@@ -1,43 +1,19 @@
 <template>
   <div class="wrapper">
-    <div class="h-wrapper">
-      <Button>
-        <RouterLink
-          to="/"
-          class="routerlink"
-        >
-          Home
-        </RouterLink>
-      </Button>
-      <Button>
-        <RouterLink
-          to="/library"
-          class="routerlink"
-        >
-          Library
-        </RouterLink>
-      </Button>
-    </div>
-    <RouterView />
+    <NavigationMenu />
   </div>
 </template>
 
 <script setup>
-import { RouterView } from 'vue-router'
-import { RouterLink } from 'vue-router'
-
-import Button from 'primevue/button'
+import NavigationMenu from './components/NavigationMenu.vue'
 
 </script>
 
 <style scoped>
-.p-button {
-  padding: 10px 20px;
-  margin-right: 10px;
-}
-
-.routerlink {
-  text-decoration: none;
-  color: #fff;
+.wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 20px;
 }
 </style>

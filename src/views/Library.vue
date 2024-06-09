@@ -5,18 +5,24 @@
       layout="grid"
     >
       <template #grid="slotProps">
-        <div
-          v-for="(item, index) in slotProps.items"
-          :key="index"
-          class="book-item"
-        >
-          <img
-            :src="item.path"
-            alt="Book Cover"
-          />
-          <div class="book-info">
-            <span>{{ item.title }}</span>
-            <span>{{ item.authors }}</span>
+        <div class="grid">
+          <div
+            v-for="(item, index) in slotProps.items"
+            :key="index"
+            class="book-item"
+          >
+            <div class="book-cover">
+              <img
+                :src="item.path"
+                alt="Book Cover"
+                style="max-width: 140px; height: 220px; object-fit: cover;"
+              />
+              <i class="pi pi-info-circle" />
+            </div>
+            <div class="book-info">
+              <span class="book-title">{{ item.title }}</span>
+              <span class="book-authors">{{ item.authors }}</span>
+            </div>
           </div>
         </div>
       </template>
@@ -34,7 +40,7 @@ import 'primeicons/primeicons.css'
 const books = ref([])
 
 onMounted(() => {
-  fetch('http://localhost:3000/library')
+  fetch('http://localhost:3000/library?fields=title,authors,path')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`)
@@ -49,37 +55,74 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.p-dataview {
-  background-color: #250d0d !important;
-}
-
 .card {
   padding: 20px;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .book-item {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-  gap: 10px;
+  text-align: center;
+  width: 380px;
+  height: 300px;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
 }
 
-.book-item img {
-  width: 140px;
-  height: 220px;
+.book-cover:hover {
+  transform: scale(1.1);
+}
+
+.book-cover:hover img {
+  filter: grayscale(100%) brightness(50%) blur(4px);
+}
+
+.book-cover {
+  width: 150px;
+  height: 250px;
   object-fit: cover;
-  margin-right: 20px;
+}
+
+.book-cover i {
+  display: none;
+  font-size: 2rem;
+  color: var(--primary-color);
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.book-cover:hover i {
+  display: block;
 }
 
 .book-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  margin-top: 16px;
 }
 
 .book-info span {
   margin-bottom: 5px;
+}
+
+.book-title {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.book-authors {
+  font-size: .9rem;
 }
 </style>
