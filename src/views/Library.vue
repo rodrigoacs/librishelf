@@ -60,7 +60,7 @@ const filterBooks = () => {
   const searchQuery = route.query.search?.toLowerCase() || ''
   if (searchQuery) {
     filteredBooks.value = books.value.filter(book =>
-      book.title.toLowerCase().includes(searchQuery)
+      book.title.toLowerCase().includes(searchQuery) || book.authors.toLowerCase().includes(searchQuery)
     )
   } else {
     filteredBooks.value = books.value
@@ -130,6 +130,7 @@ watch(route, filterBooks)
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  text-align: left;
   margin-top: 16px;
 }
 
