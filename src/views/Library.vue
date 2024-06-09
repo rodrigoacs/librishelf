@@ -1,7 +1,8 @@
 <template>
   <div class="card">
+    <Search />
     <DataView
-      :value="books"
+      :value="filteredBooks"
       layout="grid"
     >
       <template #grid="slotProps">
@@ -31,13 +32,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import DataView from 'primevue/dataview'
-import 'primevue/resources/themes/saga-blue/theme.css'
-import 'primevue/resources/primevue.min.css'
-import 'primeicons/primeicons.css'
+import Search from '../components/Search.vue'
 
 const books = ref([])
+const filteredBooks = ref([])
+const route = useRoute()
 
 onMounted(() => {
   fetch('http://localhost:3000/library?fields=title,authors,path')
@@ -49,20 +51,38 @@ onMounted(() => {
     })
     .then(data => {
       books.value = data
+      filterBooks()
     })
     .catch(error => console.error('Error fetching data:', error))
 })
+
+const filterBooks = () => {
+  const searchQuery = route.query.search?.toLowerCase() || ''
+  if (searchQuery) {
+    filteredBooks.value = books.value.filter(book =>
+      book.title.toLowerCase().includes(searchQuery)
+    )
+  } else {
+    filteredBooks.value = books.value
+  }
+}
+
+watch(route, filterBooks)
 </script>
 
 <style scoped>
 .card {
-  padding: 20px;
+  padding: 0 1rem;
+  height: 95vh;
+  width: 85vw;
+  overflow-y: scroll;
 }
 
 .grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
+  background-color: #181818;
 }
 
 .book-item {

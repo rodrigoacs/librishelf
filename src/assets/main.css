@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-
 * {
   font-family: 'Inter', sans-serif;
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
   transition: all .2s;
+  box-sizing: border-box;
 }
 
 *::-webkit-scrollbar {
@@ -23,7 +23,7 @@
 }
 
 body {
-  margin: 40px;
+  margin: 0;
   background-color: #181818;
 }
 

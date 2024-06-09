@@ -1,6 +1,7 @@
 <template>
   <div class="wrapper">
     <NavigationMenu />
+    <RouterView />
   </div>
 </template>
 
@@ -14,6 +15,7 @@ import NavigationMenu from './components/NavigationMenu.vue'
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 20px;
+  height: 100vh;
+  margin: 0 6rem;
 }
 </style>
