@@ -59,6 +59,6 @@ const onChange = (event) => {
 }
 
 ::v-deep .p-autocomplete-panel {
-  width: 100px;
+  transform-origin: top;
 }
 </style>

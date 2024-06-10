@@ -89,8 +89,7 @@ watch(route, filterBooks)
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  text-align: center;
-  width: 380px;
+  width: 200px;
   height: 300px;
   margin: 10px;
   padding: 10px;
@@ -139,11 +138,11 @@ watch(route, filterBooks)
 }
 
 .book-title {
-  font-size: 1rem;
+  font-size: .8rem;
   font-weight: bold;
 }
 
 .book-authors {
-  font-size: .9rem;
+  font-size: .8rem;
 }
 </style>
