@@ -12,10 +12,9 @@
 </template>
 
 <style scoped>
-.dasdas {
-  margin: 10px;
+.card {
   padding: 0 1rem;
   height: 95vh;
-  width: 100%;
+  width: 85vw;
 }
 </style>
