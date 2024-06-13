@@ -14,7 +14,7 @@ const queryFields = {
   'pubdate': `CASE WHEN pubdate LIKE '0101-01-01 00:00:00+00:00' THEN 'NA' ELSE strftime('%F', pubdate) END AS pubdate`
 }
 
-export function prepareQuery(fields = DEFAULT_FIELDS) {
+export function prepareLibraryQuery(fields = DEFAULT_FIELDS) {
   const selectedFields = fields.split(',').map(field => field.trim())
   const invalidFields = selectedFields.filter(field => !queryFields[field])
   if (invalidFields.length > 0) {
@@ -23,7 +23,7 @@ export function prepareQuery(fields = DEFAULT_FIELDS) {
   return `SELECT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books`
 }
 
-export function executeQuery(query, callback) {
+export function executeLibraryQuery(query, callback) {
   const db = dbConnect()
   db.all(query, [], (err, rows) => {
     if (err) {
@@ -39,4 +39,19 @@ export function executeQuery(query, callback) {
     }
     dbClose(db)
   })
+}
+
+export function executeAuthorQuery(callback) {
+  const db = dbConnect()
+  const query = `SELECT name FROM authors`
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error(`[${new Date().toLocaleTimeString()}] Error executing query: ${err.message}`)
+      callback(err, null)
+    } else {
+      callback(null, rows)
+    }
+    dbClose(db)
+  })
+
 }
