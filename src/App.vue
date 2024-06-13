@@ -7,7 +7,7 @@
 
 <script setup>
 import NavigationMenu from './components/NavigationMenu.vue'
-
+import { RouterView } from 'vue-router'
 </script>
 
 <style scoped>

@@ -43,12 +43,7 @@ const route = useRoute()
 
 onMounted(() => {
   fetch('http://localhost:3000/library?fields=title,authors,path')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
-      return response.json()
-    })
+    .then(response => response.json())
     .then(data => {
       books.value = data
       filterBooks()
@@ -58,13 +53,13 @@ onMounted(() => {
 
 const filterBooks = () => {
   const searchQuery = route.query.search?.toLowerCase() || ''
-  if (searchQuery) {
-    filteredBooks.value = books.value.filter(book =>
-      book.title.toLowerCase().includes(searchQuery) || book.authors.toLowerCase().includes(searchQuery)
-    )
-  } else {
-    filteredBooks.value = books.value
-  }
+  const authorQuery = route.query.author?.split(',').map(a => a.toLowerCase()) || []
+
+  filteredBooks.value = books.value.filter(book => {
+    const matchesTitle = book.title.toLowerCase().includes(searchQuery)
+    const matchesAuthor = authorQuery.length === 0 || authorQuery.some(author => book.authors.toLowerCase().includes(author))
+    return matchesTitle && matchesAuthor
+  })
 }
 
 watch(route, filterBooks)
@@ -81,7 +76,7 @@ watch(route, filterBooks)
 .grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start;
+  justify-content: space-evenly;
   background-color: #181818;
 }
 
