@@ -13,13 +13,11 @@
           alt="external-Bookshelf-interior-smashingstocks-isometric-smashing-stocks-3"
         />
         <div>
-          <span style="color: var(--primary-color);">MY</span>
-          <span style="font-weight: bold;">LIBRARY</span>
+          <span style="color: var(--primary-color);">LIBRI</span>
+          <span style="font-weight: bold;">SHELF</span>
         </div>
       </div>
     </template>
-
-
   </Menu>
 </template>
 
