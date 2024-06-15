@@ -69,7 +69,7 @@ export function preparePublisherQuery(authors) {
     return 'SELECT name FROM publishers ORDER BY name'
   }
   const authorsList = authors.split(',').map(author => `'${author}'`).join(',')
-  return `SELECT name FROM publishers WHERE id IN (
+  return `SELECT DISTINCT name FROM publishers WHERE id IN (
     SELECT publisher FROM books_publishers_link WHERE book IN (
       SELECT book FROM books_authors_link WHERE author IN (
         SELECT id FROM authors WHERE name IN (${authorsList})

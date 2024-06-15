@@ -4,11 +4,11 @@ import { executePublisherQuery, preparePublisherQuery } from '../database/querie
 const router = express.Router()
 
 router.get('/', (req, res) => {
-  const { author } = req.query
+  const { authors } = req.query
 
   let query
   try {
-    query = preparePublisherQuery(author)
+    query = preparePublisherQuery(authors)
   } catch (error) {
     return res.status(400).send(error.message)
   }

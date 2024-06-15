@@ -2,7 +2,6 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
@@ -16,7 +15,7 @@ export default defineConfig({
     fs: {
       allow: [
         '/mnt/c/Users/rodri/OneDrive/Documentos/Calibre',
-        '/root/my-lib'
+        '/root/librishelf'
       ]
     }
   }

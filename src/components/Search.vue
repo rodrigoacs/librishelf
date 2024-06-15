@@ -30,12 +30,12 @@
   </div>
   <div class="sort-buttons">
     <Button
-      :label="`Sort by Title`"
+      label="Sort by Title"
       @click="sortBooks('title')"
       :icon="sortField === 'title' ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
     />
     <Button
-      :label="`Sort by Author`"
+      label="Sort by Author"
       @click="sortBooks('authors')"
       :icon="sortField === 'authors' ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
     />
