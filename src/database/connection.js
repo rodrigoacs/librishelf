@@ -1,12 +1,12 @@
 import pkg from 'pg'
-const { Pool } = pkg
 
+const { Pool } = pkg
 const pool = new Pool({
-  user: 'acs',
-  host: '195.200.2.145',
-  database: 'librishelf',
-  password: 'acs1405',
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 })
 
 export function dbConnect(callback) {
