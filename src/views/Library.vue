@@ -7,24 +7,11 @@
     >
       <template #grid="slotProps">
         <div class="grid">
-          <div
+          <BookItem
             v-for="(item, index) in slotProps.items"
             :key="index"
-            class="book-item"
-          >
-            <div class="book-cover">
-              <img
-                :src="item.path"
-                alt="Book Cover"
-                style="max-width: 140px; height: 220px; object-fit: cover;"
-              />
-              <i class="pi pi-info-circle" />
-            </div>
-            <div class="book-info">
-              <span class="book-title">{{ item.title }}</span>
-              <span class="book-authors">{{ item.authors }}</span>
-            </div>
-          </div>
+            :book="item"
+          />
         </div>
       </template>
     </DataView>
@@ -36,31 +23,46 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DataView from 'primevue/dataview'
 import Search from '../components/Search.vue'
+import BookItem from '../components/BookItem.vue'
+import { fetchBooks } from '../services/api'
 
 const books = ref([])
 const filteredBooks = ref([])
 const route = useRoute()
 
+const filterBooks = () => {
+  const searchQuery = route.query.search?.toLowerCase() || ''
+  const authorQuery = route.query.author?.split(',').map(a => a.toLowerCase()) || []
+  const publisherQuery = route.query.publisher?.split(',').map(p => p.toLowerCase()) || []
+  const sortField = route.query.sort || ''
+  const sortOrder = route.query.order || 'asc'
+
+  filteredBooks.value = books.value.filter(book => {
+    const matchesTitle = book.title.toLowerCase().includes(searchQuery)
+    const matchesAuthor = authorQuery.length === 0 || authorQuery.some(author => book.authors.toLowerCase().includes(author))
+    const matchesPublisher = publisherQuery.length === 0 || publisherQuery.some(publisher => book.publisher?.toLowerCase().includes(publisher))
+    return matchesTitle && matchesAuthor && matchesPublisher
+  })
+
+  if (sortField) {
+    filteredBooks.value.sort((a, b) => {
+      if (sortOrder === 'asc') {
+        return a[sortField].localeCompare(b[sortField])
+      } else {
+        return b[sortField].localeCompare(a[sortField])
+      }
+    })
+  }
+}
+
 onMounted(() => {
-  fetch('http://localhost:3000/library?fields=title,authors,path')
-    .then(response => response.json())
+  fetchBooks('title,authors,path,publisher')
     .then(data => {
       books.value = data
       filterBooks()
     })
     .catch(error => console.error('Error fetching data:', error))
 })
-
-const filterBooks = () => {
-  const searchQuery = route.query.search?.toLowerCase() || ''
-  const authorQuery = route.query.author?.split(',').map(a => a.toLowerCase()) || []
-
-  filteredBooks.value = books.value.filter(book => {
-    const matchesTitle = book.title.toLowerCase().includes(searchQuery)
-    const matchesAuthor = authorQuery.length === 0 || authorQuery.some(author => book.authors.toLowerCase().includes(author))
-    return matchesTitle && matchesAuthor
-  })
-}
 
 watch(route, filterBooks)
 </script>
@@ -78,66 +80,5 @@ watch(route, filterBooks)
   flex-wrap: wrap;
   justify-content: space-evenly;
   background-color: #181818;
-}
-
-.book-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 200px;
-  height: 300px;
-  margin: 10px;
-  padding: 10px;
-  border-radius: 10px;
-}
-
-.book-cover:hover {
-  transform: scale(1.1);
-}
-
-.book-cover:hover img {
-  filter: grayscale(100%) brightness(50%) blur(4px);
-}
-
-.book-cover {
-  width: 150px;
-  height: 250px;
-  object-fit: cover;
-}
-
-.book-cover i {
-  display: none;
-  font-size: 2rem;
-  color: var(--primary-color);
-  cursor: pointer;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.book-cover:hover i {
-  display: block;
-}
-
-.book-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  margin-top: 16px;
-}
-
-.book-info span {
-  margin-bottom: 5px;
-}
-
-.book-title {
-  font-size: .8rem;
-  font-weight: bold;
-}
-
-.book-authors {
-  font-size: .8rem;
 }
 </style>

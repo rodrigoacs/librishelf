@@ -14,7 +14,6 @@ const queryFields = {
   'pubdate': `CASE WHEN pubdate = '0101-01-01 00:00:00+00:00' THEN 'NA' ELSE to_char(pubdate, 'YYYY-MM-DD') END AS pubdate`
 }
 
-// Prepara a consulta SQL com base nos campos selecionados
 export function prepareLibraryQuery(fields = DEFAULT_FIELDS) {
   const selectedFields = fields.split(',').map(field => field.trim())
   const invalidFields = selectedFields.filter(field => !queryFields[field])
@@ -24,7 +23,6 @@ export function prepareLibraryQuery(fields = DEFAULT_FIELDS) {
   return `SELECT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books`
 }
 
-// Executa uma consulta ao banco de dados
 export function executeLibraryQuery(query, callback) {
   dbConnect((err, client, release) => {
     if (err) {
@@ -48,9 +46,39 @@ export function executeLibraryQuery(query, callback) {
   })
 }
 
-// Função específica para consultas de autores
 export function executeAuthorQuery(callback) {
-  const query = 'SELECT DISTINCT name FROM authors'
+  const query = 'SELECT name FROM authors ORDER BY name'
+  dbConnect((err, client, release) => {
+    if (err) {
+      return callback(err, null)
+    }
+    client.query(query, (err, result) => {
+      release()
+      if (err) {
+        console.error(`[${new Date().toLocaleTimeString()}] Error executing query: ${err.message}`)
+        callback(err, null)
+      } else {
+        callback(null, result.rows)
+      }
+    })
+  })
+}
+
+export function preparePublisherQuery(authors) {
+  if (!authors) {
+    return 'SELECT name FROM publishers ORDER BY name'
+  }
+  const authorsList = authors.split(',').map(author => `'${author}'`).join(',')
+  return `SELECT name FROM publishers WHERE id IN (
+    SELECT publisher FROM books_publishers_link WHERE book IN (
+      SELECT book FROM books_authors_link WHERE author IN (
+        SELECT id FROM authors WHERE name IN (${authorsList})
+      )
+    )
+  ) ORDER BY name`
+}
+
+export function executePublisherQuery(query, callback) {
   dbConnect((err, client, release) => {
     if (err) {
       return callback(err, null)
