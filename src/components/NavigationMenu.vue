@@ -42,6 +42,49 @@ const items = [
     icon: 'pi pi-fw pi-book',
     command: () => { router.push('/library') }
   },
+  {
+    label: 'Read Books',
+    icon: 'pi pi-fw pi-check',
+    command: () => { router.push('/read-books') }
+  },
+  {
+    label: 'Unread Books',
+    icon: 'pi pi-fw pi-times',
+    command: () => { router.push('/unread-books') }
+  },
+  {
+    label: 'Publishers',
+    icon: 'pi pi-fw pi-users',
+    command: () => { router.push('/publishers') }
+  },
+  {
+    label: 'Authors',
+    icon: 'pi pi-fw pi-user',
+    command: () => { router.push('/authors') }
+  },
+  {
+    label: 'Categories',
+    icon: 'pi pi-fw pi-tags',
+    command: () => { router.push('/categories') }
+  },
+  {
+    label: 'Series',
+    icon: 'pi pi-fw pi-list',
+    command: () => { router.push('/series') }
+  },
+  {
+    separator: true
+  },
+  {
+    label: 'Settings',
+    icon: 'pi pi-fw pi-cog',
+    command: () => { router.push('/settings') }
+  },
+  {
+    label: 'About',
+    icon: 'pi pi-fw pi-info',
+    command: () => { router.push('/about') }
+  }
 ]
 </script>
 
