@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "vite && node src/server.js"
+    "server": "nodemon --exec 'node --env-file=src/.env src/server.js'"
   },
   "dependencies": {
     "cors": "^2.8.5",
