@@ -56,7 +56,7 @@ const filterBooks = () => {
 }
 
 onMounted(() => {
-  fetchBooks('title,authors,path,publisher')
+  fetchBooks('id,title,authors,path,publisher')
     .then(data => {
       books.value = data
       filterBooks()

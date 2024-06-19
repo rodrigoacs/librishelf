@@ -6,21 +6,36 @@
         alt="Book Cover"
         style="max-width: 140px; height: 220px; object-fit: cover;"
       />
-      <i class="pi pi-info-circle" />
+      <i
+        @click="openDialog"
+        class="pi pi-info-circle"
+      />
     </div>
     <div class="book-info">
       <span class="book-title">{{ book.title }}</span>
       <span class="book-authors">{{ book.authors }}</span>
     </div>
+    <BookDialog
+      :bookId="book.id"
+      :modelValue="displayDialog"
+      @update:modelValue="displayDialog = $event"
+    />
   </div>
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, ref } from 'vue'
+import BookDialog from './BookDialog.vue'
 
 const props = defineProps({
   book: Object
 })
+
+const displayDialog = ref(false)
+
+function openDialog() {
+  displayDialog.value = true
+}
 </script>
 
 <style scoped>
@@ -83,10 +98,5 @@ const props = defineProps({
 
 .book-authors {
   font-size: .8rem;
-}
-
-.book-publisher {
-  font-size: .8rem;
-  font-style: italic;
 }
 </style>

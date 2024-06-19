@@ -1,9 +1,10 @@
 import { dbConnect } from './connection.js'
 
 const BASE_PATH = '/@fs/mnt/c/Users/rodri/OneDrive/Documentos/Calibre/'
-const DEFAULT_FIELDS = 'title,authors,publisher,tags,isbn,path,read_date,pubdate'
+const DEFAULT_FIELDS = 'id,title,authors,publisher,tags,isbn,path,read_date,pubdate'
 
 const queryFields = {
+  'id': `id`,
   'title': `title`,
   'authors': `(SELECT STRING_AGG(name, ', ') FROM books_authors_link JOIN authors ON(author = authors.id) WHERE book = books.id) AS authors`,
   'publisher': `(SELECT name FROM publishers WHERE publishers.id IN (SELECT publisher FROM books_publishers_link WHERE book = books.id)) AS publisher`,
@@ -14,13 +15,16 @@ const queryFields = {
   'pubdate': `CASE WHEN pubdate = '0101-01-01 00:00:00+00:00' THEN 'NA' ELSE to_char(pubdate, 'YYYY-MM-DD') END AS pubdate`
 }
 
-export function prepareLibraryQuery(fields = DEFAULT_FIELDS) {
+export function prepareLibraryQuery(id = null, fields = DEFAULT_FIELDS) {
   const selectedFields = fields.split(',').map(field => field.trim())
   const invalidFields = selectedFields.filter(field => !queryFields[field])
   if (invalidFields.length > 0) {
     throw new Error(`Invalid fields: ${invalidFields.join(', ')}`)
   }
-  return `SELECT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books`
+  if (id) {
+    return `SELECT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books WHERE id = ${id}`
+  }
+  return `SELECT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books `
 }
 
 export function executeLibraryQuery(query, callback) {

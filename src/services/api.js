@@ -34,3 +34,11 @@ export async function fetchBooks(fields) {
   }
   return response.json()
 }
+
+export async function fetchBookDetails(bookId) {
+  const response = await fetch(`${API_BASE_URL}/library/${bookId}`)
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`)
+  }
+  return response.json()
+}

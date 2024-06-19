@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
 
   let query
   try {
-    query = prepareLibraryQuery(fields)
+    query = prepareLibraryQuery(null, fields)
   } catch (error) {
     return res.status(400).send(error.message)
   }
@@ -21,5 +21,20 @@ router.get('/', (req, res) => {
     }
   })
 })
+
+router.get('/:id', (req, res) => {
+  const { id } = req.params
+
+  const query = prepareLibraryQuery(id)
+
+  executeLibraryQuery(query, (err, rows) => {
+    if (err) {
+      return res.status(500).send('Error executing the query.')
+    } else {
+      res.json(rows[0])
+    }
+  })
+})
+
 
 export default router
