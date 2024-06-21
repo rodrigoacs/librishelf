@@ -23,11 +23,44 @@
               :label="tag"
             />
           </div>
+          <div class="read-wrapper">
+            <Checkbox
+              v-model="bookRead"
+              inputId="book-read"
+              class="book-read"
+              binary
+              icon="pi pi-book"
+              @change="updateReadStatus"
+            >
+              <template #icon>
+                <i
+                  v-if="bookRead"
+                  style="color: var(--main-color);"
+                  class="pi pi-bookmark-fill"
+                />
+                <i
+                  v-else
+                  style="color: var(--main-color);"
+                  class="pi pi-bookmark"
+                />
+              </template>
+            </Checkbox>
+            <span
+              v-if="bookRead"
+              class="book-read-date"
+            >
+              <Calendar
+                v-model="(book.read_date)"
+                disabled
+                dateFormat="dd-mm-yy"
+                inputStyle="width: 10vw"
+              />
+            </span>
+          </div>
         </div>
         <div class="bottom">
           <span class="book-publisher">Publisher: {{ book.publisher }}</span>
           <span class="book-isbn">ISBN: {{ book.isbn }}</span>
-          <span class="book-read-date">Lido em: {{ book.read_date }}</span>
           <span class="book-pubdate">{{ book.pubdate }}</span>
         </div>
       </div>
@@ -36,10 +69,17 @@
 </template>
 
 <script setup>
+import {
+  fetchBookDetails
+  // ,
+  //  updateBookReadStatus 
+} from '../services/api'
 import { ref, watch, defineProps, defineEmits } from 'vue'
-import Dialog from 'primevue/dialog'
 import Chip from 'primevue/chip'
-import { fetchBookDetails } from '../services/api'
+import Dialog from 'primevue/dialog'
+import Calendar from 'primevue/calendar'
+import Checkbox from 'primevue/checkbox'
+
 
 const props = defineProps({
   modelValue: Boolean,
@@ -47,6 +87,7 @@ const props = defineProps({
 })
 const emits = defineEmits(['update:modelValue'])
 const visible = ref(props.modelValue)
+const bookRead = ref(false)
 const book = ref({
   path: '',
   title: '',
@@ -63,18 +104,30 @@ watch(() => props.modelValue, (newValue) => {
 })
 
 watch(visible, (newValue) => {
-  console.log('visible changed:', newValue)
   emits('update:modelValue', newValue)
   if (newValue) {
     fetchBookDetails(props.bookId)
       .then((response) => {
         book.value = response
+        book.value.read_date = response.read_date ? new Date(response.read_date) : null
+        bookRead.value = response.read_date ? true : false
       })
       .catch(error => {
         console.error('Error fetching book details:', error)
       })
   }
 })
+
+// const updateReadStatus = () => {
+//   const newReadStatus = bookRead.value ? new Date().toISOString().split('T')[0] : '0101-01-01'
+//   updateBookReadStatus(props.bookId, newReadStatus)
+//     .then(() => {
+//       book.value.read_date = newReadStatus
+//     })
+//     .catch(error => {
+//       console.error('Error updating read status:', error)
+//     })
+// }
 </script>
 
 <style scoped>
@@ -106,8 +159,12 @@ watch(visible, (newValue) => {
   text-align: left;
 }
 
-.book-info span {
-  margin-bottom: 5px;
+.read-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  height: 4vh;
 }
 
 .book-title {
@@ -117,7 +174,7 @@ watch(visible, (newValue) => {
 
 .book-authors {
   font-size: 1.2rem;
-  color: var(--primary-color);
+  color: var(--main-color);
   font-weight: 700;
 }
 

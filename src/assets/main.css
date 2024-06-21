@@ -1,8 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-   --primary-color: #ff6188;
+  --main-color: #72d460;
 }
+
+.p-checkbox.p-highlight .p-checkbox-box {
+  border: none;
+  background: none;
+}
+
+.p-checkbox .p-checkbox-box {
+  border: none;
+  background: none;
+}
+
+.p-inputtext:enabled:focus {
+  outline: 1px solid var(--main-color);
+}
+
 
 * {
   font-family: 'Inter', sans-serif;
@@ -28,7 +43,6 @@
 
 body {
   margin: 0;
-  background-color: #181818;
 }
 
 #app {

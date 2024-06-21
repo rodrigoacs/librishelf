@@ -79,6 +79,6 @@ watch(route, filterBooks)
   display: flex;
   flex-wrap: wrap;
   justify-content: space-evenly;
-  background-color: #181818;
+  background-color: #121212;
 }
 </style>

@@ -67,7 +67,7 @@ function openDialog() {
 .book-cover i {
   display: none;
   font-size: 2rem;
-  color: var(--primary-color);
+  color: var(--main-color);
   cursor: pointer;
   position: absolute;
   top: 50%;

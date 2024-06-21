@@ -11,8 +11,8 @@ const queryFields = {
   'tags': `(SELECT STRING_AGG(name, ', ') FROM (SELECT name FROM tags WHERE tags.id IN (SELECT tag FROM books_tags_link WHERE book = books.id) ORDER BY name)) AS tags`,
   'isbn': `(SELECT val FROM identifiers WHERE book = books.id AND type = 'isbn') AS isbn`,
   'path': `path`,
-  'read_date': `CASE WHEN timestamp = '0101-01-01 00:00:00+00:00' THEN 'não lido' ELSE to_char(timestamp, 'YYYY-MM-DD') END AS read_date`,
-  'pubdate': `CASE WHEN pubdate = '0101-01-01 00:00:00+00:00' THEN 'NA' ELSE to_char(pubdate, 'YYYY-MM-DD') END AS pubdate`
+  'read_date': `CASE WHEN timestamp = '0101-01-01 00:00:00+00:00' THEN '' ELSE to_char(timestamp, 'YYYY-MM-DD') END AS read_date`,
+  'pubdate': `CASE WHEN pubdate = '0101-01-01 00:00:00+00:00' THEN '' ELSE to_char(pubdate, 'YYYY-MM-DD') END AS pubdate`
 }
 
 export function prepareLibraryQuery(id = null, fields = DEFAULT_FIELDS) {

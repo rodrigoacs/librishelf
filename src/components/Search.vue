@@ -6,6 +6,7 @@
       v-model="title"
       @complete="search"
       @change="onTitleChange"
+      class="search-input"
     />
     <MultiSelect
       v-model="selectedAuthors"
@@ -16,7 +17,20 @@
       @change="onAuthorsChange"
       class="multiselect"
       display="chip"
-    />
+    >
+      <template #itemcheckboxicon>
+        <i
+          style="color: #a1a1aa;"
+          class="pi pi-user"
+        />
+      </template>
+      <template #headercheckboxicon>
+        <i
+          style="color: #a1a1aa;"
+          class="pi pi-check"
+        />
+      </template>
+    </MultiSelect>
     <MultiSelect
       v-model="selectedPublishers"
       :options="publishers"
@@ -26,18 +40,34 @@
       @change="onPublishersChange"
       class="multiselect"
       display="chip"
-    />
+    >
+      <template #itemcheckboxicon>
+        <i
+          style="color: #a1a1aa;"
+          class="pi pi-book"
+        />
+      </template>
+      <template #headercheckboxicon>
+        <i
+          style="color: #a1a1aa;"
+          class="pi pi-check"
+        />
+      </template>
+    </MultiSelect>
   </div>
   <div class="sort-buttons">
+    Sort by:
     <Button
-      label="Sort by Title"
+      label="Title"
       @click="sortBooks('title')"
       :icon="sortField === 'title' ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
+      class="sort-button"
     />
     <Button
-      label="Sort by Author"
+      label="Author"
       @click="sortBooks('authors')"
       :icon="sortField === 'authors' ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
+      class="sort-button"
     />
   </div>
 </template>
@@ -45,9 +75,9 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import AutoComplete from 'primevue/autocomplete'
-import MultiSelect from 'primevue/multiselect'
 import Button from 'primevue/button'
+import MultiSelect from 'primevue/multiselect'
+import AutoComplete from 'primevue/autocomplete'
 import { fetchTitles, fetchAuthors, fetchPublishers } from '../services/api'
 
 const title = ref('')
@@ -137,14 +167,11 @@ watch(selectedPublishers, updateRoute)
 </script>
 
 <style scoped>
-.p-button {
-  width: 10%;
-}
-
-.sort-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+.p-multiselect:not(.p-disabled).p-focus {
+  outline: 1px solid var(--main-color);
+  outline-offset: -1px;
+  box-shadow: none;
+  border-color: #52525b;
 }
 
 .search-wrapper {
@@ -154,9 +181,30 @@ watch(selectedPublishers, updateRoute)
   width: 100%;
 }
 
-.multiselect,
-.p-autocomplete {
+.search-input {
   width: 50%;
+}
+
+.multiselect {
+  width: 50%;
+}
+
+.sort-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sort-button {
+  width: 100px;
+  background-color: var(--main-color);
+  color: var(--text-color);
+  border: 1px solid var(--main-color);
+}
+
+.sort-button:hover {
+  background-color: var(--primary-color-dark);
 }
 
 ::v-deep .p-autocomplete-input {
