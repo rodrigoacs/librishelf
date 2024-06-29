@@ -1,4 +1,5 @@
 import { dbConnect } from './connection.js'
+import { error, info } from '../utils/logger.js'
 
 const BASE_PATH = '/@fs/mnt/c/Users/rodri/OneDrive/Documentos/Calibre/'
 const DEFAULT_FIELDS = 'id,title,authors,publisher,tags,isbn,path,read_date,pubdate'
@@ -30,12 +31,12 @@ export function prepareLibraryQuery(id = null, fields = DEFAULT_FIELDS) {
 export function executeLibraryQuery(query, callback) {
   dbConnect((err, client, release) => {
     if (err) {
+      error(`Error connecting to the database: ${err.message}`)
       return callback(err, null)
     }
     client.query(query, (err, result) => {
       release()
       if (err) {
-        console.error(`[${new Date().toLocaleTimeString()}] Error executing query: ${err.message}`)
         callback(err, null)
       } else {
         const rows = result.rows
@@ -54,12 +55,12 @@ export function executeAuthorQuery(callback) {
   const query = 'SELECT name FROM authors ORDER BY name'
   dbConnect((err, client, release) => {
     if (err) {
+      error(`Error connecting to the database: ${err.message}`)
       return callback(err, null)
     }
     client.query(query, (err, result) => {
       release()
       if (err) {
-        console.error(`[${new Date().toLocaleTimeString()}] Error executing query: ${err.message}`)
         callback(err, null)
       } else {
         callback(null, result.rows)
@@ -85,12 +86,12 @@ export function preparePublisherQuery(authors) {
 export function executePublisherQuery(query, callback) {
   dbConnect((err, client, release) => {
     if (err) {
+      error(`Error connecting to the database: ${err.message}`)
       return callback(err, null)
     }
     client.query(query, (err, result) => {
       release()
       if (err) {
-        console.error(`[${new Date().toLocaleTimeString()}] Error executing query: ${err.message}`)
         callback(err, null)
       } else {
         callback(null, result.rows)

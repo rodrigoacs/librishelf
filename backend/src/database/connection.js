@@ -1,4 +1,5 @@
 import pkg from 'pg'
+import { info, error } from '../utils/logger.js'
 
 const { Pool } = pkg
 const pool = new Pool({
@@ -12,10 +13,10 @@ const pool = new Pool({
 export function dbConnect(callback) {
   pool.connect((err, client, release) => {
     if (err) {
-      console.error(`[${new Date().toLocaleTimeString()}] Error connecting to the database: ${err.message}`)
+      error(`Error connecting to the database: ${err.message}`)
       callback(err, null)
     } else {
-      console.log(`[${new Date().toLocaleTimeString()}] Connected to the database.`)
+      info('Database connection established.')
       callback(null, client, release)
     }
   })
@@ -24,9 +25,9 @@ export function dbConnect(callback) {
 export function dbClose(client) {
   client.release((err) => {
     if (err) {
-      console.error(`[${new Date().toLocaleTimeString()}] Error closing the database connection: ${err.message}`)
+      error(`Error closing the database connection: ${err.message}`)
     } else {
-      console.log(`[${new Date().toLocaleTimeString()}] Database connection closed.`)
+      info('Database connection closed.')
     }
   })
 }
