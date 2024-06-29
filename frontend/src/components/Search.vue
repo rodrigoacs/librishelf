@@ -78,7 +78,7 @@ import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
 import AutoComplete from 'primevue/autocomplete'
-import { fetchTitles, fetchAuthors, fetchPublishers } from '../services/api'
+import { fetchTitles, fetchAuthors, fetchPublishers } from '../../../backend/src/services/api.js'
 
 const title = ref('')
 const filteredTitles = ref([])

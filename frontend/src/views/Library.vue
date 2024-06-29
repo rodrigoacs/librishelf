@@ -24,7 +24,7 @@ import { useRoute } from 'vue-router'
 import DataView from 'primevue/dataview'
 import Search from '../components/Search.vue'
 import BookItem from '../components/BookItem.vue'
-import { fetchBooks } from '../services/api'
+import { fetchBooks } from '../../../backend/src/services/api.js'
 
 const books = ref([])
 const filteredBooks = ref([])

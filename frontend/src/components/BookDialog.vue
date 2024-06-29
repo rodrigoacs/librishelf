@@ -69,11 +69,7 @@
 </template>
 
 <script setup>
-import {
-  fetchBookDetails
-  // ,
-  //  updateBookReadStatus 
-} from '../services/api'
+import { fetchBookDetails } from '../../../backend/src/services/api.js'
 import { ref, watch, defineProps, defineEmits } from 'vue'
 import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'

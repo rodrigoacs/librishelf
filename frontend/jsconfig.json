@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["frontend/src/*"]
     }
   },
   "exclude": ["node_modules", "dist"]
