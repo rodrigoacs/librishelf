@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-    <Search path="library"/>
+    <Search path="unread" />
     <DataView
       :value="filteredBooks"
       layout="grid"
@@ -24,7 +24,7 @@ import { useRoute } from 'vue-router'
 import DataView from 'primevue/dataview'
 import Search from '../components/Search.vue'
 import BookItem from '../components/BookItem.vue'
-import { fetchBooks } from '../../../backend/src/services/api.js'
+import { fetchBookReadState } from '../../../backend/src/services/api.js'
 
 const books = ref([])
 const filteredBooks = ref([])
@@ -56,7 +56,7 @@ const filterBooks = () => {
 }
 
 onMounted(() => {
-  fetchBooks('id,title,authors,path,publisher')
+  fetchBookReadState(false)
     .then(data => {
       books.value = data
       filterBooks()

@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, defineProps } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
@@ -90,6 +90,10 @@ const publishers = ref([])
 const selectedPublishers = ref([])
 const sortField = ref('')
 const sortOrder = ref('asc')
+
+const props = defineProps({
+  path: String,
+})
 
 const search = (event) => {
   filteredTitles.value = titles.value.filter(title =>
@@ -123,7 +127,8 @@ const updateRoute = () => {
   }
   searchParams.set('sort', sortField.value)
   searchParams.set('order', sortOrder.value)
-  router.push({ path: '/library', query: Object.fromEntries(searchParams.entries()) })
+
+  router.push({ path: `/${props.path}`, query: Object.fromEntries(searchParams.entries()) })
 }
 
 const sortBooks = (field) => {

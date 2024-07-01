@@ -45,12 +45,12 @@ const items = [
   {
     label: 'Read Books',
     icon: 'pi pi-fw pi-check',
-    command: () => { router.push('/read-books') }
+    command: () => { router.push('/read') }
   },
   {
     label: 'Unread Books',
     icon: 'pi pi-fw pi-times',
-    command: () => { router.push('/unread-books') }
+    command: () => { router.push('/unread') }
   },
   {
     label: 'Publishers',

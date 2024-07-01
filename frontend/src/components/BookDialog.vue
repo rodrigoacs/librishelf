@@ -5,6 +5,12 @@
     :modal="true"
     :style="{ width: '45vw' }"
   >
+    <template #header>
+      <div class="header-wrapper">
+        <span style="font-size: 1.5rem; font-weight: bold;">Details</span>
+        <Button icon="pi pi-cog" />
+      </div>
+    </template>
     <div class="dialog-content">
       <img
         :src="book.path"
@@ -16,7 +22,7 @@
           <span class="book-title">{{ book.title }}</span>
           <span class="book-authors"> {{ book.authors }}</span>
           <div class="book-tags">
-            <i class="pi pi-tags"></i>
+            <i class="pi pi-tags" />
             <Chip
               v-for="tag in book.tags.split(',')"
               :key="tag"
@@ -53,7 +59,7 @@
                 v-model="(book.read_date)"
                 disabled
                 dateFormat="dd-mm-yy"
-                inputStyle="width: 10vw"
+                inputStyle="width: 120px"
               />
             </span>
           </div>
@@ -75,7 +81,7 @@ import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
 import Calendar from 'primevue/calendar'
 import Checkbox from 'primevue/checkbox'
-
+import Button from 'primevue/button'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -113,17 +119,6 @@ watch(visible, (newValue) => {
       })
   }
 })
-
-// const updateReadStatus = () => {
-//   const newReadStatus = bookRead.value ? new Date().toISOString().split('T')[0] : '0101-01-01'
-//   updateBookReadStatus(props.bookId, newReadStatus)
-//     .then(() => {
-//       book.value.read_date = newReadStatus
-//     })
-//     .catch(error => {
-//       console.error('Error updating read status:', error)
-//     })
-// }
 </script>
 
 <style scoped>
@@ -147,6 +142,18 @@ watch(visible, (newValue) => {
   gap: 2rem;
 }
 
+i {
+  color: var(--main-color);
+  width: 1.2rem;
+}
+
+.p-button {
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--main-color);
+}
+
 .book-info {
   display: flex;
   flex-direction: column;
@@ -161,6 +168,14 @@ watch(visible, (newValue) => {
   align-items: center;
   gap: 0.5rem;
   height: 4vh;
+}
+
+.header-wrapper {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .book-title {

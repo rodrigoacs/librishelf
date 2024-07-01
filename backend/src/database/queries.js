@@ -23,9 +23,9 @@ export function prepareLibraryQuery(id = null, fields = DEFAULT_FIELDS) {
     throw new Error(`Invalid fields: ${invalidFields.join(', ')}`)
   }
   if (id) {
-    return `SELECT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books WHERE id = ${id}`
+    return `SELECT DISTINCT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books WHERE id = ${id}`
   }
-  return `SELECT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books `
+  return `SELECT DISTINCT ${selectedFields.map(field => queryFields[field]).join(', ')} FROM books `
 }
 
 export function executeLibraryQuery(query, callback) {
@@ -52,7 +52,7 @@ export function executeLibraryQuery(query, callback) {
 }
 
 export function executeAuthorQuery(callback) {
-  const query = 'SELECT name FROM authors ORDER BY name'
+  const query = 'SELECT DISTINCT name FROM authors ORDER BY name'
   dbConnect((err, client, release) => {
     if (err) {
       error(`Error connecting to the database: ${err.message}`)
@@ -71,7 +71,7 @@ export function executeAuthorQuery(callback) {
 
 export function preparePublisherQuery(authors) {
   if (!authors) {
-    return 'SELECT name FROM publishers ORDER BY name'
+    return 'SELECT DISTINCT name FROM publishers ORDER BY name'
   }
   const authorsList = authors.split(',').map(author => `'${author}'`).join(',')
   return `SELECT DISTINCT name FROM publishers WHERE id IN (

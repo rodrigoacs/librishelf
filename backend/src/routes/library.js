@@ -1,15 +1,20 @@
 import express from 'express'
 import { prepareLibraryQuery, executeLibraryQuery } from '../database/queries.js'
-import { info, error } from '../utils/logger.js'
+import { error } from '../utils/logger.js'
 
 const router = express.Router()
 
 router.get('/', (req, res) => {
-  const { fields } = req.query
-
+  const { fields, readState } = req.query
   let query
+
   try {
     query = prepareLibraryQuery(null, fields)
+    if (readState === 'true') {
+      query += "WHERE timestamp != '0101-01-01 00:00:00.000'"
+    } else if (readState === 'false') {
+      query += "WHERE timestamp = '0101-01-01 00:00:00.000'"
+    }
   } catch (error) {
     error('Error preparing GET /library query.' + error.message)
     return res.status(400).send(error.message)
@@ -20,7 +25,6 @@ router.get('/', (req, res) => {
       error('Error executing GET /library query.' + err.message)
       return res.status(500).send('Error executing the query.')
     } else {
-      info('GET /library query executed successfully.')
       res.json(rows)
     }
   })
@@ -36,7 +40,6 @@ router.get('/:id', (req, res) => {
       error('Error executing GET /library/:id query.' + err.message)
       return res.status(500).send('Error executing the query.')
     } else {
-      info('GET /library/:id query executed successfully.')
       res.json(rows[0])
     }
   })

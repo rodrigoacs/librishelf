@@ -16,7 +16,6 @@ export function dbConnect(callback) {
       error(`Error connecting to the database: ${err.message}`)
       callback(err, null)
     } else {
-      info('Database connection established.')
       callback(null, client, release)
     }
   })
@@ -26,8 +25,6 @@ export function dbClose(client) {
   client.release((err) => {
     if (err) {
       error(`Error closing the database connection: ${err.message}`)
-    } else {
-      info('Database connection closed.')
-    }
+    } 
   })
 }
