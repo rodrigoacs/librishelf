@@ -1,5 +1,5 @@
 import pkg from 'pg'
-import { info, error } from '../utils/logger.js'
+import { error } from '../utils/logger.js'
 
 const { Pool } = pkg
 const pool = new Pool({
@@ -25,6 +25,6 @@ export function dbClose(client) {
   client.release((err) => {
     if (err) {
       error(`Error closing the database connection: ${err.message}`)
-    } 
+    }
   })
 }

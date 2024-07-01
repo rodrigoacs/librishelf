@@ -2,8 +2,6 @@ import { existsSync, writeFileSync, appendFileSync, statSync } from 'fs'
 import { join } from 'path'
 
 const levels = {
-  info: 'INFO',
-  warn: 'WARN',
   error: 'ERROR',
 }
 
@@ -44,8 +42,4 @@ function log(level, message) {
   appendFileSync(logFilePath, formattedMessage)
 }
 
-
-
-export function info(message) { return log(levels.info, message) }
-export function warn(message) { return log(levels.warn, message) }
 export function error(message) { return log(levels.error, message) }

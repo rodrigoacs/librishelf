@@ -1,6 +1,6 @@
 import express from 'express'
 import { executeAuthorQuery } from '../database/queries.js'
-import { info, error } from '../utils/logger.js'
+import { error } from '../utils/logger.js'
 
 const router = express.Router()
 
@@ -10,7 +10,6 @@ router.get('/', (req, res) => {
       error('Error executing GET /author query.' + err.message)
       return res.status(500).send('Error executing the query.')
     } else {
-      info('GET /author query executed successfully.')
       res.json(rows)
     }
   }

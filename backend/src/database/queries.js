@@ -1,5 +1,5 @@
 import { dbConnect } from './connection.js'
-import { error, info } from '../utils/logger.js'
+import { error } from '../utils/logger.js'
 
 const BASE_PATH = '/@fs/mnt/c/Users/rodri/OneDrive/Documentos/Calibre/'
 const DEFAULT_FIELDS = 'id,title,authors,publisher,tags,isbn,path,read_date,pubdate'

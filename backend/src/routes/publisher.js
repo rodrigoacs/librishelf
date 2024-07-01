@@ -1,6 +1,6 @@
 import express from 'express'
 import { executePublisherQuery, preparePublisherQuery } from '../database/queries.js'
-import { info, error } from '../utils/logger.js'
+import { error } from '../utils/logger.js'
 
 const router = express.Router()
 
@@ -20,7 +20,6 @@ router.get('/', (req, res) => {
       error('Error executing GET /publisher query.' + err.message)
       return res.status(500).send('Error executing the query.')
     } else {
-      info('GET /publisher query executed successfully.')
       res.json(rows)
     }
   })
