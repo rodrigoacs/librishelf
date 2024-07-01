@@ -20,7 +20,7 @@ router.get('/', (req, res) => {
       error('Error executing GET /publisher query.' + err.message)
       return res.status(500).send('Error executing the query.')
     } else {
-      info('GET /publisher query executed successfully.')caches
+      info('GET /publisher query executed successfully.')
       res.json(rows)
     }
   })
