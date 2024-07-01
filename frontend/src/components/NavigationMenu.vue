@@ -23,11 +23,9 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-
 import Menu from 'primevue/menu'
 
 const router = useRouter()
-
 const items = [
   {
     separator: true

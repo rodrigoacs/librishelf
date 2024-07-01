@@ -27,11 +27,10 @@
 import { defineProps, ref } from 'vue'
 import BookDialog from './BookDialog.vue'
 
+const displayDialog = ref(false)
 const props = defineProps({
   book: Object
 })
-
-const displayDialog = ref(false)
 
 function openDialog() {
   displayDialog.value = true

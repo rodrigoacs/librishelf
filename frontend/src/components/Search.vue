@@ -90,31 +90,29 @@ const publishers = ref([])
 const selectedPublishers = ref([])
 const sortField = ref('')
 const sortOrder = ref('asc')
-
 const props = defineProps({
   path: String,
 })
 
-const search = (event) => {
-  filteredTitles.value = titles.value.filter(title =>
-    title.toLowerCase().includes(event.query.toLowerCase())
+function search(event) {
+  filteredTitles.value = titles.value.filter(title => title.toLowerCase().includes(event.query.toLowerCase())
   )
 }
 
-const onTitleChange = () => {
+function onTitleChange() {
   updateRoute()
 }
 
-const onAuthorsChange = () => {
+function onAuthorsChange() {
   fetchAndSetPublishers()
   updateRoute()
 }
 
-const onPublishersChange = () => {
+function onPublishersChange() {
   updateRoute()
 }
 
-const updateRoute = () => {
+function updateRoute() {
   const searchParams = new URLSearchParams()
   if (title.value) {
     searchParams.set('search', title.value)
@@ -131,7 +129,7 @@ const updateRoute = () => {
   router.push({ path: `/${props.path}`, query: Object.fromEntries(searchParams.entries()) })
 }
 
-const sortBooks = (field) => {
+function sortBooks(field) {
   if (sortField.value === field) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
   } else {
@@ -141,7 +139,7 @@ const sortBooks = (field) => {
   updateRoute()
 }
 
-const fetchAndSetPublishers = () => {
+function fetchAndSetPublishers() {
   const authorQuery = selectedAuthors.value.map(author => author.name).join(',')
   fetchPublishers(authorQuery)
     .then(data => {

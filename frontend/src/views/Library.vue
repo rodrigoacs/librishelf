@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-    <Search path="library"/>
+    <Search path="library" />
     <DataView
       :value="filteredBooks"
       layout="grid"
@@ -30,7 +30,7 @@ const books = ref([])
 const filteredBooks = ref([])
 const route = useRoute()
 
-const filterBooks = () => {
+function filterBooks() {
   const searchQuery = route.query.search?.toLowerCase() || ''
   const authorQuery = route.query.author?.split(',').map(a => a.toLowerCase()) || []
   const publisherQuery = route.query.publisher?.split(',').map(p => p.toLowerCase()) || []
