@@ -1,7 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --main-color: #72d460;
+  --main-color: #0098b3;
+  --red: #fe6189;
+  --green: #a9dc76;
+  --blue: #78dde9;
+  --purple: #ab9cf3;
+  --yellow: #ffd866;
+  --orange: #fc9966;
 }
 
 .p-checkbox.p-highlight .p-checkbox-box {
@@ -18,6 +24,12 @@
   outline: 1px solid var(--main-color);
 }
 
+.p-inputtext:disabled {
+  background-color: #3f3f4600;
+  color: #ffffff;
+  border: none;
+  padding: 0;
+}
 
 * {
   font-family: 'Inter', sans-serif;

@@ -3,7 +3,7 @@
     v-model:visible="visible"
     header="Details"
     :modal="true"
-    :style="{ width: '45vw' }"
+    :style="{ width: '800px' }"
   >
     <template #header>
       <div class="header-wrapper">
@@ -15,7 +15,6 @@
       <img
         :src="book.path"
         alt="Book Cover"
-        style="max-width: 100%; height: 60vh; object-fit: cover;"
       />
       <div class="book-info">
         <div class="top">
@@ -24,9 +23,10 @@
           <div class="book-tags">
             <i class="pi pi-tags" />
             <Chip
-              v-for="tag in book.tags.split(',')"
+              v-for="(tag, index) in book.tags.split(',')"
               :key="tag"
               :label="tag"
+              :style="{ backgroundColor: getChipColor(index), color: '#18181b', fontWeight: '700' }"
             />
           </div>
           <div class="read-wrapper">
@@ -36,7 +36,7 @@
               class="book-read"
               binary
               icon="pi pi-book"
-              @change="updateReadStatus"
+              @onclick="updateReadStatus"
             >
               <template #icon>
                 <i
@@ -58,8 +58,7 @@
               <Calendar
                 v-model="(book.read_date)"
                 disabled
-                dateFormat="dd-mm-yy"
-                inputStyle="width: 120px"
+                dateFormat="dd/mm/yy"
               />
             </span>
           </div>
@@ -100,6 +99,25 @@ const book = ref({
   read_date: '',
   pubdate: ''
 })
+const colors = [
+  'var(--red)',
+  'var(--green)',
+  'var(--blue)',
+  'var(--purple)',
+  'var(--yellow)',
+  'var(--orange)'
+]
+
+function getChipColor(index) {
+  return colors[index % colors.length]
+}
+
+function updateReadStatus() {
+  bookRead.value = !bookRead.value
+  if (!bookRead.value) {
+    book.value.read_date = null
+  }
+}
 
 watch(() => props.modelValue, (newValue) => {
   visible.value = newValue
@@ -122,6 +140,17 @@ watch(visible, (newValue) => {
 </script>
 
 <style scoped>
+img {
+  max-width: 100%;
+  height: 60vh;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.p-calendar {
+  width: 120px;
+}
+
 .top {
   display: flex;
   flex-direction: column;
@@ -167,7 +196,6 @@ i {
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
-  height: 4vh;
 }
 
 .header-wrapper {
