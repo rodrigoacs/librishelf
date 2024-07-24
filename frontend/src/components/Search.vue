@@ -200,7 +200,7 @@ watch(selectedPublishers, updateRoute)
 }
 
 .sort-button {
-  width: 100px;
+  width: 120px;
   background-color: var(--main-color);
   color: var(--text-color);
   border: 1px solid var(--main-color);

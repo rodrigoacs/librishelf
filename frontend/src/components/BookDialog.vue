@@ -142,7 +142,7 @@ watch(visible, (newValue) => {
 <style scoped>
 img {
   max-width: 100%;
-  height: 60vh;
+  height: 40vh;
   object-fit: cover;
   border-radius: 0.5rem;
 }
@@ -180,7 +180,7 @@ i {
   background: none;
   border: none;
   border-radius: 50%;
-  color: var(--main-color);
+  color: #a1a1aa;
 }
 
 .book-info {
