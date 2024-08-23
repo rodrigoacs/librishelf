@@ -11,13 +11,13 @@ router.get('/', (req, res) => {
   try {
     query = prepareLibraryQuery(null, fields)
     if (readState === 'true') {
-      query += "WHERE timestamp != '0101-01-01 00:00:00.000'"
+      query += " WHERE timestamp != '0101-01-01 00:00:00.000'"
     } else if (readState === 'false') {
-      query += "WHERE timestamp = '0101-01-01 00:00:00.000'"
+      query += " WHERE timestamp = '0101-01-01 00:00:00.000'"
     }
-  } catch (error) {
-    error('Error preparing GET /library query.' + error.message)
-    return res.status(400).send(error.message)
+  } catch (err) {
+    error('Error preparing GET /library query.' + err.message)
+    return res.status(400).send(err.message)
   }
 
   executeLibraryQuery(query, (err, rows) => {
@@ -44,6 +44,5 @@ router.get('/:id', (req, res) => {
     }
   })
 })
-
 
 export default router

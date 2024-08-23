@@ -1,7 +1,7 @@
 import { dbConnect } from './connection.js'
 import { error } from '../utils/logger.js'
 
-const BASE_PATH = '/@fs/mnt/c/Users/rodri/OneDrive/Documentos/Calibre/'
+const BASE_PATH = './src/assets/covers/'
 const DEFAULT_FIELDS = 'id,title,authors,publisher,tags,isbn,path,read_date,pubdate'
 
 const queryFields = {
@@ -11,7 +11,7 @@ const queryFields = {
   'publisher': `(SELECT name FROM publishers WHERE publishers.id IN (SELECT publisher FROM books_publishers_link WHERE book = books.id)) AS publisher`,
   'tags': `(SELECT STRING_AGG(name, ', ') FROM (SELECT name FROM tags WHERE tags.id IN (SELECT tag FROM books_tags_link WHERE book = books.id) ORDER BY name)) AS tags`,
   'isbn': `(SELECT val FROM identifiers WHERE book = books.id AND type = 'isbn') AS isbn`,
-  'path': `path`,
+  'path': `id as path`,
   'read_date': `CASE WHEN timestamp = '0101-01-01 00:00:00+00:00' THEN '' ELSE to_char(timestamp, 'YYYY-MM-DD') END AS read_date`,
   'pubdate': `CASE WHEN pubdate = '0101-01-01 00:00:00+00:00' THEN '' ELSE to_char(pubdate, 'YYYY-MM-DD') END AS pubdate`
 }
@@ -42,7 +42,7 @@ export function executeLibraryQuery(query, callback) {
         const rows = result.rows
         if (query.includes('path')) {
           rows.forEach(row => {
-            row.path = `${BASE_PATH}${row.path}/cover.jpg`
+            row.path = `${BASE_PATH}${row.path}.jpg`
           })
         }
         callback(null, rows)

@@ -10,6 +10,10 @@
   --orange: #fc9966;
 }
 
+:focus-visible {
+  outline: none;
+}
+
 .p-checkbox.p-highlight .p-checkbox-box {
   border: none;
   background: none;

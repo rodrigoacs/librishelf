@@ -8,7 +8,10 @@
     <template #header>
       <div class="header-wrapper">
         <span style="font-size: 1.5rem; font-weight: bold;">Details</span>
-        <Button icon="pi pi-cog" />
+        <Button
+          icon="pi pi-cog"
+          @click="editMode()"
+        />
       </div>
     </template>
     <div class="dialog-content">
@@ -18,15 +21,23 @@
       />
       <div class="book-info">
         <div class="top">
-          <span class="book-title">{{ book.title }}</span>
-          <span class="book-authors"> {{ book.authors }}</span>
+          <input
+            class="book-title"
+            v-model="book.title"
+            readonly
+          />
+          <input
+            class="book-authors"
+            v-model="book.authors"
+            readonly
+          >
           <div class="book-tags">
             <i class="pi pi-tags" />
             <Chip
               v-for="(tag, index) in book.tags.split(',')"
               :key="tag"
               :label="tag"
-              :style="{ backgroundColor: getChipColor(index), color: '#18181b', fontWeight: '700' }"
+              :style="{ backgroundColor: getChipColor(index), color: '#18181b', fontWeight: '700', fontSize: '0.9rem' }"
             />
           </div>
           <div class="read-wrapper">
@@ -64,9 +75,18 @@
           </div>
         </div>
         <div class="bottom">
-          <span class="book-publisher">Publisher: {{ book.publisher }}</span>
-          <span class="book-isbn">ISBN: {{ book.isbn }}</span>
-          <span class="book-pubdate">{{ book.pubdate }}</span>
+          <span class="book-publisher">
+            Publisher: {{ book.publisher }}
+          </span>
+          <span class="book-isbn">
+            ISBN: {{ book.isbn }}
+          </span>
+          <span class="book-pubdate">
+            {{ book.pubdate }}
+          </span>
+          <span>
+            {{ book.id }}
+          </span>
         </div>
       </div>
     </div>
@@ -117,6 +137,10 @@ function updateReadStatus() {
   if (!bookRead.value) {
     book.value.read_date = null
   }
+}
+
+function editMode() {
+
 }
 
 watch(() => props.modelValue, (newValue) => {
@@ -207,21 +231,27 @@ i {
 }
 
 .book-title {
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: bold;
+  border: none;
+  background: none;
+  width: 450px;
 }
 
 .book-authors {
   font-size: 1.2rem;
   color: var(--main-color);
   font-weight: 700;
+  border: none;
+  background: none;
+  width: 450px;
 }
 
 .book-publisher,
 .book-isbn,
 .book-read-date,
 .book-pubdate {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .book-tags {
