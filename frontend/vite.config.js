@@ -15,7 +15,8 @@ export default defineConfig({
     fs: {
       allow: [
         '/mnt/c/Users/rodri/OneDrive/Documentos/Calibre',
-        '/root/librishelf'
+        '/root/librishelf',
+        '/home/acs/librishelf'
       ]
     }
   }
