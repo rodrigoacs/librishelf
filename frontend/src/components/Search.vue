@@ -213,4 +213,38 @@ watch(selectedPublishers, updateRoute)
 ::v-deep .p-autocomplete-input {
   width: 100%;
 }
+
+@media (max-width: 768px) {
+  .search-wrapper {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .search-input,
+  .multiselect {
+    width: 100%;
+  }
+
+  .sort-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .sort-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .search-input,
+  .multiselect {
+    width: 100%;
+  }
+
+  .sort-button {
+    width: 100%;
+  }
+}
 </style>

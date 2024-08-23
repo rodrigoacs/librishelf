@@ -18,4 +18,11 @@ import { RouterView } from 'vue-router'
   height: 100vh;
   margin: 0 6rem;
 }
+
+@media screen and (max-width: 768px) {
+  .wrapper {
+    flex-direction: column;
+    margin: 10px;
+  }
+}
 </style>
