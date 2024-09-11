@@ -8,8 +8,11 @@ export async function fetchTitles() {
   return response.json()
 }
 
-export async function fetchAuthors() {
-  const response = await fetch(`${API_BASE_URL}/author`)
+export async function fetchAuthors(publisherQuery) {
+  const url = publisherQuery
+    ? `${API_BASE_URL}/author?publishers=${publisherQuery}`
+    : `${API_BASE_URL}/author`
+  const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`HTTP error! Status: ${response.status}`)
   }

@@ -17,17 +17,12 @@
       @change="onAuthorsChange"
       class="multiselect"
       display="chip"
+      :selectAll="false"
     >
       <template #itemcheckboxicon>
         <i
           style="color: #a1a1aa;"
           class="pi pi-user"
-        />
-      </template>
-      <template #headercheckboxicon>
-        <i
-          style="color: #a1a1aa;"
-          class="pi pi-check"
         />
       </template>
     </MultiSelect>
@@ -40,6 +35,7 @@
       @change="onPublishersChange"
       class="multiselect"
       display="chip"
+      :selectAll="false"
     >
       <template #itemcheckboxicon>
         <i
@@ -47,56 +43,63 @@
           class="pi pi-book"
         />
       </template>
-      <template #headercheckboxicon>
-        <i
-          style="color: #a1a1aa;"
-          class="pi pi-check"
-        />
-      </template>
     </MultiSelect>
   </div>
-  <div class="sort-buttons">
+  <div class="buttons">
     Sort by:
     <Button
       label="Title"
       @click="sortBooks('title')"
       :icon="sortField === 'title' ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
-      class="sort-button"
+      class="button"
     />
     <Button
       label="Author"
       @click="sortBooks('authors')"
       :icon="sortField === 'authors' ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
-      class="sort-button"
+      class="button"
+    />
+    <Button
+      label="Add Book"
+      icon="pi pi-plus"
+      class="button"
+      @click="openAddBookModal"
     />
   </div>
+
+  <AddBookDialog
+    v-model:visible="addBookDialogVisible"
+    @save="saveNewBook"
+  />
+
 </template>
 
 <script setup>
-import { ref, watch, onMounted, defineProps } from 'vue'
+import { ref, onMounted, defineProps, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
 import AutoComplete from 'primevue/autocomplete'
+import AddBookDialog from '../components/AddBookDialog.vue'
 import { fetchTitles, fetchAuthors, fetchPublishers } from '../../../backend/src/services/api.js'
 
+const addBookDialogVisible = ref(false)
 const title = ref('')
 const filteredTitles = ref([])
 const titles = ref([])
-const router = useRouter()
 const authors = ref([])
 const selectedAuthors = ref([])
 const publishers = ref([])
 const selectedPublishers = ref([])
 const sortField = ref('')
 const sortOrder = ref('asc')
+const router = useRouter()
 const props = defineProps({
   path: String,
 })
 
 function search(event) {
-  filteredTitles.value = titles.value.filter(title => title.toLowerCase().includes(event.query.toLowerCase())
-  )
+  filteredTitles.value = titles.value.filter(title => title.toLowerCase().includes(event.query.toLowerCase()))
 }
 
 function onTitleChange() {
@@ -109,7 +112,16 @@ function onAuthorsChange() {
 }
 
 function onPublishersChange() {
+  fetchAndSetAuthors()
   updateRoute()
+}
+
+function openAddBookModal() {
+  addBookDialogVisible.value = true
+}
+
+function saveNewBook(book) {
+  console.log('Book saved:', book)
 }
 
 function updateRoute() {
@@ -146,6 +158,15 @@ function fetchAndSetPublishers() {
       publishers.value = [...new Set(data.map(item => item.name))].map(publisher => ({ name: publisher }))
     })
     .catch(error => console.error('Error fetching publishers:', error))
+}
+
+function fetchAndSetAuthors() {
+  const publisherQuery = selectedPublishers.value.map(publisher => publisher.name).join(',')
+  fetchAuthors(publisherQuery)
+    .then(data => {
+      authors.value = [...new Set(data.map(item => item.name))].map(author => ({ name: author }))
+    })
+    .catch(error => console.error('Error fetching authors:', error))
 }
 
 onMounted(() => {
@@ -192,26 +213,32 @@ watch(selectedPublishers, updateRoute)
   width: 50%;
 }
 
-.sort-buttons {
+.buttons {
   display: flex;
   gap: 1rem;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.sort-button {
-  width: 120px;
+.button {
+  width: 134px;
   background-color: var(--main-color);
   color: var(--text-color);
   border: 1px solid var(--main-color);
 }
 
-.sort-button:hover {
+.button:hover {
   background-color: var(--primary-color-dark);
 }
 
 ::v-deep .p-autocomplete-input {
   width: 100%;
+}
+
+.add-book-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -225,13 +252,13 @@ watch(selectedPublishers, updateRoute)
     width: 100%;
   }
 
-  .sort-buttons {
+  .buttons {
     flex-direction: column;
     gap: 0.5rem;
     align-items: stretch;
   }
 
-  .sort-button {
+  .button {
     width: 100%;
   }
 }
@@ -243,7 +270,7 @@ watch(selectedPublishers, updateRoute)
     width: 100%;
   }
 
-  .sort-button {
+  .button {
     width: 100%;
   }
 }

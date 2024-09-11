@@ -83,6 +83,35 @@ export function preparePublisherQuery(authors) {
   ) ORDER BY name`
 }
 
+export function executeAuthorByPublisherQuery(publishers, callback) {
+  const publishersList = publishers.split(',').map(publisher => `'${publisher}'`).join(',')
+
+  const query = `
+    SELECT DISTINCT authors.name 
+    FROM authors
+    JOIN books_authors_link ON authors.id = books_authors_link.author
+    JOIN books_publishers_link ON books_authors_link.book = books_publishers_link.book
+    JOIN publishers ON books_publishers_link.publisher = publishers.id
+    WHERE publishers.name IN (${publishersList})
+    ORDER BY authors.name
+  `
+
+  dbConnect((err, client, release) => {
+    if (err) {
+      error(`Error connecting to the database: ${err.message}`)
+      return callback(err, null)
+    }
+    client.query(query, (err, result) => {
+      release()
+      if (err) {
+        callback(err, null)
+      } else {
+        callback(null, result.rows)
+      }
+    })
+  })
+}
+
 export function executePublisherQuery(query, callback) {
   dbConnect((err, client, release) => {
     if (err) {
