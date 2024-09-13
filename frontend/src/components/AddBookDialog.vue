@@ -4,7 +4,7 @@
     header="Add New Book"
     modal
     :closable="true"
-    :style="{ width: '60vw' }"
+    :style="{ width: '800px' }"
     @hide="closeDialog"
   >
     <div class="add-book-form">
@@ -18,7 +18,7 @@
             v-model="selectedAuthor"
             :suggestions="filteredAuthors"
             @complete="searchAuthors"
-            placeholder="Select or Add Author"
+            placeholder="Author"
           >
             <template #footer>
               <Button
@@ -34,7 +34,7 @@
             v-model="selectedPublisher"
             :suggestions="filteredPublishers"
             @complete="searchPublishers"
-            placeholder="Select or Add Publisher"
+            placeholder="Publisher"
           >
             <template #footer>
               <Button
@@ -55,68 +55,34 @@
             placeholder="Publication Date"
             showIcon
           />
-          <div class="image-upload">
-            <label for="coverImage">Upload Book Cover</label>
-            <input
-              type="file"
-              @change="onCoverImageChange"
-              accept="image/*"
-              id="coverImage"
-            />
-          </div>
-
-          <!-- Alinhando read checkbox e read date lado a lado -->
-          <div class="read-section">
-            <div class="checkbox-wrapper">
-              <Checkbox
-                v-model="newBook.read"
-                inputId="read"
-                @change="onReadChange"
-              >
-                <template #icon>
-                  <i
-                    v-if="newBook.read"
-                    style="color: var(--main-color);"
-                    class="pi pi-bookmark-fill"
-                  />
-                  <i
-                    v-else
-                    style="color: var(--main-color);"
-                    class="pi pi-bookmark"
-                  />
-                </template>
-              </Checkbox>
-            </div>
-
-            <div v-if="newBook.read">
-              <Calendar
-                v-model="newBook.readDate"
-                placeholder="Read Date"
-                showIcon
-              />
-            </div>
-          </div>
-
+          <Calendar
+            v-model="newBook.readDate"
+            placeholder="Read Date"
+            showIcon
+          />
           <InputText
             v-model="newBook.tags"
             placeholder="Tags (comma-separated)"
           />
         </div>
       </div>
-
-      <!-- Preview da imagem -->
       <div
         class="image-preview"
-        v-if="coverImagePreview"
+        @click="triggerFileUpload"
       >
         <img
-          :src="coverImagePreview"
+          :src="coverImagePreview || './src/assets/book-cover.png'"
           alt="Cover Preview"
         />
       </div>
+      <input
+        type="file"
+        ref="fileInput"
+        @change="onCoverImageChange"
+        accept="image/*"
+        style="display: none;"
+      />
     </div>
-
-    <!-- Botão de salvar -->
     <div class="save-button">
       <Button
         label="Save"
@@ -128,17 +94,15 @@
   </Dialog>
 </template>
 
-
 <script setup>
 import { ref, watch } from 'vue'
 import { defineProps, defineEmits } from 'vue'
-import { fetchAuthors, fetchPublishers } from '../../../backend/src/services/api.js'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import AutoComplete from 'primevue/autocomplete'
 import Calendar from 'primevue/calendar'
-import Checkbox from 'primevue/checkbox'
+import { fetchAuthors, fetchPublishers, addNewBook } from '../../../backend/src/services/api.js'
 
 const props = defineProps({
   visible: Boolean,
@@ -149,6 +113,28 @@ const emit = defineEmits(['update:visible'])
 
 const internalVisible = ref(props.visible)
 
+const newBook = ref({
+  title: '',
+  author: '',
+  publisher: '',
+  isbn: '',
+  pubdate: null,
+  readDate: null,
+  tags: '',
+  coverImage: null
+})
+
+const coverImagePreview = ref('./src/assets/book-cover.png')
+const fileInput = ref(null)
+
+const selectedAuthor = ref(null)
+const filteredAuthors = ref([])
+const allowNewAuthor = ref(true)
+
+const selectedPublisher = ref(null)
+const filteredPublishers = ref([])
+const allowNewPublisher = ref(true)
+
 watch(() => props.visible, (newVal) => {
   internalVisible.value = newVal
 })
@@ -157,19 +143,9 @@ function closeDialog() {
   emit('update:visible', false)
 }
 
-const newBook = ref({
-  title: '',
-  author: '',
-  publisher: '',
-  isbn: '',
-  pubdate: null,
-  read: false,
-  readDate: null,
-  tags: '',
-  coverImage: null // Armazena a imagem de capa
-})
-
-const coverImagePreview = ref(null)
+function triggerFileUpload() {
+  fileInput.value.click()
+}
 
 function onCoverImageChange(event) {
   const file = event.target.files[0]
@@ -182,14 +158,6 @@ function onCoverImageChange(event) {
     reader.readAsDataURL(file)
   }
 }
-
-const selectedAuthor = ref(null)
-const filteredAuthors = ref([])
-const allowNewAuthor = ref(true)
-
-const selectedPublisher = ref(null)
-const filteredPublishers = ref([])
-const allowNewPublisher = ref(true)
 
 async function searchAuthors(event) {
   try {
@@ -225,30 +193,46 @@ function addNewPublisher() {
   allowNewPublisher.value = false
 }
 
-function onReadChange() {
-  if (!newBook.value.read) {
-    newBook.value.readDate = null
-  }
-}
-
 function saveBook() {
-  if (newBook.value.title && selectedAuthor.value && selectedPublisher.value && newBook.value.isbn) {
-    newBook.value.author = selectedAuthor.value
-    newBook.value.publisher = selectedPublisher.value
-    newBook.value.tags = newBook.value.tags.split(',').map(tag => tag.trim()) // Converte tags separadas por vírgula
-    props.onSave(newBook.value)
-    resetForm()
-    closeDialog()
+  const formData = new FormData()
+
+  formData.append('title', newBook.value.title)
+  formData.append('author', selectedAuthor.value)
+  formData.append('publisher', selectedPublisher.value)
+  formData.append('isbn', newBook.value.isbn)
+
+  if (newBook.value.pubdate) {
+    formData.append('pubdate', newBook.value.pubdate.toISOString().split('T')[0])
   }
+  if (newBook.value.readDate) {
+    formData.append('readDate', newBook.value.readDate.toISOString().split('T')[0])
+  }
+
+  formData.append('tags', newBook.value.tags.split(',').map(tag => tag.trim()).join(','))
+
+  if (newBook.value.coverImage) {
+    formData.append('coverImage', newBook.value.coverImage)
+  }
+
+  addNewBook(formData)
+    .then(() => {
+      props.onSave()
+      closeDialog()
+      resetForm()
+    })
+    .catch(error => {
+      console.error('Error adding new book:', error)
+    })
 }
 
 function resetForm() {
-  newBook.value = { title: '', author: '', publisher: '', isbn: '', pubdate: null, read: false, readDate: null, tags: '', coverImage: null }
+  newBook.value = { title: '', author: '', publisher: '', isbn: '', pubdate: null, readDate: null, tags: '', coverImage: null }
   selectedAuthor.value = null
   selectedPublisher.value = null
-  coverImagePreview.value = null
+  coverImagePreview.value = './src/assets/book-cover.png'
 }
 </script>
+
 
 <style scoped>
 .add-book-form {
@@ -268,16 +252,8 @@ function resetForm() {
   max-width: 400px;
 }
 
-.form-fields input,
-.form-fields .p-autocomplete,
-.form-fields .p-calendar,
-.form-fields .p-inputtext,
-.p-autocomplete-panel input,
-.p-autocomplete-panel .p-inputtext,
-.p-autocomplete .p-component,
-.p-inputwrapper input {
+::v-deep .p-autocomplete-input {
   width: 100%;
-  max-width: 400px;
 }
 
 .image-preview {
@@ -285,12 +261,15 @@ function resetForm() {
   justify-content: center;
   align-items: center;
   width: 40%;
+  height: 420px;
+  border: 1px solid #52525b;
 }
 
 .image-preview img {
-  max-height: 40vh;
-  max-width: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
 }
 
 .read-section {
@@ -301,7 +280,7 @@ function resetForm() {
 
 .save-button {
   margin-top: 1rem;
-  text-align: right;
+  text-align: center;
 }
 
 .image-upload label {

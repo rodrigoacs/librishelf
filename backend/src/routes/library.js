@@ -1,9 +1,27 @@
 import express from 'express'
-import { prepareLibraryQuery, executeLibraryQuery } from '../database/queries.js'
+import fs from 'fs'
+import path from 'path'
+import multer from 'multer'
+import { prepareLibraryQuery, executeLibraryQuery, addNewBookQuery } from '../database/queries.js'
 import { error } from '../utils/logger.js'
+import { fileURLToPath } from 'url'
+import { authenticateToken } from '../middlewares/auth.js'
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 1024 * 1024 * 2 } // Limit file size to 2MB
+})
+
+// Initialize router
 const router = express.Router()
 
+// Middleware to ensure authentication
+// router.use(authenticateToken)  // Applies authentication to all routes in this file
+
+// Get books with optional filters for 'readState'
 router.get('/', (req, res) => {
   const { fields, readState } = req.query
   let query
@@ -11,25 +29,26 @@ router.get('/', (req, res) => {
   try {
     query = prepareLibraryQuery(null, fields)
     if (readState === 'true') {
-      query += " WHERE timestamp != '0101-01-01 00:00:00.000'"
+      query += " WHERE timestamp != '0101-01-01 00:00:00.000' AND timestamp IS NOT NULL"
     } else if (readState === 'false') {
-      query += " WHERE timestamp = '0101-01-01 00:00:00.000'"
+      query += " WHERE timestamp = '0101-01-01 00:00:00.000' OR timestamp IS NULL"
     }
   } catch (err) {
-    error('Error preparing GET /library query.' + err.message)
-    return res.status(400).send(err.message)
+    error('Error preparing GET /library query: ' + err.message)
+    return res.status(400).json({ error: err.message })
   }
 
   executeLibraryQuery(query, (err, rows) => {
     if (err) {
-      error('Error executing GET /library query.' + err.message)
-      return res.status(500).send('Error executing the query.')
+      error('Error executing GET /library query: ' + err.message)
+      return res.status(500).json({ error: 'Error executing the query.' })
     } else {
       res.json(rows)
     }
   })
 })
 
+// Get a single book by ID
 router.get('/:id', (req, res) => {
   const { id } = req.params
 
@@ -37,12 +56,58 @@ router.get('/:id', (req, res) => {
 
   executeLibraryQuery(query, (err, rows) => {
     if (err) {
-      error('Error executing GET /library/:id query.' + err.message)
-      return res.status(500).send('Error executing the query.')
+      error('Error executing GET /library/:id query: ' + err.message)
+      return res.status(500).json({ error: 'Error executing the query.' })
     } else {
       res.json(rows[0])
     }
   })
+})
+
+// Add a new book (with cover image upload)
+router.post('/', upload.single('coverImage'), async (req, res) => {
+  try {
+    const { title, pubdate, author, publisher, tags, isbn } = req.body
+
+    if (!title || !author || !publisher || !tags || !pubdate || !isbn) {
+      return res.status(400).json({ error: 'Missing required book information.' })
+    }
+
+    // Split tags and ensure they are an array
+    const parsedTags = tags.split(',').map(tag => tag.trim())
+
+    const bookInfo = {
+      title,
+      pubdate,
+      author,
+      publisher,
+      tags: parsedTags,
+      isbn
+    }
+
+    // Insert book into the database
+    const newBookId = await addNewBookQuery(bookInfo)
+
+    // Save cover image if provided
+    if (req.file) {
+      const coverImage = req.file.buffer
+      const uploadDir = path.resolve(__dirname, '../../../frontend/src/assets/covers/')
+      const filePath = path.join(uploadDir, `${newBookId}.jpg`)
+
+      // Ensure the directory exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true })
+      }
+
+      // Write the cover image to the specified path
+      fs.writeFileSync(filePath, coverImage)
+    }
+
+    res.status(201).json({ bookId: newBookId })
+  } catch (err) {
+    error('Error saving the book: ' + err.message)
+    res.status(500).json({ error: 'An error occurred while saving the book.' })
+  }
 })
 
 export default router

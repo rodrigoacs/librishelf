@@ -53,3 +53,16 @@ export async function fetchBookDetails(bookId) {
   }
   return response.json()
 }
+
+export async function addNewBook(formData) {
+  const response = await fetch(`${API_BASE_URL}/library`, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`)
+  }
+
+  return response.json()
+}

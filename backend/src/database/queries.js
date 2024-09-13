@@ -128,3 +128,80 @@ export function executePublisherQuery(query, callback) {
     })
   })
 }
+
+export function addNewBookQuery(bookInfo) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT add_book(
+        '${bookInfo.title}',
+        '${bookInfo.pubdate}',
+        '${bookInfo.author}',
+        '${bookInfo.publisher}',
+        '{${bookInfo.tags.join(',')}}',
+        '${bookInfo.isbn}'
+      ) AS book_id;
+    `
+
+    dbConnect((err, client, release) => {
+      if (err) {
+        return reject(err)
+      }
+
+      client.query(query, (err, result) => {
+        release()
+        if (err) {
+          return reject(err)
+        }
+
+        const newBookId = result.rows[0].book_id
+        resolve(newBookId)
+      })
+    })
+  })
+}
+
+export function addUserQuery({ username, password }) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      INSERT INTO users (name, password_hash)
+      VALUES ('${username}', '${password}')
+    `
+
+    dbConnect((err, client, release) => {
+      if (err) {
+        return reject(err)
+      }
+
+      client.query(query, (err) => {
+        release()
+        if (err) {
+          return reject(err)
+        }
+
+        resolve()
+      })
+    })
+  })
+}
+
+export function getUserByUsernameQuery(username) {
+  return new Promise((resolve, reject) => {
+    const query = `SELECT * FROM users WHERE name = '${username}'`
+
+    dbConnect((err, client, release) => {
+      if (err) {
+        return reject(err)
+      }
+
+      client.query(query, (err, result) => {
+        release()
+        if (err) {
+          return reject(err)
+        }
+
+        const user = result.rows[0]
+        resolve(user)
+      })
+    })
+  })
+}
