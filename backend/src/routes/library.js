@@ -15,13 +15,9 @@ const upload = multer({
   limits: { fileSize: 1024 * 1024 * 2 } // Limit file size to 2MB
 })
 
-// Initialize router
 const router = express.Router()
-
-// Middleware to ensure authentication
 // router.use(authenticateToken)  // Applies authentication to all routes in this file
 
-// Get books with optional filters for 'readState'
 router.get('/', (req, res) => {
   const { fields, readState } = req.query
   let query
@@ -48,7 +44,6 @@ router.get('/', (req, res) => {
   })
 })
 
-// Get a single book by ID
 router.get('/:id', (req, res) => {
   const { id } = req.params
 
@@ -64,7 +59,6 @@ router.get('/:id', (req, res) => {
   })
 })
 
-// Add a new book (with cover image upload)
 router.post('/', upload.single('coverImage'), async (req, res) => {
   try {
     const { title, pubdate, author, publisher, tags, isbn } = req.body
@@ -73,7 +67,6 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
       return res.status(400).json({ error: 'Missing required book information.' })
     }
 
-    // Split tags and ensure they are an array
     const parsedTags = tags.split(',').map(tag => tag.trim())
 
     const bookInfo = {
@@ -85,21 +78,17 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
       isbn
     }
 
-    // Insert book into the database
     const newBookId = await addNewBookQuery(bookInfo)
 
-    // Save cover image if provided
     if (req.file) {
       const coverImage = req.file.buffer
       const uploadDir = path.resolve(__dirname, '../../../frontend/src/assets/covers/')
       const filePath = path.join(uploadDir, `${newBookId}.jpg`)
 
-      // Ensure the directory exists
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true })
       }
 
-      // Write the cover image to the specified path
       fs.writeFileSync(filePath, coverImage)
     }
 
