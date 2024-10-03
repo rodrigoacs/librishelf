@@ -165,7 +165,7 @@ watch(visible, (newValue) => {
 
 <style scoped>
 img {
-  max-width: 100%;
+  max-width: 270px;
   height: 40vh;
   object-fit: cover;
   border-radius: 0.5rem;
