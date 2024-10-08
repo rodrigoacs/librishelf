@@ -61,9 +61,9 @@ router.get('/:id', (req, res) => {
 
 router.post('/', upload.single('coverImage'), async (req, res) => {
   try {
-    const { title, pubdate, author, publisher, tags, isbn } = req.body
+    const { title, pubDate, author, publisher, tags, isbn, readDate } = req.body
 
-    if (!title || !author || !publisher || !tags || !pubdate || !isbn) {
+    if (!title || !author || !publisher || !tags || !pubDate || !isbn) {
       return res.status(400).json({ error: 'Missing required book information.' })
     }
 
@@ -71,11 +71,12 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
 
     const bookInfo = {
       title,
-      pubdate,
+      pubDate,
       author,
       publisher,
       tags: parsedTags,
-      isbn
+      isbn,
+      readDate
     }
 
     const newBookId = await addNewBookQuery(bookInfo)

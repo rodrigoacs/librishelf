@@ -51,7 +51,7 @@
             placeholder="ISBN"
           />
           <Calendar
-            v-model="newBook.pubdate"
+            v-model="newBook.pubDate"
             placeholder="Publication Date"
             showIcon
           />
@@ -118,7 +118,7 @@ const newBook = ref({
   author: '',
   publisher: '',
   isbn: '',
-  pubdate: null,
+  pubDate: null,
   readDate: null,
   tags: '',
   coverImage: null
@@ -201,8 +201,8 @@ function saveBook() {
   formData.append('publisher', selectedPublisher.value)
   formData.append('isbn', newBook.value.isbn)
 
-  if (newBook.value.pubdate) {
-    formData.append('pubdate', newBook.value.pubdate.toISOString().split('T')[0])
+  if (newBook.value.pubDate) {
+    formData.append('pubDate', newBook.value.pubDate.toISOString().split('T')[0])
   }
   if (newBook.value.readDate) {
     formData.append('readDate', newBook.value.readDate.toISOString().split('T')[0])
@@ -226,7 +226,7 @@ function saveBook() {
 }
 
 function resetForm() {
-  newBook.value = { title: '', author: '', publisher: '', isbn: '', pubdate: null, readDate: null, tags: '', coverImage: null }
+  newBook.value = { title: '', author: '', publisher: '', isbn: '', pubDate: null, readDate: null, tags: '', coverImage: null }
   selectedAuthor.value = null
   selectedPublisher.value = null
   coverImagePreview.value = './src/assets/book-cover.png'
