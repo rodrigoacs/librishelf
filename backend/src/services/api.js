@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://librishelf.com'
+const API_BASE_URL = 'https://librishelf.com/api'
 
 export async function fetchTitles() {
   const response = await fetch(`${API_BASE_URL}/library?fields=title`)
