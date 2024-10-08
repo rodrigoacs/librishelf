@@ -1,5 +1,5 @@
 import express from 'express'
-import fs from 'fs'
+import fs, { read } from 'fs'
 import path from 'path'
 import multer from 'multer'
 import { prepareLibraryQuery, executeLibraryQuery, addNewBookQuery, updateBookDetailsQuery } from '../database/queries.js'
@@ -65,6 +65,10 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
 
     if (!title || !author || !publisher || !tags || !pubDate || !isbn) {
       return res.status(400).json({ error: 'Missing required book information.' })
+    }
+
+    if (readDate && isNaN(Date.parse(readDate))) {
+      readDate = '0101-01-01 00:00:00.000'
     }
 
     const parsedTags = tags.split(',').map(tag => tag.trim())
