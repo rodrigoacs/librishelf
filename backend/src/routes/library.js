@@ -2,7 +2,7 @@ import express from 'express'
 import fs from 'fs'
 import path from 'path'
 import multer from 'multer'
-import { prepareLibraryQuery, executeLibraryQuery, addNewBookQuery } from '../database/queries.js'
+import { prepareLibraryQuery, executeLibraryQuery, addNewBookQuery, updateBookDetailsQuery } from '../database/queries.js'
 import { error } from '../utils/logger.js'
 import { fileURLToPath } from 'url'
 import { authenticateToken } from '../middlewares/auth.js'
@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename)
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 1024 * 1024 * 2 } // Limit file size to 2MB
+  limits: { fileSize: 1024 * 1024 * 2 }
 })
 
 const router = express.Router()
@@ -99,5 +99,20 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
     res.status(500).json({ error: 'An error occurred while saving the book.' })
   }
 })
+
+router.put('/:id', async (req, res) => {
+  try {
+    const bookId = req.params.id
+    const bookInfo = req.body
+
+    await updateBookDetailsQuery(bookId, bookInfo)
+    res.status(200).json({ message: 'Book updated successfully.' })
+  } catch (error) {
+    console.error('Error updating book:', error)
+    res.status(500).json({ error: 'Failed to update book details.' })
+  }
+})
+
+
 
 export default router

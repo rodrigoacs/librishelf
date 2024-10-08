@@ -9,11 +9,19 @@
       <div class="header-wrapper">
         <span style="font-size: 1.5rem; font-weight: bold;">Details</span>
         <Button
+          v-if="!isEditing"
           icon="pi pi-cog"
-          @click="editMode()"
+          @click="editMode"
+        />
+        <Button
+          v-if="isEditing"
+          icon="pi pi-save"
+          class="p-button-success"
+          @click="saveBookDetails"
         />
       </div>
     </template>
+
     <div class="dialog-content">
       <img
         :src="book.path"
@@ -21,33 +29,46 @@
       />
       <div class="book-info">
         <div class="top">
+          <!-- Campo de Título -->
           <input
             class="book-title"
             v-model="book.title"
-            readonly
+            :readonly="!isEditing"
           />
+
+          <!-- Campo de Autores -->
           <input
             class="book-authors"
             v-model="book.authors"
-            readonly
-          >
+            :readonly="!isEditing"
+          />
+
+          <!-- Campo de Tags -->
           <div class="book-tags">
             <i class="pi pi-tags" />
+            <input
+              v-if="isEditing"
+              v-model="book.tags"
+              placeholder="Edit tags"
+            />
             <Chip
+              v-else
               v-for="(tag, index) in book.tags.split(',')"
               :key="tag"
               :label="tag"
               :style="{ backgroundColor: getChipColor(index), color: '#18181b', fontWeight: '700', fontSize: '0.9rem' }"
             />
           </div>
+
+          <!-- Campo de Leitura -->
           <div class="read-wrapper">
             <Checkbox
               v-model="bookRead"
               inputId="book-read"
               class="book-read"
+              :disabled="!isEditing"
               binary
               icon="pi pi-book"
-              @onclick="updateReadStatus"
             >
               <template #icon>
                 <i
@@ -62,30 +83,46 @@
                 />
               </template>
             </Checkbox>
+
             <span
               v-if="bookRead"
               class="book-read-date"
             >
               <Calendar
-                v-model="(book.read_date)"
-                disabled
+                v-model="book.read_date"
+                :disabled="!isEditing"
                 dateFormat="dd/mm/yy"
               />
             </span>
           </div>
         </div>
+
+        <!-- Informações na parte inferior -->
         <div class="bottom">
           <span class="book-publisher">
-            Publisher: {{ book.publisher }}
+            Publisher:
+            <input
+              v-if="isEditing"
+              v-model="book.publisher"
+            />
+            <span v-else>{{ book.publisher }}</span>
           </span>
+
           <span class="book-isbn">
-            ISBN: {{ book.isbn }}
+            ISBN:
+            <input
+              v-if="isEditing"
+              v-model="book.isbn"
+            />
+            <span v-else>{{ book.isbn }}</span>
           </span>
+
           <span class="book-pubdate">
-            {{ book.pubdate }}
-          </span>
-          <span>
-            {{ book.id }}
+            <Calendar
+              v-model="book.pubdate"
+              :disabled="!isEditing"
+              dateFormat="dd/mm/yy"
+            />
           </span>
         </div>
       </div>
@@ -93,8 +130,9 @@
   </Dialog>
 </template>
 
+
 <script setup>
-import { fetchBookDetails } from '../../../backend/src/services/api.js'
+import { fetchBookDetails, updateBookDetails } from '../../../backend/src/services/api.js'
 import { ref, watch, defineProps, defineEmits } from 'vue'
 import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
@@ -109,6 +147,7 @@ const props = defineProps({
 const emits = defineEmits(['update:modelValue'])
 const visible = ref(props.modelValue)
 const bookRead = ref(false)
+const isEditing = ref(false)
 const book = ref({
   path: '',
   title: '',
@@ -132,15 +171,27 @@ function getChipColor(index) {
   return colors[index % colors.length]
 }
 
-function updateReadStatus() {
-  bookRead.value = !bookRead.value
-  if (!bookRead.value) {
-    book.value.read_date = null
-  }
+function editMode() {
+  isEditing.value = !isEditing.value
 }
 
-function editMode() {
+async function saveBookDetails() {
+  const updatedBook = {
+    title: book.value.title,
+    authors: book.value.authors,
+    publisher: book.value.publisher,
+    tags: book.value.tags,
+    isbn: book.value.isbn,
+    pubdate: book.value.pubdate,
+    read_date: book.value.read_date ? book.value.read_date.toISOString().split('T')[0] : null
+  }
 
+  try {
+    await updateBookDetails(props.bookId, updatedBook)
+    isEditing.value = false
+  } catch (error) {
+    console.error('Error updating book details:', error)
+  }
 }
 
 watch(() => props.modelValue, (newValue) => {

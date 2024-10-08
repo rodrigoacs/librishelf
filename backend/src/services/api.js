@@ -66,3 +66,19 @@ export async function addNewBook(formData) {
 
   return response.json()
 }
+
+export async function updateBookDetails(bookId, updatedBook) {
+  const response = await fetch(`${API_BASE_URL}/library/${bookId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updatedBook)
+  })
+
+  if (!response.ok) {
+    throw new Error(`Error updating book details: ${response.statusText}`)
+  }
+
+  return await response.json()
+}
