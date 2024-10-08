@@ -54,7 +54,7 @@ const router = useRouter()
 const items = [
   { separator: true },
   { label: 'Home', icon: 'pi pi-fw pi-home', command: () => router.push('/') },
-  { label: 'Library', icon: 'pi pi-fw pi-book', command: () => router.push('/library') },
+  { label: 'Library', icon: 'pi pi-fw pi-book', command: () => router.push('/books') },
   { label: 'Read Books', icon: 'pi pi-fw pi-check', command: () => router.push('/read') },
   { label: 'Unread Books', icon: 'pi pi-fw pi-times', command: () => router.push('/unread') },
   { label: 'Publishers', icon: 'pi pi-fw pi-users', command: () => router.push('/publishers') },
