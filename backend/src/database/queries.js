@@ -134,11 +134,11 @@ export function addNewBookQuery(bookInfo) {
     const query = `
       SELECT add_book(
         '${bookInfo.title}',
-        '${bookInfo.pubdate}',
+        '${bookInfo.pubDate}',
         '${bookInfo.author}',
         '${bookInfo.publisher}',
         '{${bookInfo.tags.join(',')}}',
-        '${bookInfo.read_date}',
+        '${bookInfo.readDate}',
         '${bookInfo.isbn}'
       ) AS book_id;
     `
