@@ -138,6 +138,7 @@ export function addNewBookQuery(bookInfo) {
         '${bookInfo.author}',
         '${bookInfo.publisher}',
         '{${bookInfo.tags.join(',')}}',
+        '${bookInfo.read_date}',
         '${bookInfo.isbn}'
       ) AS book_id;
     `
@@ -205,3 +206,43 @@ export function getUserByUsernameQuery(username) {
     })
   })
 }
+
+export async function updateBookDetailsQuery(bookId, bookInfo) {
+  let { title, authors, publisher, tags, isbn, pubdate, read_date } = bookInfo
+
+  if (typeof tags === 'string') {
+    tags = tags.split(',').map(tag => tag.trim())
+  }
+
+  const query = `
+    SELECT update_book(
+      ${bookId},
+      '${title}',
+      '${pubdate}',
+      '${authors}',
+      '${publisher}',
+      '{${tags.join(',')}}',
+      '${read_date}',
+      '${isbn}'
+    );
+  `
+
+  return new Promise((resolve, reject) => {
+    dbConnect((err, client, release) => {
+      if (err) {
+        return reject(err)
+      }
+
+      client.query(query, (err, result) => {
+        release()
+        if (err) {
+          return reject(err)
+        }
+
+        resolve(result)
+      })
+    })
+  })
+}
+
+
