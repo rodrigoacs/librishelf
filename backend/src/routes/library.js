@@ -67,10 +67,6 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
       return res.status(400).json({ error: 'Missing required book information.' })
     }
 
-    if (readDate && isNaN(Date.parse(readDate))) {
-      readDate = '0101-01-01 00:00:00.000'
-    }
-
     const parsedTags = tags.split(',').map(tag => tag.trim())
 
     const bookInfo = {
@@ -80,7 +76,7 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
       publisher,
       tags: parsedTags,
       isbn,
-      readDate
+      readDate: readDate || '0101-01-01 00:00:00.000'
     }
 
     const newBookId = await addNewBookQuery(bookInfo)
