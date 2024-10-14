@@ -12,6 +12,10 @@
 </template>
 
 <style scoped>
+* {
+  color: #ffffff;
+}
+
 .card {
   padding: 0 1rem;
   height: 95vh;

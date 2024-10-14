@@ -8,6 +8,7 @@
   --purple: #ab9cf3;
   --yellow: #ffd866;
   --orange: #fc9966;
+  color-scheme: none;
 }
 
 :focus-visible {
