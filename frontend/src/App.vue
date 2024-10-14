@@ -17,7 +17,6 @@ import { RouterView } from 'vue-router'
   align-items: center;
   height: 100vh;
   margin: 0 6rem;
-  background-color: #121212;
 }
 
 @media screen and (max-width: 768px) {
