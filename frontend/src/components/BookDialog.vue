@@ -287,6 +287,7 @@ i {
   border: none;
   background: none;
   width: 450px;
+  color: var(--text-color);
 }
 
 .book-authors {

@@ -218,6 +218,7 @@ watch(selectedPublishers, updateRoute)
   gap: 1rem;
   align-items: center;
   margin-bottom: 1rem;
+  color: var(--text-color);
 }
 
 .button {
