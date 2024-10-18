@@ -14,12 +14,14 @@ router.post('/', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10)
     await addUserQuery({ username, password: hashedPassword })
+
+    console.log('User registered successfully:', username)
     res.status(201).json({ message: 'User registered successfully.' })
   } catch (err) {
-    res.status(500).json({ error: 'Error registering the user.' })
-    console.log(err)
-
+    console.error('Error occurred:', err)
+    res.status(500).json({ error: 'Error registering the user.', msg: err.message })
   }
 })
+
 
 export default router

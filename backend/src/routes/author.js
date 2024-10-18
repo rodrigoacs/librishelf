@@ -1,8 +1,10 @@
 import express from 'express'
 import { executeAuthorQuery, executeAuthorByPublisherQuery } from '../database/queries.js'
 import { error } from '../utils/logger.js'
+import { authenticateToken } from '../middlewares/auth.js'
 
 const router = express.Router()
+router.use(authenticateToken)
 
 router.get('/', (req, res) => {
   const publishers = req.query.publishers

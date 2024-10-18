@@ -16,18 +16,21 @@ const upload = multer({
 })
 
 const router = express.Router()
-// router.use(authenticateToken)  // Applies authentication to all routes in this file
+router.use(authenticateToken)
 
 router.get('/', (req, res) => {
   const { fields, readState } = req.query
+  const userId = req.user.userId
   let query
 
   try {
     query = prepareLibraryQuery(null, fields)
+    query += ` WHERE user_id = ${userId}`
+
     if (readState === 'true') {
-      query += " WHERE timestamp != '0101-01-01 00:00:00.000' AND timestamp IS NOT NULL"
+      query += " AND timestamp != '0101-01-01 00:00:00.000' AND timestamp IS NOT NULL"
     } else if (readState === 'false') {
-      query += " WHERE timestamp = '0101-01-01 00:00:00.000' OR timestamp IS NULL"
+      query += " AND (timestamp = '0101-01-01 00:00:00.000' OR timestamp IS NULL)"
     }
   } catch (err) {
     error('Error preparing GET /library query: ' + err.message)
@@ -62,6 +65,7 @@ router.get('/:id', (req, res) => {
 router.post('/', upload.single('coverImage'), async (req, res) => {
   try {
     const { title, pubDate, author, publisher, tags, isbn, readDate } = req.body
+    const userId = req.user.userId
 
     if (!title || !author || !publisher || !tags || !pubDate || !isbn) {
       return res.status(400).json({ error: 'Missing required book information.' })
@@ -76,7 +80,8 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
       publisher,
       tags: parsedTags,
       isbn,
-      readDate: readDate || '0101-01-01 00:00:00.000'
+      readDate: readDate || '0101-01-01 00:00:00.000',
+      user_id: userId
     }
 
     const newBookId = await addNewBookQuery(bookInfo)

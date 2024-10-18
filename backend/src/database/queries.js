@@ -139,7 +139,8 @@ export function addNewBookQuery(bookInfo) {
         '${bookInfo.publisher}',
         '{${bookInfo.tags.join(',')}}',
         '${bookInfo.readDate}',
-        '${bookInfo.isbn}'
+        '${bookInfo.isbn}',
+        ${bookInfo.user_id}
       ) AS book_id;
     `
 

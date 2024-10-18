@@ -1,16 +1,18 @@
 import jwt from 'jsonwebtoken'
 
-const SECRET_KEY = 'your_jwt_secret_key'
+const SECRET_KEY = process.env.SECRET_KEY
 
 export function authenticateToken(req, res, next) {
-  const token = req.headers['authorization']
+  const authHeader = req.headers['authorization']
 
-  if (!token) {
-    return res.status(403).json({ error: 'Token is required' })
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(403).json({ error: 'Token is required or invalid format' })
   }
 
+  const token = authHeader.split(' ')[1]
+
   try {
-    const decoded = jwt.verify(token.split(' ')[1], SECRET_KEY)
+    const decoded = jwt.verify(token, SECRET_KEY)
     req.user = decoded
     next()
   } catch (err) {

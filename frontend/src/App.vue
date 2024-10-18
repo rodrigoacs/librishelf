@@ -1,13 +1,20 @@
 <template>
   <div class="wrapper">
-    <NavigationMenu />
+    <NavigationMenu v-if="showNavigationMenu" />
     <RouterView />
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import NavigationMenu from './components/NavigationMenu.vue'
-import { RouterView } from 'vue-router'
+
+const route = useRoute()
+
+const showNavigationMenu = computed(() => {
+  return !['/login', '/register'].includes(route.path)
+})
 </script>
 
 <style scoped>

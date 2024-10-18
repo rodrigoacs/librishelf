@@ -4,7 +4,7 @@ import { getUserByUsernameQuery } from '../database/queries.js'
 import express from 'express'
 
 const router = express.Router()
-const SECRET_KEY = 'your_jwt_secret_key'
+const SECRET_KEY = process.env.SECRET_KEY
 
 router.post('/', async (req, res) => {
   const { username, password } = req.body

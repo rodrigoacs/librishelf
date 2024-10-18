@@ -57,13 +57,20 @@ const items = [
   { label: 'Library', icon: 'pi pi-fw pi-book', command: () => router.push('/books') },
   { label: 'Read Books', icon: 'pi pi-fw pi-check', command: () => router.push('/read') },
   { label: 'Unread Books', icon: 'pi pi-fw pi-times', command: () => router.push('/unread') },
-  { label: 'Publishers', icon: 'pi pi-fw pi-users', command: () => router.push('/publishers') },
+  // { label: 'Publishers', icon: 'pi pi-fw pi-users', command: () => router.push('/publishers') },
   { label: 'Authors', icon: 'pi pi-fw pi-user', command: () => router.push('/authors') },
-  { label: 'Categories', icon: 'pi pi-fw pi-tags', command: () => router.push('/categories') },
-  { label: 'Series', icon: 'pi pi-fw pi-list', command: () => router.push('/series') },
+  // { label: 'Categories', icon: 'pi pi-fw pi-tags', command: () => router.push('/categories') },
+  // { label: 'Series', icon: 'pi pi-fw pi-list', command: () => router.push('/series') },
   { separator: true },
-  { label: 'Settings', icon: 'pi pi-fw pi-cog', command: () => router.push('/settings') },
-  { label: 'About', icon: 'pi pi-fw pi-info', command: () => router.push('/about') }
+  // { label: 'Settings', icon: 'pi pi-fw pi-cog', command: () => router.push('/settings') },
+  // { label: 'About', icon: 'pi pi-fw pi-info', command: () => router.push('/about') },
+  // { separator: true },
+  {
+    label: 'Logout', icon: 'pi pi-fw pi-sign-out', command: () => {
+      localStorage.clear()
+      router.push('/login')
+    }
+  },
 ]
 
 function toggleMenu(event) {
