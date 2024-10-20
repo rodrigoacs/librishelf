@@ -77,7 +77,7 @@ async function handleRegister() {
   }
 
   try {
-    const response = await registerUser({ username: username.value, password: password.value })
+    const response = await registerUser({ username: username.value.toLowerCase(), password: password.value })
 
     if (response.ok) {
       toast.value.add({ severity: 'success', summary: 'Success', detail: 'Registered successfully', life: 3000 })

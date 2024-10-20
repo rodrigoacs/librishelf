@@ -153,5 +153,5 @@ export async function registerUser(userData) {
     throw new Error(`Registration error: ${response.statusText}`)
   }
 
-  return response.json()
+  return response
 }
