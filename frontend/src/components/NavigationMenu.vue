@@ -100,6 +100,7 @@ onUnmounted(() => {
   align-items: center;
   padding: 0.5rem 1rem;
   gap: 0.5rem;
+  color: var(--text-color);
 }
 
 .wrapper {

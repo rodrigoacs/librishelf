@@ -29,21 +29,18 @@
       />
       <div class="book-info">
         <div class="top">
-          <!-- Campo de Título -->
           <input
             class="book-title"
             v-model="book.title"
             :readonly="!isEditing"
           />
 
-          <!-- Campo de Autores -->
           <input
             class="book-authors"
             v-model="book.authors"
             :readonly="!isEditing"
           />
 
-          <!-- Campo de Tags -->
           <div class="book-tags">
             <i class="pi pi-tags" />
             <input
@@ -60,7 +57,6 @@
             />
           </div>
 
-          <!-- Campo de Leitura -->
           <div class="read-wrapper">
             <Checkbox
               v-model="bookRead"
@@ -97,7 +93,6 @@
           </div>
         </div>
 
-        <!-- Informações na parte inferior -->
         <div class="bottom">
           <span class="book-publisher">
             Publisher:
