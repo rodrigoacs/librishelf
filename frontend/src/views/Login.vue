@@ -57,7 +57,7 @@ const toast = ref(null)
 
 async function handleLogin() {
   try {
-    const response = await loginUser({ username: username.value, password: password.value })
+    const response = await loginUser({ username: username.value.toLowerCase(), password: password.value })
     if (response.token) {
       localStorage.setItem('token', response.token)
       localStorage.setItem('timestamp', Date.now())
