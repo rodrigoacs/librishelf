@@ -1,77 +1,77 @@
 <template>
   <div class="search-wrapper">
-    <AutoComplete
-      placeholder="Search by Title"
-      :suggestions="filteredTitles"
-      v-model="title"
-      @complete="search"
-      @change="onTitleChange"
-      class="search-input"
-    />
-    <MultiSelect
-      v-model="selectedAuthors"
-      :options="authors"
-      optionLabel="name"
-      placeholder="Filter by Author"
-      filter
-      @change="onAuthorsChange"
-      class="multiselect"
-      display="chip"
-      :selectAll="false"
-    >
-      <template #itemcheckboxicon>
-        <i
-          style="color: #a1a1aa;"
-          class="pi pi-user"
-        />
-      </template>
-    </MultiSelect>
-    <MultiSelect
-      v-model="selectedPublishers"
-      :options="publishers"
-      optionLabel="name"
-      placeholder="Filter by Publisher"
-      filter
-      @change="onPublishersChange"
-      class="multiselect"
-      display="chip"
-      :selectAll="false"
-    >
-      <template #itemcheckboxicon>
-        <i
-          style="color: #a1a1aa;"
-          class="pi pi-book"
-        />
-      </template>
-    </MultiSelect>
-  </div>
-  <div class="buttons">
-    Sort by:
-    <Button
-      label="Title"
-      @click="sortBooks('title')"
-      :icon="sortField === 'title' ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
-      class="button"
-    />
-    <Button
-      label="Author"
-      @click="sortBooks('authors')"
-      :icon="sortField === 'authors' ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
-      class="button"
-    />
-    <Button
-      label="Add Book"
-      icon="pi pi-plus"
-      class="button"
-      @click="openAddBookModal"
-    />
+    <div class="first-row">
+      <h1 style="color: var(--text-color)">Your Library</h1>
+      <Button
+        label="Add Book"
+        icon="pi pi-plus"
+        class="add-button"
+        @click="openAddBookModal"
+      />
+    </div>
+    <div class="second-row">
+      <AutoComplete
+        placeholder="Search by Title"
+        :suggestions="filteredTitles"
+        v-model="title"
+        @complete="search"
+        @change="onTitleChange"
+        class="search-input"
+      />
+      <MultiSelect
+        v-model="selectedAuthors"
+        :options="authors"
+        optionLabel="name"
+        placeholder="Filter by Author"
+        filter
+        @change="onAuthorsChange"
+        class="multiselect"
+        display="chip"
+        :selectAll="false"
+      >
+        <template #itemcheckboxicon>
+          <i
+            style="color: #a1a1aa;"
+            class="pi pi-user"
+          />
+        </template>
+      </MultiSelect>
+      <MultiSelect
+        v-model="selectedPublishers"
+        :options="publishers"
+        optionLabel="name"
+        placeholder="Filter by Publisher"
+        filter
+        @change="onPublishersChange"
+        class="multiselect"
+        display="chip"
+        :selectAll="false"
+      >
+        <template #itemcheckboxicon>
+          <i
+            style="color: #a1a1aa;"
+            class="pi pi-book"
+          />
+        </template>
+      </MultiSelect>
+      <Dropdown
+        v-model="sortField"
+        :options="['Authors', 'Title']"
+        placeholder="Sort by"
+        class="dropdown"
+      />
+      <Button
+        @click="sortBooks(sortField.toLowerCase())"
+        :icon="sortField ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
+        class="button"
+      />
+    </div>
   </div>
 
   <AddBookDialog
     v-model:visible="addBookDialogVisible"
     @save="saveNewBook"
   />
-
 </template>
 
 <script setup>
@@ -81,6 +81,7 @@ import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
 import AutoComplete from 'primevue/autocomplete'
 import AddBookDialog from '../components/AddBookDialog.vue'
+import Dropdown from 'primevue/dropdown'
 import { fetchTitles, fetchAuthors, fetchPublishers } from '../../../backend/src/services/api.js'
 
 const addBookDialogVisible = ref(false)
@@ -169,20 +170,15 @@ function fetchAndSetAuthors() {
     .catch(error => console.error('Error fetching authors:', error))
 }
 
-onMounted(() => {
-  fetchTitles()
-    .then(data => {
-      titles.value = data.map(item => item.title)
-    })
-    .catch(error => console.error('Error fetching titles:', error))
-
-  fetchAuthors()
-    .then(data => {
-      authors.value = data
-    })
-    .catch(error => console.error('Error fetching authors:', error))
-
-  fetchAndSetPublishers()
+onMounted(async () => {
+  try {
+    const [titlesData, authorsData] = await Promise.all([fetchTitles(), fetchAuthors()])
+    titles.value = titlesData.map(item => item.title)
+    authors.value = authorsData
+    fetchAndSetPublishers()
+  } catch (error) {
+    console.error('Error loading initial data:', error)
+  }
 })
 
 watch(selectedAuthors, fetchAndSetPublishers)
@@ -191,7 +187,40 @@ watch(selectedPublishers, updateRoute)
 </script>
 
 <style scoped>
-.p-multiselect:not(.p-disabled).p-focus {
+.button {
+  background-color: var(--main-color);
+  color: var(--text-color);
+  border: 1px solid var(--main-color);
+}
+
+.first-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.second-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dropdown {
+  width: 12rem;
+}
+
+.multiselect {
+  width: 24rem;
+}
+
+.search-input {
+  width: 50%;
+}
+
+.p-multiselect:not(.p-disabled).p-focus,
+.p-autocomplete-input:not(.p-disabled).p-focus,
+.p-dropdown:not(.p-disabled).p-focus {
   outline: 1px solid var(--main-color);
   outline-offset: -1px;
   box-shadow: none;
@@ -200,35 +229,19 @@ watch(selectedPublishers, updateRoute)
 
 .search-wrapper {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
   margin-bottom: 1rem;
   width: 100%;
 }
 
-.search-input {
-  width: 50%;
-}
-
-.multiselect {
-  width: 50%;
-}
-
-.buttons {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 1rem;
-  color: var(--text-color);
-}
-
-.button {
-  width: 134px;
+.add-button {
   background-color: var(--main-color);
   color: var(--text-color);
   border: 1px solid var(--main-color);
+  width: 10rem;
 }
 
-.button:hover {
+.add-button:hover {
   background-color: var(--primary-color-dark);
 }
 
@@ -253,13 +266,7 @@ watch(selectedPublishers, updateRoute)
     width: 100%;
   }
 
-  .buttons {
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: stretch;
-  }
-
-  .button {
+  .add-button {
     width: 100%;
   }
 }
@@ -271,7 +278,7 @@ watch(selectedPublishers, updateRoute)
     width: 100%;
   }
 
-  .button {
+  .add-button {
     width: 100%;
   }
 }

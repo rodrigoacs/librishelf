@@ -1,15 +1,15 @@
 <template>
   <div class="book-item">
-    <div class="book-cover">
+    <div
+      class="book-cover"
+      @click="openDialog"
+    >
       <img
         :src="book.path"
         alt="Book Cover"
-        style="max-width: 140px; height: 220px; object-fit: cover;"
+        style="width: 170px; height: 250px; object-fit: cover; border-radius: 10px;"
       />
-      <i
-        @click="openDialog"
-        class="pi pi-info-circle"
-      />
+      <span class="more-info">details</span>
     </div>
     <div class="book-info">
       <span class="book-title">{{ book.title }}</span>
@@ -43,39 +43,50 @@ function openDialog() {
   flex-direction: column;
   align-items: flex-start;
   width: 200px;
-  height: 300px;
   margin: 10px;
   padding: 10px;
-  border-radius: 10px;
-}
-
-.book-cover:hover {
-  transform: scale(1.1);
-}
-
-.book-cover:hover img {
-  filter: grayscale(100%) brightness(50%) blur(4px);
 }
 
 .book-cover {
-  width: 150px;
+  position: relative;
+  width: 170px;
   height: 250px;
-  object-fit: cover;
+  border-radius: 20px;
+  border: 2px solid transparent;
+  transition: 0.1s ease-out;
 }
 
-.book-cover i {
-  display: none;
-  font-size: 2rem;
-  color: var(--main-color);
+.book-cover img {
+  border-radius: 10px;
+  transition: 0.1s;
   cursor: pointer;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
-.book-cover:hover i {
-  display: block;
+.book-cover:hover img {
+  filter: brightness(0.5);
+}
+
+.more-info {
+  cursor: pointer;
+  width: 70%;
+  text-align: center;
+  border-radius: 1rem;
+  border: none;
+  background-color: var(--main-color);
+  color: #fff;
+  font-size: 1rem;
+  padding: .5rem 1rem;
+  position: absolute;
+  left: 50%;
+  bottom: 0px;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: 0.1s ease-out;
+}
+
+.book-cover:hover .more-info {
+  opacity: 1;
+  bottom: 90px;
 }
 
 .book-info {
@@ -84,6 +95,7 @@ function openDialog() {
   align-items: flex-start;
   text-align: left;
   margin-top: 16px;
+  width: 170px;
 }
 
 .book-info span {

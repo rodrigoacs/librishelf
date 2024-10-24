@@ -1,139 +1,118 @@
 <template>
   <Dialog
     v-model:visible="visible"
-    header="Details"
     :modal="true"
-    :style="{ width: '800px' }"
+    :style="{ width: '900px', border: 'none', borderRadius: '1rem' }"
+    :dismissableMask="true"
+    :pt="{ mask: { style: 'backdrop-filter: blur(3px);' } }"
   >
-    <template #header>
-      <div class="header-wrapper">
-        <span style="font-size: 1.5rem; font-weight: bold;">Details</span>
-        <Button
-          v-if="!isEditing"
-          icon="pi pi-cog"
-          @click="editMode"
+    <template #container="{ closeCallback }">
+      <div class="dialog-content">
+        <img
+          :src="book.path"
+          alt="Book Cover"
+          class="book-cover"
         />
-        <Button
-          v-if="isEditing"
-          icon="pi pi-save"
-          class="p-button-success"
-          @click="saveBookDetails"
-        />
-      </div>
-    </template>
-
-    <div class="dialog-content">
-      <img
-        :src="book.path"
-        alt="Book Cover"
-      />
-      <div class="book-info">
-        <div class="top">
-          <input
-            class="book-title"
-            v-model="book.title"
-            :readonly="!isEditing"
-          />
-
-          <input
-            class="book-authors"
-            v-model="book.authors"
-            :readonly="!isEditing"
-          />
-
-          <div class="book-tags">
-            <i class="pi pi-tags" />
+        <div class="book-info">
+          <div class="top">
+            <div class="header-row">
+              <input
+                class="book-title"
+                v-model="book.title"
+                :readonly="!isEditing"
+                style="font-size: 1.8rem; font-weight: bold; color: #f5f5f5; background: none; border: none; width: 100%;"
+              />
+              <Button
+                v-if="!isEditing"
+                icon="pi pi-cog"
+                class="edit-button"
+                @click="editMode"
+              />
+              <Button
+                v-if="isEditing"
+                icon="pi pi-save"
+                class="save-button"
+                @click="saveBookDetails"
+              />
+            </div>
             <input
-              v-if="isEditing"
-              v-model="book.tags"
-              placeholder="Edit tags"
+              class="book-authors"
+              v-model="book.authors"
+              :readonly="!isEditing"
+              style="font-size: 1.2rem; color: #a1a1a1; background: none; border: none; width: 100%;"
             />
-            <Chip
-              v-else
-              v-for="(tag, index) in book.tags.split(',')"
-              :key="tag"
-              :label="tag"
-              :style="{ backgroundColor: getChipColor(index), color: '#18181b', fontWeight: '700', fontSize: '0.9rem' }"
-            />
-          </div>
-
-          <div class="read-wrapper">
-            <Checkbox
-              v-model="bookRead"
-              inputId="book-read"
-              class="book-read"
-              :disabled="!isEditing"
-              binary
-              icon="pi pi-book"
-            >
-              <template #icon>
-                <i
-                  v-if="bookRead"
-                  style="color: var(--main-color);"
-                  class="pi pi-bookmark-fill"
+            <div class="book-tags">
+              <input
+                v-if="isEditing"
+                v-model="book.tags"
+                placeholder="Edit tags"
+                style="color: #f5f5f5; background: none; border: none; border-bottom: 1px solid #f5f5f5; width: 100%;"
+              />
+              <div v-else>
+                <Chip
+                  v-for="(tag, index) in book.tags.split(',')"
+                  :key="tag"
+                  :label="tag"
+                  :style="{ backgroundColor: getChipColor(), color: '#000', fontWeight: '700', fontSize: '0.9rem', marginRight: '.5rem', padding: '0.25rem 0.5rem', borderRadius: '12px' }"
                 />
-                <i
-                  v-else
-                  style="color: var(--main-color);"
-                  class="pi pi-bookmark"
-                />
-              </template>
-            </Checkbox>
-
-            <span
-              v-if="bookRead"
-              class="book-read-date"
-            >
+              </div>
+            </div>
+            <div class="book-read-date">
+              <i
+                v-if="bookRead"
+                class="pi pi-bookmark-fill"
+                style="margin-right: 0.5rem; color: var(--main-color);"
+              ></i>
               <Calendar
                 v-model="book.read_date"
                 :disabled="!isEditing"
                 dateFormat="dd/mm/yy"
+                style="color: #f5f5f5;"
               />
-            </span>
+            </div>
+          </div>
+          <div class="bottom">
+            <div class="book-publisher">
+              <span>Editora: </span>
+              <input
+                v-if="isEditing"
+                v-model="book.publisher"
+                style="color: #f5f5f5; background: none; border: none; border-bottom: 1px solid #f5f5f5; width: 100%;"
+              />
+              <span v-else>{{ book.publisher }}</span>
+            </div>
+            <div class="book-isbn">
+              <span>ISBN: </span>
+              <input
+                v-if="isEditing"
+                v-model="book.isbn"
+                style="color: #f5f5f5; background: none; border: none; border-bottom: 1px solid #f5f5f5; width: 100%;"
+              />
+              <span v-else>{{ book.isbn }}</span>
+            </div>
+            <div class="book-pubdate">
+              <span>Data de Publicação: </span>
+              <Calendar
+                v-model="book.pubdate"
+                :disabled="!isEditing"
+                dateFormat="dd/mm/yy"
+                style="color: #f5f5f5;"
+              />
+            </div>
           </div>
         </div>
-
-        <div class="bottom">
-          <span class="book-publisher">
-            Publisher:
-            <input
-              v-if="isEditing"
-              v-model="book.publisher"
-            />
-            <span v-else>{{ book.publisher }}</span>
-          </span>
-
-          <span class="book-isbn">
-            ISBN:
-            <input
-              v-if="isEditing"
-              v-model="book.isbn"
-            />
-            <span v-else>{{ book.isbn }}</span>
-          </span>
-
-          <span class="book-pubdate">
-            <Calendar
-              v-model="book.pubdate"
-              :disabled="!isEditing"
-              dateFormat="dd/mm/yy"
-            />
-          </span>
-        </div>
       </div>
-    </div>
+    </template>
   </Dialog>
 </template>
 
-
 <script setup>
-import { fetchBookDetails, updateBookDetails } from '../../../backend/src/services/api.js'
 import { ref, watch, defineProps, defineEmits } from 'vue'
 import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
 import Calendar from 'primevue/calendar'
-import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
+import { fetchBookDetails, updateBookDetails } from '../../../backend/src/services/api.js'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -162,8 +141,18 @@ const colors = [
   'var(--orange)'
 ]
 
-function getChipColor(index) {
-  return colors[index % colors.length]
+let shuffledColors = []
+
+function shuffleColors() {
+  shuffledColors = [...colors].sort(() => Math.random() - 0.5)
+}
+
+function getChipColor() {
+  if (shuffledColors.length === 0) {
+    shuffleColors()
+  }
+
+  return shuffledColors.pop()
 }
 
 function editMode() {
@@ -177,7 +166,7 @@ async function saveBookDetails() {
     publisher: book.value.publisher,
     tags: book.value.tags,
     isbn: book.value.isbn,
-    pubdate: book.value.pubdate,
+    pubdate: book.value.pubdate instanceof Date ? book.value.pubdate.toISOString().split('T')[0] : null,
     read_date: book.value.read_date ? book.value.read_date.toISOString().split('T')[0] : null
   }
 
@@ -200,6 +189,7 @@ watch(visible, (newValue) => {
       .then((response) => {
         book.value = response
         book.value.read_date = response.read_date ? new Date(response.read_date) : null
+        book.value.pubdate = response.pubdate ? new Date(response.pubdate) : ''
         bookRead.value = response.read_date ? true : false
       })
       .catch(error => {
@@ -210,21 +200,69 @@ watch(visible, (newValue) => {
 </script>
 
 <style scoped>
-img {
-  max-width: 270px;
-  height: 40vh;
-  object-fit: cover;
-  border-radius: 0.5rem;
+.dialog-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
 }
 
-.p-calendar {
-  width: 120px;
+.book-cover-wrapper {
+  max-width: 200px;
+}
+
+.book-cover {
+  width: auto;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 1rem 0 0 1rem;
+}
+
+.book-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #f5f5f5;
+  width: 100%;
+  padding: 1rem;
 }
 
 .top {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.save-button,
+.edit-button {
+  background-color: var(--main-color);
+  color: var(--text-color);
+  border: none;
+}
+
+.book-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.book-authors {
+  font-size: 1rem;
+}
+
+.book-tags {
+  display: flex;
   gap: 0.5rem;
+}
+
+.book-read-date {
+  display: flex;
+  font-size: 0.9rem;
 }
 
 .bottom {
@@ -233,78 +271,9 @@ img {
   gap: 0.5rem;
 }
 
-.dialog-content {
-  display: flex;
-  flex-direction: row;
-  padding: 0px 16px 16px 16px;
-  justify-content: flex-start;
-  gap: 2rem;
-}
-
-i {
-  color: var(--main-color);
-  width: 1.2rem;
-}
-
-.p-button {
-  background: none;
-  border: none;
-  border-radius: 50%;
-  color: #a1a1aa;
-}
-
-.book-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  text-align: left;
-}
-
-.read-wrapper {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.header-wrapper {
-  display: flex;
-  width: 100%;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.book-title {
-  font-size: 1.4rem;
-  font-weight: bold;
-  border: none;
-  background: none;
-  width: 450px;
-  color: var(--text-color);
-}
-
-.book-authors {
-  font-size: 1.2rem;
-  color: var(--main-color);
-  font-weight: 700;
-  border: none;
-  background: none;
-  width: 450px;
-}
-
 .book-publisher,
 .book-isbn,
-.book-read-date,
 .book-pubdate {
-  font-size: 0.8rem;
-}
-
-.book-tags {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: 0.9rem;
 }
 </style>
