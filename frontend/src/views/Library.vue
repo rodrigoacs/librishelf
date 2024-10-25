@@ -1,6 +1,9 @@
 <template>
   <div class="card">
-    <Search path="books" />
+    <Search
+      path="books"
+      :books-quantity="filteredBooks.length"
+    />
     <DataView
       :value="filteredBooks"
       layout="grid"

@@ -15,6 +15,10 @@
   outline: none;
 }
 
+.p-checkbox-box .p-icon {
+  color: var(--main-color);
+}
+
 .p-checkbox.p-highlight .p-checkbox-box {
   border: none;
   background: none;

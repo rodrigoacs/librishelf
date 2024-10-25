@@ -1,7 +1,7 @@
 <template>
   <div class="search-wrapper">
     <div class="first-row">
-      <h1 style="color: var(--text-color)">Your Library</h1>
+      <h1 style="color: var(--text-color)">Your Library ({{ booksQuantity }})</h1>
       <Button
         label="Add Book"
         icon="pi pi-plus"
@@ -26,16 +26,8 @@
         filter
         @change="onAuthorsChange"
         class="multiselect"
-        display="chip"
-        :selectAll="false"
-      >
-        <template #itemcheckboxicon>
-          <i
-            style="color: #a1a1aa;"
-            class="pi pi-user"
-          />
-        </template>
-      </MultiSelect>
+        :maxSelectedLabels="2"
+      />
       <MultiSelect
         v-model="selectedPublishers"
         :options="publishers"
@@ -44,16 +36,8 @@
         filter
         @change="onPublishersChange"
         class="multiselect"
-        display="chip"
-        :selectAll="false"
-      >
-        <template #itemcheckboxicon>
-          <i
-            style="color: #a1a1aa;"
-            class="pi pi-book"
-          />
-        </template>
-      </MultiSelect>
+        :maxSelectedLabels="2"
+      />
       <Dropdown
         v-model="sortField"
         :options="['Authors', 'Title']"
@@ -84,6 +68,7 @@ import AddBookDialog from '../components/AddBookDialog.vue'
 import Dropdown from 'primevue/dropdown'
 import { fetchTitles, fetchAuthors, fetchPublishers } from '../../../backend/src/services/api.js'
 
+const totalBooks = ref(0)
 const addBookDialogVisible = ref(false)
 const title = ref('')
 const filteredTitles = ref([])
@@ -97,6 +82,7 @@ const sortOrder = ref('asc')
 const router = useRouter()
 const props = defineProps({
   path: String,
+  booksQuantity: Number
 })
 
 function search(event) {
@@ -216,6 +202,10 @@ watch(selectedPublishers, updateRoute)
 
 .search-input {
   width: 50%;
+}
+
+::v-deep .p-multiselect .p-multiselect-label {
+  color: var(--text-color);
 }
 
 .p-multiselect:not(.p-disabled).p-focus,
