@@ -3,6 +3,7 @@
     <Search
       path="books"
       :books-quantity="filteredBooks.length"
+      @updateReadState="handleReadStateUpdate"
     />
     <DataView
       :value="filteredBooks"
@@ -27,11 +28,27 @@ import { useRoute } from 'vue-router'
 import DataView from 'primevue/dataview'
 import Search from '../components/Search.vue'
 import BookItem from '../components/BookItem.vue'
-import { fetchBooks } from '../../../backend/src/services/api.js'
+import { fetchBooks, fetchBookReadState } from '../../../backend/src/services/api.js'
 
 const books = ref([])
 const filteredBooks = ref([])
 const route = useRoute()
+const readState = ref('all books')
+
+async function fetchBooksData() {
+  try {
+    if (readState.value === 'all books') {
+      books.value = await fetchBooks('id,title,authors,path,publisher')
+    } else if (readState.value === 'read books') {
+      books.value = await fetchBookReadState(true)
+    } else if (readState.value === 'unread books') {
+      books.value = await fetchBookReadState(false)
+    }
+    filterBooks()
+  } catch (error) {
+    console.error('Error fetching books:', error)
+  }
+}
 
 function filterBooks() {
   const searchQuery = route.query.search?.toLowerCase() || ''
@@ -49,24 +66,20 @@ function filterBooks() {
 
   if (sortField) {
     filteredBooks.value.sort((a, b) => {
-      if (sortOrder === 'asc') {
-        return a[sortField].localeCompare(b[sortField])
-      } else {
-        return b[sortField].localeCompare(a[sortField])
-      }
+      return sortOrder === 'asc'
+        ? a[sortField].localeCompare(b[sortField])
+        : b[sortField].localeCompare(a[sortField])
     })
   }
 }
 
-onMounted(() => {
-  fetchBooks('id,title,authors,path,publisher')
-    .then(data => {
-      books.value = data
-      filterBooks()
-    })
-    .catch(error => console.error('Error fetching data:', error))
-})
+function handleReadStateUpdate(newReadState) {
+  readState.value = newReadState
+}
 
+onMounted(fetchBooksData)
+
+watch(readState, fetchBooksData)
 watch(route, filterBooks)
 </script>
 

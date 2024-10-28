@@ -1,17 +1,26 @@
 <template>
   <div class="search-wrapper">
     <div class="first-row">
-      <h1 style="color: var(--text-color)">Your Library ({{ booksQuantity }})</h1>
-      <Button
-        label="Add Book"
-        icon="pi pi-plus"
-        class="add-button"
-        @click="openAddBookModal"
-      />
+      <h1 style="color: var(--text-color)">your library ({{ booksQuantity }})</h1>
+      <div class="first-row">
+        <SelectButton
+          :options="[
+            'all books', 'read books', 'unread books'
+          ]"
+          v-model="readState"
+          @change="emit('updateReadState', readState)"
+        />
+        <Button
+          label="add book"
+          icon="pi pi-plus"
+          class="add-button"
+          @click="openAddBookModal"
+        />
+      </div>
     </div>
     <div class="second-row">
       <AutoComplete
-        placeholder="Search by Title"
+        placeholder="search by title"
         :suggestions="filteredTitles"
         v-model="title"
         @complete="search"
@@ -22,7 +31,7 @@
         v-model="selectedAuthors"
         :options="authors"
         optionLabel="name"
-        placeholder="Filter by Author"
+        placeholder="filter by author"
         filter
         @change="onAuthorsChange"
         class="multiselect"
@@ -32,7 +41,7 @@
         v-model="selectedPublishers"
         :options="publishers"
         optionLabel="name"
-        placeholder="Filter by Publisher"
+        placeholder="filter by publisher"
         filter
         @change="onPublishersChange"
         class="multiselect"
@@ -40,12 +49,12 @@
       />
       <Dropdown
         v-model="sortField"
-        :options="['Authors', 'Title']"
-        placeholder="Sort by"
+        :options="['authors', 'title']"
+        placeholder="sort by"
         class="dropdown"
       />
       <Button
-        @click="sortBooks(sortField.toLowerCase())"
+        @click="sortBooks(sortField)"
         :icon="sortField ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
         class="button"
       />
@@ -59,16 +68,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineProps, watch } from 'vue'
+import { ref, onMounted, defineProps, watch, defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
 import AutoComplete from 'primevue/autocomplete'
 import AddBookDialog from '../components/AddBookDialog.vue'
 import Dropdown from 'primevue/dropdown'
+import SelectButton from 'primevue/selectbutton'
 import { fetchTitles, fetchAuthors, fetchPublishers } from '../../../backend/src/services/api.js'
 
-const totalBooks = ref(0)
+const emit = defineEmits(['updateReadState'])
+
+const readState = ref('all books')
 const addBookDialogVisible = ref(false)
 const title = ref('')
 const filteredTitles = ref([])
@@ -129,14 +141,16 @@ function updateRoute() {
 }
 
 function sortBooks(field) {
-  if (sortField.value === field) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
-  } else {
+  if (sortField.value !== field) {
     sortField.value = field
     sortOrder.value = 'asc'
+  } else {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
   }
+  console.log('Sort field:', sortField.value, 'Sort order:', sortOrder.value)
   updateRoute()
 }
+
 
 function fetchAndSetPublishers() {
   const authorQuery = selectedAuthors.value.map(author => author.name).join(',')
@@ -183,6 +197,7 @@ watch(selectedPublishers, updateRoute)
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .second-row {

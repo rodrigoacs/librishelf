@@ -1,20 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Library from '../views/Library.vue'
-import ReadBooks from '../views/ReadBooks.vue'
-import UnreadBooks from '../views/UnreadBooks.vue'
 import Author from '../views/Author.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
-
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'home', component: Home, meta: { requiresAuth: true } },
     { path: '/books', name: 'library', component: Library, meta: { requiresAuth: true } },
-    { path: '/read', name: 'read', component: ReadBooks, meta: { requiresAuth: true } },
-    { path: '/unread', name: 'unread', component: UnreadBooks, meta: { requiresAuth: true } },
     { path: '/authors', name: 'authors', component: Author, meta: { requiresAuth: true } },
     { path: '/login', name: 'login', component: Login },
     { path: '/register', name: 'register', component: Register }
