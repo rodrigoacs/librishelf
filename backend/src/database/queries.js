@@ -10,7 +10,7 @@ const queryFields = {
   'authors': `(SELECT STRING_AGG(name, ', ') FROM books_authors_link JOIN authors ON(author = authors.id) WHERE book = books.id) AS authors`,
   'publisher': `(SELECT name FROM publishers WHERE publishers.id IN (SELECT publisher FROM books_publishers_link WHERE book = books.id)) AS publisher`,
   'tags': `(SELECT STRING_AGG(name, ', ') FROM (SELECT name FROM tags WHERE tags.id IN (SELECT tag FROM books_tags_link WHERE book = books.id) ORDER BY name)) AS tags`,
-  'isbn': `(SELECT val FROM identifiers WHERE book = books.id AND type = 'isbn') AS isbn`,
+  'isbn': `isbn`,
   'path': `id as path`,
   'read_date': `CASE WHEN timestamp = '0101-01-01 00:00:00+00:00' THEN '' ELSE to_char(timestamp, 'YYYY-MM-DD') END AS read_date`,
   'pubdate': `CASE WHEN pubdate = '0101-01-01 00:00:00+00:00' THEN '' ELSE to_char(pubdate, 'YYYY-MM-DD') END AS pubdate`
@@ -227,6 +227,8 @@ export async function updateBookDetailsQuery(bookId, bookInfo) {
       '${isbn}'
     );
   `
+  
+  console.log(query)
 
   return new Promise((resolve, reject) => {
     dbConnect((err, client, release) => {
