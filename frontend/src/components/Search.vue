@@ -1,15 +1,9 @@
 <template>
   <div class="search-wrapper">
     <div class="first-row">
-      <h1 style="color: var(--text-color)">your library ({{ booksQuantity }})</h1>
+      <h1 style="color: var(--text-color)">Library ({{ booksQuantity }})</h1>
       <div class="first-row">
-        <SelectButton
-          :options="[
-            'all books', 'read books', 'unread books'
-          ]"
-          v-model="readState"
-          @change="emit('updateReadState', readState)"
-        />
+
         <Button
           label="add book"
           icon="pi pi-plus"
@@ -19,6 +13,12 @@
       </div>
     </div>
     <div class="second-row">
+      <SelectButton
+        :options="['all', 'read', 'unread']"
+        v-model="readState"
+        @change="emit('updateReadState', readState)"
+        class="select-button"
+      />
       <AutoComplete
         placeholder="search by title"
         :suggestions="filteredTitles"
@@ -80,7 +80,7 @@ import { fetchTitles, fetchAuthors, fetchPublishers } from '../../../backend/src
 
 const emit = defineEmits(['updateReadState'])
 
-const readState = ref('all books')
+const readState = ref('all')
 const addBookDialogVisible = ref(false)
 const title = ref('')
 const filteredTitles = ref([])
@@ -202,9 +202,16 @@ watch(selectedPublishers, updateRoute)
 
 .second-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 1rem;
+}
+
+.select-button {
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
 }
 
 .dropdown {

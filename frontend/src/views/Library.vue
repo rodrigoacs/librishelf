@@ -33,15 +33,15 @@ import { fetchBooks, fetchBookReadState } from '../../../backend/src/services/ap
 const books = ref([])
 const filteredBooks = ref([])
 const route = useRoute()
-const readState = ref('all books')
+const readState = ref('all')
 
 async function fetchBooksData() {
   try {
-    if (readState.value === 'all books') {
+    if (readState.value === 'all') {
       books.value = await fetchBooks('id,title,authors,path,publisher')
-    } else if (readState.value === 'read books') {
+    } else if (readState.value === 'read') {
       books.value = await fetchBookReadState(true)
-    } else if (readState.value === 'unread books') {
+    } else if (readState.value === 'unread') {
       books.value = await fetchBookReadState(false)
     }
     filterBooks()

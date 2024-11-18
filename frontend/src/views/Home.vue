@@ -2,11 +2,9 @@
   <div class="card">
     <h1>Home</h1>
     <p>
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Praesentium, sequi atque. Eaque quidem aperiam ex
-      cupiditate, modi incidunt obcaecati perferendis molestiae rem similique assumenda error? Nobis mollitia quos at
-      ratione. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quod autem doloribus quasi veniam, commodi et
-      esse praesentium illo modi aliquid minus sunt! Accusantium recusandae consequatur velit, quis assumenda est
-      voluptas.
+      Librishelf is a library management system that enables users to organize, track, and manage their personal book
+      collections. With user authentication and custom book storage features, Librishelf provides a personalized,
+      secure, and accessible way to manage personal libraries.
     </p>
   </div>
 </template>
