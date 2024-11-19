@@ -22,14 +22,20 @@ const showNavigationMenu = computed(() => {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   height: 100vh;
+  width: 100vw;
   margin: 0 6rem;
 }
 
-@media screen and (max-width: 768px) {
+@media (max-width: 768px) {
   .wrapper {
     flex-direction: column;
-    margin: 10px;
+    margin: 0;
+  }
+
+  .wrapper > * {
+    width: 100%;
   }
 }
 </style>

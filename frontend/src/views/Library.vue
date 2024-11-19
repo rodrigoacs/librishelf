@@ -97,4 +97,14 @@ watch(route, filterBooks)
   justify-content: space-evenly;
   background-color: #121212;
 }
+
+@media (max-width: 768px) {
+  .card {
+    width: 100vw;
+  }
+
+  .grid {
+    justify-content: space-around;
+  }
+}
 </style>

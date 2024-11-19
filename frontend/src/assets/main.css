@@ -41,6 +41,16 @@
   font-size: 0.9rem;
 }
 
+.dialog-overlay {
+  width: 900px;
+  border: none;
+  border-radius: 1rem;
+}
+
+.p-dialog-mask {
+  backdrop-filter: blur(3px);
+}
+
 * {
   font-family: 'Inter', sans-serif;
   -webkit-user-select: none;
@@ -70,10 +80,12 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
-@media screen and (max-width: 768px) {
-  #app {
-    padding: 0 20px;
+@media (max-width: 768px) {
+  .dialog-overlay {
+    width: 80%;
   }
+
 }

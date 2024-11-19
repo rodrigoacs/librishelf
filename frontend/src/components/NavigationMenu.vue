@@ -9,7 +9,7 @@
         aria-haspopup="true"
         aria-controls="overlay_menu"
       />
-      <div>
+      <div class="title">
         <span style="color: var(--main-color);">LIBRI</span>
         <span style="font-weight: bold;">SHELF</span>
       </div>
@@ -92,6 +92,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.title {
+  width: 100%;
+  text-align: center;
+}
+
 .popup-wrapper {
   display: flex;
   justify-content: space-between;
@@ -116,10 +121,9 @@ onUnmounted(() => {
   border: 1px solid var(--main-color);
 }
 
-@media screen and (min-width: 768px) {
+@media (min-width: 768px) {
   .popup-wrapper {
     display: none;
   }
-
 }
 </style>

@@ -47,17 +47,19 @@
         class="multiselect"
         :maxSelectedLabels="2"
       />
-      <Dropdown
-        v-model="sortField"
-        :options="['authors', 'title']"
-        placeholder="sort by"
-        class="dropdown"
-      />
-      <Button
-        @click="sortBooks(sortField)"
-        :icon="sortField ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
-        class="button"
-      />
+      <div class="sort-area">
+        <Dropdown
+          v-model="sortField"
+          :options="['authors', 'title']"
+          placeholder="sort by"
+          class="dropdown"
+        />
+        <Button
+          @click="sortBooks(sortField)"
+          :icon="sortField ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
+          class="button"
+        />
+      </div>
     </div>
   </div>
 
@@ -79,7 +81,6 @@ import SelectButton from 'primevue/selectbutton'
 import { fetchTitles, fetchAuthors, fetchPublishers } from '../../../backend/src/services/api.js'
 
 const emit = defineEmits(['updateReadState'])
-
 const readState = ref('all')
 const addBookDialogVisible = ref(false)
 const title = ref('')
@@ -267,31 +268,37 @@ watch(selectedPublishers, updateRoute)
   gap: 1rem;
 }
 
+.sort-area {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 @media (max-width: 768px) {
+
+  .sort-area,
+  .sort-area div {
+    width: 100%;
+  }
+
   .search-wrapper {
+    gap: 0.5rem;
+  }
+
+  .second-row {
     flex-direction: column;
     gap: 0.5rem;
   }
 
   .search-input,
-  .multiselect {
-    width: 100%;
-  }
-
+  .multiselect,
+  .dropdown,
   .add-button {
     width: 100%;
   }
-}
 
-@media (max-width: 480px) {
-
-  .search-input,
-  .multiselect {
-    width: 100%;
-  }
-
-  .add-button {
-    width: 100%;
+  h1 {
+    font-size: 1.25rem;
   }
 }
 </style>

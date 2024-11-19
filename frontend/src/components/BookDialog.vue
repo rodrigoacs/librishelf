@@ -2,9 +2,8 @@
   <Dialog
     v-model:visible="visible"
     :modal="true"
-    :style="{ width: '900px', border: 'none', borderRadius: '1rem' }"
+    class="dialog-overlay"
     :dismissableMask="true"
-    :pt="{ mask: { style: 'backdrop-filter: blur(3px);' } }"
   >
     <template #container="{ closeCallback }">
       <div class="dialog-content">
@@ -20,7 +19,6 @@
                 class="book-title"
                 v-model="book.title"
                 :readonly="!isEditing"
-                style="font-size: 1.8rem; font-weight: bold; color: #f5f5f5; background: none; border: none; width: 100%;"
               />
               <Button
                 v-if="!isEditing"
@@ -39,35 +37,34 @@
               class="book-authors"
               v-model="book.authors"
               :readonly="!isEditing"
-              style="font-size: 1.2rem; color: #a1a1a1; background: none; border: none; width: 100%;"
             />
             <div class="book-tags">
               <input
                 v-if="isEditing"
                 v-model="book.tags"
+                class="edit-tags"
                 placeholder="Edit tags"
-                style="color: #f5f5f5; background: none; border: none; border-bottom: 1px solid #f5f5f5; width: 100%;"
               />
               <div v-else>
                 <Chip
                   v-for="(tag, index) in book.tags.split(',')"
                   :key="tag"
                   :label="tag"
-                  :style="{ backgroundColor: getChipColor(), color: '#000', fontWeight: '700', fontSize: '0.9rem', marginRight: '.5rem', padding: '0.25rem 0.5rem', borderRadius: '12px' }"
+                  :style="{ backgroundColor: getChipColor(), color: '#000' }"
+                  class="book-chip"
                 />
               </div>
             </div>
             <div class="book-read-date">
               <i
                 v-if="bookRead"
-                class="pi pi-bookmark-fill"
-                style="margin-right: 0.5rem; color: var(--main-color);"
+                class="pi pi-bookmark-fill bookmark-icon"
               ></i>
               <Calendar
                 v-model="book.read_date"
                 :disabled="!isEditing"
                 dateFormat="dd/mm/yy"
-                style="color: #f5f5f5;"
+                class="calendar-input"
               />
             </div>
           </div>
@@ -77,7 +74,7 @@
               <input
                 v-if="isEditing"
                 v-model="book.publisher"
-                style="color: #f5f5f5; background: none; border: none; border-bottom: 1px solid #f5f5f5; width: 100%;"
+                class="editable-input"
               />
               <span v-else>{{ book.publisher }}</span>
             </div>
@@ -86,7 +83,7 @@
               <input
                 v-if="isEditing"
                 v-model="book.isbn"
-                style="color: #f5f5f5; background: none; border: none; border-bottom: 1px solid #f5f5f5; width: 100%;"
+                class="editable-input"
               />
               <span v-else>{{ book.isbn }}</span>
             </div>
@@ -96,7 +93,7 @@
                 v-model="book.pubdate"
                 :disabled="!isEditing"
                 dateFormat="dd/mm/yy"
-                style="color: #f5f5f5;"
+                class="calendar-input"
               />
             </div>
           </div>
@@ -105,6 +102,7 @@
     </template>
   </Dialog>
 </template>
+
 
 <script setup>
 import { ref, watch, defineProps, defineEmits } from 'vue'
@@ -206,12 +204,7 @@ watch(visible, (newValue) => {
   gap: 1rem;
 }
 
-.book-cover-wrapper {
-  max-width: 200px;
-}
-
 .book-cover {
-  width: auto;
   height: 500px;
   object-fit: cover;
   border-radius: 1rem 0 0 1rem;
@@ -226,7 +219,8 @@ watch(visible, (newValue) => {
   padding: 1rem;
 }
 
-.top {
+.top,
+.bottom {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -239,20 +233,24 @@ watch(visible, (newValue) => {
   gap: 1rem;
 }
 
-.save-button,
-.edit-button {
-  background-color: var(--main-color);
-  color: var(--text-color);
+.book-title,
+.book-authors,
+.edit-tags,
+.editable-input {
+  background: none;
   border: none;
+  width: 100%;
+  color: #f5f5f5;
 }
 
 .book-title {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: bold;
 }
 
 .book-authors {
-  font-size: 1rem;
+  font-size: 1.2rem;
+  color: #a1a1a1;
 }
 
 .book-tags {
@@ -260,20 +258,77 @@ watch(visible, (newValue) => {
   gap: 0.5rem;
 }
 
+.book-chip {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+}
+
 .book-read-date {
   display: flex;
+  align-items: center;
   font-size: 0.9rem;
 }
 
-.bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.bookmark-icon {
+  margin-right: 0.5rem;
+  color: var(--main-color);
+}
+
+.calendar-input {
+  color: #f5f5f5;
 }
 
 .book-publisher,
 .book-isbn,
 .book-pubdate {
   font-size: 0.9rem;
+}
+
+.save-button,
+.edit-button {
+  background-color: var(--main-color);
+  color: var(--text-color);
+  border: none;
+}
+
+@media (max-width: 768px) {
+  .dialog-content {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .book-cover {
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .book-title {
+    font-size: 1.5rem;
+  }
+
+  .book-authors {
+    font-size: 1rem;
+  }
+
+  .book-tags,
+  .book-chip,
+  .book-read-date,
+  .bottom,
+  .editable-input {
+    font-size: 0.8rem;
+  }
+
+  .book-info,
+  .top,
+  .header-row,
+  .book-read-date {
+    gap: 0.5rem;
+  }
+
+  .book-tags {
+    gap: 0.25rem;
+  }
 }
 </style>

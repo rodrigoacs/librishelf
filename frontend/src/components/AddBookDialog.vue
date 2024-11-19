@@ -4,7 +4,7 @@
     header="Add New Book"
     modal
     :closable="true"
-    :style="{ width: '800px' }"
+    :style="{ width: '90%', maxWidth: '800px' }"
     @hide="closeDialog"
   >
     <div class="add-book-form">
@@ -238,6 +238,7 @@ function resetForm() {
 .add-book-form {
   display: flex;
   justify-content: space-between;
+  gap: 1rem;
 }
 
 .form-left {
@@ -283,12 +284,48 @@ function resetForm() {
   text-align: center;
 }
 
-.image-upload label {
-  font-weight: bold;
+@media (max-width: 1024px) {
+  .add-book-form {
+    gap: 0.5rem;
+  }
+
+  .image-preview {
+    height: 360px;
+  }
 }
 
-.image-upload input {
-  width: 100%;
-  max-width: 400px;
+@media (max-width: 768px) {
+  .add-book-form {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .form-fields {
+    max-width: 100%;
+  }
+
+  .image-preview {
+    width: 100%;
+    height: 300px;
+  }
+
+  .save-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-fields {
+    gap: 0.5rem;
+  }
+
+  .image-preview {
+    height: 250px;
+  }
+
+  .save-button {
+    width: 100%;
+  }
 }
 </style>

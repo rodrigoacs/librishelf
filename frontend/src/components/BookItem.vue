@@ -7,7 +7,6 @@
       <img
         :src="book.path"
         alt="Book Cover"
-        style="width: 170px; height: 250px; object-fit: cover; border-radius: 10px;"
       />
       <span class="more-info">details</span>
     </div>
@@ -38,6 +37,13 @@ function openDialog() {
 </script>
 
 <style scoped>
+img {
+  width: 170px;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
 .book-item {
   display: flex;
   flex-direction: column;
@@ -109,5 +115,27 @@ function openDialog() {
 
 .book-authors {
   font-size: .8rem;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    justify-content: space-between;
+  }
+
+  .book-item {
+    width: 150px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .book-cover {
+    width: 150px;
+    height: 220px;
+  }
+
+  img {
+    width: 150px;
+    height: 220px;
+  }
 }
 </style>
