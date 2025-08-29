@@ -51,7 +51,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { registerUser } from '../../../backend/src/services/api.js'
+import { registerUser } from '../services/api.js'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'

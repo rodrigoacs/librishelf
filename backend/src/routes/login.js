@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt'
+import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { getUserByUsernameQuery } from '../database/queries.js'
 import express from 'express'
@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid username or password.' })
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash)
+    const isPasswordValid = await bcryptjs.compare(password, user.password_hash)
 
     if (!isPasswordValid) {
       return res.status(400).json({ error: 'Invalid username or password.' })

@@ -110,7 +110,7 @@ import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
 import Calendar from 'primevue/calendar'
 import Button from 'primevue/button'
-import { fetchBookDetails, updateBookDetails } from '../../../backend/src/services/api.js'
+import { fetchBookDetails, updateBookDetails } from '../services/api.js'
 
 const props = defineProps({
   modelValue: Boolean,

@@ -78,7 +78,7 @@ import AutoComplete from 'primevue/autocomplete'
 import AddBookDialog from '../components/AddBookDialog.vue'
 import Dropdown from 'primevue/dropdown'
 import SelectButton from 'primevue/selectbutton'
-import { fetchTitles, fetchAuthors, fetchPublishers } from '../../../backend/src/services/api.js'
+import { fetchTitles, fetchAuthors, fetchPublishers } from '../services/api.js'
 
 const emit = defineEmits(['updateReadState'])
 const readState = ref('all')

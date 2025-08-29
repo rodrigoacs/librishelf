@@ -1,7 +1,6 @@
 import { dbConnect } from './connection.js'
 import { error } from '../utils/logger.js'
 
-const BASE_PATH = './src/assets/covers/'
 const DEFAULT_FIELDS = 'id,title,authors,publisher,tags,isbn,path,read_date,pubdate'
 
 const queryFields = {
@@ -11,7 +10,7 @@ const queryFields = {
   'publisher': `(SELECT name FROM publishers WHERE publishers.id IN (SELECT publisher FROM books_publishers_link WHERE book = books.id)) AS publisher`,
   'tags': `(SELECT STRING_AGG(name, ', ') FROM (SELECT name FROM tags WHERE tags.id IN (SELECT tag FROM books_tags_link WHERE book = books.id) ORDER BY name)) AS tags`,
   'isbn': `isbn`,
-  'path': `id as path`,
+  'path': `'/uploads/' || id || '.jpg' AS path`,
   'read_date': `CASE WHEN timestamp = '0101-01-01 00:00:00+00:00' THEN '' ELSE to_char(timestamp, 'YYYY-MM-DD') END AS read_date`,
   'pubdate': `CASE WHEN pubdate = '0101-01-01 00:00:00+00:00' THEN '' ELSE to_char(pubdate, 'YYYY-MM-DD') END AS pubdate`
 }
@@ -40,11 +39,6 @@ export function executeLibraryQuery(query, callback) {
         callback(err, null)
       } else {
         const rows = result.rows
-        if (query.includes('path')) {
-          rows.forEach(row => {
-            row.path = `${BASE_PATH}${row.path}.jpg`
-          })
-        }
         callback(null, rows)
       }
     })

@@ -1,5 +1,5 @@
-const API_BASE_URL = 'https://librishelf.com/api'
-// const API_BASE_URL = 'http://localhost:3050'
+// const API_BASE_URL = 'https://librishelf.com/api'
+const API_BASE_URL = 'http://localhost:3050'
 
 function getAuthHeader() {
   const token = localStorage.getItem('token')

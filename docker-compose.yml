@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: librishelf-frontend  
+    volumes:
+      - ./uploads:/usr/share/nginx/html/uploads
+    depends_on:
+      - backend
+    networks:
+    - proxy  
+
+  backend:
+    build:
+      context: ./backend
+    container_name: librishelf-backend
+    ports:
+      - "3050:3050"
+    env_file:
+      - ./backend/src/.env
+    volumes:
+          - ./uploads:/app/uploads
+    networks:
+    - proxy    
+
+networks:
+    proxy:
+        external: true

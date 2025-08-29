@@ -24,7 +24,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import DataView from 'primevue/dataview'
-import { fetchAuthors } from '../../../backend/src/services/api.js'
+import { fetchAuthors } from '../services/api.js'
 
 const authors = ref([])
 

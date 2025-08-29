@@ -88,7 +88,7 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
 
     if (req.file) {
       const coverImage = req.file.buffer
-      const uploadDir = path.resolve(__dirname, '../../../frontend/src/assets/covers/')
+      const uploadDir = path.resolve('/app/uploads')
       const filePath = path.join(uploadDir, `${newBookId}.jpg`)
 
       if (!fs.existsSync(uploadDir)) {

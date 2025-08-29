@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt'
+import bcryptjs from 'bcryptjs'
 import { addUserQuery } from '../database/queries.js' // Assume this handles adding users to DB
 import express from 'express'
 
@@ -12,7 +12,7 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcryptjs.hash(password, 10)
     await addUserQuery({ username, password: hashedPassword })
 
     console.log('User registered successfully:', username)

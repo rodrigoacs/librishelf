@@ -102,7 +102,7 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import AutoComplete from 'primevue/autocomplete'
 import Calendar from 'primevue/calendar'
-import { fetchAuthors, fetchPublishers, addNewBook } from '../../../backend/src/services/api.js'
+import { fetchAuthors, fetchPublishers, addNewBook } from '../services/api.js'
 
 const props = defineProps({
   visible: Boolean,
