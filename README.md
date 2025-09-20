@@ -1,95 +1,124 @@
-# Librishelf
+# Librishelf: Your Digital Bookshelf 📚
 
-Librishelf is a library management system that enables users to organize, track, and manage their personal book collections. With user authentication and custom book storage features, Librishelf provides a personalized, secure, and accessible way to manage personal libraries.
+**Librishelf** is a personal library management system that allows you to organize, track, and manage your book collections in a personalized, secure, and accessible way.
 
-Librishelf é um sistema de gerenciamento de bibliotecas que permite aos usuários organizar, acompanhar e gerenciar suas coleções pessoais de livros. Com recursos de autenticação e armazenamento personalizado, o Librishelf oferece uma maneira personalizada, segura e acessível de gerenciar bibliotecas pessoais.
+-----
 
----
+## 🌟 About the Project
 
+For book lovers, keeping track of a growing collection can be a challenge. Librishelf was born from the need for a simple yet powerful tool to catalog and manage books, offering a visually pleasing interface and intuitive features.
 
-## Tech Stack / Tecnologias
+With Librishelf, you can:
 
-- **Frontend**: Vue 3, PrimeVue.
-- **Backend**: Node.js, Express, JWT.
-- **Database / Banco de Dados**: PostgreSQL.
+  * Add new books to your collection with details like author, publisher, publication date, and cover art.
+  * Mark books as read and record the reading date.
+  * Filter and search your library by title, author, or publisher.
+  * View your collection in a responsive and attractive grid layout.
 
-## Folder Structure / Estrutura de Pastas
+### ✨ Tech Stack
 
-```plaintext
-/librishlef
-├── /backend
-├── /frontend
-└── README.md
-```
+  * **Frontend:**
+      * [Vue.js](https://vuejs.org/)
+      * [PrimeVue](https://primevue.org/)
+  * **Backend:**
+      * [Node.js](https://nodejs.org/)
+      * [Express](https://expressjs.com/)
+  * **Database:**
+      * [PostgreSQL](https://www.postgresql.org/)
 
-## Getting Started / Primeiros Passos
+-----
 
-### Prerequisites / Pré-requisitos
+## 🚀 Getting Started
 
-- Node.js and npm
-- PostgreSQL
-- Vue CLI
+To get Librishelf up and running on your local machine, follow these simple steps.
 
-### Installation / Instalação
+### Prerequisites
 
-1. **Clone the repository / Clone o repositório**:
-   ```sh
-   git clone https://github.com/rodrigoacs/Librishelf.git
-   cd Librishelf
-   ```
+  * Node.js and npm
+  * PostgreSQL
+  * Vue CLI
 
-2. **Install backend dependencies / Instale dependências do backend**:
-   ```sh
-   cd backend
-   npm install
-   ```
+### Installation
 
-3. **Install frontend dependencies / Instale dependências do frontend**:
-   ```sh
-   cd frontend
-   npm install
-   ```
+1.  **Clone the repository:**
 
-4. **Set up environment variables / Configure variáveis de ambiente**:
-  
-    `backend/src/.env`
-     ```plaintext
-      DB_USER=
-      DB_HOST=
-      DB_NAME=
-      DB_PASSWORD=
-      DB_PORT=
-      SECRET_KEY=
-     ```
+    ```sh
+    git clone https://github.com/rodrigoacs/Librishelf.git
+    cd Librishelf
+    ```
 
-### Running the Application / Executando a Aplicação
+2.  **Install backend dependencies:**
 
-1. **Start the backend server / Inicie o servidor backend**:
-   ```sh
-   cd backend
-   npm run server
-   ```
+    ```sh
+    cd backend
+    npm install
+    ```
 
-2. **Start the frontend development server / Inicie o servidor de desenvolvimento frontend**:
-   ```sh
-   cd ../frontend
-   npm run dev
-   ```
+3.  **Install frontend dependencies:**
 
-## API Endpoints / Endpoints da API
+    ```sh
+    cd ../frontend
+    npm install
+    ```
 
-Soon / Em breve
+4.  **Set up environment variables:**
 
-## Contributing / Contribuindo
+    Create a `.env` file in the `backend/src` folder and fill it with your database credentials:
 
-1. **Fork the project / Crie um fork**.
-2. **Create a feature branch / Crie um branch para a nova funcionalidade**: `git checkout -b feature/your-feature`
-3. **Commit your changes / Faça commit das alterações**: `git commit -m 'Add feature'`
-4. **Push to the branch / Envie para o branch**: `git push origin feature/your-feature`
-5. **Open a pull request / Abra um pull request**
+    ```plaintext
+    DB_USER=
+    DB_HOST=
+    DB_NAME=
+    DB_PASSWORD=
+    DB_PORT=
+    SECRET_KEY=
+    ```
 
+### Running the Application
 
-## Contact / Contato
+1.  **Start the backend server:**
+    ```sh
+    cd backend
+    npm run server
+    ```
+2.  **Start the frontend development server:**
+    ```sh
+    cd ../frontend
+    npm run dev
+    ```
 
-- **Project Maintainer / Mantenedor do Projeto**: Rodrigo Soares
-- **Email**: rodrigohths@gmail.com
+-----
+
+## 📖 Features
+
+  * **User Authentication:** Secure login and registration system to protect your collection.
+  * **Add Books:** Easily add new books with detailed information and a cover image.
+  * **Grid View:** Browse your collection with a beautiful grid display of book covers.
+  * **Search and Filter:** Quickly find books with filters for title, author, and publisher.
+  * **Mark as Read:** Track your reading progress by marking books as read.
+  * **Edit Details:** Edit the information of any book on your shelf.
+
+-----
+
+## 🎉 Join Us\!
+
+Create your account and start managing your library today at [librishelf.com](https://librishelf.com)\!
+
+-----
+
+## 🤝 Contributing
+
+Any contributions you make are **greatly appreciated**.
+
+1.  **Fork the Project**
+2.  **Create your Feature Branch:** `git checkout -b feature/AmazingFeature`
+3.  **Commit your Changes:** `git commit -m 'Add some AmazingFeature'`
+4.  **Push to the Branch:** `git push origin feature/AmazingFeature`
+5.  **Open a Pull Request**
+
+-----
+
+## 📧 Contact
+
+  * **Project Maintainer:** Rodrigo Soares
+  * **Email:** rodrigohths@gmail.com
