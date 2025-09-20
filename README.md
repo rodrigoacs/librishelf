@@ -118,7 +118,4 @@ Any contributions you make are **greatly appreciated**.
 
 -----
 
-## 📧 Contact
-
-  * **Project Maintainer:** Rodrigo Soares
-  * **Email:** rodrigohths@gmail.com
+Made with ❤️ by **[acs](https://github.com/rodrigoacs)**

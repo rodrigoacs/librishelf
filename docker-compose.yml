@@ -10,7 +10,7 @@ services:
     depends_on:
       - backend
     networks:
-    - proxy  
+      - proxy  
 
   backend:
     build:
@@ -21,10 +21,10 @@ services:
     env_file:
       - ./backend/src/.env
     volumes:
-          - ./uploads:/app/uploads
+      - ./uploads:/app/uploads
     networks:
-    - proxy    
+      - proxy    
 
 networks:
-    proxy:
-        external: true
+  proxy:
+    external: true
