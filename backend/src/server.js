@@ -14,9 +14,9 @@ app.use(cors())
 app.use(express.json())
 
 app.use('/library', libraryRouter)
-app.use('/author', authorRouter)
-app.use('/publisher', publisherRouter)
-app.use('/register', registerRouter)
+// app.use('/author', authorRouter)
+// app.use('/publisher', publisherRouter)
+// app.use('/register', registerRouter)
 app.use('/login', loginRouter)
 
 app.get('/ping', (req, res) => {

@@ -10,21 +10,13 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 })
 
-export function dbConnect(callback) {
-  pool.connect((err, client, release) => {
-    if (err) {
-      error(`Error connecting to the database: ${err.message}`)
-      callback(err, null)
-    } else {
-      callback(null, client, release)
-    }
-  })
+export const db = {
+  query: (text, params, callback) => {
+    return pool.query(text, params, callback)
+  }
 }
 
-export function dbClose(client) {
-  client.release((err) => {
-    if (err) {
-      error(`Error closing the database connection: ${err.message}`)
-    }
-  })
-}
+pool.on('error', (err) => {
+  error(`${new Date().toISOString()}[connection.js]: ${err.message}`)
+  process.exit(-1)
+})  

@@ -1,4 +1,4 @@
-import { dbConnect } from './connection.js'
+// import { dbConnect } from './connection.js'
 import { error } from '../utils/logger.js'
 
 const DEFAULT_FIELDS = 'id,title,authors,publisher,tags,isbn,path,read_date,pubdate'
