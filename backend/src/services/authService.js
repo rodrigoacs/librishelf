@@ -1,4 +1,5 @@
 import * as authRepository from '../repositories/authRepository.js'
+import STATUS from '../utils/statusCodes.js'
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
@@ -12,7 +13,7 @@ async function loginUser(username, password) {
 
   if (!user || !isPasswordValid) {
     const error = new Error('User or password invalid.')
-    error.status = 401
+    error.status = STATUS.UNAUTHORIZED
     throw error
   }
 
@@ -24,7 +25,7 @@ async function registerUser(username, password) {
   const existingUser = await authRepository.getUserByUsername(username)
   if (existingUser) {
     const error = new Error('Username already taken.')
-    error.status = 409
+    error.status = STATUS.CONFLICT
     throw error
   }
 

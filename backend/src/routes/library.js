@@ -1,10 +1,11 @@
+import express from 'express'
+import fs from 'fs'
+import path from 'path'
+import multer from 'multer'
 import * as libraryService from '../services/libraryService.js'
 import catchAsync from '../utils/catchAsync.js'
 import { authenticateToken } from '../middlewares/auth.js'
-import express from 'express'
-import multer from 'multer'
-import fs from 'fs'
-import path from 'path'
+import STATUS from '../utils/statusCodes.js'
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -21,7 +22,7 @@ router.get('/', catchAsync(async (req, res) => {
   const userId = req.user.userId
 
   const books = await libraryService.getAllBooksByUser(userId, readState)
-  res.status(200).json(books)
+  res.status(STATUS.OK).json(books)
 }))
 
 // GET: Buscar um livro específico por ID
@@ -31,11 +32,11 @@ router.get('/:id', catchAsync(async (req, res) => {
 
   if (!book) {
     const error = new Error('Book not found.')
-    error.status = 404
+    error.status = STATUS.NOT_FOUND
     throw error
   }
 
-  res.status(200).json(book)
+  res.status(STATUS.OK).json(book)
 }))
 
 // POST: Adicionar um novo livro
@@ -45,7 +46,7 @@ router.post('/', upload.single('coverImage'), catchAsync(async (req, res) => {
 
   if (!title || !author || !publisher || !tags || !pubDate) {
     const error = new Error('Missing required book information.')
-    error.status = 400
+    error.status = STATUS.BAD_REQUEST
     throw error
   }
 
@@ -73,7 +74,7 @@ router.post('/', upload.single('coverImage'), catchAsync(async (req, res) => {
     fs.writeFileSync(filePath, coverImage)
   }
 
-  res.status(201).json({ bookId: newBookId })
+  res.status(STATUS.CREATED).json({ bookId: newBookId })
 }))
 
 // PUT: Atualizar detalhes do livro
@@ -83,7 +84,7 @@ router.put('/:id', catchAsync(async (req, res) => {
   const userId = req.user.userId
 
   await libraryService.updateBookDetails(id, userId, bookInfo)
-  res.status(200).json({ message: 'Livro atualizado com sucesso.' })
+  res.status(STATUS.OK).json({ message: 'Livro atualizado com sucesso.' })
 }))
 
 // POST: Atualizar apenas a capa do livro
@@ -93,7 +94,7 @@ router.post('/:id/cover', upload.single('coverImage'), catchAsync(async (req, re
 
   if (!req.file) {
     const error = new Error('An image file is required.')
-    error.status = 400
+    error.status = STATUS.BAD_REQUEST
     throw error
   }
 
@@ -108,7 +109,7 @@ router.post('/:id/cover', upload.single('coverImage'), catchAsync(async (req, re
   }
 
   fs.writeFileSync(filePath, coverImage)
-  res.status(200).json({ message: 'Cover updated successfully.' })
+  res.status(STATUS.OK).json({ message: 'Cover updated successfully.' })
 }))
 
 // DELETE: Remover um livro
@@ -117,7 +118,7 @@ router.delete('/:id', catchAsync(async (req, res) => {
   const userId = req.user.userId
 
   await libraryService.deleteBook(id, userId)
-  res.status(204).send()
+  res.status(STATUS.NO_CONTENT).send()
 }))
 
 // PATCH: Marcar como LIDO
@@ -126,7 +127,7 @@ router.patch('/:id/read', catchAsync(async (req, res) => {
   const userId = req.user.userId
 
   await libraryService.markBookAsRead(id, userId)
-  res.status(200).json({ message: 'Book marked as read.' })
+  res.status(STATUS.OK).json({ message: 'Book marked as read.' })
 }))
 
 // DELETE: Marcar como NÃO LIDO
@@ -135,7 +136,7 @@ router.delete('/:id/read', catchAsync(async (req, res) => {
   const userId = req.user.userId
 
   await libraryService.markBookAsUnread(id, userId)
-  res.status(200).json({ message: 'Book marked as unread.' })
+  res.status(STATUS.OK).json({ message: 'Book marked as unread.' })
 }))
 
 export default router

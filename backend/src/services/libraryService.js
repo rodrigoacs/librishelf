@@ -1,4 +1,5 @@
 import * as libraryRepository from '../repositories/libraryRepository.js'
+import STATUS from '../utils/statusCodes.js'
 
 async function getAllBooksByUser(userId, readState) {
   return await libraryRepository.getAllBooksByUser(userId, readState)
@@ -13,7 +14,7 @@ async function addNewBook(bookData) {
 
   if (existingBook) {
     const error = new Error('ISBN already exists for this user.')
-    error.status = 409
+    error.status = STATUS.CONFLICT
     throw error
   }
 
@@ -27,13 +28,13 @@ async function updateBookDetails(bookId, userId, bookData) {
 
   if (!bookOwner) {
     const error = new Error('Book not found.')
-    error.status = 404
+    error.status = STATUS.NOT_FOUND
     throw error
   }
 
   if (bookOwner.user_id !== userId) {
     const error = new Error('Permission denied.')
-    error.status = 403
+    error.status = STATUS.FORBIDDEN
     throw error
   }
 
@@ -49,13 +50,13 @@ async function checkBookOwnership(bookId, userId) {
 
   if (!bookOwner) {
     const error = new Error('Book not found.')
-    error.status = 404
+    error.status = STATUS.NOT_FOUND
     throw error
   }
 
   if (bookOwner.user_id !== userId) {
     const error = new Error('Permission denied.')
-    error.status = 403
+    error.status = STATUS.FORBIDDEN
     throw error
   }
 
