@@ -10,8 +10,11 @@ async function getBookById(id) {
 
 async function addNewBook(bookData) {
   const existingBook = await libraryRepository.findBookByIsbn(bookData.isbn, bookData.user_id)
+
   if (existingBook) {
-    throw new Error('ISBN already exists for this user.')
+    const error = new Error('ISBN already exists for this user.')
+    error.status = 409
+    throw error
   }
 
   const newBookId = await libraryRepository.createBook(bookData)
@@ -23,11 +26,15 @@ async function updateBookDetails(bookId, userId, bookData) {
   const bookOwner = await libraryRepository.getBookOwner(bookId)
 
   if (!bookOwner) {
-    throw new Error('Book not found.')
+    const error = new Error('Book not found.')
+    error.status = 404
+    throw error
   }
 
   if (bookOwner.user_id !== userId) {
-    throw new Error('Permission denied.')
+    const error = new Error('Permission denied.')
+    error.status = 403
+    throw error
   }
 
   if (typeof bookData.tags === 'string') {
@@ -41,11 +48,15 @@ async function checkBookOwnership(bookId, userId) {
   const bookOwner = await libraryRepository.getBookOwner(bookId)
 
   if (!bookOwner) {
-    throw new Error('Book not found.')
+    const error = new Error('Book not found.')
+    error.status = 404
+    throw error
   }
 
   if (bookOwner.user_id !== userId) {
-    throw new Error('Permission denied.')
+    const error = new Error('Permission denied.')
+    error.status = 403
+    throw error
   }
 
   return true

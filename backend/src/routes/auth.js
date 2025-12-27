@@ -1,50 +1,37 @@
 import * as authService from '../services/authService.js'
+import catchAsync from '../utils/catchAsync.js'
 import express from 'express'
 
 const router = express.Router()
 
-router.post('/login', async (req, res) => {
+// POST: Login de usuário
+router.post('/login', catchAsync(async (req, res) => {
   const { username, password } = req.body
 
   if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password are required.' })
+    const error = new Error('Username and password are required.')
+    error.status = 400
+    throw error
   }
 
-  try {
-    const token = await authService.loginUser(username, password)
-    res.status(200).json({ message: 'Login successful', token })
+  const token = await authService.loginUser(username, password)
 
-  } catch (err) {
+  res.status(200).json({ message: 'Login successful', token })
+}))
 
-    if (err.message === 'User or password invalid.') {
-      return res.status(401).json({ error: err.message })
-    }
-
-    console.error(err)
-    res.status(500).json({ error: 'Internal server error.' })
-  }
-})
-
-router.post('/register', async (req, res) => {
+// POST: Registro de novo usuário
+router.post('/register', catchAsync(async (req, res) => {
   const { username, password } = req.body
 
   if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password are required.' })
+    const error = new Error('Username and password are required.')
+    error.status = 400
+    throw error
   }
 
-  try {
-    const user = await authService.registerUser(username, password)
-    res.status(201).json({ message: 'User registered successfully', user })
+  const user = await authService.registerUser(username, password)
 
-  } catch (err) {
-
-    if (err.message === 'Username already taken.') {
-      return res.status(409).json({ error: err.message })
-    }
-
-    console.error(err)
-    res.status(500).json({ error: 'Internal server error.' })
-  }
-})
+  res.status(201).json({ message: 'User registered successfully', user })
+}))
 
 export default router

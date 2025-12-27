@@ -1,16 +1,17 @@
 import express from 'express'
 import cors from 'cors'
-// import bodyParser from 'body-parser'
 import libraryRouter from './routes/library.js'
 import authorRouter from './routes/author.js'
 import publisherRouter from './routes/publisher.js'
 import authRouter from './routes/auth.js'
+import errorHandler from './middlewares/errorHandler.js'
 
 const app = express()
 const PORT = 3050
 
 app.use(cors())
 app.use(express.json())
+app.use(errorHandler)
 
 app.use('/auth', authRouter)
 app.use('/library', libraryRouter)
