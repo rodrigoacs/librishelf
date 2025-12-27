@@ -3,7 +3,6 @@ import fs from 'fs'
 import path from 'path'
 import multer from 'multer'
 import * as libraryService from '../services/libraryService.js'
-import catchAsync from '../utils/catchAsync.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import STATUS from '../utils/statusCodes.js'
 
@@ -17,16 +16,16 @@ const router = express.Router()
 router.use(authenticateToken)
 
 // GET: Listar todos os livros (com filtro opcional de readState)
-router.get('/', catchAsync(async (req, res) => {
+router.get('/', async (req, res) => {
   const { readState } = req.query
   const userId = req.user.userId
 
   const books = await libraryService.getAllBooksByUser(userId, readState)
   res.status(STATUS.OK).json(books)
-}))
+})
 
 // GET: Buscar um livro específico por ID
-router.get('/:id', catchAsync(async (req, res) => {
+router.get('/:id', async (req, res) => {
   const { id } = req.params
   const book = await libraryService.getBookById(id)
 
@@ -37,10 +36,10 @@ router.get('/:id', catchAsync(async (req, res) => {
   }
 
   res.status(STATUS.OK).json(book)
-}))
+})
 
 // POST: Adicionar um novo livro
-router.post('/', upload.single('coverImage'), catchAsync(async (req, res) => {
+router.post('/', upload.single('coverImage'), async (req, res) => {
   const { title, pubDate, author, publisher, tags, isbn, readDate } = req.body
   const userId = req.user.userId
 
@@ -75,20 +74,20 @@ router.post('/', upload.single('coverImage'), catchAsync(async (req, res) => {
   }
 
   res.status(STATUS.CREATED).json({ bookId: newBookId })
-}))
+})
 
 // PUT: Atualizar detalhes do livro
-router.put('/:id', catchAsync(async (req, res) => {
+router.put('/:id', async (req, res) => {
   const { id } = req.params
   const bookInfo = req.body
   const userId = req.user.userId
 
   await libraryService.updateBookDetails(id, userId, bookInfo)
   res.status(STATUS.OK).json({ message: 'Livro atualizado com sucesso.' })
-}))
+})
 
 // POST: Atualizar apenas a capa do livro
-router.post('/:id/cover', upload.single('coverImage'), catchAsync(async (req, res) => {
+router.post('/:id/cover', upload.single('coverImage'), async (req, res) => {
   const { id } = req.params
   const userId = req.user.userId
 
@@ -110,33 +109,33 @@ router.post('/:id/cover', upload.single('coverImage'), catchAsync(async (req, re
 
   fs.writeFileSync(filePath, coverImage)
   res.status(STATUS.OK).json({ message: 'Cover updated successfully.' })
-}))
+})
 
 // DELETE: Remover um livro
-router.delete('/:id', catchAsync(async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const { id } = req.params
   const userId = req.user.userId
 
   await libraryService.deleteBook(id, userId)
   res.status(STATUS.NO_CONTENT).send()
-}))
+})
 
 // PATCH: Marcar como LIDO
-router.patch('/:id/read', catchAsync(async (req, res) => {
+router.patch('/:id/read', async (req, res) => {
   const { id } = req.params
   const userId = req.user.userId
 
   await libraryService.markBookAsRead(id, userId)
   res.status(STATUS.OK).json({ message: 'Book marked as read.' })
-}))
+})
 
 // DELETE: Marcar como NÃO LIDO
-router.delete('/:id/read', catchAsync(async (req, res) => {
+router.delete('/:id/read', async (req, res) => {
   const { id } = req.params
   const userId = req.user.userId
 
   await libraryService.markBookAsUnread(id, userId)
   res.status(STATUS.OK).json({ message: 'Book marked as unread.' })
-}))
+})
 
 export default router

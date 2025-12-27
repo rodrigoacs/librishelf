@@ -11,7 +11,6 @@ const PORT = 3050
 
 app.use(cors())
 app.use(express.json())
-app.use(errorHandler)
 
 app.use('/auth', authRouter)
 app.use('/library', libraryRouter)
@@ -21,6 +20,8 @@ app.use('/library', libraryRouter)
 app.get('/ping', (req, res) => {
   res.json({ message: 'pong' })
 })
+
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
