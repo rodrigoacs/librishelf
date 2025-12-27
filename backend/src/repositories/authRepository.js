@@ -1,13 +1,14 @@
 import { db } from "../database/connection.js"
+import { AUTH_QUERIES as q } from "../database/queries.js"
 
-async function getUserByUsername(username) {
-  const result = await db.query("SELECT * FROM users WHERE username = $1", [username])
+async function findUserByUsername(username) {
+  const result = await db.query(q.FIND_USER_BY_USERNAME, [username])
+  return result.rows[0] || null
+}
+
+async function createUser(username, hashedPassword) {
+  const result = await db.query(q.CREATE_USER, [username, hashedPassword])
   return result.rows[0]
 }
 
-async function createUser(userData) {
-  const result = await db.query("INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, role", [userData.username, userData.password_hash])
-  return result.rows[0]
-}
-
-export { getUserByUsername, createUser }
+export { findUserByUsername, createUser }

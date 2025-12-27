@@ -30,3 +30,12 @@ export const LIBRARY_QUERIES = {
   ADD_BOOK_FUNC: 'SELECT librishelf.add_book($1, $2, $3, $4, $5, $6, $7, $8) AS book_id',
   UPDATE_BOOK_FUNC: 'SELECT librishelf.update_book($1, $2, $3, $4, $5, $6, $7, $8)'
 }
+
+export const AUTH_QUERIES = {
+  FIND_USER_BY_USERNAME: 'SELECT * FROM librishelf.users WHERE name = $1',
+  CREATE_USER: `
+    INSERT INTO librishelf.users (name, password) 
+    VALUES ($1, $2) 
+    RETURNING id, name
+  `
+}
