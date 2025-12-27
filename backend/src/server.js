@@ -1,8 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import libraryRouter from './routes/library.js'
-import authorRouter from './routes/author.js'
-import publisherRouter from './routes/publisher.js'
+// import authorRouter from './routes/author.js'
+// import publisherRouter from './routes/publisher.js'
 import authRouter from './routes/auth.js'
 import errorHandler from './middlewares/errorHandler.js'
 
