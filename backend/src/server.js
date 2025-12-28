@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import libraryRouter from './routes/library.js'
 import authorRouter from './routes/author.js'
+import publisherRoutes from './routes/publisher.js'
 import authRouter from './routes/auth.js'
 import errorHandler from './middlewares/errorHandler.js'
 
@@ -14,6 +15,7 @@ app.use(express.json())
 app.use('/auth', authRouter)
 app.use('/library', libraryRouter)
 app.use('/author', authorRouter)
+app.use('/publisher', publisherRoutes)
 
 app.get('/ping', (req, res) => {
   res.json({ message: 'pong' })

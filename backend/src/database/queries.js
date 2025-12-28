@@ -40,8 +40,6 @@ export const AUTH_QUERIES = {
   `
 }
 
-// Adicione ao src/database/queries.js
-
 export const AUTHOR_QUERIES = {
   GET_ALL_AUTHORS: 'SELECT DISTINCT name FROM librishelf.authors ORDER BY name',
 
@@ -54,4 +52,18 @@ export const AUTHOR_QUERIES = {
     WHERE p.name = ANY($1)
     ORDER BY a.name
   `
-};
+}
+
+export const PUBLISHER_QUERIES = {
+  GET_ALL_PUBLISHERS: 'SELECT DISTINCT name FROM librishelf.publishers ORDER BY name',
+
+  GET_PUBLISHERS_BY_AUTHOR: `
+    SELECT DISTINCT p.name, a.name AS author_name
+    FROM librishelf.publishers p
+    JOIN librishelf.books b ON p.id = b.publisher_id
+    JOIN librishelf.books_authors_link bal ON b.id = bal.book_id
+    JOIN librishelf.authors a ON bal.author_id = a.id
+    WHERE a.name = ANY($1)
+    ORDER BY p.name
+  `
+}
