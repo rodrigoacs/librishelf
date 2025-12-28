@@ -1,5 +1,4 @@
 import pkg from 'pg'
-import { error } from '../utils/logger.js'
 
 const { Pool } = pkg
 
@@ -13,11 +12,7 @@ const pool = new Pool({
 
 pool.on('error', (err) => {
   const logMsg = `${new Date().toISOString()}[connection.js]: ${err.message}`
-  if (typeof error === 'function') {
-    error(logMsg)
-  } else {
-    console.error(logMsg)
-  }
+  console.error(logMsg)
   process.exit(-1)
 })
 
