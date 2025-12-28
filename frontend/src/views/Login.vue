@@ -15,22 +15,29 @@
               v-model="username"
               id="username"
               required
+              class="w-full"
             />
             <label for="username">Username</label>
           </FloatLabel>
+
           <FloatLabel>
             <Password
               v-model="password"
               id="password"
               :feedback="false"
               required
+              toggleMask
+              class="w-full"
+              inputClass="w-full"
             />
             <label for="password">Password</label>
           </FloatLabel>
+
           <Button
             label="Login"
-            class="p-button-success"
+            class="p-button-success w-full"
             type="submit"
+            :loading="loading"
           />
         </form>
         <p>Don't have an account? <router-link to="/register">Register here</router-link></p>
@@ -42,7 +49,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { loginUser } from '../services/api.js'
+import api from '../services/api.js'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
@@ -52,23 +59,47 @@ import FloatLabel from 'primevue/floatlabel'
 
 const username = ref('')
 const password = ref('')
+const loading = ref(false)
 const router = useRouter()
 const toast = ref(null)
 
 async function handleLogin() {
+  loading.value = true
+
   try {
-    const response = await loginUser({ username: username.value.toLowerCase(), password: password.value })
+    const payload = {
+      username: username.value.toLowerCase(),
+      password: password.value
+    }
+
+    const response = await api.login(payload)
+
     if (response.token) {
       localStorage.setItem('token', response.token)
-      localStorage.setItem('timestamp', Date.now())
-      toast.value.add({ severity: 'success', summary: 'Login Successful', detail: 'You are now logged in.', life: 3000 })
+      localStorage.setItem('timestamp', Date.now().toString())
+
+      toast.value.add({
+        severity: 'success',
+        summary: 'Bem-vindo!',
+        detail: 'Login realizado com sucesso.',
+        life: 2000
+      })
+
       setTimeout(() => router.push('/'), 500)
-    } else {
-      toast.value.add({ severity: 'error', summary: 'Login Failed', detail: 'Invalid credentials.', life: 3000 })
     }
   } catch (error) {
-    toast.value.add({ severity: 'error', summary: 'Error', detail: 'Error logging in.', life: 3000 })
-    console.error('Error logging in:', error)
+    console.error('Login error:', error)
+
+    const message = error.message || 'Erro ao conectar com o servidor.'
+
+    toast.value.add({
+      severity: 'error',
+      summary: 'Falha no Login',
+      detail: message,
+      life: 4000
+    })
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -89,10 +120,11 @@ form {
   flex-direction: column;
   gap: 1.6rem;
   align-items: center;
+  margin-top: 1rem;
 }
 
 a {
-  color: var(--main-color);
+  color: var(--main-color, #4caf50);
   text-decoration: none;
 }
 
@@ -101,16 +133,20 @@ a {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background-color: var(--background-color, #121212);
 }
 
-input,
-.p-button {
+.w-full {
+  width: 100%;
+}
+
+:deep(.p-password) {
   width: 100%;
 }
 
 .p-button {
-  background-color: var(--main-color);
-  color: var(--text-color);
-  border: 1px solid var(--main-color);
+  background-color: var(--main-color, #4caf50);
+  color: var(--text-color, #fff);
+  border: 1px solid var(--main-color, #4caf50);
 }
 </style>

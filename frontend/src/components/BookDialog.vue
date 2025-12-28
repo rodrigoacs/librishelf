@@ -4,14 +4,17 @@
     :modal="true"
     class="dialog-overlay"
     :dismissableMask="true"
+    @hide="closeDialog"
   >
-    <template #container="{ closeCallback }">
+    <template #container>
       <div class="dialog-content">
         <img
-          :src="book.path"
+          :src="bookCoverUrl"
+          @error="handleImageError"
           alt="Book Cover"
           class="book-cover"
         />
+
         <div class="book-info">
           <div class="top">
             <div class="header-row">
@@ -33,31 +36,34 @@
                 @click="saveBookDetails"
               />
             </div>
+
             <input
               class="book-authors"
               v-model="book.authors"
               :readonly="!isEditing"
             />
+
             <div class="book-tags">
               <input
                 v-if="isEditing"
                 v-model="book.tags"
                 class="edit-tags"
-                placeholder="Edit tags"
+                placeholder="Tags separadas por vírgula"
               />
               <div v-else>
                 <Chip
-                  v-for="(tag, index) in book.tags.split(',')"
+                  v-for="tag in (book.tags ? book.tags.split(',') : [])"
                   :key="tag"
-                  :label="tag"
+                  :label="tag.trim()"
                   :style="{ backgroundColor: getChipColor(), color: '#000' }"
                   class="book-chip"
                 />
               </div>
             </div>
+
             <div class="book-read-date">
               <i
-                v-if="bookRead"
+                v-if="book.read_date"
                 class="pi pi-bookmark-fill bookmark-icon"
               ></i>
               <Calendar
@@ -65,9 +71,11 @@
                 :disabled="!isEditing"
                 dateFormat="dd/mm/yy"
                 class="calendar-input"
+                placeholder="Não lido"
               />
             </div>
           </div>
+
           <div class="bottom">
             <div class="book-publisher">
               <span>Editora: </span>
@@ -78,6 +86,7 @@
               />
               <span v-else>{{ book.publisher }}</span>
             </div>
+
             <div class="book-isbn">
               <span>ISBN: </span>
               <input
@@ -87,6 +96,7 @@
               />
               <span v-else>{{ book.isbn }}</span>
             </div>
+
             <div class="book-pubdate">
               <span>Data de Publicação: </span>
               <Calendar
@@ -103,42 +113,37 @@
   </Dialog>
 </template>
 
-
 <script setup>
-import { ref, watch, defineProps, defineEmits } from 'vue'
+import { ref, watch, defineProps, defineEmits, computed } from 'vue'
 import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
 import Calendar from 'primevue/calendar'
 import Button from 'primevue/button'
-import { fetchBookDetails, updateBookDetails } from '../services/api.js'
+import api from '../services/api.js'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3050'
 
 const props = defineProps({
   modelValue: Boolean,
   bookId: Number
 })
-const emits = defineEmits(['update:modelValue'])
+
+const emits = defineEmits(['update:modelValue', 'refresh'])
+
 const visible = ref(props.modelValue)
-const bookRead = ref(false)
 const isEditing = ref(false)
+
 const book = ref({
-  path: '',
   title: '',
   authors: '',
   publisher: '',
   tags: '',
   isbn: '',
-  read_date: '',
-  pubdate: ''
+  read_date: null,
+  pubdate: null
 })
-const colors = [
-  'var(--red)',
-  'var(--green)',
-  'var(--blue)',
-  'var(--purple)',
-  'var(--yellow)',
-  'var(--orange)'
-]
 
+const colors = ['var(--red)', 'var(--green)', 'var(--blue)', 'var(--purple)', 'var(--yellow)', 'var(--orange)']
 let shuffledColors = []
 
 function shuffleColors() {
@@ -146,15 +151,32 @@ function shuffleColors() {
 }
 
 function getChipColor() {
-  if (shuffledColors.length === 0) {
-    shuffleColors()
-  }
-
+  if (shuffledColors.length === 0) shuffleColors()
   return shuffledColors.pop()
+}
+
+const bookCoverUrl = computed(() => {
+  if (!props.bookId) return '/placeholder.jpg'
+  return `${API_URL}/uploads/${props.bookId}.jpg`
+})
+
+function handleImageError(e) {
+  e.target.src = 'https://placehold.co/300x500?text=No+Cover'
 }
 
 function editMode() {
   isEditing.value = !isEditing.value
+}
+
+function closeDialog() {
+  isEditing.value = false
+}
+
+function formatDate(date) {
+  if (!date) return null
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return null
+  return d.toISOString().split('T')[0]
 }
 
 async function saveBookDetails() {
@@ -162,17 +184,19 @@ async function saveBookDetails() {
     title: book.value.title,
     authors: book.value.authors,
     publisher: book.value.publisher,
-    tags: book.value.tags,
+    tags: book.value.tags.split(',').map(t => t.trim()),
     isbn: book.value.isbn,
-    pubdate: book.value.pubdate instanceof Date ? book.value.pubdate.toISOString().split('T')[0] : null,
-    read_date: book.value.read_date ? book.value.read_date.toISOString().split('T')[0] : null
+    pubdate: formatDate(book.value.pubdate),
+    read_date: formatDate(book.value.read_date)
   }
 
   try {
-    await updateBookDetails(props.bookId, updatedBook)
+    await api.updateBook(props.bookId, updatedBook)
     isEditing.value = false
+    emits('refresh')
   } catch (error) {
     console.error('Error updating book details:', error)
+    alert('Erro ao atualizar: ' + error.message)
   }
 }
 
@@ -182,13 +206,17 @@ watch(() => props.modelValue, (newValue) => {
 
 watch(visible, (newValue) => {
   emits('update:modelValue', newValue)
-  if (newValue) {
-    fetchBookDetails(props.bookId)
+
+  if (newValue && props.bookId) {
+    api.getBookById(props.bookId)
       .then((response) => {
-        book.value = response
+        book.value.title = response.title
+        book.value.authors = response.authors || ''
+        book.value.isbn = response.isbn
+        book.value.publisher = response.publisher_name || ''
+        book.value.tags = response.tags || ''
         book.value.read_date = response.read_date ? new Date(response.read_date) : null
-        book.value.pubdate = response.pubdate ? new Date(response.pubdate) : ''
-        bookRead.value = response.read_date ? true : false
+        book.value.pubdate = response.publication_date ? new Date(response.publication_date) : null
       })
       .catch(error => {
         console.error('Error fetching book details:', error)
@@ -274,7 +302,7 @@ watch(visible, (newValue) => {
 
 .bookmark-icon {
   margin-right: 0.5rem;
-  color: var(--main-color);
+  color: var(--main-color, #4caf50);
 }
 
 .calendar-input {
@@ -289,8 +317,8 @@ watch(visible, (newValue) => {
 
 .save-button,
 .edit-button {
-  background-color: var(--main-color);
-  color: var(--text-color);
+  background-color: var(--main-color, #4caf50);
+  color: var(--text-color, #fff);
   border: none;
 }
 

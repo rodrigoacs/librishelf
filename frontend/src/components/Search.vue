@@ -3,7 +3,6 @@
     <div class="first-row">
       <h1 style="color: var(--text-color)">Library ({{ booksQuantity }})</h1>
       <div class="first-row">
-
         <Button
           label="add book"
           icon="pi pi-plus"
@@ -19,14 +18,16 @@
         @change="emit('updateReadState', readState)"
         class="select-button"
       />
+
       <AutoComplete
         placeholder="search by title"
         :suggestions="filteredTitles"
         v-model="title"
-        @complete="search"
+        @complete="searchTitle"
         @change="onTitleChange"
         class="search-input"
       />
+
       <MultiSelect
         v-model="selectedAuthors"
         :options="authors"
@@ -37,6 +38,7 @@
         class="multiselect"
         :maxSelectedLabels="2"
       />
+
       <MultiSelect
         v-model="selectedPublishers"
         :options="publishers"
@@ -47,6 +49,7 @@
         class="multiselect"
         :maxSelectedLabels="2"
       />
+
       <div class="sort-area">
         <Dropdown
           v-model="sortField"
@@ -70,7 +73,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineProps, watch, defineEmits } from 'vue'
+import { ref, onMounted, defineProps, defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
@@ -78,28 +81,35 @@ import AutoComplete from 'primevue/autocomplete'
 import AddBookDialog from '../components/AddBookDialog.vue'
 import Dropdown from 'primevue/dropdown'
 import SelectButton from 'primevue/selectbutton'
-import { fetchTitles, fetchAuthors, fetchPublishers } from '../services/api.js'
+import api from '../services/api.js'
 
 const emit = defineEmits(['updateReadState'])
-const readState = ref('all')
-const addBookDialogVisible = ref(false)
-const title = ref('')
-const filteredTitles = ref([])
-const titles = ref([])
-const authors = ref([])
-const selectedAuthors = ref([])
-const publishers = ref([])
-const selectedPublishers = ref([])
-const sortField = ref('')
-const sortOrder = ref('asc')
 const router = useRouter()
+
 const props = defineProps({
   path: String,
   booksQuantity: Number
 })
 
-function search(event) {
-  filteredTitles.value = titles.value.filter(title => title.toLowerCase().includes(event.query.toLowerCase()))
+const readState = ref('all')
+const addBookDialogVisible = ref(false)
+
+const title = ref('')
+const filteredTitles = ref([])
+const titles = ref([])
+
+const authors = ref([])
+const selectedAuthors = ref([])
+
+const publishers = ref([])
+const selectedPublishers = ref([])
+
+const sortField = ref('')
+const sortOrder = ref('asc')
+
+function searchTitle(event) {
+  const query = event.query.toLowerCase()
+  filteredTitles.value = titles.value.filter(t => t.toLowerCase().includes(query))
 }
 
 function onTitleChange() {
@@ -120,23 +130,32 @@ function openAddBookModal() {
   addBookDialogVisible.value = true
 }
 
-function saveNewBook(book) {
-  console.log('Book saved:', book)
+function saveNewBook() {
+  console.log('Book saved, triggering refresh...')
+  emit('updateReadState', readState.value)
 }
 
 function updateRoute() {
   const searchParams = new URLSearchParams()
+
   if (title.value) {
     searchParams.set('search', title.value)
   }
+
   if (selectedAuthors.value.length) {
-    searchParams.set('author', selectedAuthors.value.map(author => author.name).join(','))
+    const names = selectedAuthors.value.map(a => a.name).join(',')
+    searchParams.set('author', names)
   }
+
   if (selectedPublishers.value.length) {
-    searchParams.set('publisher', selectedPublishers.value.map(publisher => publisher.name).join(','))
+    const names = selectedPublishers.value.map(p => p.name).join(',')
+    searchParams.set('publisher', names)
   }
-  searchParams.set('sort', sortField.value)
-  searchParams.set('order', sortOrder.value)
+
+  if (sortField.value) {
+    searchParams.set('sort', sortField.value)
+    searchParams.set('order', sortOrder.value)
+  }
 
   router.push({ path: `/${props.path}`, query: Object.fromEntries(searchParams.entries()) })
 }
@@ -148,43 +167,46 @@ function sortBooks(field) {
   } else {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
   }
-  console.log('Sort field:', sortField.value, 'Sort order:', sortOrder.value)
   updateRoute()
 }
 
-
-function fetchAndSetPublishers() {
-  const authorQuery = selectedAuthors.value.map(author => author.name).join(',')
-  fetchPublishers(authorQuery)
-    .then(data => {
-      publishers.value = [...new Set(data.map(item => item.name))].map(publisher => ({ name: publisher }))
-    })
-    .catch(error => console.error('Error fetching publishers:', error))
+async function fetchAndSetTitles() {
+  try {
+    const response = await api.getBooks()
+    const allBooks = response.result || []
+    titles.value = [...new Set(allBooks.map(b => b.title))]
+  } catch (error) {
+    console.error('Error fetching titles:', error)
+  }
 }
 
-function fetchAndSetAuthors() {
-  const publisherQuery = selectedPublishers.value.map(publisher => publisher.name).join(',')
-  fetchAuthors(publisherQuery)
-    .then(data => {
-      authors.value = [...new Set(data.map(item => item.name))].map(author => ({ name: author }))
-    })
-    .catch(error => console.error('Error fetching authors:', error))
+async function fetchAndSetPublishers() {
+  try {
+    const authorQuery = selectedAuthors.value.map(a => a.name).join(',')
+    const data = await api.getPublishers(authorQuery)
+    publishers.value = data.map(item => ({ name: item.name || item }))
+  } catch (error) {
+    console.error('Error fetching publishers:', error)
+  }
+}
+
+async function fetchAndSetAuthors() {
+  try {
+    const publisherQuery = selectedPublishers.value.map(p => p.name).join(',')
+    const data = await api.getAuthors(publisherQuery)
+    authors.value = data.map(item => ({ name: item.name || item }))
+  } catch (error) {
+    console.error('Error fetching authors:', error)
+  }
 }
 
 onMounted(async () => {
-  try {
-    const [titlesData, authorsData] = await Promise.all([fetchTitles(), fetchAuthors()])
-    titles.value = titlesData.map(item => item.title)
-    authors.value = authorsData
+  await Promise.all([
+    fetchAndSetTitles(),
+    fetchAndSetAuthors(),
     fetchAndSetPublishers()
-  } catch (error) {
-    console.error('Error loading initial data:', error)
-  }
+  ])
 })
-
-watch(selectedAuthors, fetchAndSetPublishers)
-watch(selectedAuthors, updateRoute)
-watch(selectedPublishers, updateRoute)
 </script>
 
 <style scoped>

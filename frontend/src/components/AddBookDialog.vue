@@ -14,67 +14,92 @@
             v-model="newBook.title"
             placeholder="Title"
           />
+
           <AutoComplete
             v-model="selectedAuthor"
             :suggestions="filteredAuthors"
             @complete="searchAuthors"
             placeholder="Author"
+            dropdown
           >
             <template #footer>
-              <Button
+              <div
+                class="p-2"
                 v-if="allowNewAuthor"
-                label="Add New Author"
-                icon="pi pi-plus"
-                class="p-button-text"
-                @click="addNewAuthor"
-              />
+              >
+                <Button
+                  label="Add New Author"
+                  icon="pi pi-plus"
+                  class="p-button-text p-button-sm"
+                  @click="addNewAuthor"
+                />
+              </div>
             </template>
           </AutoComplete>
+
           <AutoComplete
             v-model="selectedPublisher"
             :suggestions="filteredPublishers"
             @complete="searchPublishers"
             placeholder="Publisher"
+            dropdown
           >
             <template #footer>
-              <Button
+              <div
+                class="p-2"
                 v-if="allowNewPublisher"
-                label="Add New Publisher"
-                icon="pi pi-plus"
-                class="p-button-text"
-                @click="addNewPublisher"
-              />
+              >
+                <Button
+                  label="Add New Publisher"
+                  icon="pi pi-plus"
+                  class="p-button-text p-button-sm"
+                  @click="addNewPublisher"
+                />
+              </div>
             </template>
           </AutoComplete>
+
           <InputText
             v-model="newBook.isbn"
             placeholder="ISBN"
           />
+
           <Calendar
             v-model="newBook.pubDate"
             placeholder="Publication Date"
             showIcon
+            dateFormat="dd/mm/yy"
           />
+
           <Calendar
             v-model="newBook.readDate"
             placeholder="Read Date"
             showIcon
+            dateFormat="dd/mm/yy"
           />
+
           <InputText
             v-model="newBook.tags"
             placeholder="Tags (comma-separated)"
           />
         </div>
       </div>
+
       <div
         class="image-preview"
         @click="triggerFileUpload"
       >
         <img
-          :src="coverImagePreview || './src/assets/book-cover.png'"
+          :src="coverImagePreview || '/placeholder_cover.png'"
           alt="Cover Preview"
+          @error="handleImageError"
         />
+        <span
+          v-if="!newBook.coverImage"
+          class="upload-hint"
+        >Click to upload cover</span>
       </div>
+
       <input
         type="file"
         ref="fileInput"
@@ -83,26 +108,27 @@
         style="display: none;"
       />
     </div>
+
     <div class="save-button">
       <Button
         label="Save"
         icon="pi pi-check"
         @click="saveBook"
         class="p-button-success"
+        :loading="isLoading"
       />
     </div>
   </Dialog>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { defineProps, defineEmits } from 'vue'
+import { ref, watch, defineProps, defineEmits } from 'vue'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import AutoComplete from 'primevue/autocomplete'
 import Calendar from 'primevue/calendar'
-import { fetchAuthors, fetchPublishers, addNewBook } from '../services/api.js'
+import api from '../services/api.js'
 
 const props = defineProps({
   visible: Boolean,
@@ -112,11 +138,10 @@ const props = defineProps({
 const emit = defineEmits(['update:visible'])
 
 const internalVisible = ref(props.visible)
+const isLoading = ref(false)
 
 const newBook = ref({
   title: '',
-  author: '',
-  publisher: '',
   isbn: '',
   pubDate: null,
   readDate: null,
@@ -124,16 +149,16 @@ const newBook = ref({
   coverImage: null
 })
 
-const coverImagePreview = ref('./src/assets/book-cover.png')
+const coverImagePreview = ref(null)
 const fileInput = ref(null)
 
 const selectedAuthor = ref(null)
 const filteredAuthors = ref([])
-const allowNewAuthor = ref(true)
+const allowNewAuthor = ref(false)
 
 const selectedPublisher = ref(null)
 const filteredPublishers = ref([])
-const allowNewPublisher = ref(true)
+const allowNewPublisher = ref(false)
 
 watch(() => props.visible, (newVal) => {
   internalVisible.value = newVal
@@ -159,13 +184,24 @@ function onCoverImageChange(event) {
   }
 }
 
+function handleImageError(e) {
+  e.target.src = 'https://placehold.co/300x450?text=Upload+Cover'
+}
+
 async function searchAuthors(event) {
   try {
-    const query = event.query.trim()
-    const publisherQuery = selectedPublisher.value ? selectedPublisher.value.trim() : ''
-    const response = await fetchAuthors(publisherQuery)
-    filteredAuthors.value = response.map(author => author.name).filter(name => name.toLowerCase().includes(query.toLowerCase()))
-    allowNewAuthor.value = !filteredAuthors.value.includes(query)
+    const query = event.query.trim().toLowerCase()
+    const publisherQuery = selectedPublisher.value ? selectedPublisher.value : ''
+
+    const response = await api.getAuthors(publisherQuery)
+
+    const allNames = response.map(a => a.name)
+
+    filteredAuthors.value = allNames.filter(name =>
+      name.toLowerCase().includes(query)
+    )
+
+    allowNewAuthor.value = query.length > 0 && !allNames.some(n => n.toLowerCase() === query)
   } catch (error) {
     console.error('Error fetching authors:', error)
   }
@@ -173,66 +209,93 @@ async function searchAuthors(event) {
 
 async function searchPublishers(event) {
   try {
-    const query = event.query.trim()
-    const authorQuery = selectedAuthor.value ? selectedAuthor.value.trim() : ''
-    const response = await fetchPublishers(authorQuery)
-    filteredPublishers.value = response.map(publisher => publisher.name).filter(name => name.toLowerCase().includes(query.toLowerCase()))
-    allowNewPublisher.value = !filteredPublishers.value.includes(query)
+    const query = event.query.trim().toLowerCase()
+    const authorQuery = selectedAuthor.value ? selectedAuthor.value : ''
+
+    const response = await api.getPublishers(authorQuery)
+    const allNames = response.map(p => p.name)
+
+    filteredPublishers.value = allNames.filter(name =>
+      name.toLowerCase().includes(query)
+    )
+
+    allowNewPublisher.value = query.length > 0 && !allNames.some(n => n.toLowerCase() === query)
   } catch (error) {
     console.error('Error fetching publishers:', error)
   }
 }
 
 function addNewAuthor() {
-  selectedAuthor.value = selectedAuthor.value.trim()
   allowNewAuthor.value = false
 }
 
 function addNewPublisher() {
-  selectedPublisher.value = selectedPublisher.value.trim()
   allowNewPublisher.value = false
 }
 
-function saveBook() {
-  const formData = new FormData()
+function formatDate(date) {
+  if (!date) return null
+  const d = new Date(date)
+  const offset = d.getTimezoneOffset()
+  const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+  return localDate.toISOString().split('T')[0]
+}
 
-  formData.append('title', newBook.value.title)
-  formData.append('author', selectedAuthor.value)
-  formData.append('publisher', selectedPublisher.value)
-  formData.append('isbn', newBook.value.isbn)
+async function saveBook() {
+  isLoading.value = true
 
-  if (newBook.value.pubDate) {
-    formData.append('pubDate', newBook.value.pubDate.toISOString().split('T')[0])
+  try {
+    const formData = new FormData()
+
+    if (!newBook.value.title || !selectedAuthor.value) {
+      alert('Title and Author are required.')
+      isLoading.value = false
+      return
+    }
+
+    formData.append('title', newBook.value.title)
+
+    const authorName = typeof selectedAuthor.value === 'object' ? selectedAuthor.value.name : selectedAuthor.value
+    const publisherName = typeof selectedPublisher.value === 'object' ? selectedPublisher.value.name : selectedPublisher.value
+
+    formData.append('author', authorName || '')
+    formData.append('publisher', publisherName || '')
+    formData.append('isbn', newBook.value.isbn || '')
+
+    if (newBook.value.pubDate) {
+      formData.append('pubDate', formatDate(newBook.value.pubDate))
+    }
+    if (newBook.value.readDate) {
+      formData.append('readDate', formatDate(newBook.value.readDate))
+    }
+
+    formData.append('tags', newBook.value.tags)
+
+    if (newBook.value.coverImage) {
+      formData.append('coverImage', newBook.value.coverImage)
+    }
+
+    await api.createBook(formData)
+
+    if (props.onSave) props.onSave()
+    closeDialog()
+    resetForm()
+
+  } catch (error) {
+    console.error('Error adding new book:', error)
+    alert('Erro ao salvar livro: ' + (error.message || 'Erro desconhecido'))
+  } finally {
+    isLoading.value = false
   }
-  if (newBook.value.readDate) {
-    formData.append('readDate', newBook.value.readDate.toISOString().split('T')[0])
-  }
-
-  formData.append('tags', newBook.value.tags.split(',').map(tag => tag.trim()).join(','))
-
-  if (newBook.value.coverImage) {
-    formData.append('coverImage', newBook.value.coverImage)
-  }
-
-  addNewBook(formData)
-    .then(() => {
-      props.onSave()
-      closeDialog()
-      resetForm()
-    })
-    .catch(error => {
-      console.error('Error adding new book:', error)
-    })
 }
 
 function resetForm() {
-  newBook.value = { title: '', author: '', publisher: '', isbn: '', pubDate: null, readDate: null, tags: '', coverImage: null }
+  newBook.value = { title: '', isbn: '', pubDate: null, readDate: null, tags: '', coverImage: null }
   selectedAuthor.value = null
   selectedPublisher.value = null
-  coverImagePreview.value = './src/assets/book-cover.png'
+  coverImagePreview.value = null
 }
 </script>
-
 
 <style scoped>
 .add-book-form {
@@ -253,17 +316,23 @@ function resetForm() {
   max-width: 400px;
 }
 
-::v-deep .p-autocomplete-input {
+:deep(.p-autocomplete),
+:deep(.p-autocomplete-input) {
   width: 100%;
 }
 
 .image-preview {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 40%;
   height: 420px;
-  border: 1px solid #52525b;
+  border: 2px dashed #52525b;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  background-color: #1e1e1e;
 }
 
 .image-preview img {
@@ -273,15 +342,19 @@ function resetForm() {
   cursor: pointer;
 }
 
-.read-section {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.upload-hint {
+  position: absolute;
+  color: #aaa;
+  font-size: 0.8rem;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .save-button {
   margin-top: 1rem;
-  text-align: center;
+  text-align: right;
 }
 
 @media (max-width: 1024px) {
@@ -312,20 +385,7 @@ function resetForm() {
 
   .save-button {
     width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .form-fields {
-    gap: 0.5rem;
-  }
-
-  .image-preview {
-    height: 250px;
-  }
-
-  .save-button {
-    width: 100%;
+    text-align: center;
   }
 }
 </style>

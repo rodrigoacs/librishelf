@@ -28,7 +28,7 @@ import { useRoute } from 'vue-router'
 import DataView from 'primevue/dataview'
 import Search from '../components/Search.vue'
 import BookItem from '../components/BookItem.vue'
-import { fetchBooks, fetchBookReadState } from '../services/api.js'
+import api from '../services/api.js'
 
 const books = ref([])
 const filteredBooks = ref([])
@@ -37,16 +37,20 @@ const readState = ref('all')
 
 async function fetchBooksData() {
   try {
-    if (readState.value === 'all') {
-      books.value = await fetchBooks('id,title,authors,path,publisher')
-    } else if (readState.value === 'read') {
-      books.value = await fetchBookReadState(true)
+    let params = {}
+
+    if (readState.value === 'read') {
+      params.readState = 'true'
     } else if (readState.value === 'unread') {
-      books.value = await fetchBookReadState(false)
+      params.readState = 'false'
     }
+
+    const response = await api.getBooks(params)
+
+    books.value = response.result || []
     filterBooks()
   } catch (error) {
-    console.error('Error fetching books:', error)
+    console.error('Erro:', error.message)
   }
 }
 
@@ -58,9 +62,15 @@ function filterBooks() {
   const sortOrder = route.query.order || 'asc'
 
   filteredBooks.value = books.value.filter(book => {
-    const matchesTitle = book.title.toLowerCase().includes(searchQuery)
-    const matchesAuthor = authorQuery.length === 0 || authorQuery.some(author => book.authors.toLowerCase().includes(author))
-    const matchesPublisher = publisherQuery.length === 0 || publisherQuery.some(publisher => book.publisher?.toLowerCase().includes(publisher))
+    const title = book.title || ''
+    const authors = book.authors || ''
+
+    const publisher = book.publisher_name || ''
+
+    const matchesTitle = title.toLowerCase().includes(searchQuery)
+    const matchesAuthor = authorQuery.length === 0 || authorQuery.some(a => authors.toLowerCase().includes(a))
+    const matchesPublisher = publisherQuery.length === 0 || publisherQuery.some(p => publisher.toLowerCase().includes(p))
+
     return matchesTitle && matchesAuthor && matchesPublisher
   })
 

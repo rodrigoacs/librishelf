@@ -24,22 +24,22 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import DataView from 'primevue/dataview'
-import { fetchAuthors } from '../services/api.js'
+import api from '../services/api.js'
 
 const authors = ref([])
 
-onMounted(() => {
-  fetchAuthors()
-    .then(data => {
-      let id = 1
-      authors.value = data.map(author => ({
-        id: id++,
-        name: author.name
-      }))
-    })
-    .catch(error => {
-      console.error("Error fetching authors:", error)
-    })
+onMounted(async () => {
+  try {
+    const data = await api.getAuthors()
+
+    let id = 1
+    authors.value = data.map(author => ({
+      id: id++,
+      name: author.name || author
+    }))
+  } catch (error) {
+    console.error("Error fetching authors:", error)
+  }
 })
 </script>
 

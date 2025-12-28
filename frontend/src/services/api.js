@@ -1,157 +1,56 @@
-// const API_BASE_URL = 'https://librishelf.com/api'
-const API_BASE_URL = 'http://localhost:3050'
+import client from './fetchClient.js'
 
-function getAuthHeader() {
-  const token = localStorage.getItem('token')
-  return token ? { 'Authorization': `Bearer ${token}` } : {}
-}
+export default {
+  login(credentials) {
+    return client.post('/auth/login', credentials)
+  },
 
-export async function fetchTitles() {
-  const response = await fetch(`${API_BASE_URL}/library?fields=title`, {
-    headers: {
-      ...getAuthHeader(),
-    }
-  })
+  register(userData) {
+    return client.post('/auth/register', userData)
+  },
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
+  async getBooks(queryParams = {}) {
+    const queryString = new URLSearchParams(queryParams).toString()
+    const url = queryString ? `/library?${queryString}` : '/library'
+
+    return client.get(url)
+  },
+
+  getBookById(id) {
+    return client.get(`/library/${id}`)
+  },
+
+  createBook(formData) {
+    return client.post('/library', formData)
+  },
+
+  updateBook(id, bookData) {
+    return client.put(`/library/${id}`, bookData)
+  },
+
+  deleteBook(id) {
+    return client.delete(`/library/${id}`)
+  },
+
+  updateCover(id, formData) {
+    return client.post(`/library/${id}/cover`, formData)
+  },
+
+  markAsRead(id) {
+    return client.patch(`/library/${id}/read`)
+  },
+
+  markAsUnread(id) {
+    return client.delete(`/library/${id}/read`)
+  },
+
+  getAuthors(publisherFilter) {
+    const url = publisherFilter ? `/author?publishers=${publisherFilter}` : '/author'
+    return client.get(url)
+  },
+
+  getPublishers(authorFilter) {
+    const url = authorFilter ? `/publisher?authors=${authorFilter}` : '/publisher'
+    return client.get(url)
   }
-  return response.json()
-}
-
-export async function fetchAuthors(publisherQuery) {
-  const url = publisherQuery
-    ? `${API_BASE_URL}/author?publishers=${publisherQuery}`
-    : `${API_BASE_URL}/author`
-
-  const response = await fetch(url, {
-    headers: {
-      ...getAuthHeader(),
-    }
-  })
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-  return response.json()
-}
-
-export async function fetchPublishers(authorQuery) {
-  const url = authorQuery
-    ? `${API_BASE_URL}/publisher?authors=${authorQuery}`
-    : `${API_BASE_URL}/publisher`
-
-  const response = await fetch(url, {
-    headers: {
-      ...getAuthHeader(),
-    }
-  })
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-  return response.json()
-}
-
-export async function fetchBooks(fields) {
-  const response = await fetch(`${API_BASE_URL}/library?fields=${fields}`, {
-    headers: {
-      ...getAuthHeader(),
-    }
-  })
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-  return response.json()
-}
-
-export async function fetchBookReadState(readState) {
-  const response = await fetch(`${API_BASE_URL}/library?readState=${readState}`, {
-    headers: {
-      ...getAuthHeader(),
-    }
-  })
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-  return response.json()
-}
-
-export async function fetchBookDetails(bookId) {
-  const response = await fetch(`${API_BASE_URL}/library/${bookId}`, {
-    headers: {
-      ...getAuthHeader(),
-    }
-  })
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-  return response.json()
-}
-
-export async function addNewBook(formData) {
-  const response = await fetch(`${API_BASE_URL}/library`, {
-    method: 'POST',
-    headers: {
-      ...getAuthHeader(),
-    },
-    body: formData
-  })
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-
-  return response.json()
-}
-
-export async function updateBookDetails(bookId, updatedBook) {
-  const response = await fetch(`${API_BASE_URL}/library/${bookId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeader(),
-    },
-    body: JSON.stringify(updatedBook)
-  })
-
-  if (!response.ok) {
-    throw new Error(`Error updating book details: ${response.statusText}`)
-  }
-
-  return await response.json()
-}
-
-export async function loginUser(credentials) {
-  const response = await fetch(`${API_BASE_URL}/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(credentials)
-  })
-
-  if (!response.ok) {
-    throw new Error(`Login error: ${response.statusText}`)
-  }
-  return response.json()
-}
-
-export async function registerUser(userData) {
-  const response = await fetch(`${API_BASE_URL}/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(userData)
-  })
-
-  if (!response.ok) {
-    throw new Error(`Registration error: ${response.statusText}`)
-  }
-
-  return response
 }
