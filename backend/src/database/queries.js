@@ -32,11 +32,11 @@ export const LIBRARY_QUERIES = {
 }
 
 export const AUTH_QUERIES = {
-  FIND_USER_BY_USERNAME: 'SELECT * FROM librishelf.users WHERE name = $1',
+  FIND_USER_BY_USERNAME: 'SELECT id, name, password_hash FROM librishelf.users WHERE name = $1',
   CREATE_USER: `
-    INSERT INTO librishelf.users (name, password) 
-    VALUES ($1, $2) 
-    RETURNING id, name
+    INSERT INTO librishelf.users (name, password_hash, email) 
+    VALUES ($1, $2, $3) 
+    RETURNING id, name, email
   `
 }
 

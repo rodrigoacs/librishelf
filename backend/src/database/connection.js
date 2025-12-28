@@ -2,6 +2,7 @@ import pkg from 'pg'
 import { error } from '../utils/logger.js'
 
 const { Pool } = pkg
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -10,13 +11,14 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 })
 
-export const db = {
-  query: (text, params, callback) => {
-    return pool.query(text, params, callback)
-  }
-}
-
 pool.on('error', (err) => {
-  error(`${new Date().toISOString()}[connection.js]: ${err.message}`)
+  const logMsg = `${new Date().toISOString()}[connection.js]: ${err.message}`
+  if (typeof error === 'function') {
+    error(logMsg)
+  } else {
+    console.error(logMsg)
+  }
   process.exit(-1)
-})  
+})
+
+export const db = pool

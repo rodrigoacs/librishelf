@@ -6,8 +6,8 @@ async function getUserByUsername(username) {
   return result.rows[0] || null
 }
 
-async function createUser(username, hashedPassword) {
-  const result = await db.query(q.CREATE_USER, [username, hashedPassword])
+async function createUser(username, hashedPassword, email) {
+  const result = await db.query(q.CREATE_USER, [username, hashedPassword, email])
   return result.rows[0]
 }
 

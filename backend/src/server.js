@@ -1,28 +1,7 @@
-import express from 'express'
-import cors from 'cors'
-import libraryRouter from './routes/library.js'
-import authorRouter from './routes/author.js'
-import publisherRoutes from './routes/publisher.js'
-import authRouter from './routes/auth.js'
-import errorHandler from './middlewares/errorHandler.js'
+import app from './app.js'
 
-const app = express()
-const PORT = 3050
-
-app.use(cors())
-app.use(express.json())
-
-app.use('/auth', authRouter)
-app.use('/library', libraryRouter)
-app.use('/author', authorRouter)
-app.use('/publisher', publisherRoutes)
-
-app.get('/ping', (req, res) => {
-  res.json({ message: 'pong' })
-})
-
-app.use(errorHandler)
+const PORT = process.env.PORT || 3050
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
-}) 
+})

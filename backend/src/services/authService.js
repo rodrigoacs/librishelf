@@ -21,7 +21,7 @@ async function loginUser(username, password) {
   return token
 }
 
-async function registerUser(username, password) {
+async function registerUser(username, password, email) {
   const existingUser = await authRepository.getUserByUsername(username)
   if (existingUser) {
     const error = new Error('Username already taken.')
@@ -30,7 +30,7 @@ async function registerUser(username, password) {
   }
 
   const hashedPassword = await bcryptjs.hash(password, 10)
-  const user = await authRepository.createUser({ username, password_hash: hashedPassword })
+  const user = await authRepository.createUser( username, hashedPassword, email )
 
   return user
 }

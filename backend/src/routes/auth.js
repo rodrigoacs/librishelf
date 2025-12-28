@@ -21,15 +21,15 @@ router.post('/login', async (req, res) => {
 
 // POST: Registro de novo usuário
 router.post('/register', async (req, res) => {
-  const { username, password } = req.body
+  const { username, password, email } = req.body
 
-  if (!username || !password) {
-    const error = new Error('Username and password are required.')
+  if (!username || !password || !email) {
+    const error = new Error('Username, password, and email are required.')
     error.status = STATUS.BAD_REQUEST
     throw error
   }
 
-  const user = await authService.registerUser(username, password)
+  const user = await authService.registerUser(username, password, email)
 
   res.status(STATUS.CREATED).json({ message: 'User registered successfully', user })
 })

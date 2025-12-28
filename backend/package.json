@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "server": "nodemon src/server.js"
+    "server": "nodemon src/server.js",
+    "test": "cross-env NODE_ENV=test node --env-file=./src/.env --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -14,5 +15,10 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "2.0.2",
     "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4"
   }
 }
