@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits, computed } from 'vue'
+import { ref, watch, defineProps, defineEmits, computed, onMounted } from 'vue'
 import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
 import Calendar from 'primevue/calendar'
@@ -134,7 +134,7 @@ const visible = ref(props.modelValue)
 const isEditing = ref(false)
 
 const book = ref({
-  title: '',
+  title: 'Carregando...',
   authors: '',
   publisher: '',
   tags: '',
@@ -156,12 +156,14 @@ function getChipColor() {
 }
 
 const bookCoverUrl = computed(() => {
-  if (!props.bookId) return '/placeholder.jpg'
+  if (!props.bookId) return '/placeholder.png'
   return `${API_URL}/uploads/${props.bookId}.jpg`
 })
 
 function handleImageError(e) {
-  e.target.src = 'https://placehold.co/300x500?text=No+Cover'
+  if (e.target.dataset.errorHandled) return
+  e.target.dataset.errorHandled = true
+  e.target.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22500%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%232a2a2a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23aaaaaa%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20dy%3D%22.3em%22%3ENo%20Cover%3C%2Ftext%3E%3C%2Fsvg%3E"
 }
 
 function editMode() {
@@ -176,7 +178,16 @@ function formatDate(date) {
   if (!date) return null
   const d = new Date(date)
   if (isNaN(d.getTime())) return null
-  return d.toISOString().split('T')[0]
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function isValidReadDate(dateString) {
+  if (!dateString) return false
+  if (dateString.startsWith('0101')) return false
+  return true
 }
 
 async function saveBookDetails() {
@@ -184,7 +195,7 @@ async function saveBookDetails() {
     title: book.value.title,
     authors: book.value.authors,
     publisher: book.value.publisher,
-    tags: book.value.tags.split(',').map(t => t.trim()),
+    tags: book.value.tags ? book.value.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
     isbn: book.value.isbn,
     pubdate: formatDate(book.value.pubdate),
     read_date: formatDate(book.value.read_date)
@@ -200,27 +211,48 @@ async function saveBookDetails() {
   }
 }
 
+async function loadBookData() {
+  console.log('Iniciando carga do livro ID:', props.bookId)
+
+  if (!props.bookId) return
+
+  try {
+    const response = await api.getBookById(props.bookId)
+
+    book.value.title = response.title || ''
+    book.value.authors = response.authors || ''
+    book.value.isbn = response.isbn || ''
+    book.value.publisher = response.publisher_name || response.publisher || ''
+    book.value.tags = response.tags || ''
+
+    book.value.pubdate = response.publication_date
+      ? new Date(new Date(response.publication_date).getUTCFullYear(), new Date(response.publication_date).getUTCMonth(), new Date(response.publication_date).getUTCDate())
+      : null
+
+    if (isValidReadDate(response.read_date)) {
+      const d = new Date(response.read_date)
+      book.value.read_date = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+    } else {
+      book.value.read_date = null
+    }
+
+  } catch (error) {
+    console.error('Erro ao buscar detalhes:', error)
+    book.value.title = 'Erro ao carregar dados'
+  }
+}
+
 watch(() => props.modelValue, (newValue) => {
   visible.value = newValue
 })
 
 watch(visible, (newValue) => {
   emits('update:modelValue', newValue)
+})
 
-  if (newValue && props.bookId) {
-    api.getBookById(props.bookId)
-      .then((response) => {
-        book.value.title = response.title
-        book.value.authors = response.authors || ''
-        book.value.isbn = response.isbn
-        book.value.publisher = response.publisher_name || ''
-        book.value.tags = response.tags || ''
-        book.value.read_date = response.read_date ? new Date(response.read_date) : null
-        book.value.pubdate = response.publication_date ? new Date(response.publication_date) : null
-      })
-      .catch(error => {
-        console.error('Error fetching book details:', error)
-      })
+onMounted(() => {
+  if (visible.value) {
+    loadBookData()
   }
 })
 </script>

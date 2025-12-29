@@ -52,5 +52,9 @@ export default {
   getPublishers(authorFilter) {
     const url = authorFilter ? `/publisher?authors=${authorFilter}` : '/publisher'
     return client.get(url)
+  },
+
+  getTags() {
+    return client.get('/tags')
   }
 }

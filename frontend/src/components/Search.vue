@@ -11,55 +11,60 @@
         />
       </div>
     </div>
+
     <div class="second-row">
       <SelectButton
         :options="['all', 'read', 'unread']"
         v-model="readState"
-        @change="emit('updateReadState', readState)"
+        @change="emitFilter('readState', readState)"
         class="select-button"
       />
 
-      <AutoComplete
-        placeholder="search by title"
-        :suggestions="filteredTitles"
-        v-model="title"
-        @complete="searchTitle"
-        @change="onTitleChange"
-        class="search-input"
-      />
+      <span class="p-input-icon-left search-input-container">
+        <i class="pi pi-search" />
+        <InputText
+          v-model="searchText"
+          placeholder="Search by title or ISBN"
+          class="search-input"
+          @input="emitFilter('search', searchText)"
+        />
+      </span>
 
       <MultiSelect
         v-model="selectedAuthors"
-        :options="authors"
+        :options="authorsList"
         optionLabel="name"
-        placeholder="filter by author"
+        placeholder="Filter by author"
         filter
-        @change="onAuthorsChange"
+        display="chip"
+        @change="emitFilter('author', selectedAuthors)"
         class="multiselect"
-        :maxSelectedLabels="2"
+        :maxSelectedLabels="1"
       />
 
       <MultiSelect
         v-model="selectedPublishers"
-        :options="publishers"
+        :options="publishersList"
         optionLabel="name"
-        placeholder="filter by publisher"
+        placeholder="Filter by publisher"
         filter
-        @change="onPublishersChange"
+        display="chip"
+        @change="emitFilter('publisher', selectedPublishers)"
         class="multiselect"
-        :maxSelectedLabels="2"
+        :maxSelectedLabels="1"
       />
 
       <div class="sort-area">
         <Dropdown
           v-model="sortField"
-          :options="['authors', 'title']"
-          placeholder="sort by"
+          :options="['title', 'authors', 'pubDate', 'readDate']"
+          placeholder="Sort by"
           class="dropdown"
+          @change="emitFilter('sortField', sortField)"
         />
         <Button
-          @click="sortBooks(sortField)"
-          :icon="sortField ? (sortOrder === 'asc' ? 'pi pi-sort-alpha-down' : 'pi pi-sort-alpha-up') : 'pi pi-sort'"
+          @click="toggleSortOrder"
+          :icon="sortOrder === 'asc' ? 'pi pi-sort-amount-down' : 'pi pi-sort-amount-up-alt'"
           class="button"
         />
       </div>
@@ -68,148 +73,123 @@
 
   <AddBookDialog
     v-model:visible="addBookDialogVisible"
-    @save="saveNewBook"
+    @save="onBookSaved"
   />
 </template>
 
 <script setup>
 import { ref, onMounted, defineProps, defineEmits } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
-import AutoComplete from 'primevue/autocomplete'
-import AddBookDialog from '../components/AddBookDialog.vue'
+import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import SelectButton from 'primevue/selectbutton'
+import AddBookDialog from '../components/AddBookDialog.vue'
 import api from '../services/api.js'
-
-const emit = defineEmits(['updateReadState'])
-const router = useRouter()
 
 const props = defineProps({
   path: String,
-  booksQuantity: Number
+  booksQuantity: Number,
+  loading: Boolean
 })
 
-const readState = ref('all')
+const emit = defineEmits(['updateReadState', 'filter-change', 'refresh'])
+const router = useRouter()
+const route = useRoute()
+
 const addBookDialogVisible = ref(false)
-
-const title = ref('')
-const filteredTitles = ref([])
-const titles = ref([])
-
-const authors = ref([])
-const selectedAuthors = ref([])
-
-const publishers = ref([])
-const selectedPublishers = ref([])
-
-const sortField = ref('')
+const readState = ref('all')
+const searchText = ref('')
+const sortField = ref('title')
 const sortOrder = ref('asc')
 
-function searchTitle(event) {
-  const query = event.query.toLowerCase()
-  filteredTitles.value = titles.value.filter(t => t.toLowerCase().includes(query))
+const selectedAuthors = ref([])
+const authorsList = ref([])
+
+const selectedPublishers = ref([])
+const publishersList = ref([])
+
+function emitFilter(key, value) {
+  emit('filter-change', { key, value })
+  updateUrlParams()
 }
 
-function onTitleChange() {
-  updateRoute()
-}
-
-function onAuthorsChange() {
-  fetchAndSetPublishers()
-  updateRoute()
-}
-
-function onPublishersChange() {
-  fetchAndSetAuthors()
-  updateRoute()
+function toggleSortOrder() {
+  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  emitFilter('sortOrder', sortOrder.value)
 }
 
 function openAddBookModal() {
   addBookDialogVisible.value = true
 }
 
-function saveNewBook() {
-  console.log('Book saved, triggering refresh...')
-  emit('updateReadState', readState.value)
+function onBookSaved() {
+  emit('refresh')
 }
 
-function updateRoute() {
-  const searchParams = new URLSearchParams()
-
-  if (title.value) {
-    searchParams.set('search', title.value)
-  }
+function updateUrlParams() {
+  const query = {}
+  if (searchText.value) query.search = searchText.value
+  if (readState.value !== 'all') query.readState = readState.value
+  if (sortField.value !== 'title') query.sort = sortField.value
+  if (sortOrder.value !== 'asc') query.order = sortOrder.value
 
   if (selectedAuthors.value.length) {
-    const names = selectedAuthors.value.map(a => a.name).join(',')
-    searchParams.set('author', names)
+    query.author = selectedAuthors.value.map(a => a.name).join(',')
   }
-
   if (selectedPublishers.value.length) {
-    const names = selectedPublishers.value.map(p => p.name).join(',')
-    searchParams.set('publisher', names)
+    query.publisher = selectedPublishers.value.map(p => p.name).join(',')
   }
 
-  if (sortField.value) {
-    searchParams.set('sort', sortField.value)
-    searchParams.set('order', sortOrder.value)
-  }
-
-  router.push({ path: `/${props.path}`, query: Object.fromEntries(searchParams.entries()) })
+  router.replace({ query })
 }
 
-function sortBooks(field) {
-  if (sortField.value !== field) {
-    sortField.value = field
-    sortOrder.value = 'asc'
-  } else {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
-  }
-  updateRoute()
-}
-
-async function fetchAndSetTitles() {
+async function loadFilterOptions() {
   try {
-    const response = await api.getBooks()
-    const allBooks = response.result || []
-    titles.value = [...new Set(allBooks.map(b => b.title))]
+    const [authorsData, publishersData] = await Promise.all([
+      api.getAuthors(),
+      api.getPublishers()
+    ])
+
+    authorsList.value = authorsData.map(a => ({ name: a.name || a }))
+    publishersList.value = publishersData.map(p => ({ name: p.name || p }))
+
   } catch (error) {
-    console.error('Error fetching titles:', error)
+    console.error('Erro ao carregar filtros:', error)
   }
 }
 
-async function fetchAndSetPublishers() {
-  try {
-    const authorQuery = selectedAuthors.value.map(a => a.name).join(',')
-    const data = await api.getPublishers(authorQuery)
-    publishers.value = data.map(item => ({ name: item.name || item }))
-  } catch (error) {
-    console.error('Error fetching publishers:', error)
-  }
-}
+onMounted(() => {
+  loadFilterOptions()
 
-async function fetchAndSetAuthors() {
-  try {
-    const publisherQuery = selectedPublishers.value.map(p => p.name).join(',')
-    const data = await api.getAuthors(publisherQuery)
-    authors.value = data.map(item => ({ name: item.name || item }))
-  } catch (error) {
-    console.error('Error fetching authors:', error)
+  if (route.query.search) {
+    searchText.value = route.query.search
+    emitFilter('search', searchText.value)
   }
-}
-
-onMounted(async () => {
-  await Promise.all([
-    fetchAndSetTitles(),
-    fetchAndSetAuthors(),
-    fetchAndSetPublishers()
-  ])
 })
 </script>
 
 <style scoped>
+.search-input-container {
+  position: relative;
+  width: 50%;
+}
+
+.search-input-container i {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: #888;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 2.5rem;
+}
+
 .button {
   background-color: var(--main-color);
   color: var(--text-color);
@@ -242,24 +222,11 @@ onMounted(async () => {
 }
 
 .multiselect {
-  width: 24rem;
-}
-
-.search-input {
-  width: 50%;
+  width: 20rem;
 }
 
 ::v-deep .p-multiselect .p-multiselect-label {
   color: var(--text-color);
-}
-
-.p-multiselect:not(.p-disabled).p-focus,
-.p-autocomplete-input:not(.p-disabled).p-focus,
-.p-dropdown:not(.p-disabled).p-focus {
-  outline: 1px solid var(--main-color);
-  outline-offset: -1px;
-  box-shadow: none;
-  border-color: #52525b;
 }
 
 .search-wrapper {
@@ -274,20 +241,6 @@ onMounted(async () => {
   color: var(--text-color);
   border: 1px solid var(--main-color);
   width: 10rem;
-}
-
-.add-button:hover {
-  background-color: var(--primary-color-dark);
-}
-
-::v-deep .p-autocomplete-input {
-  width: 100%;
-}
-
-.add-book-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 .sort-area {
@@ -310,9 +263,10 @@ onMounted(async () => {
   .second-row {
     flex-direction: column;
     gap: 0.5rem;
+    width: 100%;
   }
 
-  .search-input,
+  .search-input-container,
   .multiselect,
   .dropdown,
   .add-button {

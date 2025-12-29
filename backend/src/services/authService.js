@@ -17,7 +17,7 @@ async function loginUser(username, password) {
     throw error
   }
 
-  const token = jwt.sign({ userId: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' })
+  const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' })
   return token
 }
 
@@ -30,7 +30,7 @@ async function registerUser(username, password, email) {
   }
 
   const hashedPassword = await bcryptjs.hash(password, 10)
-  const user = await authRepository.createUser( username, hashedPassword, email )
+  const user = await authRepository.createUser(username, hashedPassword, email)
 
   return user
 }

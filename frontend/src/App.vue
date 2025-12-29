@@ -34,7 +34,7 @@ const showNavigationMenu = computed(() => {
     margin: 0;
   }
 
-  .wrapper > * {
+  .wrapper>* {
     width: 100%;
   }
 }

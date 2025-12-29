@@ -3,8 +3,20 @@ import fs from 'fs'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import STATUS from '../utils/statusCodes.js'
 
-async function getAllBooksByUser(userId, readState) {
-  return await libraryRepository.getAllBooksByUser(userId, readState)
+async function getAllBooksByUser(userId, query) {
+  const filters = {
+    search: query.search || undefined,
+    readState: query.readState || 'all',
+    author: query.author || undefined,
+    publisher: query.publisher || undefined,
+    tags: query.tags || undefined,
+    page: query.page || 1,
+    limit: query.limit || 20,
+    sortField: query.sort || 'recent',
+    sortOrder: query.order || 'desc'
+  }
+
+  return await libraryRepository.getAllBooksByUser(userId, filters)
 }
 
 async function getBookById(id) {
@@ -41,7 +53,7 @@ async function updateBookDetails(bookId, userId, bookData) {
   }
 
   if (typeof bookData.tags === 'string') {
-    bookData.tags = bookData.tags.split(',').map(tag => tag.trim())
+    bookData.tags = bookData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
   }
 
   return await libraryRepository.updateBook(bookId, bookData)
