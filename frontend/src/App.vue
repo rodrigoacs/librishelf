@@ -1,4 +1,6 @@
 <template>
+  <Toast position="bottom-right" />
+  <ConfirmDialog />
   <div class="wrapper">
     <NavigationMenu v-if="showNavigationMenu" />
     <RouterView />
@@ -8,6 +10,8 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import Toast from 'primevue/toast'
+import ConfirmDialog from 'primevue/confirmdialog'
 import NavigationMenu from './components/NavigationMenu.vue'
 
 const route = useRoute()
