@@ -56,5 +56,9 @@ export default {
 
   getTags() {
     return client.get('/tags')
+  },
+
+  getRandomCovers() {
+    return client.get('/library/covers/random')
   }
 }

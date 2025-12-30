@@ -24,6 +24,32 @@ const upload = multer({
 
 const router = express.Router()
 
+router.get('/covers/random', (req, res) => {
+  try {
+    if (!fs.existsSync(UPLOAD_DIR)) {
+      return res.json([])
+    }
+
+    const files = fs.readdirSync(UPLOAD_DIR)
+
+    const imageFiles = files.filter(file =>
+      /\.(avif)$/i.test(file) && !file.startsWith('.')
+    )
+
+    for (let i = imageFiles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [imageFiles[i], imageFiles[j]] = [imageFiles[j], imageFiles[i]]
+    }
+
+    const selectedCovers = imageFiles.slice(0, 50)
+
+    res.json(selectedCovers)
+  } catch (error) {
+    console.error('Erro ao buscar capas aleatórias:', error)
+    res.json([])
+  }
+})
+
 router.use(authenticateToken)
 
 router.get('/', async (req, res) => {

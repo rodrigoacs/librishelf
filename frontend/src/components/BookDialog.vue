@@ -250,7 +250,7 @@ const book = ref({
 const displayCoverUrl = computed(() => {
   if (previewUrl.value) return previewUrl.value
   if (!props.bookId) return '/placeholder.png'
-  return `${API_URL}/uploads/${props.bookId}.jpg?t=${cacheBuster.value}`
+  return `${API_URL}/uploads/${props.bookId}.avif?t=${cacheBuster.value}`
 })
 
 function handleImageError(e) {

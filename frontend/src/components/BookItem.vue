@@ -54,7 +54,6 @@ const props = defineProps({
 const emit = defineEmits(['refresh'])
 const displayDialog = ref(false)
 
-// Lógica para validar se está lido
 const isRead = computed(() => {
   const date = props.book.read_date
   return date && !date.startsWith('0101')
@@ -63,7 +62,7 @@ const isRead = computed(() => {
 const bookCoverUrl = computed(() => {
   const id = props.book.book_id || props.book.id
   if (!id) return '/placeholder.png'
-  return `${API_URL}/uploads/${id}.jpg`
+  return `${API_URL}/uploads/${id}.avif`
 })
 
 function openDialog() {
@@ -108,7 +107,6 @@ function handleImageError(event) {
   aspect-ratio: 2 / 3;
   overflow: hidden;
   background-color: #2a2a2a;
-  /* Cria um contexto de empilhamento para os filhos */
   isolation: isolate;
 }
 
@@ -117,8 +115,6 @@ function handleImageError(event) {
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
-
-  /* [CORREÇÃO] Forçar imagem a ficar no fundo e otimizar renderização */
   position: relative;
   z-index: 1;
   will-change: transform;
@@ -129,20 +125,17 @@ function handleImageError(event) {
   transform: scale(1.05);
 }
 
-/* [CORREÇÃO] Overlay com z-index maior para não ser engolido */
 .cover-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 40%;
-  /* Aumentei um pouco para ficar mais suave */
   background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
   pointer-events: none;
   z-index: 2;
 }
 
-/* Fita com z-index máximo */
 .bookmark-ribbon {
   position: absolute;
   top: -2px;
@@ -155,9 +148,7 @@ function handleImageError(event) {
   display: flex;
   justify-content: center;
   padding-top: 6px;
-
   z-index: 3;
-  /* Sempre acima de tudo */
   transition: height 0.2s ease;
 }
 
@@ -176,7 +167,6 @@ function handleImageError(event) {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* Garante que o texto fique sobre o fundo do card */
   z-index: 2;
   background-color: #1e1e1e;
 }
