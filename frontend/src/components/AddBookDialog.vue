@@ -1,391 +1,646 @@
 <template>
   <Dialog
-    v-model:visible="internalVisible"
-    header="Add New Book"
-    modal
-    :closable="true"
-    :style="{ width: '90%', maxWidth: '800px' }"
-    @hide="closeDialog"
+    v-model:visible="visible"
+    :modal="true"
+    :dismissableMask="true"
+    class="modern-add-dialog"
+    :breakpoints="{ '960px': '75vw', '640px': '95vw' }"
+    :style="{ width: '900px', maxWidth: '95vw' }"
+    :showHeader="false"
   >
-    <div class="add-book-form">
-      <div class="form-left">
-        <div class="form-fields">
-          <InputText
-            v-model="newBook.title"
-            placeholder="Title"
-          />
+    <div class="dialog-body">
+      <button
+        class="close-btn"
+        @click="visible = false"
+      >
+        <i class="pi pi-times"></i>
+      </button>
 
-          <AutoComplete
-            v-model="selectedAuthor"
-            :suggestions="filteredAuthors"
-            @complete="searchAuthors"
-            placeholder="Author"
-            dropdown
+      <div class="cover-section">
+        <img
+          v-if="previewUrl"
+          :src="previewUrl"
+          class="blur-bg"
+          aria-hidden="true"
+        />
+
+        <div
+          class="upload-container"
+          @click="triggerFileInput"
+        >
+          <div
+            v-if="previewUrl"
+            class="preview-wrapper"
           >
-            <template #footer>
-              <div
-                class="p-2"
-                v-if="allowNewAuthor"
-              >
-                <Button
-                  label="Add New Author"
-                  icon="pi pi-plus"
-                  class="p-button-text p-button-sm"
-                  @click="addNewAuthor"
-                />
-              </div>
-            </template>
-          </AutoComplete>
+            <img
+              :src="previewUrl"
+              class="cover-preview"
+            />
+            <div class="change-overlay">
+              <i class="pi pi-refresh"></i>
+              <span>Trocar</span>
+            </div>
+          </div>
 
-          <AutoComplete
-            v-model="selectedPublisher"
-            :suggestions="filteredPublishers"
-            @complete="searchPublishers"
-            placeholder="Publisher"
-            dropdown
+          <div
+            v-else
+            class="upload-placeholder"
           >
-            <template #footer>
-              <div
-                class="p-2"
-                v-if="allowNewPublisher"
-              >
-                <Button
-                  label="Add New Publisher"
-                  icon="pi pi-plus"
-                  class="p-button-text p-button-sm"
-                  @click="addNewPublisher"
-                />
-              </div>
-            </template>
-          </AutoComplete>
+            <div class="icon-circle">
+              <i class="pi pi-camera"></i>
+            </div>
+            <span class="upload-text">Adicionar Capa</span>
+            <span class="upload-subtext">Clique para selecionar</span>
+          </div>
 
-          <InputText
-            v-model="newBook.isbn"
-            placeholder="ISBN"
-          />
-
-          <Calendar
-            v-model="newBook.pubDate"
-            placeholder="Publication Date"
-            showIcon
-            dateFormat="dd/mm/yy"
-          />
-
-          <Calendar
-            v-model="newBook.readDate"
-            placeholder="Read Date"
-            showIcon
-            dateFormat="dd/mm/yy"
-          />
-
-          <InputText
-            v-model="newBook.tags"
-            placeholder="Tags (comma-separated)"
+          <input
+            type="file"
+            ref="fileInput"
+            accept="image/*"
+            class="hidden-input"
+            @change="onFileSelect"
           />
         </div>
       </div>
 
-      <div
-        class="image-preview"
-        @click="triggerFileUpload"
-      >
-        <img
-          :src="coverImagePreview || '/placeholder_cover.png'"
-          alt="Cover Preview"
-          @error="handleImageError"
-        />
-        <span
-          v-if="!newBook.coverImage"
-          class="upload-hint"
-        >Click to upload cover</span>
+      <div class="form-section">
+        <div class="form-header">
+          <h2>Novo Livro</h2>
+          <p>Adicione uma nova obra à sua coleção.</p>
+        </div>
+
+        <div class="form-content">
+          <div class="input-group main-group">
+            <input
+              v-model="book.title"
+              class="modern-input title-input"
+              placeholder="Título do Livro *"
+              :class="{ 'error': submitted && !book.title }"
+            />
+            <small
+              v-if="submitted && !book.title"
+              class="error-msg"
+            >Título é obrigatório</small>
+          </div>
+
+          <div class="input-group">
+            <i class="pi pi-user input-icon"></i>
+            <input
+              v-model="book.author"
+              class="modern-input"
+              placeholder="Nome do Autor"
+            />
+          </div>
+
+          <div class="input-group">
+            <i class="pi pi-tags input-icon"></i>
+            <input
+              v-model="book.tags"
+              class="modern-input"
+              placeholder="Tags (separadas por vírgula)"
+            />
+          </div>
+
+          <div class="dates-grid">
+            <div class="input-group">
+              <label>Status de Leitura</label>
+              <div class="date-wrapper">
+                <i
+                  class="pi"
+                  :class="book.readDate ? 'pi-check-circle text-theme' : 'pi-circle text-gray'"
+                ></i>
+                <Calendar
+                  v-model="book.readDate"
+                  dateFormat="dd/mm/yy"
+                  placeholder="Não lido"
+                  class="modern-calendar"
+                  :showIcon="false"
+                />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Data de Publicação</label>
+              <div class="date-wrapper">
+                <i class="pi pi-calendar text-gray"></i>
+                <Calendar
+                  v-model="book.pubDate"
+                  dateFormat="dd/mm/yy"
+                  placeholder="Data"
+                  class="modern-calendar"
+                  :showIcon="false"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="meta-grid">
+            <div class="input-group">
+              <label>Editora</label>
+              <input
+                v-model="book.publisher"
+                class="modern-input meta-input"
+                placeholder="-"
+              />
+            </div>
+            <div class="input-group">
+              <label>ISBN</label>
+              <input
+                v-model="book.isbn"
+                class="modern-input meta-input"
+                placeholder="-"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-footer">
+          <Button
+            label="Cancelar"
+            class="p-button-text p-button-secondary"
+            @click="visible = false"
+          />
+          <Button
+            label="Adicionar Livro"
+            icon="pi pi-plus"
+            class="btn-action-primary"
+            @click="saveBook"
+            :loading="loading"
+          />
+        </div>
       </div>
-
-      <input
-        type="file"
-        ref="fileInput"
-        @change="onCoverImageChange"
-        accept="image/*"
-        style="display: none;"
-      />
-    </div>
-
-    <div class="save-button">
-      <Button
-        label="Save"
-        icon="pi pi-check"
-        @click="saveBook"
-        class="p-button-success"
-        :loading="isLoading"
-      />
     </div>
   </Dialog>
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits } from 'vue'
+import { ref, reactive, watch, defineProps, defineEmits } from 'vue'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import AutoComplete from 'primevue/autocomplete'
 import Calendar from 'primevue/calendar'
+import { useToast } from 'primevue/usetoast'
 import api from '../services/api.js'
 
 const props = defineProps({
-  visible: Boolean,
-  onSave: Function
+  visible: Boolean
 })
 
-const emit = defineEmits(['update:visible'])
+const emit = defineEmits(['update:visible', 'save'])
+const toast = useToast()
 
-const internalVisible = ref(props.visible)
-const isLoading = ref(false)
-
-const newBook = ref({
-  title: '',
-  isbn: '',
-  pubDate: null,
-  readDate: null,
-  tags: '',
-  coverImage: null
-})
-
-const coverImagePreview = ref(null)
+const visible = ref(props.visible)
+const loading = ref(false)
+const submitted = ref(false)
 const fileInput = ref(null)
+const previewUrl = ref(null)
+const selectedFile = ref(null)
 
-const selectedAuthor = ref(null)
-const filteredAuthors = ref([])
-const allowNewAuthor = ref(false)
-
-const selectedPublisher = ref(null)
-const filteredPublishers = ref([])
-const allowNewPublisher = ref(false)
-
-watch(() => props.visible, (newVal) => {
-  internalVisible.value = newVal
-})
-
-function closeDialog() {
-  emit('update:visible', false)
+const initialBookState = {
+  title: '',
+  author: '',
+  publisher: '',
+  tags: '',
+  isbn: '',
+  readDate: null,
+  pubDate: null
 }
 
-function triggerFileUpload() {
+const book = reactive({ ...initialBookState })
+
+watch(() => props.visible, (newVal) => {
+  visible.value = newVal
+  if (newVal) {
+    resetForm()
+  }
+})
+
+watch(visible, (newVal) => {
+  emit('update:visible', newVal)
+})
+
+function resetForm() {
+  Object.assign(book, initialBookState)
+  selectedFile.value = null
+  previewUrl.value = null
+  submitted.value = false
+}
+
+function triggerFileInput() {
   fileInput.value.click()
 }
 
-function onCoverImageChange(event) {
+function onFileSelect(event) {
   const file = event.target.files[0]
   if (file) {
-    newBook.value.coverImage = file
-    const reader = new FileReader()
-    reader.onload = e => {
-      coverImagePreview.value = e.target.result
-    }
-    reader.readAsDataURL(file)
+    selectedFile.value = file
+    previewUrl.value = URL.createObjectURL(file)
   }
 }
 
-function handleImageError(e) {
-  e.target.src = 'https://placehold.co/300x450?text=Upload+Cover'
-}
-
-async function searchAuthors(event) {
-  try {
-    const query = event.query.trim().toLowerCase()
-    const publisherQuery = selectedPublisher.value ? selectedPublisher.value : ''
-
-    const response = await api.getAuthors(publisherQuery)
-
-    const allNames = response.map(a => a.name)
-
-    filteredAuthors.value = allNames.filter(name =>
-      name.toLowerCase().includes(query)
-    )
-
-    allowNewAuthor.value = query.length > 0 && !allNames.some(n => n.toLowerCase() === query)
-  } catch (error) {
-    console.error('Error fetching authors:', error)
-  }
-}
-
-async function searchPublishers(event) {
-  try {
-    const query = event.query.trim().toLowerCase()
-    const authorQuery = selectedAuthor.value ? selectedAuthor.value : ''
-
-    const response = await api.getPublishers(authorQuery)
-    const allNames = response.map(p => p.name)
-
-    filteredPublishers.value = allNames.filter(name =>
-      name.toLowerCase().includes(query)
-    )
-
-    allowNewPublisher.value = query.length > 0 && !allNames.some(n => n.toLowerCase() === query)
-  } catch (error) {
-    console.error('Error fetching publishers:', error)
-  }
-}
-
-function addNewAuthor() {
-  allowNewAuthor.value = false
-}
-
-function addNewPublisher() {
-  allowNewPublisher.value = false
-}
-
-function formatDate(date) {
+function formatDateISO(date) {
   if (!date) return null
   const d = new Date(date)
+  if (isNaN(d.getTime())) return null
   const offset = d.getTimezoneOffset()
   const localDate = new Date(d.getTime() - (offset * 60 * 1000))
   return localDate.toISOString().split('T')[0]
 }
 
 async function saveBook() {
-  isLoading.value = true
+  submitted.value = true
+
+  if (!book.title.trim()) {
+    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'O título é obrigatório.', life: 3000 })
+    return
+  }
+
+  loading.value = true
 
   try {
     const formData = new FormData()
 
-    if (!newBook.value.title || !selectedAuthor.value) {
-      alert('Title and Author are required.')
-      isLoading.value = false
-      return
-    }
+    formData.append('title', book.title)
+    formData.append('author', book.author || '')
+    formData.append('publisher', book.publisher || '')
+    formData.append('isbn', book.isbn || '')
 
-    formData.append('title', newBook.value.title)
+    formData.append('tags', book.tags)
 
-    const authorName = typeof selectedAuthor.value === 'object' ? selectedAuthor.value.name : selectedAuthor.value
-    const publisherName = typeof selectedPublisher.value === 'object' ? selectedPublisher.value.name : selectedPublisher.value
+    if (book.pubDate) formData.append('pubDate', formatDateISO(book.pubDate))
+    if (book.readDate) formData.append('readDate', formatDateISO(book.readDate))
 
-    formData.append('author', authorName || '')
-    formData.append('publisher', publisherName || '')
-    formData.append('isbn', newBook.value.isbn || '')
-
-    if (newBook.value.pubDate) {
-      formData.append('pubDate', formatDate(newBook.value.pubDate))
-    }
-    if (newBook.value.readDate) {
-      formData.append('readDate', formatDate(newBook.value.readDate))
-    }
-
-    formData.append('tags', newBook.value.tags)
-
-    if (newBook.value.coverImage) {
-      formData.append('coverImage', newBook.value.coverImage)
+    if (selectedFile.value) {
+      formData.append('coverImage', selectedFile.value)
     }
 
     await api.createBook(formData)
 
-    if (props.onSave) props.onSave()
-    closeDialog()
-    resetForm()
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Livro adicionado à biblioteca!', life: 3000 })
+    emit('save')
+    visible.value = false
 
   } catch (error) {
-    console.error('Error adding new book:', error)
-    alert('Erro ao salvar livro: ' + (error.message || 'Erro desconhecido'))
+    console.error('Erro ao criar livro:', error)
+    toast.add({ severity: 'error', summary: 'Erro', detail: error.message || 'Falha ao criar livro.', life: 4000 })
   } finally {
-    isLoading.value = false
+    loading.value = false
   }
-}
-
-function resetForm() {
-  newBook.value = { title: '', isbn: '', pubDate: null, readDate: null, tags: '', coverImage: null }
-  selectedAuthor.value = null
-  selectedPublisher.value = null
-  coverImagePreview.value = null
 }
 </script>
 
+<style>
+.p-dialog.modern-add-dialog {
+  border: none !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.modern-add-dialog .p-dialog-content {
+  padding: 0 !important;
+  background-color: #18181b;
+}
+
+.modern-add-dialog .p-dialog-header {
+  display: none !important;
+}
+</style>
+
 <style scoped>
-.add-book-form {
+.dialog-body {
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.form-left {
-  flex: 1;
-}
-
-.form-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex-direction: row;
+  min-height: 550px;
   width: 100%;
-  max-width: 400px;
+  position: relative;
 }
 
-:deep(.p-autocomplete),
-:deep(.p-autocomplete-input) {
-  width: 100%;
-}
-
-.image-preview {
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  color: white;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  width: 40%;
-  height: 420px;
-  border: 2px dashed #52525b;
-  border-radius: 8px;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.cover-section {
+  flex: 1;
+  max-width: 350px;
+  background-color: #09090b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   overflow: hidden;
-  background-color: #1e1e1e;
+  padding: 2rem;
 }
 
-.image-preview img {
+.blur-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: blur(40px) brightness(0.4);
+  z-index: 1;
+  transform: scale(1.2);
+}
+
+.upload-container {
+  width: 100%;
+  max-width: 250px;
+  aspect-ratio: 2/3;
+  border-radius: 12px;
+  border: 2px dashed #3f3f46;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+  background-color: rgba(24, 24, 27, 0.5);
 }
 
-.upload-hint {
-  position: absolute;
-  color: #aaa;
+.upload-container:hover {
+  border-color: var(--main-color, #4caf50);
+  background-color: rgba(24, 24, 27, 0.8);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #71717a;
+}
+
+.icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  transition: transform 0.2s;
+}
+
+.upload-container:hover .icon-circle {
+  transform: scale(1.1);
+  background-color: var(--main-color, #4caf50);
+  color: #000;
+}
+
+.icon-circle i {
+  font-size: 1.5rem;
+}
+
+.upload-text {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #e4e4e7;
+}
+
+.upload-subtext {
   font-size: 0.8rem;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 4px 8px;
-  border-radius: 4px;
+  margin-top: 0.25rem;
 }
 
-.save-button {
-  margin-top: 1rem;
-  text-align: right;
+.hidden-input {
+  display: none;
 }
 
-@media (max-width: 1024px) {
-  .add-book-form {
-    gap: 0.5rem;
-  }
+.preview-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+}
 
-  .image-preview {
-    height: 360px;
-  }
+.cover-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.change-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: white;
+  gap: 0.5rem;
+}
+
+.preview-wrapper:hover .change-overlay {
+  opacity: 1;
+}
+
+.form-section {
+  flex: 1.5;
+  padding: 3rem;
+  background-color: #18181b;
+  color: #f4f4f5;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+.form-header {
+  margin-bottom: 2rem;
+}
+
+.form-header h2 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+  color: #fff;
+}
+
+.form-header p {
+  margin: 0;
+  color: #a1a1aa;
+  font-size: 1rem;
+}
+
+.form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.input-group {
+  position: relative;
+  width: 100%;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.8rem;
+  color: #71717a;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #71717a;
+}
+
+.modern-input {
+  width: 100%;
+  background-color: #27272a;
+  border: 1px solid transparent;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.input-group:has(.input-icon) .modern-input {
+  padding-left: 2.8rem;
+}
+
+.modern-input:focus {
+  outline: none;
+  border-color: var(--main-color, #4caf50);
+  background-color: #09090b;
+}
+
+.modern-input::placeholder {
+  color: #52525b;
+}
+
+.title-input {
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 1rem;
+  background-color: transparent;
+  border-bottom: 2px solid #27272a;
+  border-radius: 0;
+}
+
+.title-input:focus {
+  background-color: transparent;
+  border-bottom-color: var(--main-color, #4caf50);
+}
+
+.title-input.error {
+  border-bottom-color: #ef4444;
+}
+
+.error-msg {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.dates-grid,
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.date-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #27272a;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.text-theme {
+  color: var(--main-color, #4caf50);
+}
+
+.text-gray {
+  color: #71717a;
+}
+
+:deep(.modern-calendar .p-inputtext) {
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 0;
+  font-size: 1rem;
+  width: 100%;
+}
+
+:deep(.modern-calendar .p-inputtext:enabled:focus) {
+  box-shadow: none;
+}
+
+.form-footer {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #27272a;
 }
 
 @media (max-width: 768px) {
-  .add-book-form {
+  .dialog-body {
     flex-direction: column;
-    align-items: center;
-    gap: 1rem;
   }
 
-  .form-fields {
+  .cover-section {
     max-width: 100%;
+    padding: 2rem 1rem;
+    height: auto;
   }
 
-  .image-preview {
-    width: 100%;
-    height: 300px;
+  .upload-container {
+    max-width: 150px;
   }
 
-  .save-button {
-    width: 100%;
-    text-align: center;
+  .form-section {
+    padding: 1.5rem;
+  }
+
+  .form-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .dates-grid,
+  .meta-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }
 </style>
