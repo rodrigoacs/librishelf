@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "server": "nodemon src/server.js",
+    "server": "node --env-file=./src/.env --watch src/server.js",
     "test": "cross-env NODE_ENV=test node --env-file=./src/.env --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
   },
   "dependencies": {
