@@ -6,17 +6,16 @@ const router = express.Router()
 
 // POST: Login de usuário
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body
+  try {
+    const { username, password } = req.body
 
-  if (!username || !password) {
-    const error = new Error('Username and password are required.')
-    error.status = STATUS.BAD_REQUEST
-    throw error
+    const result = await authService.loginUser(username, password)
+
+    res.status(STATUS.OK).json(result)
+
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message })
   }
-
-  const token = await authService.loginUser(username, password)
-
-  res.status(STATUS.OK).json({ message: 'Login successful', token })
 })
 
 // POST: Registro de novo usuário

@@ -17,8 +17,16 @@ async function loginUser(username, password) {
     throw error
   }
 
-  const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' })
-  return token
+  const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '7d' })
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email
+    }
+  }
 }
 
 async function registerUser(username, password, email) {
