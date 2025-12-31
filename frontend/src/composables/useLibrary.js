@@ -59,6 +59,10 @@ export function useLibrary() {
         params.tags = filters.value.tags.map(t => t.name || t).join(',')
       }
 
+      if (filters.value.readYear && filters.value.readYear !== 'all') {
+        params.readYear = filters.value.readYear
+      }
+
       const response = await api.getBooks(params)
 
       totalRecords.value = response.total || 0

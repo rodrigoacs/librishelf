@@ -131,6 +131,7 @@ function clearFilters() {
   setFilter('author', [])
   setFilter('publisher', [])
   setFilter('tags', [])
+  setFilter('readYear', 'all')
   refreshData()
 }
 

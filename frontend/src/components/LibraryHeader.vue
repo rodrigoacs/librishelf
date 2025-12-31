@@ -114,6 +114,20 @@
         </div>
 
         <div class="filter-group">
+          <label>Ano de leitura</label>
+          <Dropdown
+            v-model="readYear"
+            :options="yearOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione o ano"
+            class="w-full custom-dropdown"
+            panelClass="custom-panel"
+            @change="emitFilter('readYear', readYear)"
+          />
+        </div>
+
+        <div class="filter-group">
           <label>Ordenar Por</label>
           <div class="sort-row">
             <Dropdown
@@ -237,6 +251,21 @@ const sortOptions = [
   { label: 'Data de Leitura', value: 'readDate' },
   { label: 'Data de Publicação', value: 'pubDate' }
 ]
+
+const readYear = ref(null) // Inicialize como null
+
+const yearOptions = computed(() => {
+  const currentYear = new Date().getFullYear()
+
+  // Gera array de objetos: [{ label: '2025', value: '2025' }, ...]
+  const years = Array.from({ length: currentYear - 1999 }, (_, i) => {
+    const year = (currentYear - i).toString()
+    return { label: year, value: year }
+  })
+
+  // Adiciona a opção "Todos" no topo com valor null (para limpar o filtro)
+  return [{ label: 'Todos os anos', value: null }, ...years]
+})
 
 const hasActiveFilters = computed(() => {
   return readState.value !== 'all' ||

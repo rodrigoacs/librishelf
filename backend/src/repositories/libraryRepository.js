@@ -1,3 +1,4 @@
+import { log } from "console"
 import { db } from "../database/connection.js"
 import { LIBRARY_QUERIES as q } from "../database/queries.js"
 
@@ -5,6 +6,7 @@ async function getAllBooksByUser(userId, filters = {}) {
   const {
     search,
     readState,
+    readYear,
     author,
     publisher,
     tags,
@@ -23,6 +25,12 @@ async function getAllBooksByUser(userId, filters = {}) {
     query += ` AND (b.read_date IS NOT NULL AND b.read_date::date <> '0101-01-01')`
   } else if (readState === 'unread' || readState === 'false') {
     query += ` AND (b.read_date IS NULL OR b.read_date::date = '0101-01-01')`
+  }
+
+  if (readYear && readYear !== 'all') {
+    query += ` AND EXTRACT(YEAR FROM b.read_date) = $${paramIndex}`
+    params.push(readYear)
+    paramIndex++
   }
 
   if (search) {

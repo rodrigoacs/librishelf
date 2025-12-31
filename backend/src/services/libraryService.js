@@ -1,5 +1,5 @@
 import path from 'path'
-import fs from 'fs'
+import fs, { read } from 'fs'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import STATUS from '../utils/statusCodes.js'
 
@@ -7,6 +7,7 @@ async function getAllBooksByUser(userId, query) {
   const filters = {
     search: query.search || undefined,
     readState: query.readState || 'all',
+    readYear: query.readYear || 'all',
     author: query.author || undefined,
     publisher: query.publisher || undefined,
     tags: query.tags || undefined,

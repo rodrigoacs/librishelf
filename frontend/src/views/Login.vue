@@ -5,7 +5,7 @@
 
       <div class="visual-content">
         <h1>Librishelf</h1>
-        <p>Sua biblioteca pessoal, reinventada.</p>
+        <p>Sua biblioteca pessoal, em todo lugar.</p>
       </div>
 
       <div class="mosaic-grid">
