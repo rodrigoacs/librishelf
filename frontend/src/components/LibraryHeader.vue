@@ -77,7 +77,7 @@
         <Chip
           v-for="t in selectedTags"
           :key="t.name"
-          :label="t.name"
+          :label="'#' + t.name"
           removable
           @remove="removeArrayFilter('tags', t)"
           class="custom-chip theme-border"
@@ -121,7 +121,7 @@
               :options="sortOptions"
               optionLabel="label"
               optionValue="value"
-              class="w-full custom-dropdown"
+              class="custom-dropdown"
               panelClass="custom-panel"
               @change="emitFilter('sortField', sortField)"
             />
@@ -344,6 +344,7 @@ onMounted(async () => {
 .header-title h1 {
   font-size: 1.5rem;
   margin: 0;
+  font-family: 'Georgia', serif;
   font-weight: 700;
   color: #fff;
   letter-spacing: -0.5px;
@@ -524,6 +525,14 @@ onMounted(async () => {
 .sort-row {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.sort-row .custom-dropdown {
+  flex: 1;
+  width: auto !important;
+  min-width: 0;
 }
 
 .sort-btn {

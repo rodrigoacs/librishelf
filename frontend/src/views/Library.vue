@@ -94,12 +94,14 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref, watchEffect } from 'vue'
+import { useRoute } from 'vue-router'
 import LibraryHeader from '../components/LibraryHeader.vue'
 import BookItem from '../components/BookItem.vue'
 import Skeleton from 'primevue/skeleton'
 import Button from 'primevue/button'
 import { useLibrary } from '../composables/useLibrary.js'
 
+const route = useRoute()
 const {
   books,
   totalRecords,
@@ -157,6 +159,18 @@ watchEffect(() => {
 })
 
 onMounted(() => {
+  if (route.query.author) {
+    setFilter('author', [{ name: route.query.author }])
+  }
+
+  if (route.query.publisher) {
+    setFilter('publisher', [{ name: route.query.publisher }])
+  }
+
+  if (route.query.tags) {
+    setFilter('tags', [{ name: route.query.tags }])
+  }
+
   fetchBooks()
 })
 
@@ -185,6 +199,7 @@ onUnmounted(() => {
 .content-section {
   padding: 1.5rem 2rem 4rem 2rem;
   flex: 1;
+  max-width: 1800px;
   margin: 0 auto;
   width: 100%;
 }

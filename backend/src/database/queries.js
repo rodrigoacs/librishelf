@@ -78,6 +78,14 @@ export const AUTHOR_QUERIES = {
     JOIN librishelf.publishers p ON b.publisher_id = p.id
     WHERE p.name = ANY($1)
     ORDER BY a.name
+  `,
+  GET_AUTHORS_BY_USER: `
+    SELECT DISTINCT a.name
+    FROM librishelf.authors a
+    JOIN librishelf.books_authors_link bal ON a.id = bal.author_id
+    JOIN librishelf.books b ON b.id = bal.book_id
+    WHERE b.user_id = $1
+    ORDER BY a.name ASC
   `
 }
 
@@ -91,7 +99,14 @@ export const PUBLISHER_QUERIES = {
     JOIN librishelf.authors a ON bal.author_id = a.id
     WHERE a.name = ANY($1)
     ORDER BY p.name
-  `
+  `,
+  GET_PUBLISHERS_BY_USER: `
+    SELECT DISTINCT p.name
+    FROM librishelf.publishers p
+    JOIN librishelf.books b ON b.publisher_id = p.id
+    WHERE b.user_id = $1
+    ORDER BY p.name ASC
+  `,
 }
 
 export const TAG_QUERIES = {
@@ -102,5 +117,13 @@ export const TAG_QUERIES = {
     JOIN librishelf.books b ON btl.book_id = b.id
     WHERE b.user_id = $1
     ORDER BY t.name
+  `,
+  GET_TAGS_BY_USER: `
+    SELECT DISTINCT t.name
+    FROM librishelf.tags t
+    JOIN librishelf.books_tags_link btl ON t.id = btl.tag_id
+    JOIN librishelf.books b ON b.id = btl.book_id
+    WHERE b.user_id = $1
+    ORDER BY t.name ASC
   `
 }

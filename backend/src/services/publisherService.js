@@ -12,4 +12,8 @@ async function listPublishers(authorFilter) {
   return await publisherRepository.getAllPublishers()
 }
 
+export async function getPublishersByUserId(userId) {
+  return await publisherRepository.getPublishersByUserId(userId)
+}
+
 export { listPublishers }

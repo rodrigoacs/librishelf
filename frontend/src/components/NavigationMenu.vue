@@ -138,6 +138,8 @@ const items = [
   { label: 'Home', icon: 'pi pi-home', route: '/' },
   { label: 'Biblioteca', icon: 'pi pi-book', route: '/books' },
   { label: 'Autores', icon: 'pi pi-users', route: '/authors' },
+  { label: 'Editoras', icon: 'pi pi-building', route: '/publishers' },
+  { label: 'Categorias', icon: 'pi pi-tags', route: '/tags' },
   { separator: true },
   { label: 'Sair', icon: 'pi pi-sign-out', command: () => { localStorage.clear(); router.push('/login') } },
 ]

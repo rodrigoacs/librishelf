@@ -1,16 +1,16 @@
 <template>
-  <div class="authors-container">
+  <div class="view-container">
     <div class="view-header">
       <div class="header-content">
-        <h1>Autores</h1>
-        <p>Explore sua coleção através dos criadores.</p>
+        <h1>Editoras</h1>
+        <p>As casas que publicam suas histórias favoritas.</p>
       </div>
 
       <div class="search-wrapper">
         <i class="pi pi-search"></i>
         <input
           v-model="search"
-          placeholder="Filtrar autores..."
+          placeholder="Buscar editora..."
           class="modern-input"
         />
       </div>
@@ -24,45 +24,35 @@
         <div
           v-for="n in 8"
           :key="n"
-          class="skeleton-author"
+          class="skeleton-card"
         ></div>
       </div>
 
       <div
-        v-else-if="filteredAuthors.length === 0"
+        v-else-if="filteredPublishers.length === 0"
         class="empty-state"
       >
-        <i class="pi pi-users"></i>
-        <p>Nenhum autor encontrado.</p>
+        <i class="pi pi-building"></i>
+        <p>Nenhuma editora encontrada.</p>
       </div>
 
       <div
         v-else
-        class="authors-grid"
+        class="publishers-grid"
       >
         <div
-          v-for="author in filteredAuthors"
-          :key="author.name"
-          class="author-card"
-          @click="goToAuthorBooks(author.name)"
+          v-for="pub in filteredPublishers"
+          :key="pub.name"
+          class="publisher-card"
+          @click="goToPublisherBooks(pub.name)"
         >
-          <div class="avatar-wrapper">
-            <span class="initials">{{ getInitials(author.name) }}</span>
+          <div class="icon-box">
+            <i class="pi pi-building"></i>
           </div>
-          <div class="author-info">
-            <h3>{{ author.name }}</h3>
-            <span
-              v-if="author.count"
-              class="book-count"
-            >
-              {{ author.count }} {{ author.count === 1 ? 'livro' : 'livros' }}
-            </span>
-            <span
-              v-else
-              class="action-text"
-            >Ver livros</span>
+          <div class="info-box">
+            <h3>{{ pub.name }}</h3>
+            <span class="action-hint">Ver coleção <i class="pi pi-arrow-right"></i></span>
           </div>
-          <i class="pi pi-chevron-right arrow-icon"></i>
         </div>
       </div>
     </div>
@@ -75,37 +65,31 @@ import { useRouter } from 'vue-router'
 import api from '../services/api.js'
 
 const router = useRouter()
-const authors = ref([])
+const publishers = ref([])
 const loading = ref(true)
 const search = ref('')
 
-const filteredAuthors = computed(() => {
-  if (!search.value) return authors.value
+const filteredPublishers = computed(() => {
+  if (!search.value) return publishers.value
   const term = search.value.toLowerCase()
-  return authors.value.filter(a => a.name.toLowerCase().includes(term))
+  return publishers.value.filter(p => p.name.toLowerCase().includes(term))
 })
 
-function getInitials(name) {
-  if (!name) return '?'
-  return name.substring(0, 2).toUpperCase()
-}
-
-function goToAuthorBooks(authorName) {
-  // [CORREÇÃO] Aponta para '/books' em vez de '/'
-  router.push({ path: '/books', query: { author: authorName } })
+function goToPublisherBooks(name) {
+  router.push({ path: '/books', query: { publisher: name } })
 }
 
 onMounted(async () => {
   loading.value = true
   try {
-    const response = await api.getAuthors()
-    authors.value = response.map(a => {
-      if (typeof a === 'string') return { name: a, count: null }
-      return a
+    const response = await api.getPublishers()
+    publishers.value = response.map(p => {
+      if (typeof p === 'string') return { name: p }
+      return p
     })
-    authors.value.sort((a, b) => a.name.localeCompare(b.name))
+    publishers.value.sort((a, b) => a.name.localeCompare(b.name))
   } catch (error) {
-    console.error('Erro ao carregar autores:', error)
+    console.error('Erro ao carregar editoras:', error)
   } finally {
     loading.value = false
   }
@@ -113,7 +97,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.authors-container {
+.view-container {
   padding: 2rem;
   min-height: 100vh;
   background-color: #121212;
@@ -173,93 +157,81 @@ onMounted(async () => {
   background-color: #202022;
 }
 
-.authors-grid {
+.publishers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
 }
 
-.author-card {
+.publisher-card {
   background-color: #18181b;
   border: 1px solid #27272a;
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  overflow: hidden;
 }
 
-.author-card:hover {
-  transform: translateY(-3px);
+.publisher-card:hover {
+  transform: translateY(-4px);
   border-color: var(--main-color, #4caf50);
-  background-color: #202022;
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
 }
 
-.avatar-wrapper {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
+.icon-box {
+  width: 45px;
+  height: 45px;
+  background-color: #27272a;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #3f3f46;
-  flex-shrink: 0;
+  color: #a1a1aa;
+  transition: all 0.2s;
 }
 
-.initials {
-  font-weight: 700;
-  color: var(--main-color, #4caf50);
-  font-size: 1.1rem;
-  letter-spacing: 1px;
+.publisher-card:hover .icon-box {
+  background-color: var(--main-color, #4caf50);
+  color: #000;
 }
 
-.author-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.author-info h3 {
+.info-box h3 {
   margin: 0;
   color: #fff;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-bottom: 0.5rem;
 }
 
-.book-count,
-.action-text {
+.action-hint {
   font-size: 0.8rem;
   color: #71717a;
-  margin-top: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.2s ease;
 }
 
-.arrow-icon {
-  color: #3f3f46;
-  transition: transform 0.2s, color 0.2s;
-}
-
-.author-card:hover .arrow-icon {
-  color: #fff;
-  transform: translateX(3px);
+.publisher-card:hover .action-hint {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--main-color, #4caf50);
 }
 
 .loading-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
 }
 
-.skeleton-author {
-  height: 80px;
+.skeleton-card {
+  height: 120px;
   background-color: #1f1f23;
   border-radius: 12px;
   animation: pulse 1.5s infinite;
@@ -294,16 +266,12 @@ onMounted(async () => {
 }
 
 @media (max-width: 600px) {
-  .authors-container {
+  .view-container {
     padding: 1rem;
   }
 
   .view-header h1 {
     font-size: 2rem;
-  }
-
-  .search-wrapper {
-    max-width: 100%;
   }
 }
 </style>

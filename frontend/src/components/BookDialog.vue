@@ -26,7 +26,6 @@
           class="blur-bg"
           aria-hidden="true"
         />
-
         <div class="image-container">
           <div
             class="cover-wrapper"
@@ -39,7 +38,6 @@
               alt="Book Cover"
               class="main-cover"
             />
-
             <div
               v-if="isEditing"
               class="edit-overlay"
@@ -48,7 +46,6 @@
               <span>Alterar Capa</span>
             </div>
           </div>
-
           <input
             type="file"
             ref="fileInput"
@@ -102,14 +99,12 @@
                 class="p-button-rounded p-button-text p-button-secondary"
                 @click="cancelEdit"
                 :disabled="isSaving"
-                v-tooltip.bottom="'Cancelar'"
               />
               <Button
                 icon="pi pi-check"
                 class="p-button-rounded btn-action-primary"
                 @click="confirmSave"
                 :loading="isSaving"
-                v-tooltip.bottom="'Salvar'"
               />
             </div>
           </div>
@@ -133,11 +128,13 @@
                 v-if="!book.tags"
                 class="empty-text"
               >Sem tags</span>
+
               <Chip
-                v-for="tag in formatTags(book.tags)"
+                v-for="(tag, index) in formatTags(book.tags)"
                 :key="tag"
                 :label="tag"
-                class="custom-chip"
+                class="custom-chip colored-chip"
+                :style="{ '--tag-color': getTagColor(index) }"
               />
             </div>
           </div>
@@ -223,7 +220,6 @@ const props = defineProps({
 })
 
 const emits = defineEmits(['update:modelValue', 'refresh'])
-
 const toast = useToast()
 const confirm = useConfirm()
 
@@ -231,7 +227,6 @@ const visible = ref(props.modelValue)
 const isEditing = ref(false)
 const isSaving = ref(false)
 const originalBookState = ref(null)
-
 const fileInput = ref(null)
 const selectedFile = ref(null)
 const previewUrl = ref(null)
@@ -247,10 +242,23 @@ const book = ref({
   pubdate: null
 })
 
+const tagColors = [
+  'var(--red)',
+  'var(--green)',
+  'var(--blue)',
+  'var(--purple)',
+  'var(--yellow)',
+  'var(--orange)'
+]
+
+function getTagColor(index) {
+  return tagColors[index % tagColors.length]
+}
+
 const displayCoverUrl = computed(() => {
   if (previewUrl.value) return previewUrl.value
   if (!props.bookId) return '/placeholder.png'
-  return `${API_URL}/uploads/${props.bookId}.avif?t=${cacheBuster.value}`
+  return `${API_URL}/uploads/${props.bookId}.jpg?t=${cacheBuster.value}`
 })
 
 function handleImageError(e) {
@@ -260,9 +268,7 @@ function handleImageError(e) {
 }
 
 function triggerFileInput() {
-  if (isEditing.value && fileInput.value) {
-    fileInput.value.click()
-  }
+  if (isEditing.value && fileInput.value) fileInput.value.click()
 }
 
 function onFileSelected(event) {
@@ -322,15 +328,12 @@ function confirmSave() {
     rejectClass: 'p-button-text p-button-secondary',
     acceptLabel: 'Salvar',
     rejectLabel: 'Cancelar',
-    accept: () => {
-      saveBookDetails()
-    }
+    accept: () => saveBookDetails()
   })
 }
 
 async function saveBookDetails() {
   isSaving.value = true
-
   try {
     const updatedBook = {
       title: book.value.title,
@@ -347,19 +350,15 @@ async function saveBookDetails() {
     if (selectedFile.value) {
       const formData = new FormData()
       formData.append('coverImage', selectedFile.value)
-
       await api.updateCover(props.bookId, formData)
-
       cacheBuster.value = Date.now()
     }
 
     isEditing.value = false
     selectedFile.value = null
     previewUrl.value = null
-
     emits('refresh')
     toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Alterações salvas.', life: 3000 })
-
   } catch (error) {
     console.error('Error updating book details:', error)
     toast.add({ severity: 'error', summary: 'Erro', detail: error.message || 'Falha ao atualizar.', life: 4000 })
@@ -370,13 +369,10 @@ async function saveBookDetails() {
 
 async function loadBookData() {
   if (!props.bookId) return
-
   previewUrl.value = null
   selectedFile.value = null
-
   try {
     const response = await api.getBookById(props.bookId)
-
     book.value.title = response.title || ''
     book.value.authors = response.authors || ''
     book.value.isbn = response.isbn || ''
@@ -396,7 +392,6 @@ async function loadBookData() {
     } else {
       book.value.pubdate = null
     }
-
   } catch (error) {
     console.error('Erro ao buscar detalhes:', error)
     book.value.title = 'Erro ao carregar dados'
@@ -429,26 +424,10 @@ onMounted(() => {
   display: none !important;
 }
 
-.p-confirm-dialog .p-dialog-content,
-.p-confirm-dialog .p-dialog-header,
-.p-confirm-dialog .p-dialog-footer {
-  background-color: #18181b !important;
-  color: #fff !important;
-  border: none !important;
-}
-
-.p-confirm-dialog .p-confirm-dialog-message {
-  color: #ccc;
-}
-
 .btn-action-primary {
   background-color: var(--main-color, #4caf50) !important;
   border-color: var(--main-color, #4caf50) !important;
   color: #000 !important;
-}
-
-.btn-action-primary:hover {
-  filter: brightness(1.1) !important;
 }
 </style>
 
@@ -513,7 +492,6 @@ onMounted(() => {
   padding: 2rem;
   display: flex;
   justify-content: center;
-  align-items: center;
   width: 100%;
 }
 
@@ -525,7 +503,6 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-  cursor: default;
 }
 
 .cover-wrapper.editable {
@@ -568,13 +545,6 @@ onMounted(() => {
   font-size: 2rem;
   margin-bottom: 0.5rem;
   color: var(--main-color, #4caf50);
-}
-
-.edit-overlay span {
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 1px;
 }
 
 .details-section {
@@ -634,11 +604,6 @@ onMounted(() => {
   outline: none;
 }
 
-.modern-input.readonly {
-  padding: 0;
-  cursor: default;
-}
-
 .title-input {
   font-size: 2rem;
   font-weight: 700;
@@ -647,12 +612,6 @@ onMounted(() => {
 .author-input {
   font-size: 1.2rem;
   color: #a1a1aa;
-}
-
-.details-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
 }
 
 .info-group label {
@@ -669,18 +628,20 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
-.custom-chip {
-  background-color: #27272a;
-  color: #e4e4e7;
-  font-weight: 500;
-  border: 1px solid #3f3f46;
+.custom-chip.colored-chip {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--tag-color) !important;
+  border: 1px solid var(--tag-color) !important;
+  box-shadow: none !important;
+  font-weight: 600;
 }
 
-.empty-text {
-  color: #52525b;
-  font-style: italic;
+.custom-chip.colored-chip:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 .dates-grid,
@@ -688,6 +649,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .date-input-wrapper {
@@ -717,10 +679,6 @@ onMounted(() => {
   width: 100%;
 }
 
-:deep(.modern-calendar .p-inputtext:enabled:focus) {
-  box-shadow: none;
-}
-
 .meta-input {
   background-color: #27272a;
   padding: 0.75rem;
@@ -741,28 +699,11 @@ onMounted(() => {
     max-width: 100%;
     height: 250px;
     border-bottom: 1px solid #27272a;
-    padding: 0;
-  }
-
-  .image-container {
-    padding: 1rem;
-  }
-
-  .main-cover {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   }
 
   .details-section {
     padding: 1.5rem;
     gap: 1.5rem;
-  }
-
-  .book-title {
-    font-size: 1.5rem;
-  }
-
-  .title-input {
-    font-size: 1.5rem;
   }
 
   .dates-grid,

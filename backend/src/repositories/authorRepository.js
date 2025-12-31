@@ -11,4 +11,9 @@ async function getAuthorsByPublishers(publishersList) {
   return result.rows
 }
 
-export { getAllAuthors, getAuthorsByPublishers }
+async function getAuthorsByUserId(userId) {
+  const result = await db.query(q.GET_AUTHORS_BY_USER, [userId])
+  return result.rows
+}
+
+export { getAllAuthors, getAuthorsByPublishers, getAuthorsByUserId }
