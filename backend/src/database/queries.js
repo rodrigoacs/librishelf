@@ -127,3 +127,43 @@ export const TAG_QUERIES = {
     ORDER BY t.name ASC
   `
 }
+
+export const DASHBOARD_QUERIES = {
+  COUNT_TOTAL: `SELECT COUNT(*) as count FROM librishelf.books WHERE user_id = $1`,
+
+  COUNT_READ: `
+    SELECT COUNT(*) as count FROM librishelf.books 
+    WHERE user_id = $1 AND read_date IS NOT NULL AND read_date::text not like '%101-01-01%'
+  `,
+
+  READ_BY_YEAR: `
+    SELECT EXTRACT(YEAR FROM read_date::date) as year, COUNT(*) as count
+    FROM librishelf.books
+    WHERE user_id = $1 AND read_date IS NOT NULL AND read_date::text <> '0101-01-01'
+    GROUP BY year
+    ORDER BY year DESC
+    LIMIT 5
+  `,
+
+  TOP_AUTHORS: `
+    SELECT a.name, COUNT(b.id) as count
+    FROM librishelf.authors a
+    JOIN librishelf.books_authors_link bal ON a.id = bal.author_id
+    JOIN librishelf.books b ON bal.book_id = b.id
+    WHERE b.user_id = $1
+    GROUP BY a.name
+    ORDER BY count DESC
+    LIMIT 5
+  `,
+
+  TOP_TAGS: `
+    SELECT t.name, COUNT(b.id) as count
+    FROM librishelf.tags t
+    JOIN librishelf.books_tags_link btl ON t.id = btl.tag_id
+    JOIN librishelf.books b ON btl.book_id = b.id
+    WHERE b.user_id = $1
+    GROUP BY t.name
+    ORDER BY count DESC
+    LIMIT 6
+  `
+}

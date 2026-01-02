@@ -60,5 +60,9 @@ export default {
 
   getRandomCovers() {
     return client.get('/library/covers/random')
+  },
+
+  getDashboardStats() {
+    return client.get('/dashboard/stats')
   }
 }

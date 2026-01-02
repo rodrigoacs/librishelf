@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js'
 import authorRoutes from './routes/author.js'
 import publisherRoutes from './routes/publisher.js'
 import tagsRoutes from './routes/tags.js'
+import dashboardRoutes from './routes/dashboard.js'
 import errorHandler from './middlewares/errorHandler.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -25,6 +26,7 @@ app.use('/library', libraryRoutes)
 app.use('/author', authorRoutes)
 app.use('/publisher', publisherRoutes)
 app.use('/tags', tagsRoutes)
+app.use('/dashboard', dashboardRoutes)
 app.get('/ping', (req, res) => { res.json({ message: 'pong' }) })
 
 app.use(errorHandler)

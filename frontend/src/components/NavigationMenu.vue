@@ -140,6 +140,7 @@ const items = [
   { label: 'Autores', icon: 'pi pi-users', route: '/authors' },
   { label: 'Editoras', icon: 'pi pi-building', route: '/publishers' },
   { label: 'Categorias', icon: 'pi pi-tags', route: '/tags' },
+  { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/dashboard' },
   { separator: true },
   { label: 'Sair', icon: 'pi pi-sign-out', command: () => { localStorage.clear(); router.push('/login') } },
 ]
