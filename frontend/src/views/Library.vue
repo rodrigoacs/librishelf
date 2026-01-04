@@ -186,7 +186,7 @@ onUnmounted(() => {
   width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #121212;
+  background-color: var(--bg-app);
   overflow-y: auto;
   position: relative;
 }
@@ -249,7 +249,7 @@ onUnmounted(() => {
 
 .loading-more-icon {
   font-size: 1.5rem;
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
 }
 
 .empty-state {
@@ -259,7 +259,7 @@ onUnmounted(() => {
   justify-content: center;
   height: 60vh;
   text-align: center;
-  color: #71717a;
+  color: var(--text-secondary);
   animation: fadeIn 0.5s ease;
 }
 
@@ -267,8 +267,8 @@ onUnmounted(() => {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -282,7 +282,7 @@ onUnmounted(() => {
 
 .empty-state h3 {
   font-size: 1.5rem;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 

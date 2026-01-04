@@ -290,19 +290,31 @@ async function saveBook() {
 
 <style>
 .p-dialog.modern-add-dialog {
-  border: none !important;
+  border: 1px solid var(--border-color) !important;
   border-radius: 16px !important;
   overflow: hidden !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  background-color: var(--bg-panel) !important;
 }
 
 .modern-add-dialog .p-dialog-content {
   padding: 0 !important;
-  background-color: #18181b;
+  background-color: var(--bg-panel);
 }
 
 .modern-add-dialog .p-dialog-header {
   display: none !important;
+}
+
+.btn-action-primary {
+  background-color: var(--main-color) !important;
+  border-color: var(--main-color) !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+}
+
+.btn-action-primary:hover {
+  filter: brightness(1.1);
 }
 </style>
 
@@ -313,6 +325,7 @@ async function saveBook() {
   min-height: 550px;
   width: 100%;
   position: relative;
+  background-color: var(--bg-panel);
 }
 
 .close-btn {
@@ -320,12 +333,12 @@ async function saveBook() {
   top: 1rem;
   right: 1rem;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
   border: none;
   border-radius: 50%;
   width: 32px;
   height: 32px;
-  color: white;
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -334,13 +347,14 @@ async function saveBook() {
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(var(--main-color-rgb), 0.2);
+  color: var(--main-color);
 }
 
 .cover-section {
   flex: 1;
   max-width: 350px;
-  background-color: #09090b;
+  background-color: var(--bg-input);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -366,7 +380,7 @@ async function saveBook() {
   max-width: 250px;
   aspect-ratio: 2/3;
   border-radius: 12px;
-  border: 2px dashed #3f3f46;
+  border: 2px dashed var(--border-color);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -379,22 +393,22 @@ async function saveBook() {
 }
 
 .upload-container:hover {
-  border-color: var(--main-color, #4caf50);
-  background-color: rgba(24, 24, 27, 0.8);
+  border-color: var(--main-color);
+  background-color: rgba(var(--main-color-rgb), 0.1);
 }
 
 .upload-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #71717a;
+  color: #a1a1aa;
 }
 
 .icon-circle {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #27272a;
+  background-color: rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -404,7 +418,7 @@ async function saveBook() {
 
 .upload-container:hover .icon-circle {
   transform: scale(1.1);
-  background-color: var(--main-color, #4caf50);
+  background-color: var(--main-color);
   color: #000;
 }
 
@@ -462,8 +476,8 @@ async function saveBook() {
 .form-section {
   flex: 1.5;
   padding: 3rem;
-  background-color: #18181b;
-  color: #f4f4f5;
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -478,12 +492,12 @@ async function saveBook() {
   font-size: 2rem;
   margin: 0 0 0.5rem 0;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .form-header p {
   margin: 0;
-  color: #a1a1aa;
+  color: var(--text-secondary);
   font-size: 1rem;
 }
 
@@ -502,7 +516,7 @@ async function saveBook() {
 .input-group label {
   display: block;
   font-size: 0.8rem;
-  color: #71717a;
+  color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -514,16 +528,16 @@ async function saveBook() {
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #71717a;
+  color: var(--text-muted);
 }
 
 .modern-input {
   width: 100%;
-  background-color: #27272a;
+  background-color: var(--bg-input);
   border: 1px solid transparent;
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  color: #fff;
+  color: var(--text-primary);
   font-family: inherit;
   font-size: 1rem;
   transition: all 0.2s;
@@ -535,12 +549,12 @@ async function saveBook() {
 
 .modern-input:focus {
   outline: none;
-  border-color: var(--main-color, #4caf50);
-  background-color: #09090b;
+  border-color: var(--main-color);
+  background-color: var(--bg-hover);
 }
 
 .modern-input::placeholder {
-  color: #52525b;
+  color: var(--text-muted);
 }
 
 .title-input {
@@ -548,13 +562,13 @@ async function saveBook() {
   font-weight: 700;
   padding: 1rem;
   background-color: transparent;
-  border-bottom: 2px solid #27272a;
+  border-bottom: 2px solid var(--border-color);
   border-radius: 0;
 }
 
 .title-input:focus {
   background-color: transparent;
-  border-bottom-color: var(--main-color, #4caf50);
+  border-bottom-color: var(--main-color);
 }
 
 .title-input.error {
@@ -579,23 +593,29 @@ async function saveBook() {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background-color: #27272a;
+  background-color: var(--bg-input);
   padding: 0.5rem 1rem;
   border-radius: 8px;
+  border: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.date-wrapper:focus-within {
+  border-color: var(--main-color);
 }
 
 .text-theme {
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
 }
 
 .text-gray {
-  color: #71717a;
+  color: var(--text-muted);
 }
 
 :deep(.modern-calendar .p-inputtext) {
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--text-primary);
   padding: 0;
   font-size: 1rem;
   width: 100%;
@@ -611,7 +631,16 @@ async function saveBook() {
   justify-content: flex-end;
   gap: 1rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #27272a;
+  border-top: 1px solid var(--border-color);
+}
+
+.p-button.p-button-secondary.p-button-text {
+  color: var(--text-secondary) !important;
+}
+
+.p-button.p-button-secondary.p-button-text:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-hover) !important;
 }
 
 @media (max-width: 768px) {

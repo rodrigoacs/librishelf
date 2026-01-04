@@ -91,7 +91,6 @@ function getInitials(name) {
 }
 
 function goToAuthorBooks(authorName) {
-  // [CORREÇÃO] Aponta para '/books' em vez de '/'
   router.push({ path: '/books', query: { author: authorName } })
 }
 
@@ -116,7 +115,7 @@ onMounted(async () => {
 .authors-container {
   padding: 2rem;
   min-height: 100vh;
-  background-color: #121212;
+  background-color: var(--bg-app);
 }
 
 .view-header {
@@ -124,7 +123,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 3rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1.5rem;
@@ -133,12 +132,12 @@ onMounted(async () => {
 .header-content h1 {
   font-family: 'Georgia', serif;
   font-size: 2.5rem;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .header-content p {
-  color: #a1a1aa;
+  color: var(--text-secondary);
   margin: 0.5rem 0 0 0;
 }
 
@@ -153,24 +152,24 @@ onMounted(async () => {
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #71717a;
+  color: var(--text-muted);
 }
 
 .modern-input {
   width: 100%;
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
   padding: 0.8rem 1rem 0.8rem 2.5rem;
   border-radius: 8px;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 0.95rem;
   transition: all 0.2s;
 }
 
 .modern-input:focus {
-  border-color: var(--main-color, #4caf50);
+  border-color: var(--main-color);
   outline: none;
-  background-color: #202022;
+  background-color: var(--bg-panel);
 }
 
 .authors-grid {
@@ -180,8 +179,8 @@ onMounted(async () => {
 }
 
 .author-card {
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
@@ -195,25 +194,25 @@ onMounted(async () => {
 
 .author-card:hover {
   transform: translateY(-3px);
-  border-color: var(--main-color, #4caf50);
-  background-color: #202022;
+  border-color: var(--main-color);
+  background-color: var(--bg-hover);
 }
 
 .avatar-wrapper {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
+  background: linear-gradient(135deg, var(--bg-input) 0%, var(--bg-panel) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #3f3f46;
+  border: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
 .initials {
   font-weight: 700;
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
   font-size: 1.1rem;
   letter-spacing: 1px;
 }
@@ -227,7 +226,7 @@ onMounted(async () => {
 
 .author-info h3 {
   margin: 0;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   white-space: nowrap;
@@ -238,17 +237,17 @@ onMounted(async () => {
 .book-count,
 .action-text {
   font-size: 0.8rem;
-  color: #71717a;
+  color: var(--text-muted);
   margin-top: 0.2rem;
 }
 
 .arrow-icon {
-  color: #3f3f46;
+  color: var(--text-muted);
   transition: transform 0.2s, color 0.2s;
 }
 
 .author-card:hover .arrow-icon {
-  color: #fff;
+  color: var(--text-primary);
   transform: translateX(3px);
 }
 
@@ -260,7 +259,7 @@ onMounted(async () => {
 
 .skeleton-author {
   height: 80px;
-  background-color: #1f1f23;
+  background-color: var(--bg-hover);
   border-radius: 12px;
   animation: pulse 1.5s infinite;
 }
@@ -271,7 +270,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: 4rem;
-  color: #52525b;
+  color: var(--text-muted);
 }
 
 .empty-state i {

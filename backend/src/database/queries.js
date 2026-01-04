@@ -153,7 +153,7 @@ export const DASHBOARD_QUERIES = {
     WHERE b.user_id = $1
     GROUP BY a.name
     ORDER BY count DESC
-    LIMIT 5
+    LIMIT 6
   `,
 
   TOP_TAGS: `

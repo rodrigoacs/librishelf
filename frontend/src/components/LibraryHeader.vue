@@ -252,18 +252,14 @@ const sortOptions = [
   { label: 'Data de Publicação', value: 'pubDate' }
 ]
 
-const readYear = ref(null) // Inicialize como null
+const readYear = ref(null)
 
 const yearOptions = computed(() => {
   const currentYear = new Date().getFullYear()
-
-  // Gera array de objetos: [{ label: '2025', value: '2025' }, ...]
   const years = Array.from({ length: currentYear - 1999 }, (_, i) => {
     const year = (currentYear - i).toString()
     return { label: year, value: year }
   })
-
-  // Adiciona a opção "Todos" no topo com valor null (para limpar o filtro)
   return [{ label: 'Todos os anos', value: null }, ...years]
 })
 
@@ -350,9 +346,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  background-color: rgba(18, 18, 18, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
   padding: 1rem 1.5rem;
 }
 
@@ -375,13 +370,13 @@ onMounted(async () => {
   margin: 0;
   font-family: 'Georgia', serif;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   letter-spacing: -0.5px;
 }
 
 .count-badge {
-  background-color: var(--main-color, #4caf50);
-  color: #000;
+  background-color: var(--main-color);
+  color: var(--text-inverse);
   font-weight: 800;
   font-size: 0.75rem;
   padding: 0.15rem 0.6rem;
@@ -403,27 +398,27 @@ onMounted(async () => {
 .search-icon {
   position: absolute;
   left: 1rem;
-  color: #71717a;
+  color: var(--text-muted);
   pointer-events: none;
 }
 
 .clear-icon {
   position: absolute;
   right: 1rem;
-  color: #71717a;
+  color: var(--text-muted);
   cursor: pointer;
   font-size: 0.8rem;
 }
 
 .clear-icon:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .custom-search-input {
   width: 100%;
-  background-color: #27272a;
+  background-color: var(--bg-input);
   border: 1px solid transparent;
-  color: #fff;
+  color: var(--text-primary);
   padding: 0.75rem 2.5rem;
   border-radius: 50px;
   font-family: inherit;
@@ -432,8 +427,8 @@ onMounted(async () => {
 }
 
 .custom-search-input:focus {
-  background-color: #18181b;
-  border-color: var(--main-color, #4caf50);
+  background-color: var(--bg-panel);
+  border-color: var(--main-color);
   box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
   outline: none;
 }
@@ -445,18 +440,18 @@ onMounted(async () => {
 }
 
 .action-btn {
-  color: #a1a1aa !important;
+  color: var(--text-secondary) !important;
   width: 42px;
   height: 42px;
 }
 
 .action-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  color: #fff !important;
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
 }
 
 .action-btn.active-filter {
-  color: var(--main-color, #4caf50) !important;
+  color: var(--main-color) !important;
   background-color: rgba(var(--main-color-rgb), 0.1) !important;
 }
 
@@ -472,7 +467,7 @@ onMounted(async () => {
   gap: 1rem;
   margin-top: 1rem;
   padding-top: 0.8rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-color);
   animation: slideDown 0.2s ease-out;
 }
 
@@ -490,7 +485,7 @@ onMounted(async () => {
 
 .filter-label {
   font-size: 0.8rem;
-  color: #71717a;
+  color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -503,16 +498,16 @@ onMounted(async () => {
 }
 
 .custom-chip {
-  background-color: #27272a;
-  color: #e4e4e7;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.85rem;
-  border: 1px solid #3f3f46;
+  border: 1px solid var(--border-color);
 }
 
 .custom-chip.theme-border {
   border-color: rgba(var(--main-color-rgb), 0.3);
   background-color: rgba(var(--main-color-rgb), 0.05);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .clear-all-btn {
@@ -527,12 +522,12 @@ onMounted(async () => {
 .sidebar-header h3 {
   margin: 0;
   font-size: 1.5rem;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .sidebar-header p {
   margin: 0.5rem 0 0;
-  color: #a1a1aa;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
@@ -545,7 +540,7 @@ onMounted(async () => {
 .filter-group label {
   display: block;
   font-size: 0.85rem;
-  color: #a1a1aa;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -608,8 +603,8 @@ onMounted(async () => {
 
 <style>
 .custom-sidebar.p-sidebar {
-  background-color: #18181b !important;
-  border-left: 1px solid #27272a;
+  background-color: var(--bg-panel) !important;
+  border-left: 1px solid var(--border-color);
   width: 24rem !important;
 }
 
@@ -632,8 +627,8 @@ onMounted(async () => {
 
 .custom-sidebar .p-dropdown,
 .custom-sidebar .p-multiselect {
-  background-color: #27272a;
-  border: 1px solid #3f3f46;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   transition: all 0.2s;
   height: 42px;
@@ -652,52 +647,61 @@ onMounted(async () => {
 .custom-sidebar .p-multiselect:not(.p-disabled):hover,
 .custom-sidebar .p-dropdown.p-focus,
 .custom-sidebar .p-multiselect.p-focus {
-  border-color: var(--main-color, #4caf50) !important;
+  border-color: var(--main-color) !important;
   box-shadow: 0 0 0 1px rgba(var(--main-color-rgb), 0.2) !important;
 }
 
 .custom-sidebar .p-dropdown-label,
 .custom-sidebar .p-multiselect-label {
-  color: #e4e4e7;
+  color: var(--text-primary);
 }
 
 .custom-selectbutton .p-button {
-  background-color: #27272a;
-  border: 1px solid #3f3f46;
-  color: #a1a1aa;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   transition: all 0.2s;
 }
 
 .custom-selectbutton .p-button:hover {
-  background-color: #3f3f46;
+  background-color: var(--bg-hover);
+}
+
+.p-selectbutton .p-button.p-highlight::before {
+  background-color: #00000000 !important;
+}
+
+.p-multiselect-panel .p-multiselect-header {
+  background-color: var(--bg-panel) !important;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
 .custom-selectbutton .p-button.p-highlight {
-  background-color: var(--main-color, #4caf50) !important;
-  border-color: var(--main-color, #4caf50) !important;
-  color: #ffffff !important;
+  background-color: var(--main-color) !important;
+  border-color: var(--main-color) !important;
+  color: var(--text-primary) !important;
   font-weight: 700;
 }
 
 .custom-panel.p-dropdown-panel,
 .custom-panel.p-multiselect-panel {
-  background-color: #18181b !important;
-  border: 1px solid #3f3f46 !important;
+  background-color: var(--bg-panel) !important;
+  border: 1px solid var(--border-color) !important;
 }
 
 .custom-panel .p-dropdown-item,
 .custom-panel .p-multiselect-item {
-  color: #e4e4e7 !important;
+  color: var(--text-primary) !important;
 }
 
 .custom-panel .p-dropdown-item:hover,
 .custom-panel .p-multiselect-item:hover {
-  background-color: #27272a !important;
+  background-color: var(--bg-hover) !important;
 }
 
 .custom-panel .p-dropdown-item.p-highlight,
 .custom-panel .p-multiselect-item.p-highlight {
-  color: var(--main-color, #4caf50) !important;
+  color: var(--main-color) !important;
   background-color: rgba(var(--main-color-rgb), 0.1) !important;
 }
 </style>

@@ -87,8 +87,8 @@ function goToLibrary() {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background-color: #121212;
-  color: #ffffff;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
   padding: 4rem 2rem;
   display: flex;
   flex-direction: column;
@@ -124,7 +124,7 @@ function goToLibrary() {
 }
 
 .highlight {
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
   position: relative;
   display: inline-block;
 }
@@ -136,7 +136,7 @@ function goToLibrary() {
   height: 4px;
   bottom: 5px;
   left: 0;
-  background-color: var(--main-color, #4caf50);
+  background-color: var(--main-color);
   opacity: 0.3;
   transition: height 0.2s;
 }
@@ -153,9 +153,9 @@ function goToLibrary() {
 }
 
 .hero-btn {
-  background-color: var(--main-color, #4caf50) !important;
-  border-color: var(--main-color, #4caf50) !important;
-  color: #000 !important;
+  background-color: var(--main-color) !important;
+  border-color: var(--main-color) !important;
+  color: var(--text-primary) !important;
   font-weight: 700 !important;
   font-size: 1.1rem !important;
   padding: 0.8rem 2rem !important;
@@ -176,7 +176,7 @@ function goToLibrary() {
   text-align: center;
   font-size: 1.8rem;
   margin-bottom: 3rem;
-  color: #e4e4e7;
+  color: var(--text-primary);
   font-weight: 600;
   letter-spacing: -0.5px;
 }
@@ -188,8 +188,8 @@ function goToLibrary() {
 }
 
 .feature-card {
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 2rem;
   display: flex;
@@ -202,7 +202,7 @@ function goToLibrary() {
 
 .feature-card:hover {
   transform: translateY(-5px);
-  border-color: var(--main-color, #4caf50);
+  border-color: var(--main-color);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
@@ -210,7 +210,7 @@ function goToLibrary() {
   width: 50px;
   height: 50px;
   border-radius: 12px;
-  background-color: #27272a;
+  background-color: var(--main-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,7 +219,7 @@ function goToLibrary() {
 }
 
 .feature-card:hover .icon-box {
-  background-color: var(--main-color, #4caf50);
+  background-color: var(--main-color);
 }
 
 .icon-box i {
@@ -229,19 +229,19 @@ function goToLibrary() {
 }
 
 .feature-card:hover .icon-box i {
-  color: #000;
+  color: var(--text-primary);
 }
 
 .feature-card h3 {
   font-size: 1.25rem;
   margin: 0 0 0.8rem 0;
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .feature-card p {
   font-size: 1rem;
-  color: #a1a1aa;
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.6;
 }

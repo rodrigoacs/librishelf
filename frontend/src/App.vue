@@ -28,7 +28,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-family);
-  background-color: #121212;
+  background-color: var(--bg-app);
   overflow-x: hidden;
 }
 

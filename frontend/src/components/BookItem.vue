@@ -81,19 +81,20 @@ function handleImageError(event) {
   display: flex;
   flex-direction: column;
   width: 100%;
-  background-color: #1e1e1e;
+  background-color: var(--bg-panel);
   border-radius: 12px;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 
 @media (hover: hover) {
   .book-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+    border-color: var(--border-hover);
   }
 }
 
@@ -106,7 +107,7 @@ function handleImageError(event) {
   width: 100%;
   aspect-ratio: 2 / 3;
   overflow: hidden;
-  background-color: #2a2a2a;
+  background-color: var(--bg-hover);
   isolation: isolate;
 }
 
@@ -131,7 +132,7 @@ function handleImageError(event) {
   left: 0;
   width: 100%;
   height: 40%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
   pointer-events: none;
   z-index: 2;
 }
@@ -142,7 +143,7 @@ function handleImageError(event) {
   right: 12px;
   width: 28px;
   height: 42px;
-  background-color: var(--main-color, #4caf50);
+  background-color: var(--main-color);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
   display: flex;
@@ -157,7 +158,7 @@ function handleImageError(event) {
 }
 
 .bookmark-ribbon i {
-  color: #000;
+  color: var(--text-inverse);
   font-size: 0.8rem;
   font-weight: bold;
 }
@@ -168,24 +169,25 @@ function handleImageError(event) {
   flex-direction: column;
   gap: 4px;
   z-index: 2;
-  background-color: #1e1e1e;
+  background-color: var(--bg-panel);
 }
 
 .book-title {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #f5f5f5;
+  color: var(--text-primary);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-clamp: 2;
   overflow: hidden;
   line-height: 1.3;
 }
 
 .book-author {
   font-size: 0.85rem;
-  color: #a1a1a1;
+  color: var(--text-secondary);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;

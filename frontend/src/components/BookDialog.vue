@@ -413,11 +413,12 @@ onMounted(() => {
   border-radius: 16px !important;
   overflow: hidden !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  background-color: var(--bg-panel) !important;
 }
 
 .modern-book-dialog .p-dialog-content {
   padding: 0 !important;
-  background-color: #18181b;
+  background-color: var(--bg-panel);
 }
 
 .modern-book-dialog .p-dialog-header {
@@ -425,9 +426,9 @@ onMounted(() => {
 }
 
 .btn-action-primary {
-  background-color: var(--main-color, #4caf50) !important;
-  border-color: var(--main-color, #4caf50) !important;
-  color: #000 !important;
+  background-color: var(--main-color) !important;
+  border-color: var(--main-color) !important;
+  color: var(--text-inverse) !important;
 }
 </style>
 
@@ -438,6 +439,7 @@ onMounted(() => {
   min-height: 500px;
   position: relative;
   width: 100%;
+  background-color: var(--bg-panel);
 }
 
 .close-btn {
@@ -445,12 +447,12 @@ onMounted(() => {
   top: 1rem;
   right: 1rem;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.2);
   border: none;
   border-radius: 50%;
   width: 32px;
   height: 32px;
-  color: white;
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -459,7 +461,8 @@ onMounted(() => {
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(var(--main-color-rgb), 0.2);
+  color: var(--main-color);
 }
 
 .cover-section {
@@ -471,7 +474,7 @@ onMounted(() => {
   position: relative;
   overflow: hidden;
   padding: 0;
-  background-color: #000;
+  background-color: #09090b;
 }
 
 .blur-bg {
@@ -544,14 +547,14 @@ onMounted(() => {
 .edit-overlay i {
   font-size: 2rem;
   margin-bottom: 0.5rem;
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
 }
 
 .details-section {
   flex: 1.5;
   padding: 2.5rem;
-  background-color: #18181b;
-  color: #f4f4f5;
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -578,11 +581,12 @@ onMounted(() => {
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
+  color: var(--text-primary);
 }
 
 .book-author {
   font-size: 1.2rem;
-  color: #a1a1aa;
+  color: var(--text-secondary);
   margin: 0;
   font-weight: 400;
 }
@@ -599,8 +603,8 @@ onMounted(() => {
 }
 
 .modern-input:not(.readonly):focus {
-  background-color: #27272a;
-  border-color: var(--main-color, #4caf50);
+  background-color: var(--bg-input);
+  border-color: var(--main-color);
   outline: none;
 }
 
@@ -611,7 +615,7 @@ onMounted(() => {
 
 .author-input {
   font-size: 1.2rem;
-  color: #a1a1aa;
+  color: var(--text-secondary);
 }
 
 .info-group label {
@@ -619,7 +623,7 @@ onMounted(() => {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #71717a;
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
   font-weight: 600;
 }
@@ -644,6 +648,11 @@ onMounted(() => {
   background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
+.empty-text {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .dates-grid,
 .meta-grid {
   display: grid;
@@ -656,38 +665,48 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background-color: #27272a;
+  background-color: var(--bg-input);
   padding: 0.5rem 1rem;
   border-radius: 8px;
 }
 
 .text-theme {
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
   font-weight: bold;
 }
 
 .text-gray {
-  color: #71717a;
+  color: var(--text-muted);
 }
 
 :deep(.modern-calendar .p-inputtext) {
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--text-primary);
   padding: 0;
   font-size: 1rem;
   width: 100%;
 }
 
 .meta-input {
-  background-color: #27272a;
+  background-color: var(--bg-input);
   padding: 0.75rem;
   border-radius: 8px;
+  color: var(--text-primary);
 }
 
 .meta-input.readonly {
   background-color: transparent;
   padding: 0;
+}
+
+.p-button.p-button-secondary.p-button-text {
+  color: var(--text-secondary) !important;
+}
+
+.p-button.p-button-secondary.p-button-text:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-hover) !important;
 }
 
 @media (max-width: 768px) {
@@ -698,7 +717,7 @@ onMounted(() => {
   .cover-section {
     max-width: 100%;
     height: 250px;
-    border-bottom: 1px solid #27272a;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .details-section {

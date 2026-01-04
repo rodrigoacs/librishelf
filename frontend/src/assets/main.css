@@ -1,54 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Georgia:wght@400;700&display=swap');
 
 :root {
-  --main-color: #3a86ff;
+  --p-focus-ring-color: var(--main-color);
+
+  --main-color-rgb: 58, 134, 255;
+  --main-color: rgb(var(--main-color-rgb));
+
+  --bg-app: #121212;
+  --bg-panel: #18181b;
+  --bg-input: #27272a;
+  --bg-hover: #3f3f46;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-inverse: #000000;
+
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.2);
+
   --red: #ff4b78;
   --green: #a9ff54;
-  --blue: #4ed3fc;
+  --blue: #3a86ff;
   --purple: #8d78fa;
   --yellow: #fdd457;
   --orange: #ff8a50;
-  color-scheme: none;
+  --red-rgb: 255, 75, 120;
+  --green-rgb: 169, 255, 84;
+  --blue-rgb: 58, 134, 255;
+  --purple-rgb: 141, 120, 250;
+  --yellow-rgb: 253, 212, 87;
+  --orange-rgb: 255, 138, 80;
+
+  color-scheme: dark;
 }
 
-:focus-visible {
-  outline: none;
-}
+[data-theme="light"] {
+  --bg-app: #f0f0f3;
+  --bg-panel: #ffffff;
+  --bg-input: #e4e4e7;
+  --bg-hover: #d4d4d8;
+  --bg-overlay: rgba(255, 255, 255, 0.6);
 
-.p-checkbox-box .p-icon {
-  color: var(--main-color);
-}
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+  --text-inverse: #ffffff;
 
-.p-checkbox.p-highlight .p-checkbox-box {
-  border: none;
-  background: none;
-}
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-hover: rgba(0, 0, 0, 0.2);
 
-.p-checkbox .p-checkbox-box {
-  border: none;
-  background: none;
-}
+  --red: #d92d45;
+  --green: #4c8c2b;
+  --blue: #0b75c9;
+  --purple: #6b4efc;
+  --yellow: #d4a017;
+  --orange: #c65327;
+  --red-rgb: 217, 45, 69;
+  --green-rgb: 76, 140, 43;
+  --blue-rgb: 11, 117, 201;
+  --purple-rgb: 107, 78, 252;
+  --yellow-rgb: 212, 160, 23;
+  --orange-rgb: 198, 83, 39;
 
-.p-inputtext:enabled:focus {
-  outline: 1px solid var(--main-color);
-}
-
-.p-inputtext:disabled {
-  background-color: #3f3f4600;
-  color: #ffffff;
-  border: none;
-  padding: 0;
-  font-size: 0.9rem;
-}
-
-.dialog-overlay {
-  width: 900px;
-  border: none;
-  border-radius: 1rem;
-}
-
-.p-dialog-mask {
-  backdrop-filter: blur(3px);
+  color-scheme: light;
 }
 
 * {
@@ -59,21 +75,11 @@
   box-sizing: border-box;
 }
 
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: none;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #3f3f46;
-  border-radius: 15px;
-}
-
 body {
   margin: 0;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #app {
@@ -81,11 +87,81 @@ body {
   justify-content: center;
   align-items: center;
   width: 100%;
+  min-height: 100vh;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--bg-hover);
+  border-radius: 4px;
+  border: 2px solid var(--bg-app);
+}
+
+:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+}
+
+.p-checkbox .p-checkbox-box {
+  border: 2px solid var(--text-muted);
+  background: transparent;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.p-checkbox.p-highlight .p-checkbox-box {
+  border-color: var(--main-color);
+  background-color: var(--main-color);
+}
+
+.p-checkbox-box .p-icon {
+  color: var(--text-inverse);
+}
+
+.p-inputtext {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid transparent;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.p-inputtext:enabled:focus {
+  outline: none;
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
+}
+
+.p-inputtext:disabled {
+  background-color: transparent;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.p-dialog-mask {
+  background-color: var(--bg-overlay) !important;
+  backdrop-filter: blur(4px);
+}
+
+.dialog-overlay {
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 @media (max-width: 768px) {
   .dialog-overlay {
-    width: 80%;
+    width: 90%;
   }
-
 }

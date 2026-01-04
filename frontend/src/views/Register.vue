@@ -180,7 +180,7 @@ async function handleRegister() {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background-color: #121212;
+  background-color: var(--bg-app);
   overflow: hidden;
 }
 
@@ -190,7 +190,7 @@ async function handleRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0a0a0a;
+  background-color: var(--bg-panel);
   overflow: hidden;
 }
 
@@ -215,7 +215,7 @@ async function handleRegister() {
   position: relative;
   overflow: hidden;
   border-radius: 4px;
-  background-color: #1a1a1a;
+  background-color: var(--border-color);
 }
 
 .mosaic-item img {
@@ -304,7 +304,7 @@ async function handleRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #18181b;
+  background-color: var(--bg-panel);
   padding: 2rem;
   min-width: 450px;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
@@ -322,12 +322,12 @@ async function handleRegister() {
 
 .header h2 {
   font-size: 2rem;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 
 .subtitle {
-  color: #71717a;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -342,21 +342,21 @@ async function handleRegister() {
 }
 
 :deep(.p-inputtext) {
-  background-color: #27272a;
-  border: 1px solid #3f3f46;
-  color: #fff;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
   padding: 1rem;
   width: 100%;
 }
 
 :deep(.p-inputtext:focus),
 :deep(.p-inputwrapper-focus .p-inputtext) {
-  border-color: var(--main-color, #4caf50);
-  box-shadow: 0 0 0 1px var(--main-color, #4caf50);
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 1px var(--main-color);
 }
 
 :deep(.p-float-label label) {
-  color: #a1a1aa;
+  color: var(--text-secondary);
   top: 50%;
   margin-top: -0.5rem;
   left: 1rem;
@@ -370,9 +370,9 @@ async function handleRegister() {
 :deep(.p-inputwrapper-filled ~ label) {
   top: -0.75rem;
   font-size: 0.75rem;
-  background-color: #18181b;
+  background-color: var(--bg-panel);
   padding: 0 0.5rem;
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
   left: 0.5rem;
   z-index: 2;
 }
@@ -384,12 +384,12 @@ async function handleRegister() {
 .footer {
   margin-top: 2rem;
   text-align: center;
-  color: #71717a;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
 .footer a {
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
   text-decoration: none;
   font-weight: 600;
 }

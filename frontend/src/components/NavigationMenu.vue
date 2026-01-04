@@ -87,6 +87,10 @@
       </nav>
 
       <div class="sidebar-footer">
+        <div class="theme-wrapper">
+          <ThemeSwitcher />
+        </div>
+
         <div class="user-info">
           <div class="avatar-circle">{{ userInitial }}</div>
           <div class="user-details">
@@ -107,6 +111,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Button from 'primevue/button'
+import ThemeSwitcher from './ThemeSwitcher.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -148,15 +153,15 @@ const items = [
 
 <style scoped>
 .text-main {
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
 }
 
 .navigation-container {
   width: 260px;
   height: 100vh;
   flex-shrink: 0;
-  background-color: #18181b;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -194,7 +199,7 @@ const items = [
   font-family: 'Georgia', serif;
   font-weight: 700;
   font-size: 1.4rem;
-  color: #fff;
+  color: var(--text-primary);
   letter-spacing: -1px;
 }
 
@@ -217,7 +222,7 @@ const items = [
   gap: 1rem;
   padding: 0.8rem 1rem;
   border-radius: 8px;
-  color: #a1a1aa;
+  color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s;
@@ -225,13 +230,13 @@ const items = [
 }
 
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .nav-item.active {
   background-color: rgba(var(--main-color-rgb), 0.15);
-  color: var(--main-color, #4caf50);
+  color: var(--main-color);
   font-weight: 600;
 }
 
@@ -242,28 +247,44 @@ const items = [
 
 .separator {
   height: 1px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--border-color);
   margin: 0.5rem 0;
 }
 
 .sidebar-footer {
   padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background-color: #131315;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.theme-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.user-info:hover {
+  background-color: var(--bg-hover);
 }
 
 .avatar-circle {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: var(--main-color, #4caf50);
-  color: #000;
+  background-color: var(--main-color);
+  color: var(--text-inverse);
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -278,7 +299,7 @@ const items = [
 }
 
 .username {
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.95rem;
   white-space: nowrap;
@@ -287,7 +308,7 @@ const items = [
 }
 
 .user-role {
-  color: #71717a;
+  color: var(--text-muted);
   font-size: 0.75rem;
 }
 
@@ -298,7 +319,7 @@ const items = [
     position: sticky;
     top: 0;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
     z-index: 200;
   }
 
@@ -307,12 +328,12 @@ const items = [
     align-items: center;
     justify-content: space-between;
     padding: 0.8rem 1rem;
-    background-color: #121212;
+    background-color: var(--bg-app);
     height: 60px;
   }
 
   .menu-btn {
-    color: #fff !important;
+    color: var(--text-primary) !important;
     padding: 0;
     width: 40px;
   }
@@ -325,7 +346,7 @@ const items = [
 
   .mobile-header .logo-text {
     font-size: 1.1rem;
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 700;
     font-family: 'Georgia', serif;
   }
@@ -337,7 +358,7 @@ const items = [
     width: 280px;
     height: 100dvh;
     z-index: 1000;
-    background-color: #18181b;
+    background-color: var(--bg-panel);
     box-shadow: none;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -352,9 +373,9 @@ const items = [
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
     border: none;
-    color: #fff;
+    color: var(--text-primary);
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -365,7 +386,7 @@ const items = [
     display: block;
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: var(--bg-overlay);
     backdrop-filter: blur(4px);
     z-index: 900;
   }

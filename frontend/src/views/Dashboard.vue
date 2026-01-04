@@ -217,7 +217,7 @@ onMounted(async () => {
 .dashboard-container {
   padding: 2rem;
   min-height: 100vh;
-  background-color: #121212;
+  background-color: var(--bg-app);
   margin: 0 10vw;
 }
 
@@ -231,13 +231,13 @@ onMounted(async () => {
 .welcome-text h1 {
   margin: 0;
   font-size: 2rem;
-  color: #fff;
+  color: var(--text-primary);
   font-family: 'Georgia', serif;
 }
 
 .welcome-text p {
   margin: 0.5rem 0 0;
-  color: #a1a1aa;
+  color: var(--text-secondary);
 }
 
 .date-display {
@@ -254,8 +254,8 @@ onMounted(async () => {
 }
 
 .kpi-card {
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
@@ -266,7 +266,7 @@ onMounted(async () => {
 
 .kpi-card:hover {
   transform: translateY(-3px);
-  border-color: #3f3f46;
+  border-color: var(--border-hover);
 }
 
 .kpi-icon {
@@ -306,14 +306,14 @@ onMounted(async () => {
 }
 
 .kpi-info .label {
-  color: #a1a1aa;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .kpi-info .value {
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1.8rem;
   font-weight: 700;
 }
@@ -325,8 +325,8 @@ onMounted(async () => {
 }
 
 .chart-card {
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
@@ -339,7 +339,7 @@ onMounted(async () => {
 
 .chart-card h3 {
   margin: 0 0 1.5rem 0;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -357,7 +357,7 @@ onMounted(async () => {
 }
 
 .no-data {
-  color: #52525b;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
@@ -379,12 +379,12 @@ onMounted(async () => {
 
 .author-row .rank {
   font-weight: bold;
-  color: #52525b;
+  color: var(--text-secondary);
   width: 20px;
 }
 
 .author-row .name {
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 500;
   z-index: 2;
   width: 150px;
@@ -394,7 +394,7 @@ onMounted(async () => {
 }
 
 .author-row .count {
-  color: #a1a1aa;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin-left: auto;
   z-index: 2;
@@ -411,12 +411,12 @@ onMounted(async () => {
 }
 
 .kpi-skeleton {
-  background-color: #1f1f23;
+  background-color: var(--bg-panel);
   border-radius: 16px;
 }
 
 .chart-skeleton {
-  background-color: #1f1f23;
+  background-color: var(--bg-panel);
   border-radius: 16px;
   margin-bottom: 1.5rem;
 }
