@@ -35,7 +35,7 @@
             <img
               :src="displayCoverUrl"
               @error="handleImageError"
-              alt="Book Cover"
+              :alt="$t('bookDialog.bookCover')"
               class="main-cover"
             />
             <div
@@ -43,7 +43,7 @@
               class="edit-overlay"
             >
               <i class="pi pi-camera"></i>
-              <span>Alterar Capa</span>
+              <span>{{ $t('bookDialog.changeCover') }}</span>
             </div>
           </div>
           <input
@@ -63,23 +63,23 @@
               v-if="isEditing"
               v-model="book.title"
               class="modern-input title-input"
-              placeholder="Book Title"
+              :placeholder="$t('bookDialog.bookTitle')"
             />
             <h1
               v-else
               class="book-title"
-            >{{ book.title || 'Sem título' }}</h1>
+            >{{ book.title || $t('bookDialog.noTitle') }}</h1>
 
             <input
               v-if="isEditing"
               v-model="book.authors"
               class="modern-input author-input"
-              placeholder="Author Names"
+              :placeholder="$t('bookDialog.authorNames')"
             />
             <h3
               v-else
               class="book-author"
-            >{{ book.authors || 'Autor desconhecido' }}</h3>
+            >{{ book.authors || $t('bookDialog.unknownAuthor') }}</h3>
           </div>
 
           <div class="actions-area">
@@ -87,7 +87,7 @@
               v-if="!isEditing"
               icon="pi pi-pencil"
               class="p-button-rounded p-button-text p-button-secondary"
-              v-tooltip.bottom="'Editar'"
+              :v-tooltip.bottom="$t('bookDialog.edit')"
               @click="editMode"
             />
             <div
@@ -112,12 +112,12 @@
 
         <div class="details-content">
           <div class="info-group">
-            <label>Tags</label>
+            <label>{{ $t('bookDialog.tags') }}</label>
             <div v-if="isEditing">
               <input
                 v-model="book.tags"
                 class="modern-input"
-                placeholder="Ex: Sci-Fi, Tech"
+                :placeholder="$t('bookDialog.tagsPlaceholder')"
               />
             </div>
             <div
@@ -127,7 +127,7 @@
               <span
                 v-if="!book.tags"
                 class="empty-text"
-              >Sem tags</span>
+              >{{ $t('bookDialog.noTags') }}</span>
 
               <Chip
                 v-for="(tag, index) in formatTags(book.tags)"
@@ -141,7 +141,7 @@
 
           <div class="dates-grid">
             <div class="info-group">
-              <label>Status de Leitura</label>
+              <label>{{ $t('bookDialog.readingStatus') }}</label>
               <div class="date-input-wrapper">
                 <i
                   class="pi"
@@ -151,7 +151,7 @@
                   v-model="book.read_date"
                   :disabled="!isEditing"
                   dateFormat="dd/mm/yy"
-                  placeholder="Não lido"
+                  :placeholder="$t('bookDialog.notRead')"
                   class="modern-calendar"
                   :showIcon="false"
                 />
@@ -159,14 +159,14 @@
             </div>
 
             <div class="info-group">
-              <label>Publicação</label>
+              <label>{{ $t('bookDialog.publication') }}</label>
               <div class="date-input-wrapper">
                 <i class="pi pi-calendar text-gray"></i>
                 <Calendar
                   v-model="book.pubdate"
                   :disabled="!isEditing"
                   dateFormat="dd/mm/yy"
-                  placeholder="Data desc."
+                  :placeholder="$t('bookDialog.dateUnknown')"
                   class="modern-calendar"
                   :showIcon="false"
                 />
@@ -176,7 +176,7 @@
 
           <div class="meta-grid">
             <div class="info-group">
-              <label>Editora</label>
+              <label>{{ $t('bookDialog.publisher') }}</label>
               <input
                 v-model="book.publisher"
                 :readonly="!isEditing"
@@ -186,7 +186,7 @@
               />
             </div>
             <div class="info-group">
-              <label>ISBN</label>
+              <label>{{ $t('bookDialog.isbn') }}</label>
               <input
                 v-model="book.isbn"
                 :readonly="!isEditing"
@@ -204,6 +204,7 @@
 
 <script setup>
 import { ref, watch, defineProps, defineEmits, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
 import Calendar from 'primevue/calendar'
@@ -214,6 +215,7 @@ import api from '../services/api.js'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3050'
 
+const { t } = useI18n()
 const props = defineProps({
   modelValue: Boolean,
   bookId: Number
@@ -233,7 +235,7 @@ const previewUrl = ref(null)
 const cacheBuster = ref(Date.now())
 
 const book = ref({
-  title: 'Carregando...',
+  title: t('bookDialog.loading'),
   authors: '',
   publisher: '',
   tags: '',
@@ -321,13 +323,13 @@ function closeDialog() {
 
 function confirmSave() {
   confirm.require({
-    message: 'Deseja salvar as alterações?',
-    header: 'Confirmar',
+    message: t('bookDialog.confirmSave'),
+    header: t('bookDialog.confirm'),
     icon: 'pi pi-exclamation-circle',
     acceptClass: 'p-button-rounded btn-action-primary',
     rejectClass: 'p-button-text p-button-secondary',
-    acceptLabel: 'Salvar',
-    rejectLabel: 'Cancelar',
+    acceptLabel: t('bookDialog.save'),
+    rejectLabel: t('bookDialog.cancel'),
     accept: () => saveBookDetails()
   })
 }
@@ -358,10 +360,10 @@ async function saveBookDetails() {
     selectedFile.value = null
     previewUrl.value = null
     emits('refresh')
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Alterações salvas.', life: 3000 })
+    toast.add({ severity: 'success', summary: t('bookDialog.success'), detail: t('bookDialog.changesSaved'), life: 3000 })
   } catch (error) {
     console.error('Error updating book details:', error)
-    toast.add({ severity: 'error', summary: 'Erro', detail: error.message || 'Falha ao atualizar.', life: 4000 })
+    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
     isSaving.value = false
   }
@@ -394,8 +396,8 @@ async function loadBookData() {
     }
   } catch (error) {
     console.error('Erro ao buscar detalhes:', error)
-    book.value.title = 'Erro ao carregar dados'
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Não foi possível carregar os detalhes.', life: 3000 })
+    book.value.title = t('bookDialog.errorLoading')
+    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.couldNotLoad'), life: 3000 })
   }
 }
 

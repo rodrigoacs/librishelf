@@ -4,8 +4,8 @@
       <div class="visual-overlay"></div>
 
       <div class="visual-content">
-        <h1>Junte-se</h1>
-        <p>Comece a organizar seu conhecimento hoje.</p>
+        <h1>{{ t('register.header') }}</h1>
+        <p>{{ t('register.welcome') }}</p>
       </div>
 
       <div class="mosaic-grid">
@@ -27,8 +27,8 @@
     <div class="form-side">
       <div class="form-wrapper">
         <div class="header">
-          <h2>Criar Conta</h2>
-          <p class="subtitle">Preencha os dados para se cadastrar.</p>
+          <h2>{{ t('register.createAccount') }}</h2>
+          <p class="subtitle">{{ t('register.allData') }}</p>
         </div>
 
         <form
@@ -42,7 +42,7 @@
                 v-model="name"
                 class="w-full"
               />
-              <label for="name">Nome de Usuário</label>
+              <label for="name">{{ t('register.user') }}</label>
             </span>
           </div>
 
@@ -54,7 +54,7 @@
                 class="w-full"
                 type="email"
               />
-              <label for="email">E-mail</label>
+              <label for="email">{{ t('register.email') }}</label>
             </span>
           </div>
 
@@ -66,12 +66,12 @@
                 class="w-full"
                 toggleMask
                 :feedback="true"
-                promptLabel="Escolha uma senha forte"
-                weakLabel="Fraca"
-                mediumLabel="Média"
-                strongLabel="Forte"
+                :promptLabel="t('register.passwordPrompt')"
+                :weakLabel="t('register.weak')"
+                :mediumLabel="t('register.medium')"
+                :strongLabel="t('register.strong')"
               />
-              <label for="password">Senha</label>
+              <label for="password">{{ t('register.password') }}</label>
             </span>
           </div>
 
@@ -84,20 +84,20 @@
                 :feedback="false"
                 toggleMask
               />
-              <label for="confirmPassword">Confirmar Senha</label>
+              <label for="confirmPassword">{{ t('register.confirmPassword') }}</label>
             </span>
           </div>
 
           <Button
             type="submit"
-            label="Cadastrar"
+            :label="$t('register.register')"
             class="btn-action-primary w-full p-button-lg"
             :loading="loading"
           />
         </form>
 
         <div class="footer">
-          <p>Já tem uma conta? <router-link to="/login">Fazer Login</router-link></p>
+          <p>{{ t('register.haveAccount') }} <router-link to="/login">{{ t('register.login') }}</router-link></p>
         </div>
       </div>
     </div>
@@ -112,6 +112,9 @@ import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import api from '../services/api.js'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
 
 const router = useRouter()
 const toast = useToast()
@@ -145,12 +148,12 @@ function getRandomSpanClass(index) {
 
 async function handleRegister() {
   if (!name.value || !email.value || !password.value) {
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos.', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('register.attention'), detail: t('register.fillFields'), life: 3000 })
     return
   }
 
   if (password.value !== confirmPassword.value) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: 'As senhas não coincidem.', life: 3000 })
+    toast.add({ severity: 'error', summary: t('register.error'), detail: t('register.passwordMismatch'), life: 3000 })
     return
   }
 
@@ -163,12 +166,12 @@ async function handleRegister() {
       password: password.value
     })
 
-    toast.add({ severity: 'success', summary: 'Sucesso!', detail: 'Conta criada. Faça login.', life: 3000 })
+    toast.add({ severity: 'success', summary: t('register.success'), detail: t('register.accountCreated'), life: 3000 })
     router.push('/login')
 
   } catch (error) {
     console.error(error)
-    toast.add({ severity: 'error', summary: 'Erro', detail: error.message || 'Falha no cadastro.', life: 4000 })
+    toast.add({ severity: 'error', summary: t('register.error'), detail: error.message || t('register.errorCreating'), life: 4000 })
   } finally {
     loading.value = false
   }

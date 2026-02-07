@@ -5,7 +5,7 @@
 
       <div class="visual-content">
         <h1>Librishelf</h1>
-        <p>Sua biblioteca pessoal, em todo lugar.</p>
+        <p></p>
       </div>
 
       <div class="mosaic-grid">
@@ -27,8 +27,8 @@
     <div class="form-side">
       <div class="form-wrapper">
         <div class="header">
-          <h2>Bem-vindo de volta</h2>
-          <p class="subtitle">Insira suas credenciais para acessar.</p>
+          <h2>{{ $t('login.welcome') }}</h2>
+          <p class="subtitle">{{ $t('login.credentials') }}</p>
         </div>
 
         <form
@@ -42,7 +42,7 @@
                 v-model="email"
                 class="w-full"
               />
-              <label for="email">E-mail ou Usuário</label>
+              <label for="email">{{ $t('login.user') }}</label>
             </span>
           </div>
 
@@ -55,20 +55,20 @@
                 :feedback="false"
                 toggleMask
               />
-              <label for="password">Senha</label>
+              <label for="password">{{ $t('login.password') }}</label>
             </span>
           </div>
 
           <Button
             type="submit"
-            label="Entrar"
+            :label="$t('login.login')"
             class="btn-action-primary w-full p-button-lg"
             :loading="loading"
           />
         </form>
 
         <div class="footer">
-          <p>Não tem uma conta? <router-link to="/register">Crie agora</router-link></p>
+          <p>{{ $t('login.newUser') }} <router-link to="/register">{{ $t('login.createAccount') }}</router-link></p>
         </div>
       </div>
     </div>
@@ -83,6 +83,9 @@ import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import api from '../services/api.js'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
 
 const router = useRouter()
 const toast = useToast()
@@ -114,7 +117,7 @@ function getRandomSpanClass(index) {
 
 async function handleLogin() {
   if (!email.value || !password.value) {
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos.', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('login.attention'), detail: t('login.fillFields'), life: 3000 })
     return
   }
 
@@ -129,12 +132,12 @@ async function handleLogin() {
     localStorage.setItem('token', response.token)
     localStorage.setItem('user', JSON.stringify(response.user))
 
-    toast.add({ severity: 'success', summary: 'Bem-vindo!', detail: 'Login realizado com sucesso.', life: 3000 })
+    toast.add({ severity: 'success', summary: t('login.welcome'), detail: t('login.success'), life: 3000 })
     router.push('/')
 
   } catch (error) {
     console.error(error)
-    toast.add({ severity: 'error', summary: 'Erro', detail: error.message || 'Falha no login.', life: 4000 })
+    toast.add({ severity: 'error', summary: t('login.error'), detail: t('login.invalidCreds'), life: 4000 })
   } finally {
     loading.value = false
   }

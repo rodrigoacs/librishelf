@@ -2,15 +2,15 @@
   <div class="view-container">
     <div class="view-header">
       <div class="header-content">
-        <h1>Categorias</h1>
-        <p>Organize seu conhecimento por tópicos.</p>
+        <h1>{{ $t('tags.title') }}</h1>
+        <p>{{ $t('tags.subtitle') }}</p>
       </div>
 
       <div class="search-wrapper">
         <i class="pi pi-search"></i>
         <input
           v-model="search"
-          placeholder="Buscar tag..."
+          :placeholder="$t('tags.search_ph')"
           class="modern-input"
         />
       </div>
@@ -33,7 +33,7 @@
         class="empty-state"
       >
         <i class="pi pi-tags"></i>
-        <p>Nenhuma categoria encontrada.</p>
+        <p>{{ $t('tags.empty') }}</p>
       </div>
 
       <div
@@ -59,9 +59,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../services/api.js'
 
 const router = useRouter()
+const { t } = useI18n()
 const tags = ref([])
 const loading = ref(true)
 const search = ref('')
@@ -99,7 +101,7 @@ onMounted(async () => {
     })
     tags.value.sort((a, b) => a.name.localeCompare(b.name))
   } catch (error) {
-    console.error('Erro ao carregar tags:', error)
+    console.error(t('tags.error'), error)
   } finally {
     loading.value = false
   }

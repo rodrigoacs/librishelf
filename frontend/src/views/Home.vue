@@ -13,17 +13,16 @@
       </div>
 
       <h1 class="hero-title">
-        Bem-vindo ao <span class="highlight">Librishelf</span>
+        {{ $t("home.welcome") }} <span class="highlight">Librishelf</span>
       </h1>
 
       <p class="hero-subtitle">
-        Sua biblioteca digital. Organize, rastreie e redescubra sua coleção de livros com elegância e
-        segurança.
+        {{ $t("home.hero") }}
       </p>
 
       <div class="hero-actions">
         <Button
-          label="Acessar Minha Biblioteca"
+          :label="$t('home.accessLibrary')"
           icon="pi pi-arrow-right"
           iconPos="right"
           class="p-button-rounded hero-btn"
@@ -33,39 +32,39 @@
     </section>
 
     <section class="features-section">
-      <h2>O que você pode fazer</h2>
+      <h2>{{ $t("home.features") }}</h2>
 
       <div class="features-grid">
         <div class="feature-card">
           <div class="icon-box">
             <i class="pi pi-plus"></i>
           </div>
-          <h3>Gerenciamento Completo</h3>
-          <p>Adicione livros com detalhes: autor, editora, data e capa personalizada.</p>
+          <h3>{{ $t("home.manageBooks.title") }}</h3>
+          <p>{{ $t("home.manageBooks.desc") }}</p>
         </div>
 
         <div class="feature-card">
           <div class="icon-box">
             <i class="pi pi-check-circle"></i>
           </div>
-          <h3>Rastreio de Leitura</h3>
-          <p>Marque livros como lidos, registre datas e acompanhe seu progresso literário.</p>
+          <h3>{{ $t("home.trackReading.title") }}</h3>
+          <p>{{ $t("home.trackReading.desc") }}</p>
         </div>
 
         <div class="feature-card">
           <div class="icon-box">
             <i class="pi pi-filter"></i>
           </div>
-          <h3>Busca Inteligente</h3>
-          <p>Encontre qualquer obra instantaneamente filtrando por título, autor, editora ou tags.</p>
+          <h3>{{ $t("home.smartSearch.title") }}</h3>
+          <p>{{ $t("home.smartSearch.desc") }}</p>
         </div>
 
         <div class="feature-card">
           <div class="icon-box">
             <i class="pi pi-th-large"></i>
           </div>
-          <h3>Visual Premium</h3>
-          <p>Sua coleção apresentada em um layout responsivo, limpo e de visual agradável.</p>
+          <h3>{{ $t("home.visual.title") }}</h3>
+          <p>{{ $t("home.visual.desc") }}</p>
         </div>
       </div>
     </section>
@@ -76,7 +75,9 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
+import { useI18n } from 'vue-i18n'
 
+const { t, locale } = useI18n()
 const router = useRouter()
 
 function goToLibrary() {

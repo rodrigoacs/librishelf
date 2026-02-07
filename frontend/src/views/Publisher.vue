@@ -2,15 +2,15 @@
   <div class="view-container">
     <div class="view-header">
       <div class="header-content">
-        <h1>Editoras</h1>
-        <p>As casas que publicam suas histórias favoritas.</p>
+        <h1>{{ $t('publishers.title') }}</h1>
+        <p>{{ $t('publishers.subtitle') }}</p>
       </div>
 
       <div class="search-wrapper">
         <i class="pi pi-search"></i>
         <input
           v-model="search"
-          placeholder="Buscar editora..."
+          :placeholder="$t('publishers.search_ph')"
           class="modern-input"
         />
       </div>
@@ -33,7 +33,7 @@
         class="empty-state"
       >
         <i class="pi pi-building"></i>
-        <p>Nenhuma editora encontrada.</p>
+        <p>{{ $t('publishers.notFound') }}</p>
       </div>
 
       <div
@@ -51,7 +51,7 @@
           </div>
           <div class="info-box">
             <h3>{{ pub.name }}</h3>
-            <span class="action-hint">Ver coleção <i class="pi pi-arrow-right"></i></span>
+            <span class="action-hint">{{ $t('publishers.viewCollection') }} <i class="pi pi-arrow-right"></i></span>
           </div>
         </div>
       </div>
@@ -62,9 +62,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '../services/api.js'
 
 const router = useRouter()
+const { t } = useI18n()
 const publishers = ref([])
 const loading = ref(true)
 const search = ref('')
@@ -89,7 +91,7 @@ onMounted(async () => {
     })
     publishers.value.sort((a, b) => a.name.localeCompare(b.name))
   } catch (error) {
-    console.error('Erro ao carregar editoras:', error)
+    console.error(t('publishers.loadError'), error)
   } finally {
     loading.value = false
   }

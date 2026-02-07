@@ -49,8 +49,8 @@
             <div class="icon-circle">
               <i class="pi pi-camera"></i>
             </div>
-            <span class="upload-text">Adicionar Capa</span>
-            <span class="upload-subtext">Clique para selecionar</span>
+            <span class="upload-text">{{ t('book.add_cover') }}</span>
+            <span class="upload-subtext">{{ t('book.click_select') }}</span>
           </div>
 
           <input
@@ -65,8 +65,8 @@
 
       <div class="form-section">
         <div class="form-header">
-          <h2>Novo Livro</h2>
-          <p>Adicione uma nova obra à sua coleção.</p>
+          <h2>{{ t('book.new_title') }}</h2>
+          <p>{{ t('book.new_subtitle') }}</p>
         </div>
 
         <div class="form-content">
@@ -74,13 +74,13 @@
             <input
               v-model="book.title"
               class="modern-input title-input"
-              placeholder="Título do Livro *"
+              :placeholder="t('book.title_ph')"
               :class="{ 'error': submitted && !book.title }"
             />
             <small
               v-if="submitted && !book.title"
               class="error-msg"
-            >Título é obrigatório</small>
+            >{{ t('book.validation_title') }}</small>
           </div>
 
           <div class="input-group">
@@ -88,7 +88,7 @@
             <input
               v-model="book.author"
               class="modern-input"
-              placeholder="Nome do Autor"
+              :placeholder="t('book.author_ph')"
             />
           </div>
 
@@ -97,13 +97,13 @@
             <input
               v-model="book.tags"
               class="modern-input"
-              placeholder="Tags (separadas por vírgula)"
+              :placeholder="t('book.tags_ph')"
             />
           </div>
 
           <div class="dates-grid">
             <div class="input-group">
-              <label>Status de Leitura</label>
+              <label>{{ t('book.read_status') }}</label>
               <div class="date-wrapper">
                 <i
                   class="pi"
@@ -112,7 +112,7 @@
                 <Calendar
                   v-model="book.readDate"
                   dateFormat="dd/mm/yy"
-                  placeholder="Não lido"
+                  :placeholder="t('book.unread')"
                   class="modern-calendar"
                   :showIcon="false"
                 />
@@ -120,13 +120,13 @@
             </div>
 
             <div class="input-group">
-              <label>Data de Publicação</label>
+              <label>{{ t('book.pub_date') }}</label>
               <div class="date-wrapper">
                 <i class="pi pi-calendar text-gray"></i>
                 <Calendar
                   v-model="book.pubDate"
                   dateFormat="dd/mm/yy"
-                  placeholder="Data"
+                  :placeholder="t('book.pub_date')"
                   class="modern-calendar"
                   :showIcon="false"
                 />
@@ -136,7 +136,7 @@
 
           <div class="meta-grid">
             <div class="input-group">
-              <label>Editora</label>
+              <label>{{ t('book.publisher') }}</label>
               <input
                 v-model="book.publisher"
                 class="modern-input meta-input"
@@ -156,12 +156,12 @@
 
         <div class="form-footer">
           <Button
-            label="Cancelar"
+            :label="t('common.cancel')"
             class="p-button-text p-button-secondary"
             @click="visible = false"
           />
           <Button
-            label="Adicionar Livro"
+            :label="t('common.new')"
             icon="pi pi-plus"
             class="btn-action-primary"
             @click="saveBook"
@@ -180,6 +180,9 @@ import Button from 'primevue/button'
 import Calendar from 'primevue/calendar'
 import { useToast } from 'primevue/usetoast'
 import api from '../services/api.js'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   visible: Boolean
@@ -250,7 +253,7 @@ async function saveBook() {
   submitted.value = true
 
   if (!book.title.trim()) {
-    toast.add({ severity: 'warn', summary: 'Atenção', detail: 'O título é obrigatório.', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('common.error'), detail: t('book.validation_title'), life: 3000 })
     return
   }
 
@@ -275,13 +278,13 @@ async function saveBook() {
 
     await api.createBook(formData)
 
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Livro adicionado à biblioteca!', life: 3000 })
+    toast.add({ severity: 'success', summary: t('common.success'), detail: t('book.toast_added'), life: 3000 })
     emit('save')
     visible.value = false
 
   } catch (error) {
     console.error('Erro ao criar livro:', error)
-    toast.add({ severity: 'error', summary: 'Erro', detail: error.message || 'Falha ao criar livro.', life: 4000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message || t('book.toast_error'), life: 4000 })
   } finally {
     loading.value = false
   }

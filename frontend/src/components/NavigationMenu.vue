@@ -87,19 +87,47 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div class="theme-wrapper">
-          <ThemeSwitcher />
-        </div>
 
-        <div class="user-info">
-          <div class="avatar-circle">{{ userInitial }}</div>
-          <div class="user-details">
-            <span
-              class="username"
-              :title="displayName"
-            >{{ truncateName(displayName) }}</span>
-            <span class="user-role">Leitor</span>
+        <Transition name="scale-up">
+          <div
+            v-if="showSettings"
+            class="settings-menu"
+          >
+            <div class="settings-header">{{ $t('menu.configurations') }}</div>
+
+            <div class="settings-row">
+              <span class="settings-label">{{ $t('menu.language') }}</span>
+              <LanguageSwitcher />
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row">
+              <ThemeSwitcher />
+            </div>
           </div>
+        </Transition>
+
+        <div class="footer-content">
+          <div class="user-info">
+            <div class="avatar-circle">{{ userInitial }}</div>
+            <div class="user-details">
+              <span
+                class="username"
+                :title="displayName"
+              >{{ truncateName(displayName) }}</span>
+              <span class="user-role">{{ $t('menu.role') }}</span>
+            </div>
+          </div>
+
+          <button
+            class="settings-btn"
+            :class="{ active: showSettings }"
+            @click="showSettings = !showSettings"
+            title="Configurações"
+          >
+            <i class="pi pi-cog"></i>
+          </button>
         </div>
       </div>
     </aside>
@@ -110,12 +138,17 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import ThemeSwitcher from './ThemeSwitcher.vue'
+import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
+
 const mobileMenuOpen = ref(false)
+const showSettings = ref(false)
 const currentUser = ref(null)
 
 function updateUser() {
@@ -127,7 +160,7 @@ function updateUser() {
 
 const displayName = computed(() => {
   const user = currentUser.value
-  return user?.name || user?.username || user?.email || 'Visitante'
+  return user?.name || user?.username || user?.email || t('menu.guest')
 })
 
 const userInitial = computed(() => displayName.value.charAt(0).toUpperCase())
@@ -136,19 +169,28 @@ function truncateName(name) {
   return name.length > 15 ? name.substring(0, 12) + '...' : name
 }
 
-onMounted(() => updateUser())
-watch(() => route.path, () => updateUser())
+watch(() => route.path, () => {
+  updateUser()
+  showSettings.value = false
+  mobileMenuOpen.value = false
+})
 
-const items = [
-  { label: 'Home', icon: 'pi pi-home', route: '/' },
-  { label: 'Biblioteca', icon: 'pi pi-book', route: '/books' },
-  { label: 'Autores', icon: 'pi pi-users', route: '/authors' },
-  { label: 'Editoras', icon: 'pi pi-building', route: '/publishers' },
-  { label: 'Categorias', icon: 'pi pi-tags', route: '/tags' },
-  { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/dashboard' },
+onMounted(() => updateUser())
+
+const items = computed(() => [
+  { label: t('menu.home'), icon: 'pi pi-home', route: '/' },
+  { label: t('menu.library'), icon: 'pi pi-book', route: '/books' },
+  { label: t('menu.authors'), icon: 'pi pi-users', route: '/authors' },
+  { label: t('menu.publishers'), icon: 'pi pi-building', route: '/publishers' },
+  { label: t('menu.categories'), icon: 'pi pi-tags', route: '/tags' },
+  { label: t('menu.dashboard'), icon: 'pi pi-chart-bar', route: '/dashboard' },
   { separator: true },
-  { label: 'Sair', icon: 'pi pi-sign-out', command: () => { localStorage.clear(); router.push('/login') } },
-]
+  {
+    label: t('menu.logout'),
+    icon: 'pi pi-sign-out',
+    command: () => { localStorage.clear(); router.push('/login') }
+  },
+])
 </script>
 
 <style scoped>
@@ -252,36 +294,29 @@ const items = [
 }
 
 .sidebar-footer {
-  padding: 1.5rem;
+  padding: 1.2rem;
   border-top: 1px solid var(--border-color);
   background-color: var(--bg-app);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  position: relative;
 }
 
-.theme-wrapper {
+.footer-content {
   display: flex;
-  justify-content: center;
-  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: background-color 0.2s;
-}
-
-.user-info:hover {
-  background-color: var(--bg-hover);
+  gap: 0.8rem;
+  overflow: hidden;
 }
 
 .avatar-circle {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-color: var(--main-color);
   color: var(--text-inverse);
@@ -289,7 +324,8 @@ const items = [
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .user-details {
@@ -301,7 +337,7 @@ const items = [
 .username {
   color: var(--text-primary);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -310,6 +346,76 @@ const items = [
 .user-role {
   color: var(--text-muted);
   font-size: 0.75rem;
+}
+
+.settings-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.settings-btn:hover,
+.settings-btn.active {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.settings-btn.active i {
+  transform: rotate(45deg);
+}
+
+.settings-btn i {
+  font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.settings-menu {
+  position: absolute;
+  bottom: 80px;
+  left: 1rem;
+  right: 1rem;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.settings-header {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.settings-label {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.settings-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 0.2rem 0;
 }
 
 @media (max-width: 768px) {
@@ -390,6 +496,17 @@ const items = [
     backdrop-filter: blur(4px);
     z-index: 900;
   }
+}
+
+.scale-up-enter-active,
+.scale-up-leave-active {
+  transition: all 0.2s ease-out;
+}
+
+.scale-up-enter-from,
+.scale-up-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
 }
 
 .fade-enter-active,

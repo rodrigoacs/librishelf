@@ -3,7 +3,7 @@
     <div class="top-bar">
 
       <div class="header-title">
-        <h1>Library</h1>
+        <h1>{{ t('menu.library') }}</h1>
         <span
           class="count-badge"
           v-if="booksQuantity !== undefined"
@@ -15,7 +15,7 @@
           <i class="pi pi-search search-icon" />
           <input
             v-model="searchText"
-            placeholder="Buscar por título, ISBN..."
+            :placeholder="t('library.search_ph')"
             class="custom-search-input"
             @input="emitFilter('search', searchText)"
           />
@@ -33,11 +33,11 @@
           class="p-button-rounded p-button-text action-btn"
           :class="{ 'active-filter': hasActiveFilters }"
           @click="visibleFilters = true"
-          v-tooltip.bottom="'Filtros Avançados'"
+          v-tooltip.bottom="t('library.filters_adv')"
         />
 
         <Button
-          label="Novo"
+          :label="t('common.new')"
           icon="pi pi-plus"
           class="p-button-rounded btn-action-primary add-btn"
           @click="openAddBookModal"
@@ -49,11 +49,11 @@
       class="active-filters-bar"
       v-if="hasActiveFilters"
     >
-      <div class="filter-label">Filtrando por:</div>
+      <div class="filter-label">{{ t('library.filtering_by') }}</div>
       <div class="chips-container">
         <Chip
           v-if="readState !== 'all'"
-          :label="readState === 'read' ? 'Lidos' : 'Não Lidos'"
+          :label="readState === 'read' ? t('library.read') : t('library.unread')"
           removable
           @remove="resetFilter('readState')"
           class="custom-chip theme-border"
@@ -84,7 +84,7 @@
         />
       </div>
       <Button
-        label="Limpar tudo"
+        :label="t('library.clear_all')"
         class="p-button-text p-button-sm p-button-danger clear-all-btn"
         @click="clearAllFilters"
       />
@@ -97,30 +97,30 @@
       :modal="true"
     >
       <div class="sidebar-header">
-        <h3>Filtros & Ordenação</h3>
-        <p>Refine sua visualização</p>
+        <h3>{{ t('library.filters_adv') }}</h3>
+        <p>{{ t('library.refine_view') }}</p>
       </div>
 
       <div class="sidebar-content">
         <div class="filter-group">
-          <label>Status de Leitura</label>
+          <label>{{ t('library.read_status') }}</label>
           <SelectButton
             v-model="readState"
             :options="['all', 'read', 'unread']"
-            :optionLabel="opt => opt === 'all' ? 'Todos' : (opt === 'read' ? 'Lidos' : 'Não Lidos')"
+            :optionLabel="opt => opt === 'all' ? t('library.all') : (opt === 'read' ? t('library.read') : t('library.unread'))"
             @change="emitFilter('readState', readState)"
             class="w-full custom-selectbutton"
           />
         </div>
 
         <div class="filter-group">
-          <label>Ano de leitura</label>
+          <label>{{ t('library.read_year') }}</label>
           <Dropdown
             v-model="readYear"
             :options="yearOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Selecione o ano"
+            :placeholder="t('library.select_year')"
             class="w-full custom-dropdown"
             panelClass="custom-panel"
             @change="emitFilter('readYear', readYear)"
@@ -128,7 +128,7 @@
         </div>
 
         <div class="filter-group">
-          <label>Ordenar Por</label>
+          <label>{{ t('library.sort_by') }}</label>
           <div class="sort-row">
             <Dropdown
               v-model="sortField"
@@ -148,14 +148,14 @@
         </div>
 
         <div class="filter-group">
-          <label>Tags</label>
+          <label>{{ t('library.tags') }}</label>
           <MultiSelect
             v-model="selectedTags"
             :options="tagsList"
             optionLabel="name"
-            placeholder="Selecione tags"
+            :placeholder="t('library.select_tags')"
             :maxSelectedLabels="2"
-            selectedItemsLabel="{0} tags selecionadas"
+            :selectedItemsLabel="`{0} ${t('library.selected_tags')}`"
             filter
             class="w-full custom-multiselect"
             panelClass="custom-panel"
@@ -164,14 +164,14 @@
         </div>
 
         <div class="filter-group">
-          <label>Autores</label>
+          <label>{{ t('library.authors') }}</label>
           <MultiSelect
             v-model="selectedAuthors"
             :options="authorsList"
             optionLabel="name"
-            placeholder="Selecione autores"
+            :placeholder="t('library.select_authors')"
             :maxSelectedLabels="2"
-            selectedItemsLabel="{0} autores selecionados"
+            :selectedItemsLabel="`{0} ${t('library.selected_authors')}`"
             filter
             class="w-full custom-multiselect"
             panelClass="custom-panel"
@@ -180,14 +180,14 @@
         </div>
 
         <div class="filter-group">
-          <label>Editoras</label>
+          <label>{{ t('library.publishers') }}</label>
           <MultiSelect
             v-model="selectedPublishers"
             :options="publishersList"
             optionLabel="name"
-            placeholder="Selecione editoras"
+            :placeholder="t('library.select_publishers')"
             :maxSelectedLabels="2"
-            selectedItemsLabel="{0} editoras selecionadas"
+            :selectedItemsLabel="`{0} ${t('library.selected_publishers')}`"
             filter
             class="w-full custom-multiselect"
             panelClass="custom-panel"
@@ -198,7 +198,7 @@
 
       <div class="sidebar-footer">
         <Button
-          label="Limpar Filtros"
+          :label="t('library.clear_all')"
           icon="pi pi-filter-slash"
           class="p-button-outlined p-button-danger w-full"
           @click="clearAllFilters"
@@ -223,6 +223,9 @@ import Dropdown from 'primevue/dropdown'
 import Chip from 'primevue/chip'
 import AddBookDialog from './AddBookDialog.vue'
 import api from '../services/api.js'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const emit = defineEmits(['filter-change', 'refresh'])
 const props = defineProps({
@@ -244,13 +247,13 @@ const publishersList = ref([])
 const selectedTags = ref([])
 const tagsList = ref([])
 
-const sortOptions = [
-  { label: 'Adicionados Recentemente', value: 'recent' },
-  { label: 'Título', value: 'title' },
-  { label: 'Autor', value: 'authors' },
-  { label: 'Data de Leitura', value: 'readDate' },
-  { label: 'Data de Publicação', value: 'pubDate' }
-]
+const sortOptions = computed(() => [
+  { label: t('library.sort.recent'), value: 'recent' },
+  { label: t('library.sort.title'), value: 'title' },
+  { label: t('library.sort.author'), value: 'authors' },
+  { label: t('library.sort.read_date'), value: 'readDate' },
+  { label: t('library.sort.pub_date'), value: 'pubDate' }
+])
 
 const readYear = ref(null)
 
@@ -260,7 +263,7 @@ const yearOptions = computed(() => {
     const year = (currentYear - i).toString()
     return { label: year, value: year }
   })
-  return [{ label: 'Todos os anos', value: null }, ...years]
+  return [{ label: t('library.sort.all_years'), value: null }, ...years]
 })
 
 const hasActiveFilters = computed(() => {

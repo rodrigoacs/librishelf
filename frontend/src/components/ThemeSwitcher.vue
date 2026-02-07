@@ -50,12 +50,13 @@ function getRxgb(name) {
 .theme-switcher {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.5rem;
   background-color: transparent;
   border: 1px solid transparent;
-  padding: 0.4rem 0.8rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 50px;
   width: fit-content;
+  max-width: 100%;
   transition: all 0.2s ease;
 }
 
@@ -74,6 +75,7 @@ function getRxgb(name) {
   justify-content: center;
   transition: color 0.2s, transform 0.2s;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .mode-btn:hover {
@@ -87,14 +89,18 @@ function getRxgb(name) {
 
 .divider {
   width: 1px;
-  height: 16px;
+  height: 14px;
   background-color: var(--border-color);
   opacity: 0.5;
+  flex-shrink: 0;
 }
 
 .colors-list {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .color-dot {
@@ -105,6 +111,7 @@ function getRxgb(name) {
   cursor: pointer;
   transition: transform 0.2s, opacity 0.2s;
   opacity: 0.6;
+  flex-shrink: 0;
 }
 
 .color-dot:hover {

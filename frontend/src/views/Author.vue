@@ -2,15 +2,15 @@
   <div class="authors-container">
     <div class="view-header">
       <div class="header-content">
-        <h1>Autores</h1>
-        <p>Explore sua coleção através dos criadores.</p>
+        <h1>{{ $t('authors.title') }}</h1>
+        <p>{{ $t('authors.subtitle') }}</p>
       </div>
 
       <div class="search-wrapper">
         <i class="pi pi-search"></i>
         <input
           v-model="search"
-          placeholder="Filtrar autores..."
+          :placeholder="$t('authors.search_ph')"
           class="modern-input"
         />
       </div>
@@ -33,7 +33,7 @@
         class="empty-state"
       >
         <i class="pi pi-users"></i>
-        <p>Nenhum autor encontrado.</p>
+        <p>{{ $t('authors.notFound') }}</p>
       </div>
 
       <div
@@ -55,12 +55,12 @@
               v-if="author.count"
               class="book-count"
             >
-              {{ author.count }} {{ author.count === 1 ? 'livro' : 'livros' }}
+              {{ author.count }} {{ $t('authors.bookCount', author.count) }}
             </span>
             <span
               v-else
               class="action-text"
-            >Ver livros</span>
+            >{{ $t('authors.viewBooks') }}</span>
           </div>
           <i class="pi pi-chevron-right arrow-icon"></i>
         </div>

@@ -2,8 +2,8 @@
   <div class="dashboard-container">
     <div class="header-section">
       <div class="welcome-text">
-        <h1>Dashboard</h1>
-        <p>Visão geral das suas estatísticas de leitura.</p>
+        <h1>{{ $t('dashboard.title') }}</h1>
+        <p>{{ $t('dashboard.subtitle') }}</p>
       </div>
       <div class="date-display">{{ currentDate }}</div>
     </div>
@@ -36,12 +36,11 @@
       v-else
       class="dashboard-content"
     >
-
       <div class="kpi-grid">
         <div class="kpi-card total">
           <div class="kpi-icon"><i class="pi pi-book"></i></div>
           <div class="kpi-info">
-            <span class="label">Total de Livros</span>
+            <span class="label">{{ $t('dashboard.totalBooks') }}</span>
             <span class="value">{{ stats.totalBooks }}</span>
           </div>
         </div>
@@ -49,7 +48,7 @@
         <div class="kpi-card read">
           <div class="kpi-icon"><i class="pi pi-check-circle"></i></div>
           <div class="kpi-info">
-            <span class="label">Livros Lidos</span>
+            <span class="label">{{ $t('dashboard.readBooks') }}</span>
             <span class="value">{{ stats.readBooks }}</span>
           </div>
         </div>
@@ -57,7 +56,7 @@
         <div class="kpi-card unread">
           <div class="kpi-icon"><i class="pi pi-bookmark"></i></div>
           <div class="kpi-info">
-            <span class="label">Livros Não Lidos</span>
+            <span class="label">{{ $t('dashboard.unreadBooks') }}</span>
             <span class="value">{{ unreadBooks }}</span>
           </div>
         </div>
@@ -65,16 +64,15 @@
         <div class="kpi-card rate">
           <div class="kpi-icon"><i class="pi pi-percentage"></i></div>
           <div class="kpi-info">
-            <span class="label">Taxa de Leitura</span>
+            <span class="label">{{ $t('dashboard.readingRate') }}</span>
             <span class="value">{{ readingRate }}%</span>
           </div>
         </div>
       </div>
 
       <div class="charts-grid">
-
         <div class="chart-card main-chart">
-          <h3>Leituras por Ano</h3>
+          <h3>{{ $t('dashboard.readingByYear') }}</h3>
           <div class="chart-wrapper">
             <Chart
               type="bar"
@@ -86,12 +84,12 @@
         </div>
 
         <div class="chart-card">
-          <h3>Gêneros Favoritos</h3>
+          <h3>{{ $t('dashboard.favoriteGenres') }}</h3>
           <div class="chart-wrapper flex-center">
             <div
               v-if="stats.topTags.length === 0"
               class="no-data"
-            >Sem dados de tags</div>
+            >{{ $t('dashboard.noTagsData') }}</div>
             <Chart
               v-else
               type="doughnut"
@@ -103,12 +101,12 @@
         </div>
 
         <div class="chart-card authors-list">
-          <h3>Top Autores</h3>
+          <h3>{{ $t('dashboard.topAuthors') }}</h3>
           <div class="authors-wrapper">
             <div
               v-if="stats.topAuthors.length === 0"
               class="no-data"
-            >Sem dados de autores</div>
+            >{{ $t('dashboard.noAuthorsData') }}</div>
             <div
               v-for="(author, index) in stats.topAuthors"
               :key="author.name"
@@ -116,11 +114,10 @@
             >
               <div class="rank">{{ index + 1 }}</div>
               <div class="name">{{ author.name }}</div>
-              <div class="count">{{ author.count }} livros</div>
+              <div class="count">{{ author.count }} {{ $t('dashboard.books') }}</div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -128,9 +125,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Chart from 'primevue/chart'
 import Skeleton from 'primevue/skeleton'
 import api from '../services/api.js'
+
+const { t, locale } = useI18n() 
 
 const loading = ref(true)
 const stats = ref({
@@ -142,7 +142,10 @@ const stats = ref({
 })
 
 const currentDate = computed(() => {
-  return new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })
+  const dateLocale = locale.value === 'pt' ? 'pt-BR' : 'en-US'
+  return new Date().toLocaleDateString(dateLocale, {
+    weekday: 'long', day: 'numeric', month: 'long'
+  })
 })
 
 const readingRate = computed(() => {
@@ -163,7 +166,7 @@ const yearChartData = computed(() => {
   return {
     labels: sorted.map(i => i.year),
     datasets: [{
-      label: 'Livros Lidos',
+      label: t('dashboard.readBooks'),
       data: sorted.map(i => i.count),
       backgroundColor: mainColor,
       borderRadius: 6
