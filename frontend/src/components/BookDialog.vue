@@ -260,13 +260,21 @@ function getTagColor(index) {
 const displayCoverUrl = computed(() => {
   if (previewUrl.value) return previewUrl.value
   if (!props.bookId) return '/placeholder.png'
-  return `${API_URL}/uploads/${props.bookId}.jpg?t=${cacheBuster.value}`
+  return `${API_URL}/uploads/${props.bookId}.avif?t=${cacheBuster.value}`
 })
 
 function handleImageError(e) {
-  if (e.target.dataset.errorHandled) return
-  e.target.dataset.errorHandled = true
-  e.target.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22500%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%232a2a2a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23aaaaaa%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20dy%3D%22.3em%22%3ENo%20Cover%3C%2Ftext%3E%3C%2Fsvg%3E"
+  const img = e.target
+  if (img.dataset.errorHandled) return
+
+  const src = img.src
+
+  if (src.includes('.avif')) {
+    img.src = src.replace('.avif', '.jpg')
+  } else {
+    img.dataset.errorHandled = true
+    img.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22500%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%232a2a2a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23aaaaaa%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20dy%3D%22.3em%22%3ENo%20Cover%3C%2Ftext%3E%3C%2Fsvg%3E"
+  }
 }
 
 function triggerFileInput() {

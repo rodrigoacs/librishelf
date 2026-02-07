@@ -22,6 +22,7 @@
           :src="previewUrl"
           class="blur-bg"
           aria-hidden="true"
+          @error="handlePreviewError"
         />
 
         <div
@@ -35,6 +36,7 @@
             <img
               :src="previewUrl"
               class="cover-preview"
+              @error="handlePreviewError"
             />
             <div class="change-overlay">
               <i class="pi pi-refresh"></i>
@@ -287,6 +289,15 @@ async function saveBook() {
     toast.add({ severity: 'error', summary: t('common.error'), detail: error.message || t('book.toast_error'), life: 4000 })
   } finally {
     loading.value = false
+  }
+}
+
+function handlePreviewError(event) {
+  const img = event.target
+  if (img.src.startsWith('blob:')) return
+
+  if (img.src.includes('.avif')) {
+    img.src = img.src.replace('.avif', '.jpg')
   }
 }
 </script>

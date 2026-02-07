@@ -65,14 +65,24 @@ const bookCoverUrl = computed(() => {
   return `${API_URL}/uploads/${id}.avif`
 })
 
-function openDialog() {
-  displayDialog.value = true
+function handleImageError(event) {
+  const img = event.target
+
+  if (img.dataset.errorHandled) return
+
+  const src = img.src
+
+  if (src.includes('.avif')) {
+    img.src = src.replace('.avif', '.jpg')
+  }
+  else {
+    img.dataset.errorHandled = true
+    img.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22450%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%232a2a2a%22%2F%3E%3Cpath%20d%3D%22M100%20180%20L150%20130%20L200%20180%22%20stroke%3D%22%23444%22%20stroke-width%3D%225%22%20fill%3D%22none%22%2F%3E%3C%2Fsvg%3E"
+  }
 }
 
-function handleImageError(event) {
-  if (event.target.dataset.errorHandled) return
-  event.target.dataset.errorHandled = true
-  event.target.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22450%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%232a2a2a%22%2F%3E%3Cpath%20d%3D%22M100%20180%20L150%20130%20L200%20180%22%20stroke%3D%22%23444%22%20stroke-width%3D%225%22%20fill%3D%22none%22%2F%3E%3C%2Fsvg%3E"
+function openDialog() {
+  displayDialog.value = true
 }
 </script>
 
