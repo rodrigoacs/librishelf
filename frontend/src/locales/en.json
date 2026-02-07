@@ -127,7 +127,8 @@
     "updateFailed": "Update failed.",
     "errorLoading": "Error loading book details.",
     "attetion": "Attention",
-    "couldNotLoad": "Could not load book details."
+    "couldNotLoad": "Could not load book details.",
+    "save": "Save Changes"
   },
   "authors": {
     "title": "Authors",

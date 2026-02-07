@@ -127,7 +127,8 @@
     "updateFailed": "Falha na atualização.",
     "errorLoading": "Erro ao carregar detalhes do livro.",
     "attetion": "Atenção",
-    "couldNotLoad": "Não foi possível carregar os detalhes do livro."
+    "couldNotLoad": "Não foi possível carregar os detalhes do livro.",
+    "save": "Salvar Alterações"
   },
   "authors": {
     "title": "Autores",
