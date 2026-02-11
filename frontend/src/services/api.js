@@ -64,5 +64,14 @@ export default {
 
   getDashboardStats() {
     return client.get('/dashboard/stats')
+  },
+
+  getPublicLibrary(username, params = {}) {
+    const queryString = new URLSearchParams(params).toString()
+    return client.get(`/library/public/u/${username}?${queryString}`)
+  },
+
+  getPublicBook(id) {
+    return client.get(`/library/public/book/${id}`)
   }
 }

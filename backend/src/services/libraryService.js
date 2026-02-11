@@ -1,7 +1,25 @@
 import path from 'path'
 import fs, { read } from 'fs'
 import * as libraryRepository from '../repositories/libraryRepository.js'
+import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
+
+async function getPublicLibraryByUsername(username, query) {
+  const user = await authRepository.getUserByUsername(username)
+
+  if (!user) {
+    const error = new Error('User not found.')
+    error.status = STATUS.NOT_FOUND
+    throw error
+  }
+
+  const booksData = await getAllBooksByUser(user.id, query)
+
+  return {
+    owner: user.name || user.username,
+    ...booksData
+  }
+}
 
 async function getAllBooksByUser(userId, query) {
   const filters = {
@@ -101,4 +119,4 @@ async function markBookAsUnread(bookId, userId) {
   return await libraryRepository.updateReadDate(bookId, null)
 }
 
-export { getAllBooksByUser, getBookById, addNewBook, updateBookDetails, checkBookOwnership, deleteBook, markBookAsRead, markBookAsUnread }
+export { getAllBooksByUser, getBookById, addNewBook, updateBookDetails, checkBookOwnership, deleteBook, markBookAsRead, markBookAsUnread, getPublicLibraryByUsername }

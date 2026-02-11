@@ -203,5 +203,11 @@
     "sucess": "Success",
     "accountCreated": "Your account has been created. You can now login.",
     "errorCreating": "Error creating account. Try again."
+  },
+  "publicLibrary": {
+    "title": "{ ownerName }'s Library",
+    "subtitle": "Exploring public collection.",
+    "empty": "No books found in this library.",
+    "loading": "Loading library..."
   }
 }

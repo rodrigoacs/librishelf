@@ -50,6 +50,29 @@ router.get('/covers/random', (req, res) => {
   }
 })
 
+router.get('/public/u/:username', async (req, res) => {
+  try {
+    const { username } = req.params
+    const libraryData = await libraryService.getPublicLibraryByUsername(username, req.query)
+    res.status(STATUS.OK).json(libraryData)
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message })
+  }
+})
+
+router.get('/public/book/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const book = await libraryService.getBookById(id)
+
+    if (!book) return res.status(STATUS.NOT_FOUND).json({ error: 'Livro não encontrado.' })
+
+    res.status(STATUS.OK).json(book)
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message })
+  }
+})
+
 router.use(authenticateToken)
 
 router.get('/', async (req, res) => {

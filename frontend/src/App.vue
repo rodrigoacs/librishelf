@@ -19,7 +19,13 @@ import ConfirmDialog from 'primevue/confirmdialog'
 
 const route = useRoute()
 const isAuthRoute = computed(() => {
-  return ['/login', '/register'].includes(route.path)
+  const allowedPatterns = [
+    /^\/login$/,
+    /^\/register$/,
+    /^\/u\/[a-zA-Z0-9_-]+$/
+  ]
+
+  return allowedPatterns.some(regex => regex.test(route.path))
 })
 </script>
 

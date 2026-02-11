@@ -84,7 +84,7 @@
 
           <div class="actions-area">
             <Button
-              v-if="!isEditing"
+              v-if="!isEditing && !isReadOnly"
               icon="pi pi-pencil"
               class="p-button-rounded p-button-text p-button-secondary"
               :v-tooltip.bottom="$t('bookDialog.edit')"
@@ -218,7 +218,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3050'
 const { t } = useI18n()
 const props = defineProps({
   modelValue: Boolean,
-  bookId: Number
+  bookId: Number,
+  isReadOnly: { type: Boolean, default: false }
 })
 
 const emits = defineEmits(['update:modelValue', 'refresh'])
@@ -379,10 +380,19 @@ async function saveBookDetails() {
 
 async function loadBookData() {
   if (!props.bookId) return
+
   previewUrl.value = null
   selectedFile.value = null
+
   try {
-    const response = await api.getBookById(props.bookId)
+    let response
+
+    if (props.isReadOnly) {
+      response = await api.getPublicBook(props.bookId)
+    } else {
+      response = await api.getBookById(props.bookId)
+    }
+
     book.value.title = response.title || ''
     book.value.authors = response.authors || ''
     book.value.isbn = response.isbn || ''

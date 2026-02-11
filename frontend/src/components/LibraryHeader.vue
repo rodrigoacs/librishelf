@@ -29,6 +29,7 @@
 
       <div class="actions">
         <Button
+          v-if="!isPublic"
           icon="pi pi-filter"
           class="p-button-rounded p-button-text action-btn"
           :class="{ 'active-filter': hasActiveFilters }"
@@ -229,7 +230,8 @@ const { t } = useI18n()
 
 const emit = defineEmits(['filter-change', 'refresh'])
 const props = defineProps({
-  booksQuantity: Number
+  booksQuantity: Number,
+  isPublic: { type: Boolean, default: false }
 })
 
 const visibleFilters = ref(false)
@@ -329,6 +331,8 @@ function openAddBookModal() { addBookDialogVisible.value = true }
 function onBookSaved() { emit('refresh') }
 
 onMounted(async () => {
+  if (props.isPublic) return
+
   try {
     const [authorsData, publishersData, tagsData] = await Promise.all([
       api.getAuthors(),

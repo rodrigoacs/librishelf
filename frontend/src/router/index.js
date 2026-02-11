@@ -7,6 +7,7 @@ import Register from '../views/Register.vue'
 import Publisher from '../views/Publisher.vue'
 import Tags from '../views/Tags.vue'
 import Dashboard from '../views/Dashboard.vue'
+import PublicLibrary from '../views/PublicLibrary.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,7 +19,8 @@ const router = createRouter({
     { path: '/register', name: 'register', component: Register },
     { path: '/publishers', name: 'publishers', component: Publisher, meta: { requiresAuth: true } },
     { path: '/dashboard', name: 'dashboard', component: Dashboard, meta: { requiresAuth: true } },
-    { path: '/tags', name: 'tags', component: Tags, meta: { requiresAuth: true } }
+    { path: '/tags', name: 'tags', component: Tags, meta: { requiresAuth: true } },
+    { path: '/u/:username', name: 'public-library', component: PublicLibrary, meta: { requiresAuth: false } }
   ]
 })
 
