@@ -128,7 +128,14 @@
     "errorLoading": "Error loading book details.",
     "attetion": "Attention",
     "couldNotLoad": "Could not load book details.",
-    "save": "Save Changes"
+    "save": "Save Changes",
+    "delete": "Delete Book",
+    "confirmDelete": "Are you sure you want to delete this book? This action cannot be undone.",
+    "deleted": "Book deleted successfully.",
+    "bookDeleted": "Book deleted.",
+    "errorDeleted": "Error deleting the book. Please try again.",
+    "deleteFailed": "Deletion failed.",
+    "attention": "Attention"
   },
   "authors": {
     "title": "Authors",

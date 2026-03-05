@@ -84,6 +84,13 @@
 
           <div class="actions-area">
             <Button
+              v-if="!isReadOnly"
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-text p-button-danger"
+              :v-tooltip.bottom="$t('bookDialog.delete')"
+              @click="deleteBook"
+            />
+            <Button
               v-if="!isEditing && !isReadOnly"
               icon="pi pi-pencil"
               class="p-button-rounded p-button-text p-button-secondary"
@@ -309,6 +316,29 @@ function formatDateISO(date) {
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function deleteBook() {
+  confirm.require({
+    message: t('bookDialog.confirmDelete'),
+    header: t('bookDialog.confirm'),
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-rounded p-button-danger',
+    rejectClass: 'p-button-text p-button-secondary',
+    acceptLabel: t('bookDialog.delete'),
+    rejectLabel: t('bookDialog.cancel'),
+    accept: async () => {
+      try {
+        await api.deleteBook(props.bookId)
+        visible.value = false
+        emits('refresh')
+        toast.add({ severity: 'success', summary: t('bookDialog.deleted'), detail: t('bookDialog.bookDeleted'), life: 3000 })
+      } catch (error) {
+        console.error('Error deleting book:', error)
+        toast.add({ severity: 'error', summary: t('bookDialog.errorDeleted'), detail: error.message || t('bookDialog.deleteFailed'), life: 4000 })
+      }
+    }
+  })
 }
 
 function editMode() {

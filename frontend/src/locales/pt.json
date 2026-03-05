@@ -128,7 +128,14 @@
     "errorLoading": "Erro ao carregar detalhes do livro.",
     "attetion": "Atenção",
     "couldNotLoad": "Não foi possível carregar os detalhes do livro.",
-    "save": "Salvar Alterações"
+    "save": "Salvar Alterações",
+    "delete": "Deletar Livro",
+    "confirmDelete": "Tem certeza de que deseja deletar este livro? Esta ação não pode ser desfeita.",
+    "deleted": "Livro deletado com sucesso.",
+    "bookDeleted": "Livro deletado.",
+    "errorDeleted": "Erro ao deletar o livro. Tente novamente.",
+    "deleteFailed": "Falha na exclusão.",
+    "attention": "Atenção"
   },
   "authors": {
     "title": "Autores",
