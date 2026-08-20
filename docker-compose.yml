@@ -22,6 +22,8 @@ services:
       - "3050:3050"
     env_file:
       - ./backend/src/.env
+    environment:
+      - UPLOAD_DIR=/app/uploads
     volumes:
       - ./uploads:/app/uploads
     networks:

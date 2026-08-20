@@ -2,20 +2,10 @@ import express from 'express'
 import fs from 'fs'
 import path from 'path'
 import multer from 'multer'
-import { fileURLToPath } from 'url'
 import * as libraryService from '../services/libraryService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import STATUS from '../utils/statusCodes.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const UPLOAD_DIR = path.join(__dirname, '../../../uploads')
-
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true })
-  console.log(`[System] Pasta de uploads criada em: ${UPLOAD_DIR}`)
-}
+import UPLOAD_DIR from '../config/uploadDir.js'
 
 const upload = multer({
   storage: multer.memoryStorage(),

@@ -1,8 +1,9 @@
 import path from 'path'
-import fs, { read } from 'fs'
+import fs from 'fs'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
+import UPLOAD_DIR from '../config/uploadDir.js'
 
 async function getPublicLibraryByUsername(username, query) {
   const user = await authRepository.getUserByUsername(username)
@@ -101,8 +102,7 @@ async function deleteBook(bookId, userId) {
 
   await libraryRepository.deleteBookById(bookId)
 
-  const uploadDir = path.join(process.cwd(), 'uploads')
-  const filePath = path.join(uploadDir, `${bookId}.jpg`)
+  const filePath = path.join(UPLOAD_DIR, `${bookId}.jpg`)
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath)
   }
