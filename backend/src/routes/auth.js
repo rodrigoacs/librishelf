@@ -1,11 +1,11 @@
 import express from 'express'
 import * as authService from '../services/authService.js'
 import STATUS from '../utils/statusCodes.js'
+import { loginLimiter, registerLimiter } from '../middlewares/rateLimiter.js'
 
 const router = express.Router()
 
-// POST: Login de usuário
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body
 
@@ -18,19 +18,22 @@ router.post('/login', async (req, res) => {
   }
 })
 
-// POST: Registro de novo usuário
-router.post('/register', async (req, res) => {
-  const { username, password, email } = req.body
+router.post('/register', registerLimiter, async (req, res) => {
+  try {
+    const { username, password, email } = req.body
 
-  if (!username || !password || !email) {
-    const error = new Error('Username, password, and email are required.')
-    error.status = STATUS.BAD_REQUEST
-    throw error
+    if (!username || !password || !email) {
+      const error = new Error('Username, password, and email are required.')
+      error.status = STATUS.BAD_REQUEST
+      throw error
+    }
+
+    const user = await authService.registerUser(username, password, email)
+
+    res.status(STATUS.CREATED).json({ message: 'User registered successfully', user })
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message })
   }
-
-  const user = await authService.registerUser(username, password, email)
-
-  res.status(STATUS.CREATED).json({ message: 'User registered successfully', user })
 })
 
 export default router
