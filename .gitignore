@@ -30,5 +30,6 @@ coverage
 *.tsbuildinfo
 
 .env
+.env.test
 
 */package-lock.json
