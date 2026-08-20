@@ -1,16 +1,33 @@
 import express from 'express'
 import fs from 'fs'
-import path from 'path'
 import multer from 'multer'
 import * as libraryService from '../services/libraryService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import STATUS from '../utils/statusCodes.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
+import { saveBookCover } from '../utils/imageProcessor.js'
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 1024 * 1024 * 10 }
+  limits: { fileSize: 1024 * 1024 * 10 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Apenas arquivos de imagem são permitidos.'))
+    }
+    cb(null, true)
+  }
 })
+
+function handleUpload(uploadMiddleware) {
+  return (req, res, next) => {
+    uploadMiddleware(req, res, (err) => {
+      if (err) {
+        return res.status(STATUS.BAD_REQUEST).json({ error: err.message })
+      }
+      next()
+    })
+  }
+}
 
 const router = express.Router()
 
@@ -86,7 +103,7 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-router.post('/', upload.single('coverImage'), async (req, res) => {
+router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => {
   try {
     const { title, pubDate, author, publisher, tags, isbn, readDate } = req.body
     const userId = req.user.id
@@ -109,8 +126,7 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
     const newBookId = await libraryService.addNewBook(bookData)
 
     if (req.file) {
-      const filePath = path.join(UPLOAD_DIR, `${newBookId}.jpg`)
-      fs.writeFileSync(filePath, req.file.buffer)
+      await saveBookCover(req.file.buffer, newBookId)
     }
 
     res.status(STATUS.CREATED).json({ bookId: newBookId })
@@ -132,7 +148,7 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-router.post('/:id/cover', upload.single('coverImage'), async (req, res) => {
+router.post('/:id/cover', handleUpload(upload.single('coverImage')), async (req, res) => {
   try {
     const { id } = req.params
     const userId = req.user.id
@@ -143,10 +159,9 @@ router.post('/:id/cover', upload.single('coverImage'), async (req, res) => {
 
     await libraryService.checkBookOwnership(id, userId)
 
-    const filePath = path.join(UPLOAD_DIR, `${id}.jpg`)
-    fs.writeFileSync(filePath, req.file.buffer)
+    await saveBookCover(req.file.buffer, id)
 
-    console.log(`[Upload] Capa salva em: ${filePath}`)
+    console.log(`[Upload] Capa processada (jpg + avif) para o livro ${id}`)
 
     res.status(STATUS.OK).json({ message: 'Capa atualizada com sucesso.' })
   } catch (error) {
@@ -161,11 +176,6 @@ router.delete('/:id', async (req, res) => {
     const userId = req.user.id
 
     await libraryService.deleteBook(id, userId)
-
-    const filePath = path.join(UPLOAD_DIR, `${id}.jpg`)
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath)
-    }
 
     res.status(STATUS.NO_CONTENT).send()
   } catch (error) {

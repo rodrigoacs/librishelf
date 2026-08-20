@@ -1,9 +1,7 @@
-import path from 'path'
-import fs from 'fs'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
-import UPLOAD_DIR from '../config/uploadDir.js'
+import { deleteBookCover } from '../utils/imageProcessor.js'
 
 async function getPublicLibraryByUsername(username, query) {
   const user = await authRepository.getUserByUsername(username)
@@ -104,10 +102,7 @@ async function deleteBook(bookId, userId) {
 
   await libraryRepository.deleteBookById(bookId)
 
-  const filePath = path.join(UPLOAD_DIR, `${bookId}.jpg`)
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath)
-  }
+  await deleteBookCover(bookId)
 }
 
 async function markBookAsRead(bookId, userId) {
