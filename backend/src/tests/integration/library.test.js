@@ -89,7 +89,8 @@ it('should update book details', async () => {
     .set('Authorization', `Bearer ${token}`)
 
   expect(checkRes.body.title).toBe('Livro Atualizado')
-  expect(checkRes.body.user_owner).toBe('libuser')
+  expect(checkRes.body.authors).toBe('Autor Novo')
+  expect(checkRes.body.publisher_name).toBe('Editora Nova')
 })
 
 it('should mark book as read (PATCH)', async () => {
