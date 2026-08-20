@@ -206,6 +206,7 @@
     "attention": "Attention",
     "fillFields": "Please fill in all fields.",
     "passwordMismatch": "Passwords do not match.",
+    "passwordTooWeak": "Password must be at least 8 characters long and include letters and numbers.",
     "error": "Error",
     "sucess": "Success",
     "accountCreated": "Your account has been created. You can now login.",

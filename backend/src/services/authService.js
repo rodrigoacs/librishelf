@@ -1,5 +1,6 @@
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
+import { validatePassword } from '../utils/passwordPolicy.js'
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
@@ -30,6 +31,13 @@ async function loginUser(username, password) {
 }
 
 async function registerUser(username, password, email) {
+  const passwordCheck = validatePassword(password)
+  if (!passwordCheck.valid) {
+    const error = new Error(passwordCheck.reason)
+    error.status = STATUS.BAD_REQUEST
+    throw error
+  }
+
   const existingUser = await authRepository.getUserByUsername(username)
   if (existingUser) {
     const error = new Error('Username already taken.')

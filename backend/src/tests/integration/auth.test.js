@@ -25,7 +25,7 @@ describe('Auth Endpoints', () => {
 
     expect(res.statusCode).toEqual(201)
     expect(res.body).toHaveProperty('user')
-    expect(res.body.user.username).toBe(mockUser.user)
+    expect(res.body.user.name).toBe(mockUser.username)
   })
 
   it('should not register user with duplicate username', async () => {
@@ -54,5 +54,37 @@ describe('Auth Endpoints', () => {
       })
 
     expect(res.statusCode).toEqual(401)
+  })
+
+  it('should reject registration with a password shorter than 8 characters', async () => {
+    const res = await request(app)
+      .post('/auth/register')
+      .send({ username: 'weakpassuser', password: '1234567', email: 'weakpass@example.com' })
+
+    expect(res.statusCode).toEqual(400)
+  })
+
+  it('should reject registration with a password that has no letters', async () => {
+    const res = await request(app)
+      .post('/auth/register')
+      .send({ username: 'onlynumbersuser', password: '12345678', email: 'onlynumbers@example.com' })
+
+    expect(res.statusCode).toEqual(400)
+  })
+
+  it('should reject registration with a password that has no numbers', async () => {
+    const res = await request(app)
+      .post('/auth/register')
+      .send({ username: 'onlylettersuser', password: 'abcdefgh', email: 'onlyletters@example.com' })
+
+    expect(res.statusCode).toEqual(400)
+  })
+
+  it('should accept registration with a password meeting the minimum policy', async () => {
+    const res = await request(app)
+      .post('/auth/register')
+      .send({ username: 'goodpassuser', password: 'abcdefg1', email: 'goodpass@example.com' })
+
+    expect(res.statusCode).toEqual(201)
   })
 })

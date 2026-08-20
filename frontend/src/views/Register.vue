@@ -157,8 +157,12 @@ async function handleRegister() {
     return
   }
 
-  loading.value = true
+  if (password.value.length < 8 || !/[a-zA-Z]/.test(password.value) || !/[0-9]/.test(password.value)) {
+    toast.add({ severity: 'error', summary: t('register.error'), detail: t('register.passwordTooWeak'), life: 4000 })
+    return
+  }
 
+  loading.value = true
   try {
     await api.register({
       username: name.value,

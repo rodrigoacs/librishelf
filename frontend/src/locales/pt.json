@@ -206,6 +206,7 @@
     "attention": "Atenção",
     "fillFields": "Por favor, preencha todos os campos.",
     "passwordMismatch": "As senhas não coincidem.",
+    "passwordTooWeak": "A senha precisa ter pelo menos 8 caracteres, incluindo letras e números.",
     "error": "Erro",
     "sucess": "Sucesso",
     "accountCreated": "Sua conta foi criada. Você já pode fazer login.",
