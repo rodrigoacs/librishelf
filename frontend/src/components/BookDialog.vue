@@ -382,8 +382,8 @@ async function saveBookDetails() {
       publisher: book.value.publisher,
       tags: book.value.tags ? book.value.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       isbn: book.value.isbn,
-      pubdate: formatDateISO(book.value.pubdate),
-      read_date: formatDateISO(book.value.read_date)
+      pubDate: formatDateISO(book.value.pubdate),
+      readDate: formatDateISO(book.value.read_date)
     }
 
     await api.updateBook(props.bookId, updatedBook)

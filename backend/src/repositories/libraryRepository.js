@@ -1,4 +1,3 @@
-import { log } from "console"
 import { db } from "../database/connection.js"
 import { LIBRARY_QUERIES as q } from "../database/queries.js"
 
@@ -116,7 +115,7 @@ async function createBook(bookInfo) {
   const params = [
     bookInfo.title,
     bookInfo.pubDate,
-    bookInfo.author,
+    bookInfo.authors,
     bookInfo.publisher,
     tagsArray,
     bookInfo.readDate,
@@ -134,8 +133,8 @@ async function getBookOwner(bookId) {
 }
 
 async function updateBook(bookId, bookInfo) {
-  const pubDate = bookInfo.pubdate ? new Date(bookInfo.pubdate).toISOString().split('T')[0] : null
-  const readDate = bookInfo.read_date ? new Date(bookInfo.read_date).toISOString().split('T')[0] : null
+  const pubDate = bookInfo.pubDate ? new Date(bookInfo.pubDate).toISOString().split('T')[0] : null
+  const readDate = bookInfo.readDate ? new Date(bookInfo.readDate).toISOString().split('T')[0] : null
   const tagsArray = Array.isArray(bookInfo.tags) ? bookInfo.tags : []
 
   const params = [

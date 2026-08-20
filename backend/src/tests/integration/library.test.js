@@ -78,8 +78,8 @@ it('should update book details', async () => {
       publisher: 'Editora Nova',
       tags: 'tag2, tag3',
       isbn: 'original-isbn',
-      pubdate: '2021-01-01',
-      read_date: null
+      pubDate: '2021-01-01',
+      readDate: null
     })
 
   expect(res.statusCode).toEqual(200)

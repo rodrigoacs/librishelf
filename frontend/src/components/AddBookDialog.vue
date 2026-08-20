@@ -88,7 +88,7 @@
           <div class="input-group">
             <i class="pi pi-user input-icon"></i>
             <input
-              v-model="book.author"
+              v-model="book.authors"
               class="modern-input"
               :placeholder="t('book.author_ph')"
             />
@@ -202,7 +202,7 @@ const selectedFile = ref(null)
 
 const initialBookState = {
   title: '',
-  author: '',
+  authors: '',
   publisher: '',
   tags: '',
   isbn: '',
@@ -265,7 +265,7 @@ async function saveBook() {
     const formData = new FormData()
 
     formData.append('title', book.title)
-    formData.append('author', book.author || '')
+    formData.append('authors', book.authors || '')
     formData.append('publisher', book.publisher || '')
     formData.append('isbn', book.isbn || '')
 

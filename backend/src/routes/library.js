@@ -105,7 +105,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => {
   try {
-    const { title, pubDate, author, publisher, tags, isbn, readDate } = req.body
+    const { title, pubDate, authors, publisher, tags, isbn, readDate } = req.body
     const userId = req.user.id
 
     if (!title) return res.status(STATUS.BAD_REQUEST).json({ error: 'Title is required.' })
@@ -115,7 +115,7 @@ router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => 
     const bookData = {
       title,
       pubDate,
-      author,
+      authors,
       publisher,
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
       isbn: cleanIsbn,
