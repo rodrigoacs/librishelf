@@ -1,5 +1,6 @@
 import { db } from "../database/connection.js"
 import { LIBRARY_QUERIES as q } from "../database/queries.js"
+import { resolvePagination } from "../utils/pagination.js"
 
 async function getAllBooksByUser(userId, filters = {}) {
   const {
@@ -80,9 +81,7 @@ async function getAllBooksByUser(userId, filters = {}) {
 
   query += ` ORDER BY ${dbSortField} ${dbSortOrder}`
 
-  const limitVal = parseInt(limit) || 20
-  const pageVal = parseInt(page) || 1
-  const offset = (pageVal - 1) * limitVal
+  const { page: pageVal, limit: limitVal, offset } = resolvePagination(page, limit)
 
   query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`
   params.push(limitVal, offset)
