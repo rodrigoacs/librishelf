@@ -11,9 +11,8 @@ const pool = new Pool({
 })
 
 pool.on('error', (err) => {
-  const logMsg = `${new Date().toISOString()}[connection.js]: ${err.message}`
+  const logMsg = `${new Date().toISOString()}[connection.js]: erro em cliente ocioso do pool — ${err.message}`
   console.error(logMsg)
-  process.exit(-1)
 })
 
 export const db = pool
