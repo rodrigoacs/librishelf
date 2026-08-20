@@ -27,7 +27,9 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   const timestamp = localStorage.getItem('timestamp')
-  const tokenDuration = 3600000 // 1h in milliseconds
+  const tokenDuration = 3600000 * 24 * 7 // 7 days in milliseconds
+
+  let isExpired = false
 
   if (token && timestamp) {
     const now = Date.now()
@@ -36,11 +38,13 @@ router.beforeEach((to, from, next) => {
     if (now >= expirationTime) {
       localStorage.removeItem('token')
       localStorage.removeItem('timestamp')
-      next('/login')
+      isExpired = true
     }
   }
 
-  if (to.meta.requiresAuth && !token) {
+  const isAuthenticated = Boolean(token) && !isExpired
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
   } else {
     next()
