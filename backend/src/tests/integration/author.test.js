@@ -7,16 +7,16 @@ let token
 beforeAll(async () => {
   await clearDatabase()
 
-  await request(app).post('/auth/register').send({ username: 'authortester', password: '123', email: 'authortester@example.com' })
-  const loginRes = await request(app).post('/auth/login').send({ username: 'authortester', password: '123' })
+  await request(app).post('/auth/register').send({ username: 'authortester', password: 'testpass123', email: 'authortester@example.com' })
+  const loginRes = await request(app).post('/auth/login').send({ username: 'authortester', password: 'testpass123' })
   token = loginRes.body.token
 
   await request(app).post('/library').set('Authorization', `Bearer ${token}`).field({
-    title: 'Harry Potter', author: 'J.K. Rowling', publisher: 'Bloomsbury', tags: 'magic', pubDate: '1997-06-26', isbn: '111'
+    title: 'Harry Potter', authors: 'J.K. Rowling', publisher: 'Bloomsbury', tags: 'magic', pubDate: '1997-06-26', isbn: '111'
   })
 
   await request(app).post('/library').set('Authorization', `Bearer ${token}`).field({
-    title: 'Foundation', author: 'Isaac Asimov', publisher: 'Gnome Press', tags: 'scifi', pubDate: '1951-01-01', isbn: '222'
+    title: 'Foundation', authors: 'Isaac Asimov', publisher: 'Gnome Press', tags: 'scifi', pubDate: '1951-01-01', isbn: '222'
   })
 })
 
@@ -63,13 +63,12 @@ describe('Author Endpoints', () => {
   })
 
   it('should not leak authors from other users sharing the same publisher', async () => {
-    await request(app).post('/auth/register').send({ username: 'authortester2', password: '123', email: 'authortester2@example.com' })
-    const loginRes2 = await request(app).post('/auth/login').send({ username: 'authortester2', password: '123' })
+    await request(app).post('/auth/register').send({ username: 'authortester2', password: 'testpass123', email: 'authortester2@example.com' })
+    const loginRes2 = await request(app).post('/auth/login').send({ username: 'authortester2', password: 'testpass123' })
     const token2 = loginRes2.body.token
 
-    // mesmo publisher ("Bloomsbury") do primeiro usuário, autor diferente
     await request(app).post('/library').set('Authorization', `Bearer ${token2}`).field({
-      title: 'Livro de outro usuário', author: 'Autor Estranho', publisher: 'Bloomsbury', tags: 'x', pubDate: '2000-01-01', isbn: '999-other-user'
+      title: 'Livro de outro usuário', authors: 'Autor Estranho', publisher: 'Bloomsbury', tags: 'x', pubDate: '2000-01-01', isbn: '999-other-user'
     })
 
     const res = await request(app)

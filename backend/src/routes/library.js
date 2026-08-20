@@ -18,6 +18,9 @@ const upload = multer({
   }
 })
 
+// Envolve o middleware do multer pra padronizar o formato de erro ({ error: ... })
+// com o resto das rotas, em vez de deixar cair no errorHandler global (que usa
+// { status, message } — ver auditoria original sobre essa inconsistência).
 function handleUpload(uploadMiddleware) {
   return (req, res, next) => {
     uploadMiddleware(req, res, (err) => {
@@ -109,6 +112,7 @@ router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => 
     const userId = req.user.id
 
     if (!title) return res.status(STATUS.BAD_REQUEST).json({ error: 'Title is required.' })
+    if (!authors || !authors.trim()) return res.status(STATUS.BAD_REQUEST).json({ error: 'Authors is required.' })
 
     const cleanIsbn = isbn && isbn.trim() ? isbn.trim() : null
 
@@ -131,6 +135,7 @@ router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => 
 
     res.status(STATUS.CREATED).json({ bookId: newBookId })
   } catch (error) {
+    if (!error.status) console.error('Erro ao criar livro:', error)
     res.status(error.status || 500).json({ error: error.message })
   }
 })
@@ -144,6 +149,7 @@ router.put('/:id', async (req, res) => {
     await libraryService.updateBookDetails(id, userId, bookInfo)
     res.status(STATUS.OK).json({ message: 'Livro atualizado com sucesso.' })
   } catch (error) {
+    if (!error.status) console.error('Erro ao atualizar livro:', error)
     res.status(error.status || 500).json({ error: error.message })
   }
 })

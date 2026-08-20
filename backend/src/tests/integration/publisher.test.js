@@ -7,16 +7,16 @@ let token
 beforeAll(async () => {
   await clearDatabase()
 
-  await request(app).post('/auth/register').send({ username: 'pubtester', password: '123', email: 'pubtester@example.com' })
-  const loginRes = await request(app).post('/auth/login').send({ username: 'pubtester', password: '123' })
+  await request(app).post('/auth/register').send({ username: 'pubtester', password: 'testpass123', email: 'pubtester@example.com' })
+  const loginRes = await request(app).post('/auth/login').send({ username: 'pubtester', password: 'testpass123' })
   token = loginRes.body.token
 
   await request(app).post('/library').set('Authorization', `Bearer ${token}`).field({
-    title: 'It', author: 'Stephen King', publisher: 'Viking Press', tags: 'horror', pubDate: '1986-09-15', isbn: '333'
+    title: 'It', authors: 'Stephen King', publisher: 'Viking Press', tags: 'horror', pubDate: '1986-09-15', isbn: '333'
   })
 
   await request(app).post('/library').set('Authorization', `Bearer ${token}`).field({
-    title: 'The Hobbit', author: 'J.R.R. Tolkien', publisher: 'Allen & Unwin', tags: 'fantasy', pubDate: '1937-09-21', isbn: '444'
+    title: 'The Hobbit', authors: 'J.R.R. Tolkien', publisher: 'Allen & Unwin', tags: 'fantasy', pubDate: '1937-09-21', isbn: '444'
   })
 })
 
@@ -57,13 +57,13 @@ describe('Publisher Endpoints', () => {
   })
 
   it('should not leak publishers from other users sharing the same author', async () => {
-    await request(app).post('/auth/register').send({ username: 'pubtester2', password: '123', email: 'pubtester2@example.com' })
-    const loginRes2 = await request(app).post('/auth/login').send({ username: 'pubtester2', password: '123' })
+    await request(app).post('/auth/register').send({ username: 'pubtester2', password: 'testpass123', email: 'pubtester2@example.com' })
+    const loginRes2 = await request(app).post('/auth/login').send({ username: 'pubtester2', password: 'testpass123' })
     const token2 = loginRes2.body.token
 
     // mesmo autor ("Stephen King") do primeiro usuário, editora diferente
     await request(app).post('/library').set('Authorization', `Bearer ${token2}`).field({
-      title: 'Livro de outro usuário', author: 'Stephen King', publisher: 'Editora Estranha', tags: 'x', pubDate: '2000-01-01', isbn: '999-other-user-pub'
+      title: 'Livro de outro usuário', authors: 'Stephen King', publisher: 'Editora Estranha', tags: 'x', pubDate: '2000-01-01', isbn: '999-other-user-pub'
     })
 
     const res = await request(app)

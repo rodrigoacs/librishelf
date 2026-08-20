@@ -7,8 +7,8 @@ let token
 beforeAll(async () => {
   await clearDatabase()
 
-  await request(app).post('/auth/register').send({ username: 'libuser', password: '123', email: 'libuser@example.com' })
-  const res = await request(app).post('/auth/login').send({ username: 'libuser', password: '123' })
+  await request(app).post('/auth/register').send({ username: 'libuser', password: 'testpass123', email: 'libuser@example.com' })
+  const res = await request(app).post('/auth/login').send({ username: 'libuser', password: 'testpass123' })
   token = res.body.token
 })
 
@@ -22,7 +22,7 @@ describe('Library Endpoints', () => {
       .post('/library')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'Livro de Teste')
-      .field('author', 'Autor Teste')
+      .field('authors', 'Autor Teste')
       .field('publisher', 'Editora Teste')
       .field('tags', 'tag1, tag2')
       .field('isbn', '999-999')
@@ -57,7 +57,7 @@ it('should create a book', async () => {
     .set('Authorization', `Bearer ${token}`)
     .field({
       title: 'Livro Original',
-      author: 'Autor Original',
+      authors: 'Autor Original',
       publisher: 'Editora Original',
       tags: 'tag1',
       isbn: 'original-isbn',
@@ -132,7 +132,7 @@ it('should allow creating a second book without ISBN for the same user', async (
     .set('Authorization', `Bearer ${token}`)
     .field({
       title: 'Livro Sem ISBN 1',
-      author: 'Autor Sem ISBN',
+      authors: 'Autor Sem ISBN',
       publisher: 'Editora Sem ISBN',
       tags: 'sem-isbn',
       pubDate: '2022-01-01'
@@ -145,7 +145,7 @@ it('should allow creating a second book without ISBN for the same user', async (
     .set('Authorization', `Bearer ${token}`)
     .field({
       title: 'Livro Sem ISBN 2',
-      author: 'Autor Sem ISBN',
+      authors: 'Autor Sem ISBN',
       publisher: 'Editora Sem ISBN',
       tags: 'sem-isbn',
       pubDate: '2022-02-01'
@@ -161,7 +161,7 @@ it('should still reject a duplicate ISBN for the same user', async () => {
     .set('Authorization', `Bearer ${token}`)
     .field({
       title: 'Livro Duplicado A',
-      author: 'Autor Duplicado',
+      authors: 'Autor Duplicado',
       publisher: 'Editora Duplicada',
       tags: 'dup',
       isbn: 'isbn-duplicado',
@@ -173,7 +173,7 @@ it('should still reject a duplicate ISBN for the same user', async () => {
     .set('Authorization', `Bearer ${token}`)
     .field({
       title: 'Livro Duplicado B',
-      author: 'Autor Duplicado',
+      authors: 'Autor Duplicado',
       publisher: 'Editora Duplicada',
       tags: 'dup',
       isbn: 'isbn-duplicado',

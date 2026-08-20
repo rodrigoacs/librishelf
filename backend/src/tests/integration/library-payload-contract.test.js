@@ -7,8 +7,8 @@ let token
 beforeAll(async () => {
   await clearDatabase()
 
-  await request(app).post('/auth/register').send({ username: 'contracttester', password: '123', email: 'contracttester@example.com' })
-  const res = await request(app).post('/auth/login').send({ username: 'contracttester', password: '123' })
+  await request(app).post('/auth/register').send({ username: 'contracttester', password: 'testpass123', email: 'contracttester@example.com' })
+  const res = await request(app).post('/auth/login').send({ username: 'contracttester', password: 'testpass123' })
   token = res.body.token
 })
 
@@ -63,22 +63,19 @@ describe('Book payload contract (item 12 — authors/pubDate/readDate unificados
     expect(check.body.authors).toBe('Autor Editado')
   })
 
-  it('should ignore legacy field names (author, pubdate, read_date) now that the contract is unified', async () => {
+  it('should reject creation when only the legacy "author" field is sent, since it is no longer recognized', async () => {
     const res = await request(app)
       .post('/library')
       .set('Authorization', `Bearer ${token}`)
       .field({
         title: 'Livro Com Nome Antigo Ignorado',
-        author: 'Nao Deveria Aparecer',
+        author: 'Nao Deveria Funcionar',
         publisher: 'Editora Z',
         tags: 'z',
         pubDate: '2020-01-01'
       })
 
-    expect(res.statusCode).toEqual(201)
-
-    const check = await request(app).get(`/library/${res.body.bookId}`).set('Authorization', `Bearer ${token}`)
-    expect(check.body.authors).not.toBe('Nao Deveria Aparecer')
+    expect(res.statusCode).toEqual(400)
   })
 
   it('should clear the read date with an explicit readDate: null', async () => {

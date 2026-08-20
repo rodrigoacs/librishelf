@@ -11,8 +11,8 @@ let token
 beforeAll(async () => {
   await clearDatabase()
 
-  await request(app).post('/auth/register').send({ username: 'uploadtester', password: '123', email: 'uploadtester@example.com' })
-  const res = await request(app).post('/auth/login').send({ username: 'uploadtester', password: '123' })
+  await request(app).post('/auth/register').send({ username: 'uploadtester', password: 'testpass123', email: 'uploadtester@example.com' })
+  const res = await request(app).post('/auth/login').send({ username: 'uploadtester', password: 'testpass123' })
   token = res.body.token
 })
 
@@ -28,7 +28,7 @@ describe('Library cover upload', () => {
       .post('/library')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'Livro Capa Inválida')
-      .field('author', 'Autor X')
+      .field('authors', 'Autor X')
       .attach('coverImage', fakeFile, { filename: 'nao-e-imagem.jpg', contentType: 'image/jpeg' })
 
     expect(res.statusCode).toEqual(400)
@@ -43,7 +43,7 @@ describe('Library cover upload', () => {
       .post('/library')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'Livro Com Capa')
-      .field('author', 'Autor Y')
+      .field('authors', 'Autor Y')
       .attach('coverImage', fakeCover, { filename: 'capa.png', contentType: 'image/png' })
 
     expect(res.statusCode).toEqual(201)
@@ -69,7 +69,7 @@ describe('Library cover upload', () => {
       .post('/library')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'Livro Para Deletar')
-      .field('author', 'Autor Z')
+      .field('authors', 'Autor Z')
       .attach('coverImage', fakeCover, { filename: 'capa.png', contentType: 'image/png' })
 
     const bookId = createRes.body.bookId
