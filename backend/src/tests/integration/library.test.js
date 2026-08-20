@@ -124,3 +124,60 @@ it('should delete the book', async () => {
   const checkRes = await request(app).get(`/library/${createdBookId}`).set('Authorization', `Bearer ${token}`)
   expect(checkRes.statusCode).toEqual(404)
 })
+
+it('should allow creating a second book without ISBN for the same user', async () => {
+  const first = await request(app)
+    .post('/library')
+    .set('Authorization', `Bearer ${token}`)
+    .field({
+      title: 'Livro Sem ISBN 1',
+      author: 'Autor Sem ISBN',
+      publisher: 'Editora Sem ISBN',
+      tags: 'sem-isbn',
+      pubDate: '2022-01-01'
+    })
+
+  expect(first.statusCode).toEqual(201)
+
+  const second = await request(app)
+    .post('/library')
+    .set('Authorization', `Bearer ${token}`)
+    .field({
+      title: 'Livro Sem ISBN 2',
+      author: 'Autor Sem ISBN',
+      publisher: 'Editora Sem ISBN',
+      tags: 'sem-isbn',
+      pubDate: '2022-02-01'
+    })
+
+  expect(second.statusCode).toEqual(201)
+  expect(second.body.bookId).not.toEqual(first.body.bookId)
+})
+
+it('should still reject a duplicate ISBN for the same user', async () => {
+  await request(app)
+    .post('/library')
+    .set('Authorization', `Bearer ${token}`)
+    .field({
+      title: 'Livro Duplicado A',
+      author: 'Autor Duplicado',
+      publisher: 'Editora Duplicada',
+      tags: 'dup',
+      isbn: 'isbn-duplicado',
+      pubDate: '2023-01-01'
+    })
+
+  const res = await request(app)
+    .post('/library')
+    .set('Authorization', `Bearer ${token}`)
+    .field({
+      title: 'Livro Duplicado B',
+      author: 'Autor Duplicado',
+      publisher: 'Editora Duplicada',
+      tags: 'dup',
+      isbn: 'isbn-duplicado',
+      pubDate: '2023-02-01'
+    })
+
+  expect(res.statusCode).toEqual(409)
+})

@@ -93,13 +93,15 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
 
     if (!title) return res.status(STATUS.BAD_REQUEST).json({ error: 'Title is required.' })
 
+    const cleanIsbn = isbn && isbn.trim() ? isbn.trim() : null
+
     const bookData = {
       title,
       pubDate,
       author,
       publisher,
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
-      isbn: isbn || '',
+      isbn: cleanIsbn,
       readDate: readDate || null,
       user_id: userId
     }

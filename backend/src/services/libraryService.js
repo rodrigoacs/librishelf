@@ -44,12 +44,14 @@ async function getBookById(id) {
 }
 
 async function addNewBook(bookData) {
-  const existingBook = await libraryRepository.findBookByIsbn(bookData.isbn, bookData.user_id)
+  if (bookData.isbn) {
+    const existingBook = await libraryRepository.findBookByIsbn(bookData.isbn, bookData.user_id)
 
-  if (existingBook) {
-    const error = new Error('ISBN already exists for this user.')
-    error.status = STATUS.CONFLICT
-    throw error
+    if (existingBook) {
+      const error = new Error('ISBN already exists for this user.')
+      error.status = STATUS.CONFLICT
+      throw error
+    }
   }
 
   const newBookId = await libraryRepository.createBook(bookData)
