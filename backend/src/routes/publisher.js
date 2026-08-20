@@ -10,7 +10,10 @@ router.use(authenticateToken)
 router.get('/', async (req, res) => {
   try {
     const userId = req.user.id
-    const publishers = await publisherService.getPublishersByUserId(userId)
+    const authorFilter = req.query.authors
+
+    const publishers = await publisherService.getPublishersByUserId(userId, authorFilter)
+
     res.status(STATUS.OK).json(publishers)
   } catch (error) {
     console.error('Erro ao buscar editoras:', error)

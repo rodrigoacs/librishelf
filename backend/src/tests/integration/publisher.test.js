@@ -55,4 +55,24 @@ describe('Publisher Endpoints', () => {
     expect(res.statusCode).toEqual(200)
     expect(res.body).toHaveLength(2)
   })
+
+  it('should not leak publishers from other users sharing the same author', async () => {
+    await request(app).post('/auth/register').send({ username: 'pubtester2', password: '123', email: 'pubtester2@example.com' })
+    const loginRes2 = await request(app).post('/auth/login').send({ username: 'pubtester2', password: '123' })
+    const token2 = loginRes2.body.token
+
+    // mesmo autor ("Stephen King") do primeiro usuário, editora diferente
+    await request(app).post('/library').set('Authorization', `Bearer ${token2}`).field({
+      title: 'Livro de outro usuário', author: 'Stephen King', publisher: 'Editora Estranha', tags: 'x', pubDate: '2000-01-01', isbn: '999-other-user-pub'
+    })
+
+    const res = await request(app)
+      .get('/publisher?authors=Stephen King')
+      .set('Authorization', `Bearer ${token}`)
+
+    expect(res.statusCode).toEqual(200)
+    const names = res.body.map(p => p.name)
+    expect(names).toContain('Viking Press')
+    expect(names).not.toContain('Editora Estranha')
+  })
 })

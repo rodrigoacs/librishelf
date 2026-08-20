@@ -1,19 +1,15 @@
 import * as authorRepository from '../repositories/authorRepository.js'
 
-async function listAuthors(publisherFilter) {
+async function getAuthorsByUserId(userId, publisherFilter) {
   if (publisherFilter) {
-    const publishersList = publisherFilter.split(',').map(p => p.trim())
+    const publishersList = publisherFilter.split(',').map(p => p.trim()).filter(Boolean)
 
     if (publishersList.length > 0) {
-      return await authorRepository.getAuthorsByPublishers(publishersList)
+      return await authorRepository.getAuthorsByUserAndPublishers(userId, publishersList)
     }
   }
 
-  return await authorRepository.getAllAuthors()
-}
-
-async function getAuthorsByUserId(userId) {
   return await authorRepository.getAuthorsByUserId(userId)
 }
 
-export { listAuthors, getAuthorsByUserId }
+export { getAuthorsByUserId }

@@ -10,8 +10,9 @@ router.use(authenticateToken)
 router.get('/', async (req, res) => {
   try {
     const userId = req.user.id
+    const publisherFilter = req.query.publishers
 
-    const authors = await authorService.getAuthorsByUserId(userId)
+    const authors = await authorService.getAuthorsByUserId(userId, publisherFilter)
 
     res.status(STATUS.OK).json(authors)
   } catch (error) {

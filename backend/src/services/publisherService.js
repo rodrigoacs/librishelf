@@ -1,19 +1,15 @@
 import * as publisherRepository from '../repositories/publisherRepository.js'
 
-async function listPublishers(authorFilter) {
+async function getPublishersByUserId(userId, authorFilter) {
   if (authorFilter) {
-    const authorsList = authorFilter.split(',').map(a => a.trim())
+    const authorsList = authorFilter.split(',').map(a => a.trim()).filter(Boolean)
 
     if (authorsList.length > 0) {
-      return await publisherRepository.getPublishersByAuthors(authorsList)
+      return await publisherRepository.getPublishersByUserAndAuthors(userId, authorsList)
     }
   }
 
-  return await publisherRepository.getAllPublishers()
-}
-
-export async function getPublishersByUserId(userId) {
   return await publisherRepository.getPublishersByUserId(userId)
 }
 
-export { listPublishers }
+export { getPublishersByUserId }

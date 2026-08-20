@@ -69,16 +69,6 @@ export const AUTH_QUERIES = {
 }
 
 export const AUTHOR_QUERIES = {
-  GET_ALL_AUTHORS: 'SELECT DISTINCT name FROM librishelf.authors ORDER BY name',
-  GET_AUTHORS_BY_PUBLISHER: `
-    SELECT DISTINCT a.name
-    FROM librishelf.authors a
-    JOIN librishelf.books_authors_link bal ON a.id = bal.author_id
-    JOIN librishelf.books b ON bal.book_id = b.id
-    JOIN librishelf.publishers p ON b.publisher_id = p.id
-    WHERE p.name = ANY($1)
-    ORDER BY a.name
-  `,
   GET_AUTHORS_BY_USER: `
     SELECT DISTINCT a.name
     FROM librishelf.authors a
@@ -86,20 +76,19 @@ export const AUTHOR_QUERIES = {
     JOIN librishelf.books b ON b.id = bal.book_id
     WHERE b.user_id = $1
     ORDER BY a.name ASC
+  `,
+  GET_AUTHORS_BY_USER_AND_PUBLISHERS: `
+    SELECT DISTINCT a.name
+    FROM librishelf.authors a
+    JOIN librishelf.books_authors_link bal ON a.id = bal.author_id
+    JOIN librishelf.books b ON bal.book_id = b.id
+    JOIN librishelf.publishers p ON b.publisher_id = p.id
+    WHERE b.user_id = $1 AND p.name = ANY($2)
+    ORDER BY a.name
   `
 }
 
 export const PUBLISHER_QUERIES = {
-  GET_ALL_PUBLISHERS: 'SELECT DISTINCT name FROM librishelf.publishers ORDER BY name',
-  GET_PUBLISHERS_BY_AUTHOR: `
-    SELECT DISTINCT p.name
-    FROM librishelf.publishers p
-    JOIN librishelf.books b ON p.id = b.publisher_id
-    JOIN librishelf.books_authors_link bal ON b.id = bal.book_id
-    JOIN librishelf.authors a ON bal.author_id = a.id
-    WHERE a.name = ANY($1)
-    ORDER BY p.name
-  `,
   GET_PUBLISHERS_BY_USER: `
     SELECT DISTINCT p.name
     FROM librishelf.publishers p
@@ -107,6 +96,15 @@ export const PUBLISHER_QUERIES = {
     WHERE b.user_id = $1
     ORDER BY p.name ASC
   `,
+  GET_PUBLISHERS_BY_USER_AND_AUTHORS: `
+    SELECT DISTINCT p.name
+    FROM librishelf.publishers p
+    JOIN librishelf.books b ON p.id = b.publisher_id
+    JOIN librishelf.books_authors_link bal ON b.id = bal.book_id
+    JOIN librishelf.authors a ON bal.author_id = a.id
+    WHERE b.user_id = $1 AND a.name = ANY($2)
+    ORDER BY p.name
+  `
 }
 
 export const TAG_QUERIES = {

@@ -61,4 +61,24 @@ describe('Author Endpoints', () => {
     const res = await request(app).get('/author')
     expect(res.statusCode).toEqual(403)
   })
+
+  it('should not leak authors from other users sharing the same publisher', async () => {
+    await request(app).post('/auth/register').send({ username: 'authortester2', password: '123', email: 'authortester2@example.com' })
+    const loginRes2 = await request(app).post('/auth/login').send({ username: 'authortester2', password: '123' })
+    const token2 = loginRes2.body.token
+
+    // mesmo publisher ("Bloomsbury") do primeiro usuário, autor diferente
+    await request(app).post('/library').set('Authorization', `Bearer ${token2}`).field({
+      title: 'Livro de outro usuário', author: 'Autor Estranho', publisher: 'Bloomsbury', tags: 'x', pubDate: '2000-01-01', isbn: '999-other-user'
+    })
+
+    const res = await request(app)
+      .get('/author?publishers=Bloomsbury')
+      .set('Authorization', `Bearer ${token}`)
+
+    expect(res.statusCode).toEqual(200)
+    const names = res.body.map(a => a.name)
+    expect(names).toContain('J.K. Rowling')
+    expect(names).not.toContain('Autor Estranho')
+  })
 })
