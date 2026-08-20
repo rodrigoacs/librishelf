@@ -2,6 +2,7 @@ import express from 'express'
 import * as authorService from '../services/authorService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import STATUS from '../utils/statusCodes.js'
+import sendError from '../utils/sendError.js'
 
 const router = express.Router()
 
@@ -16,8 +17,7 @@ router.get('/', async (req, res) => {
 
     res.status(STATUS.OK).json(authors)
   } catch (error) {
-    console.error('Erro ao buscar autores:', error)
-    res.status(STATUS.INTERNAL_SERVER_ERROR).json({ error: error.message })
+    sendError(res, error, 'Erro ao buscar autores')
   }
 })
 

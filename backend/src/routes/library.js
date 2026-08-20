@@ -7,6 +7,7 @@ import { validateNumericId } from '../middlewares/validateId.js'
 import STATUS from '../utils/statusCodes.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
 import { saveBookCover } from '../utils/imageProcessor.js'
+import sendError from '../utils/sendError.js'
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -19,9 +20,6 @@ const upload = multer({
   }
 })
 
-// Envolve o middleware do multer pra padronizar o formato de erro ({ error: ... })
-// com o resto das rotas, em vez de deixar cair no errorHandler global (que usa
-// { status, message } — ver auditoria original sobre essa inconsistência).
 function handleUpload(uploadMiddleware) {
   return (req, res, next) => {
     uploadMiddleware(req, res, (err) => {
@@ -67,7 +65,7 @@ router.get('/public/u/:username', async (req, res) => {
     const libraryData = await libraryService.getPublicLibraryByUsername(username, req.query)
     res.status(STATUS.OK).json(libraryData)
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao buscar biblioteca pública')
   }
 })
 
@@ -80,7 +78,7 @@ router.get('/public/book/:id', validateNumericId(), async (req, res) => {
 
     res.status(STATUS.OK).json(book)
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao buscar livro público')
   }
 })
 
@@ -92,7 +90,7 @@ router.get('/', async (req, res) => {
     const booksData = await libraryService.getAllBooksByUser(userId, req.query)
     res.status(STATUS.OK).json(booksData)
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao listar biblioteca')
   }
 })
 
@@ -103,7 +101,7 @@ router.get('/:id', validateNumericId(), async (req, res) => {
     if (!book) return res.status(STATUS.NOT_FOUND).json({ error: 'Book not found.' })
     res.status(STATUS.OK).json(book)
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao buscar livro')
   }
 })
 
@@ -136,8 +134,7 @@ router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => 
 
     res.status(STATUS.CREATED).json({ bookId: newBookId })
   } catch (error) {
-    if (!error.status) console.error('Erro ao criar livro:', error)
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao criar livro')
   }
 })
 
@@ -150,8 +147,7 @@ router.put('/:id', validateNumericId(), async (req, res) => {
     await libraryService.updateBookDetails(id, userId, bookInfo)
     res.status(STATUS.OK).json({ message: 'Livro atualizado com sucesso.' })
   } catch (error) {
-    if (!error.status) console.error('Erro ao atualizar livro:', error)
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao atualizar livro')
   }
 })
 
@@ -172,8 +168,7 @@ router.post('/:id/cover', validateNumericId(), handleUpload(upload.single('cover
 
     res.status(STATUS.OK).json({ message: 'Capa atualizada com sucesso.' })
   } catch (error) {
-    console.error('Erro no upload de capa:', error)
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro no upload de capa')
   }
 })
 
@@ -186,7 +181,7 @@ router.delete('/:id', validateNumericId(), async (req, res) => {
 
     res.status(STATUS.NO_CONTENT).send()
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao deletar livro')
   }
 })
 
@@ -196,7 +191,7 @@ router.patch('/:id/read', validateNumericId(), async (req, res) => {
     await libraryService.markBookAsRead(req.params.id, userId)
     res.status(STATUS.OK).json({ message: 'Book marked as read.' })
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao marcar livro como lido')
   }
 })
 
@@ -206,7 +201,7 @@ router.delete('/:id/read', validateNumericId(), async (req, res) => {
     await libraryService.markBookAsUnread(req.params.id, userId)
     res.status(STATUS.OK).json({ message: 'Book marked as unread.' })
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro ao marcar livro como não lido')
   }
 })
 

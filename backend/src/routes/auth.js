@@ -1,6 +1,7 @@
 import express from 'express'
 import * as authService from '../services/authService.js'
 import STATUS from '../utils/statusCodes.js'
+import sendError from '../utils/sendError.js'
 import { loginLimiter, registerLimiter } from '../middlewares/rateLimiter.js'
 
 const router = express.Router()
@@ -14,7 +15,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     res.status(STATUS.OK).json(result)
 
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro no login')
   }
 })
 
@@ -32,7 +33,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 
     res.status(STATUS.CREATED).json({ message: 'User registered successfully', user })
   } catch (error) {
-    res.status(error.status || 500).json({ error: error.message })
+    sendError(res, error, 'Erro no registro')
   }
 })
 

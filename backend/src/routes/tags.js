@@ -2,6 +2,7 @@ import express from 'express'
 import * as tagService from '../services/tagService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import STATUS from '../utils/statusCodes.js'
+import sendError from '../utils/sendError.js'
 
 const router = express.Router()
 
@@ -13,8 +14,7 @@ router.get('/', async (req, res) => {
     const tags = await tagService.getTagsByUserId(userId)
     res.status(STATUS.OK).json(tags)
   } catch (error) {
-    console.error('Erro ao buscar tags:', error)
-    res.status(STATUS.INTERNAL_SERVER_ERROR).json({ error: error.message })
+    sendError(res, error, 'Erro ao buscar tags')
   }
 })
 
