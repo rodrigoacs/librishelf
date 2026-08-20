@@ -32,4 +32,4 @@ coverage
 .env
 .env.test
 
-package-lock.jsonuploads/
+git commit -m "chore: ignora backend/uploads/ (gerado localmente pelos testes)"package-lock.jsonuploads/
