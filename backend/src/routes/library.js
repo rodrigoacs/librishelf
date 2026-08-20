@@ -3,6 +3,7 @@ import fs from 'fs'
 import multer from 'multer'
 import * as libraryService from '../services/libraryService.js'
 import { authenticateToken } from '../middlewares/auth.js'
+import { validateNumericId } from '../middlewares/validateId.js'
 import STATUS from '../utils/statusCodes.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
 import { saveBookCover } from '../utils/imageProcessor.js'
@@ -70,7 +71,7 @@ router.get('/public/u/:username', async (req, res) => {
   }
 })
 
-router.get('/public/book/:id', async (req, res) => {
+router.get('/public/book/:id', validateNumericId(), async (req, res) => {
   try {
     const { id } = req.params
     const book = await libraryService.getBookById(id)
@@ -95,7 +96,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateNumericId(), async (req, res) => {
   try {
     const { id } = req.params
     const book = await libraryService.getBookById(id)
@@ -140,7 +141,7 @@ router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => 
   }
 })
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', validateNumericId(), async (req, res) => {
   try {
     const { id } = req.params
     const bookInfo = req.body
@@ -154,7 +155,7 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-router.post('/:id/cover', handleUpload(upload.single('coverImage')), async (req, res) => {
+router.post('/:id/cover', validateNumericId(), handleUpload(upload.single('coverImage')), async (req, res) => {
   try {
     const { id } = req.params
     const userId = req.user.id
@@ -176,7 +177,7 @@ router.post('/:id/cover', handleUpload(upload.single('coverImage')), async (req,
   }
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validateNumericId(), async (req, res) => {
   try {
     const { id } = req.params
     const userId = req.user.id
@@ -189,7 +190,7 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
-router.patch('/:id/read', async (req, res) => {
+router.patch('/:id/read', validateNumericId(), async (req, res) => {
   try {
     const userId = req.user.id
     await libraryService.markBookAsRead(req.params.id, userId)
@@ -199,7 +200,7 @@ router.patch('/:id/read', async (req, res) => {
   }
 })
 
-router.delete('/:id/read', async (req, res) => {
+router.delete('/:id/read', validateNumericId(), async (req, res) => {
   try {
     const userId = req.user.id
     await libraryService.markBookAsUnread(req.params.id, userId)
