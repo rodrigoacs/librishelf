@@ -9,10 +9,11 @@ import tagsRoutes from './routes/tags.js'
 import dashboardRoutes from './routes/dashboard.js'
 import errorHandler from './middlewares/errorHandler.js'
 import UPLOAD_DIR from './config/uploadDir.js'
+import corsOptions from './config/corsOptions.js'
 
 const app = express()
 
-app.use(cors())
+app.use(cors(corsOptions))
 app.use(express.json())
 
 app.use('/uploads', express.static(UPLOAD_DIR))
