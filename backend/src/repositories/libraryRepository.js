@@ -22,9 +22,9 @@ async function getAllBooksByUser(userId, filters = {}) {
   let paramIndex = 2
 
   if (readState === 'read' || readState === 'true') {
-    query += ` AND (b.read_date IS NOT NULL AND b.read_date::date <> '0101-01-01')`
+    query += ` AND b.read_date IS NOT NULL`
   } else if (readState === 'unread' || readState === 'false') {
-    query += ` AND (b.read_date IS NULL OR b.read_date::date = '0101-01-01')`
+    query += ` AND b.read_date IS NULL`
   }
 
   if (readYear && readYear !== 'all') {

@@ -131,13 +131,13 @@ export const DASHBOARD_QUERIES = {
 
   COUNT_READ: `
     SELECT COUNT(*) as count FROM librishelf.books 
-    WHERE user_id = $1 AND read_date IS NOT NULL AND read_date::text not like '%101-01-01%'
+    WHERE user_id = $1 AND read_date IS NOT NULL
   `,
 
   READ_BY_YEAR: `
     SELECT EXTRACT(YEAR FROM read_date::date) as year, COUNT(*) as count
     FROM librishelf.books
-    WHERE user_id = $1 AND read_date IS NOT NULL AND read_date::text <> '0101-01-01'
+    WHERE user_id = $1 AND read_date IS NOT NULL
     GROUP BY year
     ORDER BY year DESC
     LIMIT 5

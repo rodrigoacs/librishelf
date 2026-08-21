@@ -304,7 +304,6 @@ function formatTags(tagsString) {
 
 function isValidReadDate(dateString) {
   if (!dateString) return false
-  if (dateString.startsWith('0101')) return false
   return true
 }
 
