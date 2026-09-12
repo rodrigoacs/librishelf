@@ -1,3 +1,5 @@
+import logger from '../utils/logger.js'
+
 const DEFAULT_DEV_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:8080'
@@ -8,7 +10,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   : DEFAULT_DEV_ORIGINS
 
 if (!process.env.ALLOWED_ORIGINS) {
-  console.log(`[System] ALLOWED_ORIGINS não definido, usando padrão de desenvolvimento: ${allowedOrigins.join(', ')}`)
+  logger.info('ALLOWED_ORIGINS não definido, usando padrão de desenvolvimento', { origins: allowedOrigins })
 }
 
 const corsOptions = {

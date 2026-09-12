@@ -9,6 +9,11 @@ function buildRes() {
   return res
 }
 
+function lastLoggedEntry(spy) {
+  const [line] = spy.mock.calls[spy.mock.calls.length - 1]
+  return JSON.parse(line)
+}
+
 describe('sendError', () => {
   let consoleErrorSpy
 
@@ -52,7 +57,10 @@ describe('sendError', () => {
 
     sendError(res, error, 'Erro ao buscar livro')
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[Erro ao buscar livro]', error)
+    const logged = lastLoggedEntry(consoleErrorSpy)
+    expect(logged.level).toBe('error')
+    expect(logged.message).toBe('Erro ao buscar livro')
+    expect(logged.meta.message).toBe(error.message)
   })
 
   it('erro não controlado sem contexto informado: ainda loga, com rótulo genérico', () => {
@@ -61,7 +69,9 @@ describe('sendError', () => {
 
     sendError(res, error)
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[Erro não tratado]', error)
+    const logged = lastLoggedEntry(consoleErrorSpy)
+    expect(logged.level).toBe('error')
+    expect(logged.message).toBe('Erro não tratado')
     expect(res.status).toHaveBeenCalledWith(STATUS.INTERNAL_SERVER_ERROR)
   })
 })

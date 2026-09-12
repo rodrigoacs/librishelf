@@ -1,4 +1,5 @@
 import STATUS from './statusCodes.js'
+import logger from './logger.js'
 
 const GENERIC_MESSAGE = 'Erro interno do servidor.'
 
@@ -8,7 +9,7 @@ function sendError(res, error, context) {
   const message = isControlled ? error.message : GENERIC_MESSAGE
 
   if (!isControlled) {
-    console.error(context ? `[${context}]` : '[Erro não tratado]', error)
+    logger.error(context || 'Erro não tratado', { message: error.message, stack: error.stack })
   }
 
   return res.status(status).json({ error: message })

@@ -1,4 +1,5 @@
 import pkg from 'pg'
+import logger from '../utils/logger.js'
 
 const { Pool } = pkg
 
@@ -11,8 +12,7 @@ const pool = new Pool({
 })
 
 pool.on('error', (err) => {
-  const logMsg = `${new Date().toISOString()}[connection.js]: erro em cliente ocioso do pool — ${err.message}`
-  console.error(logMsg)
+  logger.error('Erro em cliente ocioso do pool de conexões', { context: 'connection.js', message: err.message })
 })
 
 export const db = pool

@@ -1,11 +1,13 @@
+import logger from '../utils/logger.js'
+
 const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true'
 
 if (process.env.COOKIE_SECURE === undefined) {
-  console.log('[System] COOKIE_SECURE não definido, usando padrão de desenvolvimento (false). Defina COOKIE_SECURE=true em produção (HTTPS).')
+  logger.info('COOKIE_SECURE não definido, usando padrão de desenvolvimento (false). Defina COOKIE_SECURE=true em produção (HTTPS).')
 }
 
 const AUTH_COOKIE_NAME = 'token'
-const AUTH_COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 7 // 7 dias
+const AUTH_COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 7 // 7 dias, mesmo prazo do JWT
 
 const authCookieOptions = {
   httpOnly: true,

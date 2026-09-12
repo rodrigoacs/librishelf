@@ -1,7 +1,7 @@
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { validatePassword } from '../utils/passwordPolicy.js'
-import bcryptjs from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 const SECRET_KEY = process.env.SECRET_KEY
@@ -10,7 +10,7 @@ async function loginUser(username, password) {
   const user = await authRepository.getUserByUsername(username)
 
   const validUser = user || {}
-  const isPasswordValid = await bcryptjs.compare(password, validUser.password_hash || "")
+  const isPasswordValid = await bcrypt.compare(password, validUser.password_hash || "")
 
   if (!user || !isPasswordValid) {
     const error = new Error('User or password invalid.')
@@ -57,7 +57,7 @@ async function registerUser(username, password, email) {
     throw error
   }
 
-  const hashedPassword = await bcryptjs.hash(password, 10)
+  const hashedPassword = await bcrypt.hash(password, 10)
   const user = await authRepository.createUser(username, hashedPassword, email)
 
   return user

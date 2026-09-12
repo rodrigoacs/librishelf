@@ -8,6 +8,7 @@ import STATUS from '../utils/statusCodes.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
 import { saveBookCover } from '../utils/imageProcessor.js'
 import sendError from '../utils/sendError.js'
+import logger from '../utils/logger.js'
 
 const upload = multer({
   storage: multer.memoryStorage(),

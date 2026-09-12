@@ -1,4 +1,5 @@
 import app from './app.js'
+import logger from './utils/logger.js'
 
 const PORT = process.env.PORT || 3050
 const MIN_SECRET_LENGTH = 32
@@ -7,7 +8,7 @@ function validateEnv() {
   const secret = process.env.SECRET_KEY
 
   if (!secret || secret.trim().length < MIN_SECRET_LENGTH) {
-    console.error(`[FATAL] SECRET_KEY ausente ou fraca (mínimo ${MIN_SECRET_LENGTH} caracteres).`)
+    logger.error('SECRET_KEY ausente ou fraca', { minLength: MIN_SECRET_LENGTH })
     process.exit(1)
   }
 }
@@ -15,5 +16,5 @@ function validateEnv() {
 validateEnv()
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  logger.info(`Server running on port ${PORT}`)
 })

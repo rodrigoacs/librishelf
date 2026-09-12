@@ -1,4 +1,5 @@
 import { db } from '../../src/database/connection.js'
+import logger from './logger.js'
 
 export async function clearDatabase() {
   if (process.env.NODE_ENV !== 'test') return
@@ -18,7 +19,7 @@ export async function clearDatabase() {
     )
   }
 
-  console.log(`[TEST] Limpando banco de teste: ${dbName}`)
+  logger.info('Limpando banco de teste', { dbName })
   await db.query('TRUNCATE TABLE librishelf.books_authors_link, librishelf.books_tags_link, librishelf.books, librishelf.authors, librishelf.publishers, librishelf.tags, librishelf.users RESTART IDENTITY CASCADE')
 }
 
