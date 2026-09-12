@@ -3,6 +3,12 @@ import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { deleteBookCover } from '../utils/imageProcessor.js'
 
+function normalizeIsbn(isbn) {
+  if (typeof isbn !== 'string') return isbn ?? null
+  const trimmed = isbn.trim()
+  return trimmed ? trimmed : null
+}
+
 async function getPublicLibraryByUsername(username, query) {
   const user = await authRepository.getUserByUsername(username)
 
@@ -42,6 +48,8 @@ async function getBookById(id) {
 }
 
 async function addNewBook(bookData) {
+  bookData.isbn = normalizeIsbn(bookData.isbn)
+
   if (bookData.isbn) {
     const existingBook = await libraryRepository.findBookByIsbn(bookData.isbn, bookData.user_id)
 
@@ -74,6 +82,10 @@ async function updateBookDetails(bookId, userId, bookData) {
 
   if (typeof bookData.tags === 'string') {
     bookData.tags = bookData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+  }
+
+  if ('isbn' in bookData) {
+    bookData.isbn = normalizeIsbn(bookData.isbn)
   }
 
   return await libraryRepository.updateBook(bookId, bookData)

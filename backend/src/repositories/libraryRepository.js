@@ -1,6 +1,19 @@
 import { db } from "../database/connection.js"
 import { LIBRARY_QUERIES as q } from "../database/queries.js"
 import { resolvePagination } from "../utils/pagination.js"
+import STATUS from "../utils/statusCodes.js"
+
+const ISBN_UNIQUE_VIOLATION = '23505'
+
+function toIsbnConflictError(err) {
+  if (err.code === ISBN_UNIQUE_VIOLATION) {
+    const conflictError = new Error('ISBN already exists for this user.')
+    conflictError.status = STATUS.CONFLICT
+    return conflictError
+  }
+
+  return err
+}
 
 async function getAllBooksByUser(userId, filters = {}) {
   const {
@@ -122,8 +135,12 @@ async function createBook(bookInfo) {
     bookInfo.user_id
   ]
 
-  const result = await db.query(q.ADD_BOOK_FUNC, params)
-  return result.rows[0].book_id
+  try {
+    const result = await db.query(q.ADD_BOOK_FUNC, params)
+    return result.rows[0].book_id
+  } catch (err) {
+    throw toIsbnConflictError(err)
+  }
 }
 
 async function getBookOwner(bookId) {
@@ -147,8 +164,12 @@ async function updateBook(bookId, bookInfo) {
     bookInfo.isbn
   ]
 
-  await db.query(q.UPDATE_BOOK_FUNC, params)
-  return true
+  try {
+    await db.query(q.UPDATE_BOOK_FUNC, params)
+    return true
+  } catch (err) {
+    throw toIsbnConflictError(err)
+  }
 }
 
 async function deleteBookById(bookId) {
