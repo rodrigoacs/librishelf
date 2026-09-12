@@ -210,7 +210,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits, computed, onMounted } from 'vue'
+import { ref, watch, defineEmits, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'

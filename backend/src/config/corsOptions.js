@@ -20,7 +20,8 @@ const corsOptions = {
     const err = new Error(`Origem não permitida pelo CORS: ${origin}`)
     err.status = 403
     return callback(err)
-  }
+  },
+  credentials: true
 }
 
 export default corsOptions

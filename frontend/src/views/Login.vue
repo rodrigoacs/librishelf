@@ -129,9 +129,7 @@ async function handleLogin() {
       password: password.value
     })
 
-    localStorage.setItem('token', response.token)
     localStorage.setItem('user', JSON.stringify(response.user))
-    localStorage.setItem('timestamp', Date.now().toString())
 
     toast.add({ severity: 'success', summary: t('login.welcome'), detail: t('login.success'), life: 3000 })
     router.push('/')

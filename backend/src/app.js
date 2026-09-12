@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 
 import libraryRoutes from './routes/library.js'
 import authRoutes from './routes/auth.js'
@@ -15,6 +16,7 @@ const app = express()
 
 app.use(cors(corsOptions))
 app.use(express.json())
+app.use(cookieParser())
 
 app.use('/uploads', express.static(UPLOAD_DIR))
 

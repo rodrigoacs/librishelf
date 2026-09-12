@@ -3,6 +3,8 @@ import * as authService from '../services/authService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 import { loginLimiter, registerLimiter } from '../middlewares/rateLimiter.js'
+import { authenticateToken } from '../middlewares/auth.js'
+import { AUTH_COOKIE_NAME, authCookieOptions } from '../config/cookieOptions.js'
 
 const router = express.Router()
 
@@ -12,10 +14,32 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     const result = await authService.loginUser(username, password)
 
-    res.status(STATUS.OK).json(result)
+    res.cookie(AUTH_COOKIE_NAME, result.token, authCookieOptions)
+    res.status(STATUS.OK).json({ user: result.user })
 
   } catch (error) {
     sendError(res, error, 'Erro no login')
+  }
+})
+
+router.post('/logout', (req, res) => {
+  res.clearCookie(AUTH_COOKIE_NAME, { ...authCookieOptions, maxAge: undefined })
+  res.status(STATUS.OK).json({ message: 'Logout realizado com sucesso' })
+})
+
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    const user = await authService.getUserProfile(req.user.id)
+
+    if (!user) {
+      const error = new Error('User not found.')
+      error.status = STATUS.NOT_FOUND
+      throw error
+    }
+
+    res.status(STATUS.OK).json({ user })
+  } catch (error) {
+    sendError(res, error, 'Erro ao buscar usuário')
   }
 })
 

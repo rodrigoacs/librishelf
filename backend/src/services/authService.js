@@ -30,6 +30,18 @@ async function loginUser(username, password) {
   }
 }
 
+async function getUserProfile(id) {
+  const user = await authRepository.getUserById(id)
+
+  if (!user) return null
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email
+  }
+}
+
 async function registerUser(username, password, email) {
   const passwordCheck = validatePassword(password)
   if (!passwordCheck.valid) {
@@ -51,4 +63,4 @@ async function registerUser(username, password, email) {
   return user
 }
 
-export { loginUser, registerUser }
+export { loginUser, registerUser, getUserProfile }

@@ -6,9 +6,14 @@ async function getUserByUsername(username) {
   return result.rows[0] || null
 }
 
+async function getUserById(id) {
+  const result = await db.query(q.FIND_USER_BY_ID, [id])
+  return result.rows[0] || null
+}
+
 async function createUser(username, hashedPassword, email) {
   const result = await db.query(q.CREATE_USER, [username, hashedPassword, email])
   return result.rows[0]
 }
 
-export { getUserByUsername, createUser }
+export { getUserByUsername, getUserById, createUser }

@@ -61,6 +61,11 @@ export const AUTH_QUERIES = {
     FROM librishelf.users 
     WHERE name = $1 OR email = $1
   `,
+  FIND_USER_BY_ID: `
+    SELECT id, name, email
+    FROM librishelf.users
+    WHERE id = $1
+  `,
   CREATE_USER: `
     INSERT INTO librishelf.users (name, password_hash, email) 
     VALUES ($1, $2, $3) 

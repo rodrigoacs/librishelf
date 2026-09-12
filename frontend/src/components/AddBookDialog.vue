@@ -176,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, defineProps, defineEmits } from 'vue'
+import { ref, reactive, watch, defineEmits } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Calendar from 'primevue/calendar'

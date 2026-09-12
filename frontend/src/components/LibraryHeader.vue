@@ -215,7 +215,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, defineEmits, defineProps } from 'vue'
+import { ref, computed, onMounted, defineEmits } from 'vue'
 import Button from 'primevue/button'
 import Sidebar from 'primevue/sidebar'
 import SelectButton from 'primevue/selectbutton'

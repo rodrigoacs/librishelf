@@ -1,18 +1,13 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3050'
 
 async function client(endpoint, { body, ...customConfig } = {}) {
-  const token = localStorage.getItem('token')
-
   const headers = {
     'Content-Type': 'application/json',
   }
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
-  }
-
   const config = {
     method: body ? 'POST' : 'GET',
+    credentials: 'include',
     ...customConfig,
     headers: {
       ...headers,
@@ -33,7 +28,6 @@ async function client(endpoint, { body, ...customConfig } = {}) {
     const response = await fetch(`${BASE_URL}${endpoint}`, config)
 
     if (response.status === 401) {
-      localStorage.removeItem('token')
       localStorage.removeItem('user')
       return Promise.reject(new Error('Sessão expirada. Faça login novamente.'))
     }

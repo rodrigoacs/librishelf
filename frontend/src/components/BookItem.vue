@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, computed } from 'vue'
+import { defineEmits, ref, computed } from 'vue'
 import BookDialog from './BookDialog.vue'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3050'

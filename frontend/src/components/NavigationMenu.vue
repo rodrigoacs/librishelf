@@ -142,6 +142,7 @@ import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import ThemeSwitcher from './ThemeSwitcher.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
+import api from '../services/api.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -169,6 +170,17 @@ function truncateName(name) {
   return name.length > 15 ? name.substring(0, 12) + '...' : name
 }
 
+async function handleLogout() {
+  try {
+    await api.logout()
+  } catch {
+    // mesmo se a chamada falhar, seguimos limpando o estado local e redirecionando
+  } finally {
+    localStorage.clear()
+    router.push('/login')
+  }
+}
+
 watch(() => route.path, () => {
   updateUser()
   showSettings.value = false
@@ -188,7 +200,7 @@ const items = computed(() => [
   {
     label: t('menu.logout'),
     icon: 'pi pi-sign-out',
-    command: () => { localStorage.clear(); router.push('/login') }
+    command: () => handleLogout()
   },
 ])
 </script>

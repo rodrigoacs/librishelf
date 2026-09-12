@@ -8,6 +8,7 @@ import Publisher from '../views/Publisher.vue'
 import Tags from '../views/Tags.vue'
 import Dashboard from '../views/Dashboard.vue'
 import PublicLibrary from '../views/PublicLibrary.vue'
+import api from '../services/api.js'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,30 +25,18 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  const timestamp = localStorage.getItem('timestamp')
-  const tokenDuration = 3600000 * 24 * 7 // 7 days in milliseconds
-
-  let isExpired = false
-
-  if (token && timestamp) {
-    const now = Date.now()
-    const expirationTime = new Date(parseInt(timestamp)).getTime() + tokenDuration
-
-    if (now >= expirationTime) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('timestamp')
-      isExpired = true
-    }
+router.beforeEach(async (to, from, next) => {
+  if (!to.meta.requiresAuth) {
+    return next()
   }
 
-  const isAuthenticated = Boolean(token) && !isExpired
-
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
-  } else {
+  try {
+    const { user } = await api.me()
+    localStorage.setItem('user', JSON.stringify(user))
     next()
+  } catch {
+    localStorage.removeItem('user')
+    next('/login')
   }
 })
 
