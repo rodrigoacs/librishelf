@@ -86,12 +86,12 @@
                 for="book-edit-authors"
                 class="sr-only"
               >{{ t('bookDialog.authorNames') }}</label>
-              <input
-                id="book-edit-authors"
-                v-model="book.authors"
-                class="modern-input author-input"
+              <AuthorsInput
+                v-model="book.authorNames"
+                input-id="book-edit-authors"
+                class="author-input"
                 :placeholder="t('bookDialog.authorNames')"
-                :aria-invalid="submitted && !book.authors.trim()"
+                :invalid="submitted && book.authorNames.length === 0"
               />
             </template>
             <template v-else>
@@ -259,6 +259,7 @@ import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import api from '../services/api.js'
+import AuthorsInput from './AuthorsInput.vue'
 import { coverUrl, handleCoverError } from '../utils/covers.js'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
@@ -291,7 +292,8 @@ const coverVersion = ref(0)
 const preview = createPreviewHandle()
 
 function emptyBook() {
-  return { title: '', authors: '', publisher: '', tags: '', isbn: '', read_date: null, pubdate: null }
+  // authors: texto para exibir; authorNames: a lista que é editada e salva.
+  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', read_date: null, pubdate: null }
 }
 
 const book = ref(emptyBook())
@@ -336,6 +338,7 @@ function clearSelectedFile() {
 function cloneBook(source) {
   return {
     ...source,
+    authorNames: [...(source.authorNames || [])],
     read_date: source.read_date ? new Date(source.read_date) : null,
     pubdate: source.pubdate ? new Date(source.pubdate) : null
   }
@@ -390,7 +393,7 @@ function validate() {
     return false
   }
 
-  if (!book.value.authors.trim()) {
+  if (book.value.authorNames.length === 0) {
     toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.validationAuthors'), life: 3000 })
     return false
   }
@@ -420,7 +423,7 @@ async function saveBookDetails() {
   try {
     const response = await api.updateBook(props.bookId, {
       title: book.value.title.trim(),
-      authors: book.value.authors.trim(),
+      authors: book.value.authorNames,
       publisher: book.value.publisher,
       tags: tagList.value,
       isbn: book.value.isbn,
@@ -455,6 +458,7 @@ function applyResponse(data) {
   book.value = {
     title: data.title || '',
     authors: data.authors || '',
+    authorNames: Array.isArray(data.author_names) ? data.author_names : (data.authors ? [data.authors] : []),
     isbn: data.isbn || '',
     publisher: data.publisher_name || data.publisher || '',
     tags: data.tags || '',

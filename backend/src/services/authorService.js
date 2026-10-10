@@ -1,15 +1,12 @@
 import * as authorRepository from '../repositories/authorRepository.js'
+import { parseNameList } from '../utils/nameList.js'
 
+// ?publishers=A&publishers=B (nome de editora pode ter vírgula: não separa).
 async function getAuthorsByUserId(userId, publisherFilter) {
-  // ?x=a&x=b chega como array; aceita os dois formatos em vez de estourar 500.
-  const rawFilter = Array.isArray(publisherFilter) ? publisherFilter.join(',') : publisherFilter
+  const publishersList = parseNameList(publisherFilter)
 
-  if (typeof rawFilter === 'string' && rawFilter) {
-    const publishersList = rawFilter.split(',').map(item => item.trim()).filter(Boolean)
-
-    if (publishersList.length > 0) {
-      return await authorRepository.getAuthorsByUserAndPublishers(userId, publishersList)
-    }
+  if (publishersList.length > 0) {
+    return await authorRepository.getAuthorsByUserAndPublishers(userId, publishersList)
   }
 
   return await authorRepository.getAuthorsByUserId(userId)

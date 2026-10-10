@@ -2,6 +2,7 @@ import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { deleteBookCover } from '../utils/imageProcessor.js'
+import { parseNameList, parseTagList, validateNameList } from '../utils/nameList.js'
 
 const READ_YEAR_PATTERN = /^\d{4}$/
 
@@ -99,15 +100,40 @@ function requireText(value, fieldName) {
   return value.trim()
 }
 
+/**
+ * Valida e normaliza o livro vindo do cliente (POST multipart ou PUT JSON).
+ *
+ * authors: lista (JSON array, campo repetido no multipart) ou um nome só.
+ *          Nunca é separado por vírgula: "Fulano, Beltrano" como texto é UM nome.
+ * tags:    lista ou texto "a, b, c".
+ */
+function normalizeBookInput(raw = {}) {
+  const authors = parseNameList(raw.authors)
+  if (authors.length === 0) throw httpError('Authors is required.', STATUS.BAD_REQUEST)
+
+  const tags = parseTagList(raw.tags)
+
+  const listError = validateNameList(authors, 'autores') || validateNameList(tags, 'tags')
+  if (listError) throw httpError(listError, STATUS.BAD_REQUEST)
+
+  const publisher = typeof raw.publisher === 'string' ? raw.publisher.trim() : ''
+
+  return {
+    title: requireText(raw.title, 'Title'),
+    authors,
+    tags,
+    publisher: publisher || null,
+    isbn: normalizeIsbn(raw.isbn),
+    pubDate: normalizeDate(raw.pubDate, 'pubDate'),
+    readDate: normalizeDate(raw.readDate, 'readDate')
+  }
+}
+
 async function getBookById(id, userId) {
   return await libraryRepository.getBookByIdForUser(id, userId)
 }
 
 async function addNewBook(bookData) {
-  bookData.isbn = normalizeIsbn(bookData.isbn)
-  bookData.pubDate = normalizeDate(bookData.pubDate, 'pubDate')
-  bookData.readDate = normalizeDate(bookData.readDate, 'readDate')
-
   if (bookData.isbn) {
     const existingBook = await libraryRepository.findBookByIsbn(bookData.isbn, bookData.user_id)
 
@@ -116,30 +142,14 @@ async function addNewBook(bookData) {
     }
   }
 
-  const newBookId = await libraryRepository.createBook(bookData)
-
-  return newBookId
+  return await libraryRepository.createBook(bookData)
 }
 
-async function updateBookDetails(bookId, userId, bookData) {
+async function updateBookDetails(bookId, userId, rawBook) {
   await checkBookOwnership(bookId, userId)
 
-  // Mesmo contrato do POST: título e autores são obrigatórios na edição também.
-  bookData.title = requireText(bookData.title, 'Title')
-  bookData.authors = requireText(bookData.authors, 'Authors')
-
-  if (typeof bookData.tags === 'string') {
-    bookData.tags = bookData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
-  }
-
-  if ('isbn' in bookData) {
-    bookData.isbn = normalizeIsbn(bookData.isbn)
-  }
-
-  bookData.pubDate = normalizeDate(bookData.pubDate, 'pubDate')
-  bookData.readDate = normalizeDate(bookData.readDate, 'readDate')
-
-  return await libraryRepository.updateBook(bookId, bookData)
+  // Mesmo contrato e mesma validação do POST.
+  return await libraryRepository.updateBook(bookId, normalizeBookInput(rawBook))
 }
 
 async function checkBookOwnership(bookId, userId) {
@@ -180,6 +190,7 @@ export {
   getBookById,
   getPublicBook,
   getRandomPublicBookIds,
+  normalizeBookInput,
   addNewBook,
   updateBookDetails,
   checkBookOwnership,

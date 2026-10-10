@@ -48,9 +48,10 @@ describe('Publisher Endpoints', () => {
     expect(res.body[0].name).toBe('Viking Press')
   })
 
-  it('should handle multiple authors in filter', async () => {
+  it('should handle multiple authors in filter (parâmetro repetido)', async () => {
     const res = await request(app)
-      .get('/publisher?authors=Stephen King,J.R.R. Tolkien')
+      .get('/publisher')
+      .query('authors=Stephen%20King&authors=J.R.R.%20Tolkien')
       .set('Authorization', `Bearer ${token}`)
 
     expect(res.statusCode).toEqual(200)

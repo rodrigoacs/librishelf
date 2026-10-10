@@ -2,6 +2,26 @@ import client from './fetchClient.js'
 
 const enc = encodeURIComponent
 
+/**
+ * Monta a query string repetindo o parâmetro para listas (author=A&author=B).
+ * Nomes de autor e editora podem ter vírgula, então nunca são juntados com ",".
+ */
+function toQuery(params = {}) {
+  const search = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === '') continue
+    if (Array.isArray(value)) {
+      value.forEach(item => search.append(key, item))
+    } else {
+      search.append(key, value)
+    }
+  }
+
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
+
 export default {
   // --- Auth / conta ---
   login(credentials) {
@@ -34,10 +54,7 @@ export default {
 
   // --- Livros ---
   getBooks(queryParams = {}, config = {}) {
-    const queryString = new URLSearchParams(queryParams).toString()
-    const url = queryString ? `/library?${queryString}` : '/library'
-
-    return client.get(url, config)
+    return client.get(`/library${toQuery(queryParams)}`, config)
   },
 
   getBookById(id) {
@@ -69,14 +86,12 @@ export default {
   },
 
   // --- Listas ---
-  getAuthors(publisherFilter) {
-    const url = publisherFilter ? `/author?publishers=${enc(publisherFilter)}` : '/author'
-    return client.get(url)
+  getAuthors(publishers = []) {
+    return client.get(`/author${toQuery({ publishers })}`)
   },
 
-  getPublishers(authorFilter) {
-    const url = authorFilter ? `/publisher?authors=${enc(authorFilter)}` : '/publisher'
-    return client.get(url)
+  getPublishers(authors = []) {
+    return client.get(`/publisher${toQuery({ authors })}`)
   },
 
   getTags() {
@@ -93,8 +108,7 @@ export default {
   },
 
   getPublicLibrary(username, params = {}) {
-    const queryString = new URLSearchParams(params).toString()
-    return client.get(`/library/public/u/${enc(username)}?${queryString}`)
+    return client.get(`/library/public/u/${enc(username)}${toQuery(params)}`)
   },
 
   getPublicBook(username, id) {

@@ -5,16 +5,28 @@ export const LIBRARY_QUERIES = {
       b.title,
       u.name AS user_owner,
       p.name AS publisher_name, -- Alias essencial
-      (SELECT STRING_AGG(a.name, ', ')
+      (SELECT STRING_AGG(a.name, ', ' ORDER BY bal.position, a.id)
        FROM librishelf.books_authors_link AS bal
        JOIN librishelf.authors AS a ON bal.author_id = a.id
        WHERE bal.book_id = b.id
       ) AS authors,
-      (SELECT STRING_AGG(t.name, ', ')
+      -- Lista de verdade: nomes podem conter vírgula, então "authors" (texto
+      -- para exibir) não serve para editar nem filtrar.
+      COALESCE((SELECT json_agg(a.name ORDER BY bal.position, a.id)
+       FROM librishelf.books_authors_link AS bal
+       JOIN librishelf.authors AS a ON bal.author_id = a.id
+       WHERE bal.book_id = b.id
+      ), '[]'::json) AS author_names,
+      (SELECT STRING_AGG(t.name, ', ' ORDER BY t.name)
        FROM librishelf.books_tags_link AS btl
        JOIN librishelf.tags AS t ON btl.tag_id = t.id
        WHERE btl.book_id = b.id
       ) AS tags,
+      COALESCE((SELECT json_agg(t.name ORDER BY t.name)
+       FROM librishelf.books_tags_link AS btl
+       JOIN librishelf.tags AS t ON btl.tag_id = t.id
+       WHERE btl.book_id = b.id
+      ), '[]'::json) AS tag_names,
       b.isbn,
       b.read_date,
       b.publication_date
@@ -32,16 +44,28 @@ export const LIBRARY_QUERIES = {
       b.read_date,
       b.publication_date,
       p.name AS publisher_name, -- O Frontend procura por .publisher_name
-      (SELECT STRING_AGG(a.name, ', ')
+      (SELECT STRING_AGG(a.name, ', ' ORDER BY bal.position, a.id)
        FROM librishelf.books_authors_link AS bal
        JOIN librishelf.authors AS a ON bal.author_id = a.id
        WHERE bal.book_id = b.id
       ) AS authors,
-      (SELECT STRING_AGG(t.name, ', ')
+      -- Lista de verdade: nomes podem conter vírgula, então "authors" (texto
+      -- para exibir) não serve para editar nem filtrar.
+      COALESCE((SELECT json_agg(a.name ORDER BY bal.position, a.id)
+       FROM librishelf.books_authors_link AS bal
+       JOIN librishelf.authors AS a ON bal.author_id = a.id
+       WHERE bal.book_id = b.id
+      ), '[]'::json) AS author_names,
+      (SELECT STRING_AGG(t.name, ', ' ORDER BY t.name)
        FROM librishelf.books_tags_link AS btl
        JOIN librishelf.tags AS t ON btl.tag_id = t.id
        WHERE btl.book_id = b.id
-      ) AS tags
+      ) AS tags,
+      COALESCE((SELECT json_agg(t.name ORDER BY t.name)
+       FROM librishelf.books_tags_link AS btl
+       JOIN librishelf.tags AS t ON btl.tag_id = t.id
+       WHERE btl.book_id = b.id
+      ), '[]'::json) AS tag_names
     FROM librishelf.books AS b
     LEFT JOIN librishelf.publishers AS p ON b.publisher_id = p.id
     WHERE b.id = $1 AND b.user_id = $2

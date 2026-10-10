@@ -116,21 +116,10 @@ router.get('/:id', validateNumericId(), async (req, res) => {
 
 router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), async (req, res) => {
   try {
-    const { title, pubDate, authors, publisher, tags, isbn, readDate } = req.body ?? {}
-    const userId = req.user.id
-
-    if (typeof title !== 'string' || !title.trim()) return res.status(STATUS.BAD_REQUEST).json({ error: 'Title is required.' })
-    if (typeof authors !== 'string' || !authors.trim()) return res.status(STATUS.BAD_REQUEST).json({ error: 'Authors is required.' })
-
+    // Autores chegam como campo repetido (authors=A&authors=B) ou um só valor.
     const bookData = {
-      title,
-      pubDate,
-      authors,
-      publisher,
-      tags: typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-      isbn,
-      readDate: readDate || null,
-      user_id: userId
+      ...libraryService.normalizeBookInput(req.body ?? {}),
+      user_id: req.user.id
     }
 
     // Valida a imagem ANTES de criar o livro: com imagem inválida a resposta é

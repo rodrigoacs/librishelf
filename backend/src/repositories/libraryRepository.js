@@ -2,11 +2,15 @@ import { db } from "../database/connection.js"
 import { LIBRARY_QUERIES as q } from "../database/queries.js"
 import { resolvePagination } from "../utils/pagination.js"
 import STATUS from "../utils/statusCodes.js"
+import { parseNameList } from "../utils/nameList.js"
 
-const ISBN_UNIQUE_VIOLATION = '23505'
+const UNIQUE_VIOLATION = '23505'
+const ISBN_CONSTRAINT = 'idx_books_isbn_user'
 
+// Só a violação do índice de ISBN vira 409 "ISBN já existe". Antes qualquer
+// 23505 (ex.: tag repetida no mesmo livro) aparecia como conflito de ISBN.
 function toIsbnConflictError(err) {
-  if (err.code === ISBN_UNIQUE_VIOLATION) {
+  if (err.code === UNIQUE_VIOLATION && err.constraint === ISBN_CONSTRAINT) {
     const conflictError = new Error('ISBN already exists for this user.')
     conflictError.status = STATUS.CONFLICT
     return conflictError
@@ -52,8 +56,8 @@ async function getAllBooksByUser(userId, filters = {}) {
     paramIndex++
   }
 
-  if (author) {
-    const authorList = Array.isArray(author) ? author : author.split(',').map(a => a.trim())
+  if (parseNameList(author).length > 0) {
+    const authorList = parseNameList(author)
     query += ` AND EXISTS (
       SELECT 1 FROM librishelf.books_authors_link bal 
       JOIN librishelf.authors a ON bal.author_id = a.id 
@@ -63,15 +67,15 @@ async function getAllBooksByUser(userId, filters = {}) {
     paramIndex++
   }
 
-  if (publisher) {
-    const publisherList = Array.isArray(publisher) ? publisher : publisher.split(',').map(p => p.trim())
+  if (parseNameList(publisher).length > 0) {
+    const publisherList = parseNameList(publisher)
     query += ` AND p.name = ANY($${paramIndex})`
     params.push(publisherList)
     paramIndex++
   }
 
-  if (tags) {
-    const tagsList = Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())
+  if (parseNameList(tags).length > 0) {
+    const tagsList = parseNameList(tags)
     query += ` AND EXISTS (
       SELECT 1 FROM librishelf.books_tags_link btl
       JOIN librishelf.tags t ON btl.tag_id = t.id
@@ -128,14 +132,12 @@ async function findBookByIsbn(isbn, userId) {
 }
 
 async function createBook(bookInfo) {
-  const tagsArray = Array.isArray(bookInfo.tags) ? bookInfo.tags : (bookInfo.tags ? bookInfo.tags.split(',') : [])
-
   const params = [
     bookInfo.title,
     bookInfo.pubDate,
     bookInfo.authors,
     bookInfo.publisher,
-    tagsArray,
+    bookInfo.tags,
     bookInfo.readDate,
     bookInfo.isbn,
     bookInfo.user_id
@@ -157,15 +159,13 @@ async function getBookOwner(bookId) {
 async function updateBook(bookId, bookInfo) {
   const pubDate = bookInfo.pubDate ?? null
   const readDate = bookInfo.readDate ?? null
-  const tagsArray = Array.isArray(bookInfo.tags) ? bookInfo.tags : []
-
   const params = [
     bookId,
     bookInfo.title,
     pubDate,
     bookInfo.authors,
     bookInfo.publisher,
-    tagsArray,
+    bookInfo.tags,
     readDate,
     bookInfo.isbn
   ]

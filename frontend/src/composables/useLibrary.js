@@ -32,16 +32,17 @@ function buildParams(filters) {
     params.readState = filters.readState === 'read' ? 'true' : 'false'
   }
 
+  // Listas vão como parâmetro repetido (author=A&author=B): o nome pode ter vírgula.
   if (filters.author?.length > 0) {
-    params.author = filters.author.map(a => a.name || a).join(',')
+    params.author = filters.author.map(a => a.name || a)
   }
 
   if (filters.publisher?.length > 0) {
-    params.publisher = filters.publisher.map(p => p.name || p).join(',')
+    params.publisher = filters.publisher.map(p => p.name || p)
   }
 
   if (filters.tags?.length > 0) {
-    params.tags = filters.tags.map(t => t.name || t).join(',')
+    params.tags = filters.tags.map(t => t.name || t)
   }
 
   if (filters.readYear && filters.readYear !== 'all') {

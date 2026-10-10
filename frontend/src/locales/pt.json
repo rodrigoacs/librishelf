@@ -66,7 +66,7 @@
     "add_cover": "Adicionar Capa",
     "click_select": "Clique para selecionar",
     "title_ph": "Título do Livro *",
-    "author_ph": "Nome do Autor",
+    "author_ph": "Autores",
     "tags_ph": "Tags (separadas por vírgula)",
     "read_status": "Status de Leitura",
     "read": "Lido",
@@ -85,7 +85,8 @@
     "cover_not_saved": "O livro foi salvo, mas a capa não pôde ser enviada. Tente trocar a capa depois.",
     "select_cover": "Selecionar imagem de capa",
     "read_ribbon": "Lido",
-    "dialog_label": "Adicionar livro"
+    "dialog_label": "Adicionar livro",
+    "authors_hint": "Digite um autor e tecle Enter para adicionar o próximo."
   },
   "library": {
     "search_ph": "Pesquisar por título, ISBN...",

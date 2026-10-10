@@ -115,26 +115,18 @@
           </div>
 
           <div class="input-group">
-            <i
-              class="pi pi-user input-icon"
-              aria-hidden="true"
-            ></i>
             <label
               for="new-book-authors"
               class="sr-only"
             >{{ t('book.author_ph') }}</label>
-            <input
-              id="new-book-authors"
+            <AuthorsInput
               v-model="book.authors"
-              class="modern-input"
+              input-id="new-book-authors"
               :placeholder="`${t('book.author_ph')} *`"
-              :class="{ 'error': submitted && !book.authors.trim() }"
-              :aria-invalid="submitted && !book.authors.trim()"
-              aria-describedby="new-book-authors-error"
-              required
+              :invalid="submitted && book.authors.length === 0"
             />
             <small
-              v-if="submitted && !book.authors.trim()"
+              v-if="submitted && book.authors.length === 0"
               id="new-book-authors-error"
               class="error-msg"
             >{{ t('book.validation_authors') }}</small>
@@ -248,6 +240,7 @@ import Button from 'primevue/button'
 import Calendar from 'primevue/calendar'
 import { useToast } from 'primevue/usetoast'
 import api from '../services/api.js'
+import AuthorsInput from './AuthorsInput.vue'
 import { useI18n } from 'vue-i18n'
 import { toApiDate } from '../utils/dates.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
@@ -271,7 +264,7 @@ const preview = createPreviewHandle()
 
 const initialBookState = {
   title: '',
-  authors: '',
+  authors: [],
   publisher: '',
   tags: '',
   isbn: '',
@@ -292,7 +285,7 @@ watch(visible, (newVal) => {
 })
 
 function resetForm() {
-  Object.assign(book, initialBookState)
+  Object.assign(book, { ...initialBookState, authors: [] })
   selectedFile.value = null
   previewUrl.value = null
   preview.clear()
@@ -322,7 +315,7 @@ async function saveBook() {
     return
   }
 
-  if (!book.authors.trim()) {
+  if (book.authors.length === 0) {
     toast.add({ severity: 'warn', summary: t('common.error'), detail: t('book.validation_authors'), life: 3000 })
     return
   }
@@ -333,7 +326,8 @@ async function saveBook() {
     const formData = new FormData()
 
     formData.append('title', book.title.trim())
-    formData.append('authors', book.authors.trim())
+    // Um campo "authors" por autor: nomes podem conter vírgula.
+    book.authors.forEach(name => formData.append('authors', name))
     formData.append('publisher', book.publisher || '')
     formData.append('isbn', book.isbn || '')
     formData.append('tags', book.tags || '')
