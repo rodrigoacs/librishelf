@@ -80,6 +80,7 @@ async function getAllBooksByUser(userId, query) {
     author: query.author || undefined,
     publisher: query.publisher || undefined,
     tags: query.tags || undefined,
+    isbnStatus: query.isbn === 'invalid' ? 'invalid' : undefined,
     page: query.page || 1,
     limit: query.limit || 20,
     sortField: query.sort || 'recent',
@@ -107,6 +108,27 @@ function requireText(value, fieldName) {
  *          Nunca é separado por vírgula: "Fulano, Beltrano" como texto é UM nome.
  * tags:    lista ou texto "a, b, c".
  */
+const OL_WORK_KEY = /^\/works\/OL\d+W$/
+const OL_EDITION_KEY = /^\/books\/OL\d+M$/
+
+/** Nota opcional: vazio/null remove; senão inteiro de 1 a 5. */
+function normalizeRating(value) {
+  if (value === undefined || value === null || value === '' || value === 'null') return null
+  const rating = Number(value)
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    throw httpError('A nota precisa ser um número inteiro de 1 a 5.', STATUS.BAD_REQUEST)
+  }
+  return rating
+}
+
+function normalizeOlKey(value, pattern, field) {
+  if (value === undefined || value === null || value === '') return null
+  if (typeof value !== 'string' || !pattern.test(value)) {
+    throw httpError(`Campo '${field}' inválido.`, STATUS.BAD_REQUEST)
+  }
+  return value
+}
+
 function normalizeBookInput(raw = {}) {
   const authors = parseNameList(raw.authors)
   if (authors.length === 0) throw httpError('Authors is required.', STATUS.BAD_REQUEST)
@@ -125,7 +147,10 @@ function normalizeBookInput(raw = {}) {
     publisher: publisher || null,
     isbn: normalizeIsbn(raw.isbn),
     pubDate: normalizeDate(raw.pubDate, 'pubDate'),
-    readDate: normalizeDate(raw.readDate, 'readDate')
+    readDate: normalizeDate(raw.readDate, 'readDate'),
+    rating: normalizeRating(raw.rating),
+    olWorkKey: normalizeOlKey(raw.olWorkKey, OL_WORK_KEY, 'olWorkKey'),
+    olEditionKey: normalizeOlKey(raw.olEditionKey, OL_EDITION_KEY, 'olEditionKey')
   }
 }
 
@@ -149,7 +174,15 @@ async function updateBookDetails(bookId, userId, rawBook) {
   await checkBookOwnership(bookId, userId)
 
   // Mesmo contrato e mesma validação do POST.
-  return await libraryRepository.updateBook(bookId, normalizeBookInput(rawBook))
+  const input = normalizeBookInput(rawBook)
+
+  // Quem não manda "rating" (clientes antigos) não apaga a nota que já existe.
+  if (!Object.hasOwn(rawBook ?? {}, 'rating')) {
+    const current = await libraryRepository.getBookByIdForUser(bookId, userId)
+    input.rating = current?.rating ?? null
+  }
+
+  return await libraryRepository.updateBook(bookId, input)
 }
 
 async function checkBookOwnership(bookId, userId) {
@@ -171,7 +204,15 @@ async function deleteBook(bookId, userId) {
 
   await libraryRepository.deleteBookById(bookId)
 
+  // Autores/editoras/tags que só existiam nesse livro deixam de aparecer nas listas.
+  await libraryRepository.pruneUserNames(userId)
+
   await deleteBookCover(bookId)
+}
+
+async function setRating(bookId, userId, value) {
+  await checkBookOwnership(bookId, userId)
+  return await libraryRepository.updateRating(bookId, normalizeRating(value))
 }
 
 async function markBookAsRead(bookId, userId) {
@@ -197,6 +238,7 @@ export {
   deleteBook,
   markBookAsRead,
   markBookAsUnread,
+  setRating,
   getPublicLibraryByUsername,
   normalizeDate,
   normalizeReadYear

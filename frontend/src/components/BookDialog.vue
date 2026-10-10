@@ -93,10 +93,31 @@
                 :placeholder="t('bookDialog.authorNames')"
                 :invalid="submitted && book.authorNames.length === 0"
               />
+              <StarRating
+                v-model="book.rating"
+                class="rating-row"
+                :label="t('rating.label')"
+              />
             </template>
             <template v-else>
               <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}</h1>
               <h2 class="book-author">{{ book.authors || (loading ? '' : t('bookDialog.unknownAuthor')) }}</h2>
+              <template v-if="!loading && !loadFailed">
+                <StarRating
+                  v-if="!isReadOnly"
+                  :model-value="book.rating"
+                  class="rating-row"
+                  :disabled="ratingSaving"
+                  :label="t('rating.label')"
+                  @update:model-value="quickRate"
+                />
+                <StarRating
+                  v-else-if="book.rating"
+                  :model-value="book.rating"
+                  class="rating-row"
+                  readonly
+                />
+              </template>
             </template>
           </div>
 
@@ -240,9 +261,136 @@
                 class="modern-input meta-input"
                 :class="{ 'readonly': !isEditing }"
                 placeholder="-"
+                :aria-describedby="showIsbnWarning ? 'book-isbn-warning' : undefined"
               />
+              <small
+                v-if="showIsbnWarning"
+                id="book-isbn-warning"
+                class="isbn-warning"
+              >
+                <i
+                  class="pi pi-exclamation-triangle"
+                  aria-hidden="true"
+                ></i>
+                {{ t('bookDialog.isbnInvalid') }}
+              </small>
             </div>
           </div>
+
+          <section
+            v-if="showCommunity"
+            class="community-section"
+            :aria-label="t('community.book_title')"
+          >
+            <h3 class="community-title">
+              <i
+                class="pi pi-users"
+                aria-hidden="true"
+              ></i>
+              {{ t('community.book_title') }}
+            </h3>
+
+            <p
+              v-if="communityLoading"
+              class="empty-text"
+            >{{ t('common.loading') }}</p>
+
+            <p
+              v-else-if="communityError"
+              class="empty-text"
+            >{{ t('community.load_error') }}</p>
+
+            <template v-else-if="community">
+              <p
+                v-if="community.readerCount === 0"
+                class="empty-text"
+              >{{ t('community.no_readers') }}</p>
+
+              <template v-else>
+                <p class="community-summary">
+                  {{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}
+                  <span
+                    v-if="community.averageRating"
+                    class="avg-rating"
+                  >
+                    · <i
+                      class="pi pi-star-fill"
+                      aria-hidden="true"
+                    ></i>
+                    {{ t('community.average', { avg: formatAverage(community.averageRating), n: community.ratingCount }, community.ratingCount) }}
+                  </span>
+                </p>
+
+                <ul class="reader-list">
+                  <li
+                    v-for="reader in community.readers"
+                    :key="reader.username"
+                  >
+                    <router-link
+                      :to="{ name: 'public-library', params: { username: reader.username } }"
+                      class="reader-link"
+                    >@{{ reader.username }}</router-link>
+                    <i
+                      v-if="reader.hasRead"
+                      class="pi pi-check-circle text-theme"
+                      v-tooltip.top="t('community.has_read')"
+                      :aria-label="t('community.has_read')"
+                    ></i>
+                    <StarRating
+                      v-if="reader.rating"
+                      :model-value="reader.rating"
+                      size="sm"
+                      readonly
+                    />
+                  </li>
+                </ul>
+
+                <div
+                  v-if="community.alsoHave.length"
+                  class="also-have"
+                >
+                  <h4>{{ t('community.also_have') }}</h4>
+                  <ul>
+                    <li
+                      v-for="item in community.alsoHave"
+                      :key="`${item.owner}-${item.bookId}`"
+                    >
+                      <router-link
+                        :to="{ name: 'public-library', params: { username: item.owner }, query: { book: item.bookId } }"
+                        class="also-link"
+                      >
+                        <span class="also-title">{{ item.title }}</span>
+                        <span
+                          v-if="item.authors"
+                          class="also-authors"
+                        >{{ item.authors }}</span>
+                      </router-link>
+                      <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers) }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+
+              <p
+                v-if="!currentUser?.showInCommunity"
+                class="community-hint"
+              >
+                <i
+                  class="pi pi-info-circle"
+                  aria-hidden="true"
+                ></i>
+                <i18n-t
+                  scope="global"
+                  keypath="community.join_hint"
+                  tag="span"
+                >
+                  <template #settings>
+                    <router-link :to="{ name: 'settings' }">{{ t('community.settings_link') }}</router-link>
+                  </template>
+                </i18n-t>
+              </p>
+            </template>
+          </section>
         </div>
       </div>
     </div>
@@ -260,6 +408,8 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import api from '../services/api.js'
 import AuthorsInput from './AuthorsInput.vue'
+import StarRating from './StarRating.vue'
+import { currentUser } from '../services/session.js'
 import { coverUrl, handleCoverError } from '../utils/covers.js'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
@@ -293,7 +443,7 @@ const preview = createPreviewHandle()
 
 function emptyBook() {
   // authors: texto para exibir; authorNames: a lista que é editada e salva.
-  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', read_date: null, pubdate: null }
+  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, pubdate: null }
 }
 
 const book = ref(emptyBook())
@@ -303,6 +453,49 @@ const tagList = computed(() => {
   if (!book.value.tags) return []
   return book.value.tags.split(',').map(tag => tag.trim()).filter(Boolean)
 })
+
+const ratingSaving = ref(false)
+const community = ref(null)
+const communityLoading = ref(false)
+const communityError = ref(false)
+
+const showIsbnWarning = computed(() => !isEditing.value && !loading.value && !book.value.isbnValid)
+const showCommunity = computed(() => !props.isReadOnly && !isEditing.value && !loading.value && !loadFailed.value)
+
+function formatAverage(value) {
+  return Number(value).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+}
+
+async function loadCommunity() {
+  if (props.isReadOnly || !props.bookId) return
+  communityLoading.value = true
+  communityError.value = false
+  try {
+    community.value = await api.getBookCommunity(props.bookId)
+  } catch {
+    communityError.value = true
+    community.value = null
+  } finally {
+    communityLoading.value = false
+  }
+}
+
+// Nota direto da visualização, sem entrar no modo de edição.
+async function quickRate(value) {
+  const previous = book.value.rating
+  book.value.rating = value
+  ratingSaving.value = true
+  try {
+    const result = await api.setRating(props.bookId, value)
+    book.value.rating = result?.rating ?? value
+    emit('updated', { book: { book_id: props.bookId, rating: book.value.rating }, coverChanged: false })
+  } catch (error) {
+    book.value.rating = previous
+    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
+  } finally {
+    ratingSaving.value = false
+  }
+}
 
 const displayCoverUrl = computed(() => previewUrl.value || coverUrl(props.bookId, coverVersion.value))
 
@@ -427,6 +620,7 @@ async function saveBookDetails() {
       publisher: book.value.publisher,
       tags: tagList.value,
       isbn: book.value.isbn,
+      rating: book.value.rating,
       pubDate: toApiDate(book.value.pubdate),
       readDate: toApiDate(book.value.read_date)
     })
@@ -460,6 +654,8 @@ function applyResponse(data) {
     authors: data.authors || '',
     authorNames: Array.isArray(data.author_names) ? data.author_names : (data.authors ? [data.authors] : []),
     isbn: data.isbn || '',
+    isbnValid: data.isbn_valid !== false,
+    rating: data.rating ?? null,
     publisher: data.publisher_name || data.publisher || '',
     tags: data.tags || '',
     read_date: fromApiDate(data.read_date),
@@ -480,6 +676,7 @@ async function loadBookData() {
       : await api.getBookById(props.bookId)
 
     applyResponse(response)
+    loadCommunity()
   } catch (error) {
     // Sem os dados reais a edição fica bloqueada: antes dava para salvar
     // "Erro ao carregar" por cima do título verdadeiro.
@@ -754,6 +951,136 @@ button.cover-wrapper {
 .empty-text {
   color: var(--text-muted);
   font-style: italic;
+}
+
+.rating-row {
+  margin-top: 0.5rem;
+}
+
+.isbn-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+  color: #f59e0b;
+  font-size: 0.8rem;
+}
+
+.community-section {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.community-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.community-summary {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.avg-rating .pi {
+  color: #f5b301;
+  font-size: 0.85rem;
+}
+
+.reader-list,
+.also-have ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reader-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.reader-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-input);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.reader-link,
+.also-link,
+.community-hint a {
+  color: var(--main-color);
+  text-decoration: none;
+}
+
+.reader-link:hover,
+.also-link:hover .also-title,
+.community-hint a:hover {
+  text-decoration: underline;
+}
+
+.also-have h4 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.also-have li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.also-have li:last-child {
+  border-bottom: none;
+}
+
+.also-link {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.also-title {
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.also-authors,
+.also-count {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.also-count {
+  flex-shrink: 0;
+}
+
+.community-hint {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
 .dates-grid,

@@ -37,7 +37,9 @@
     "openMenu": "Abrir menu",
     "settings": "Conta",
     "preferences": "Preferências",
-    "closeMenu": "Fechar menu"
+    "closeMenu": "Fechar menu",
+    "community": "Comunidade",
+    "pending_requests": "{n} pedido para seguir | {n} pedidos para seguir"
   },
   "common": {
     "save": "Salvar",
@@ -117,7 +119,8 @@
       "author": "Autor",
       "read_date": "Data de Leitura",
       "pub_date": "Data de Publicação",
-      "all_years": "Todos os anos"
+      "all_years": "Todos os anos",
+      "rating": "Nota"
     },
     "empty_title": "Nenhum livro encontrado",
     "empty_msg": "Não encontramos nada com os filtros atuais.",
@@ -126,7 +129,8 @@
     "sort_desc": "Ordem decrescente",
     "read_year_chip": "Lidos em {year}",
     "search_label": "Pesquisar livros",
-    "load_error": "Não foi possível carregar seus livros."
+    "load_error": "Não foi possível carregar seus livros.",
+    "invalid_isbn_chip": "ISBN inválido"
   },
   "bookDialog": {
     "bookCover": "Capa do Livro",
@@ -166,7 +170,8 @@
     "dialog_label": "Detalhes do livro",
     "cannotEdit": "Não é possível editar: os dados do livro não carregaram.",
     "validationTitle": "Título é obrigatório.",
-    "validationAuthors": "Autor é obrigatório."
+    "validationAuthors": "Autor é obrigatório.",
+    "isbnInvalid": "Este ISBN parece incorreto (dígito verificador não confere). Corrija para o livro aparecer na comunidade."
   },
   "authors": {
     "title": "Autores",
@@ -209,7 +214,8 @@
     "noAuthorsData": "Nenhum dado de autores disponível",
     "books": "Livros",
     "loadError": "Não foi possível carregar as estatísticas.",
-    "noYearData": "Nenhuma leitura registrada ainda"
+    "noYearData": "Nenhuma leitura registrada ainda",
+    "invalidIsbn": "{n} livro com ISBN inválido — corrija para ele aparecer na comunidade. | {n} livros com ISBN inválido — corrija para eles aparecerem na comunidade."
   },
   "login": {
     "header": "Sua biblioteca pessoal, em todo lugar.",
@@ -316,7 +322,22 @@
       "confirmButton": "Excluir tudo",
       "success": "Sua conta foi excluída."
     },
-    "privacyLink": "Ler a política de privacidade"
+    "privacyLink": "Ler a política de privacidade",
+    "community": {
+      "title": "Comunidade",
+      "desc": "Escolha como outros leitores podem interagir com você. Tudo começa desligado.",
+      "toggle": "Participar da comunidade",
+      "help": "Outros leitores verão que você tem os mesmos livros, sua nota e quantos livros vocês têm em comum.",
+      "needs_public": "Disponível só com a biblioteca pública ligada.",
+      "on": "Você agora participa da comunidade.",
+      "off": "Você não aparece mais para outros leitores."
+    },
+    "activity": {
+      "toggle": "Aceitar seguidores",
+      "help": "Pessoas podem pedir para seguir você. Só quem você aprovar vê no feed os livros que você adiciona e termina de ler.",
+      "on": "Agora você aceita pedidos para seguir.",
+      "off": "Seus seguidores não veem mais sua atividade."
+    }
   },
   "privacy": {
     "title": "Política de Privacidade",
@@ -327,7 +348,7 @@
         "title": "Quais dados coletamos",
         "paragraphs": [
           "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
-          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, tags e datas) e as capas que você enviar.",
+          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, tags, datas e notas) e as capas que você enviar.",
           "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login."
         ]
       },
@@ -343,6 +364,19 @@
         "paragraphs": [
           "Sua biblioteca é privada por padrão. Se você ativar o compartilhamento em Conta, qualquer pessoa com o seu link pode ver seus livros e capas, e algumas capas podem aparecer nas telas de entrada do site.",
           "Você pode desativar quando quiser, e a mudança vale na hora."
+        ]
+      },
+      {
+        "title": "Comunidade e seguidores",
+        "paragraphs": [
+          "As duas opções começam desligadas e ficam em Conta. \"Participar da comunidade\" (só com a biblioteca pública) deixa outros leitores logados verem que vocês têm o mesmo livro, sua nota para ele e quantos livros vocês têm em comum.",
+          "\"Aceitar seguidores\" deixa outras pessoas pedirem para seguir você. Só quem você aprovar vê, no feed, os livros que você adiciona e termina de ler. Você pode remover seguidores ou desligar a opção quando quiser, e a mudança vale na hora."
+        ]
+      },
+      {
+        "title": "Busca por ISBN",
+        "paragraphs": [
+          "Quando você clica em Buscar, o Librishelf consulta o ISBN no Open Library (openlibrary.org), um catálogo público de livros. A consulta é feita pelo nosso servidor: o Open Library recebe só o ISBN, nunca seus dados ou sua conta."
         ]
       },
       {
@@ -377,5 +411,77 @@
     "title": "Página não encontrada",
     "message": "O endereço que você abriu não existe ou foi movido.",
     "goHome": "Ir para o início"
+  },
+  "rating": {
+    "label": "Sua nota",
+    "value": "Nota: {n} de 5",
+    "none": "Sem nota",
+    "set": "Dar {n} de 5 estrelas",
+    "clear": "Tirar a nota"
+  },
+  "isbn": {
+    "placeholder": "ISBN (10 ou 13 dígitos)",
+    "search": "Buscar",
+    "hint": "Digite o ISBN e clique em Buscar para preencher os dados automaticamente.",
+    "found": "Dados encontrados no Open Library. Confira antes de salvar — só os campos vazios foram preenchidos.",
+    "not_found": "Não encontramos este ISBN. Preencha os dados à mão.",
+    "error": "A busca está indisponível agora. Preencha os dados à mão ou tente mais tarde.",
+    "invalid": "Este ISBN não é válido. Confira os dígitos."
+  },
+  "community": {
+    "book_title": "Comunidade",
+    "load_error": "Não foi possível carregar a comunidade.",
+    "no_readers": "Ninguém mais na comunidade tem este livro ainda.",
+    "readers_count": "Nenhum outro leitor tem este livro | 1 outro leitor tem este livro | {n} outros leitores têm este livro",
+    "average": "média {avg} ({n} nota) | média {avg} ({n} notas)",
+    "has_read": "Já leu",
+    "also_have": "Quem tem este livro também tem",
+    "readers_short": "{n} leitor | {n} leitores",
+    "join_hint": "Você não aparece para outros leitores. Para participar, ative a comunidade em {settings}.",
+    "settings_link": "Conta"
+  },
+  "profile": {
+    "title": "Perfil",
+    "own_page": "Esta é a sua página pública.",
+    "privacy_settings": "Privacidade",
+    "following": "Seguindo",
+    "cancel_request": "Cancelar pedido",
+    "follow": "Seguir",
+    "login_to_follow": "Entre para seguir",
+    "books": "livros",
+    "read": "lidos",
+    "avg_rating": "nota média ({n} livro) | nota média ({n} livros)",
+    "in_common": "em comum com você | em comum com você",
+    "by_year": "Leituras por ano",
+    "top_authors": "Autores mais presentes",
+    "top_tags": "Categorias",
+    "recently_read": "Lidos recentemente",
+    "common_books": "Livros em comum",
+    "common_more": "e mais {n}.",
+    "request_sent": "Pedido enviado. Você passa a seguir quando a pessoa aceitar."
+  },
+  "communityView": {
+    "title": "Comunidade",
+    "subtitle": "O que as pessoas que você segue andam lendo.",
+    "activity_off": "Você não aceita seguidores — ninguém vê sua atividade. Você ainda pode seguir outras pessoas. Para mudar, vá em {settings}.",
+    "tab_feed": "Feed",
+    "tab_requests": "Pedidos",
+    "tab_following": "Seguindo",
+    "tab_followers": "Seguidores",
+    "load_error": "Não foi possível carregar.",
+    "feed_empty": "Nada por aqui ainda. Encontre leitores na seção Comunidade de um livro e peça para seguir pela página pública deles.",
+    "event_read": "terminou de ler",
+    "event_added": "adicionou",
+    "no_requests": "Nenhum pedido esperando resposta.",
+    "accept": "Aceitar",
+    "reject": "Recusar",
+    "accepted": "{'@'}{name} agora segue você.",
+    "rejected": "Pedido de {'@'}{name} recusado.",
+    "no_following": "Você ainda não segue ninguém.",
+    "pending": "Aguardando",
+    "unfollow": "Deixar de seguir",
+    "no_followers": "Ninguém segue você ainda.",
+    "remove": "Remover",
+    "remove_confirm": "Remover {'@'}{name} dos seus seguidores? A pessoa não é avisada."
   }
 }

@@ -1,4 +1,5 @@
 import client from './fetchClient.js'
+import { API_URL } from '../config/site.js'
 
 const enc = encodeURIComponent
 
@@ -44,8 +45,9 @@ export default {
     return client.put('/auth/password', { currentPassword, newPassword })
   },
 
-  setLibraryVisibility(isPublic) {
-    return client.patch('/auth/me/visibility', { isPublic })
+  /** Qualquer combinação de { isPublic, showInCommunity, showActivity }. */
+  setPrivacy(settings) {
+    return client.patch('/auth/me/visibility', settings)
   },
 
   deleteAccount(password) {
@@ -83,6 +85,61 @@ export default {
 
   markAsUnread(id) {
     return client.delete(`/library/${id}/read`)
+  },
+
+  setRating(id, rating) {
+    return client.patch(`/library/${id}/rating`, { rating })
+  },
+
+  // --- ISBN (Open Library, sempre via servidor) ---
+  lookupIsbn(isbn) {
+    return client.get(`/isbn/${enc(isbn)}`)
+  },
+
+  isbnCoverUrl(coverId) {
+    return `${API_URL}/isbn/cover/${coverId}`
+  },
+
+  // --- Comunidade ---
+  getBookCommunity(id) {
+    return client.get(`/community/books/${id}`)
+  },
+
+  getPublicProfile(username) {
+    return client.get(`/library/public/u/${enc(username)}/profile`)
+  },
+
+  // --- Seguir / feed ---
+  getFeed(page = 1) {
+    return client.get(`/social/feed${toQuery({ page })}`)
+  },
+
+  getConnections() {
+    return client.get('/social/connections')
+  },
+
+  getPendingRequestsCount() {
+    return client.get('/social/requests/count')
+  },
+
+  follow(username) {
+    return client.post(`/social/follow/${enc(username)}`)
+  },
+
+  unfollow(username) {
+    return client.delete(`/social/follow/${enc(username)}`)
+  },
+
+  acceptRequest(username) {
+    return client.post(`/social/requests/${enc(username)}/accept`)
+  },
+
+  rejectRequest(username) {
+    return client.delete(`/social/requests/${enc(username)}`)
+  },
+
+  removeFollower(username) {
+    return client.delete(`/social/followers/${enc(username)}`)
   },
 
   // --- Listas ---

@@ -9,6 +9,11 @@
     "db:migrate": "node --env-file=./src/.env src/database/migrate.js",
     "db:migrate:test": "node --env-file=./src/.env.test src/database/migrate.js",
     "db:migrate:docker": "node src/database/migrate.js",
+    "db:migrate:local": "node --env-file=./src/.env.local src/database/migrate.js",
+    "db:seed": "node --env-file=./src/.env.local src/scripts/seed.js",
+    "server:local": "node --env-file=./src/.env.local --watch src/server.js",
+    "enrich:isbn": "node --env-file=./src/.env src/scripts/enrichIsbn.js",
+    "enrich:isbn:docker": "node src/scripts/enrichIsbn.js",
     "test": "cross-env NODE_ENV=test node --env-file=./src/.env.test --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "test:unit": "cross-env NODE_ENV=test SECRET_KEY=unit-test-secret-key-with-32-chars-min node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand src/tests/unit src/tests/integration/cors.test.js"
   },

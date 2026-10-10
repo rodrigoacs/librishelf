@@ -20,6 +20,7 @@ const router = createRouter({
     { path: '/publishers', name: 'publishers', component: () => import('../views/Publisher.vue'), meta: { requiresAuth: true } },
     { path: '/tags', name: 'tags', component: () => import('../views/Tags.vue'), meta: { requiresAuth: true } },
     { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { requiresAuth: true } },
+    { path: '/community', name: 'community', component: () => import('../views/Community.vue'), meta: { requiresAuth: true } },
     { path: '/settings', name: 'settings', component: () => import('../views/Settings.vue'), meta: { requiresAuth: true } },
 
     { path: '/login', name: 'login', component: () => import('../views/Login.vue'), meta: { guestOnly: true, standalone: true } },

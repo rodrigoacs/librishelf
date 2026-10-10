@@ -77,11 +77,10 @@ router.put('/password', authenticateToken, sensitiveLimiter, async (req, res) =>
 
 router.patch('/me/visibility', authenticateToken, async (req, res) => {
   try {
-    const { isPublic } = req.body ?? {}
-    const result = await authService.setLibraryVisibility(req.user.id, isPublic)
+    const result = await authService.setPrivacy(req.user.id, req.body ?? {})
     res.status(STATUS.OK).json(result)
   } catch (error) {
-    sendError(res, error, 'Erro ao alterar visibilidade')
+    sendError(res, error, 'Erro ao alterar privacidade')
   }
 })
 

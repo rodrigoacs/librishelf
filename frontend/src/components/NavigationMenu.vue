@@ -78,6 +78,11 @@
             aria-hidden="true"
           ></i>
           <span>{{ item.label }}</span>
+          <span
+            v-if="item.badge"
+            class="nav-badge"
+            :aria-label="t('menu.pending_requests', { n: item.badge }, item.badge)"
+          >{{ item.badge }}</span>
         </router-link>
 
         <div
@@ -167,6 +172,7 @@ import ThemeSwitcher from './ThemeSwitcher.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 import api from '../services/api.js'
 import { currentUser, clearSession } from '../services/session.js'
+import { pendingRequests, refreshPendingRequests, resetPendingRequests } from '../services/social.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -189,6 +195,7 @@ async function handleLogout() {
     // mesmo se a chamada falhar, seguimos limpando o estado local e redirecionando
   } finally {
     clearSession()
+    resetPendingRequests()
     router.push('/login')
   }
 }
@@ -196,7 +203,8 @@ async function handleLogout() {
 watch(() => route.path, () => {
   showSettings.value = false
   mobileMenuOpen.value = false
-})
+  if (currentUser.value) refreshPendingRequests()
+}, { immediate: true })
 
 const items = computed(() => [
   { label: t('menu.home'), icon: 'pi pi-home', route: '/' },
@@ -205,11 +213,27 @@ const items = computed(() => [
   { label: t('menu.publishers'), icon: 'pi pi-building', route: '/publishers' },
   { label: t('menu.categories'), icon: 'pi pi-tags', route: '/tags' },
   { label: t('menu.dashboard'), icon: 'pi pi-chart-bar', route: '/dashboard' },
+  { label: t('menu.community'), icon: 'pi pi-globe', route: '/community', badge: pendingRequests.value },
   { label: t('menu.settings'), icon: 'pi pi-user', route: '/settings' }
 ])
 </script>
 
 <style scoped>
+.nav-badge {
+  margin-left: auto;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--main-color);
+  color: var(--text-inverse, #000);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .text-main {
   color: var(--main-color);
 }

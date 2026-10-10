@@ -211,3 +211,14 @@ body {
     width: 90%;
   }
 }
+/* Botão principal (tema). Também definido nos diálogos; aqui vale para todas as telas. */
+.p-button.btn-action-primary {
+  background-color: var(--main-color);
+  border-color: var(--main-color);
+  color: var(--text-inverse, #000);
+  font-weight: 600;
+}
+
+.p-button.btn-action-primary:hover {
+  filter: brightness(1.1);
+}

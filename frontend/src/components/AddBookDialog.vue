@@ -92,6 +92,37 @@
           novalidate
           @submit.prevent="saveBook"
         >
+          <div class="isbn-lookup">
+            <label for="new-book-isbn">{{ t('book.isbn') }}</label>
+            <div class="isbn-row">
+              <input
+                id="new-book-isbn"
+                v-model="book.isbn"
+                class="modern-input meta-input"
+                :placeholder="t('isbn.placeholder')"
+                inputmode="numeric"
+                autocomplete="off"
+                aria-describedby="new-book-isbn-hint"
+                @keydown.enter.prevent="lookupIsbn"
+              />
+              <Button
+                type="button"
+                :label="t('isbn.search')"
+                icon="pi pi-search"
+                class="p-button-outlined isbn-btn"
+                :loading="lookingUp"
+                :disabled="!book.isbn.trim()"
+                @click="lookupIsbn"
+              />
+            </div>
+            <small
+              id="new-book-isbn-hint"
+              class="isbn-hint"
+              :class="{ found: lookupState === 'found', missing: lookupState === 'missing' }"
+              aria-live="polite"
+            >{{ lookupMessage }}</small>
+          </div>
+
           <div class="input-group main-group">
             <label
               for="new-book-title"
@@ -201,13 +232,14 @@
               />
             </div>
             <div class="input-group">
-              <label for="new-book-isbn">{{ t('book.isbn') }}</label>
-              <input
-                id="new-book-isbn"
-                v-model="book.isbn"
-                class="modern-input meta-input"
-                placeholder="-"
-                inputmode="numeric"
+              <span
+                id="new-book-rating-label"
+                class="group-label"
+              >{{ t('rating.label') }}</span>
+              <StarRating
+                v-model="book.rating"
+                size="lg"
+                :label="t('rating.label')"
               />
             </div>
           </div>
@@ -234,13 +266,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onBeforeUnmount } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Calendar from 'primevue/calendar'
 import { useToast } from 'primevue/usetoast'
 import api from '../services/api.js'
 import AuthorsInput from './AuthorsInput.vue'
+import StarRating from './StarRating.vue'
 import { useI18n } from 'vue-i18n'
 import { toApiDate } from '../utils/dates.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
@@ -269,8 +302,22 @@ const initialBookState = {
   tags: '',
   isbn: '',
   readDate: null,
-  pubDate: null
+  pubDate: null,
+  rating: null
 }
+
+// Resultado da busca por ISBN: as chaves do Open Library só valem para o ISBN
+// buscado; se a pessoa trocar o ISBN depois, elas não são enviadas.
+const lookup = reactive({ isbn: null, olWorkKey: null, olEditionKey: null, coverId: null })
+const lookingUp = ref(false)
+const lookupState = ref('idle') // idle | found | missing | error
+
+const lookupMessage = computed(() => {
+  if (lookupState.value === 'found') return t('isbn.found')
+  if (lookupState.value === 'missing') return t('isbn.not_found')
+  if (lookupState.value === 'error') return t('isbn.error')
+  return t('isbn.hint')
+})
 
 const book = reactive({ ...initialBookState })
 
@@ -290,7 +337,68 @@ function resetForm() {
   previewUrl.value = null
   preview.clear()
   submitted.value = false
+  clearLookup()
+  lookupState.value = 'idle'
 }
+
+function clearLookup() {
+  Object.assign(lookup, { isbn: null, olWorkKey: null, olEditionKey: null, coverId: null })
+  if (!selectedFile.value) previewUrl.value = null
+}
+
+function parseApiDate(value) {
+  if (!value) return null
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+// Preenche só os campos vazios: o que a pessoa já digitou tem prioridade.
+async function lookupIsbn() {
+  const isbn = book.isbn.trim()
+  if (!isbn || lookingUp.value) return
+
+  lookingUp.value = true
+  try {
+    const found = await api.lookupIsbn(isbn)
+
+    if (!book.title.trim() && found.title) book.title = found.title
+    if (book.authors.length === 0 && found.authors?.length) book.authors = [...found.authors]
+    if (!book.publisher.trim() && found.publisher) book.publisher = found.publisher
+    if (!book.pubDate && found.pubDate) book.pubDate = parseApiDate(found.pubDate)
+
+    Object.assign(lookup, {
+      isbn,
+      olWorkKey: found.olWorkKey,
+      olEditionKey: found.olEditionKey,
+      coverId: found.coverId
+    })
+
+    if (!selectedFile.value && found.coverId) {
+      previewUrl.value = api.isbnCoverUrl(found.coverId)
+    }
+
+    lookupState.value = 'found'
+  } catch (error) {
+    clearLookup()
+    if (error.status === 404) {
+      lookupState.value = 'missing'
+    } else if (error.status === 400) {
+      lookupState.value = 'idle'
+      toast.add({ severity: 'warn', summary: t('common.error'), detail: t('isbn.invalid'), life: 4000 })
+    } else {
+      lookupState.value = 'error'
+    }
+  } finally {
+    lookingUp.value = false
+  }
+}
+
+watch(() => book.isbn, (value) => {
+  if (lookup.isbn && value.trim() !== lookup.isbn) {
+    clearLookup()
+    lookupState.value = 'idle'
+  }
+})
 
 function onFileSelect(event) {
   const file = event.target.files[0]
@@ -305,6 +413,7 @@ function onFileSelect(event) {
 
   selectedFile.value = file
   previewUrl.value = preview.set(file)
+  lookup.coverId = null
 }
 
 async function saveBook() {
@@ -334,6 +443,13 @@ async function saveBook() {
 
     if (book.pubDate) formData.append('pubDate', toApiDate(book.pubDate))
     if (book.readDate) formData.append('readDate', toApiDate(book.readDate))
+    if (book.rating) formData.append('rating', String(book.rating))
+
+    if (lookup.isbn && lookup.isbn === book.isbn.trim()) {
+      if (lookup.olWorkKey) formData.append('olWorkKey', lookup.olWorkKey)
+      if (lookup.olEditionKey) formData.append('olEditionKey', lookup.olEditionKey)
+      if (!selectedFile.value && lookup.coverId) formData.append('olCoverId', String(lookup.coverId))
+    }
 
     if (selectedFile.value) {
       formData.append('coverImage', selectedFile.value)
@@ -341,7 +457,8 @@ async function saveBook() {
 
     const result = await api.createBook(formData)
 
-    if (selectedFile.value && result?.coverSaved === false) {
+    const expectedCover = selectedFile.value || formData.has('olCoverId')
+    if (expectedCover && result?.coverSaved === false) {
       toast.add({ severity: 'warn', summary: t('common.success'), detail: t('book.cover_not_saved'), life: 6000 })
     } else {
       toast.add({ severity: 'success', summary: t('common.success'), detail: t('book.toast_added'), life: 3000 })
@@ -670,6 +787,53 @@ button.upload-container {
 }
 
 .dates-grid,
+.isbn-lookup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.isbn-lookup label,
+.group-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.group-label {
+  margin-bottom: 0.5rem;
+}
+
+.isbn-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.isbn-row .modern-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.isbn-btn {
+  flex-shrink: 0;
+}
+
+.isbn-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.isbn-hint.found {
+  color: var(--main-color);
+}
+
+.isbn-hint.missing {
+  color: #f59e0b;
+}
+
 .meta-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

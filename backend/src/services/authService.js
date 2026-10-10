@@ -38,7 +38,9 @@ function toProfile(user) {
     id: user.id,
     name: user.name,
     email: user.email,
-    isPublic: Boolean(user.is_public)
+    isPublic: Boolean(user.is_public),
+    showInCommunity: Boolean(user.show_in_community),
+    showActivity: Boolean(user.show_activity)
   }
 }
 
@@ -152,15 +154,38 @@ async function changePassword(userId, currentPassword, newPassword) {
   return { token: issueToken(user), user: toProfile(user) }
 }
 
-async function setLibraryVisibility(userId, isPublic) {
-  if (typeof isPublic !== 'boolean') {
-    throw httpError("Campo 'isPublic' precisa ser true ou false.", STATUS.BAD_REQUEST)
+/**
+ * Opções de privacidade. Só altera o que vier no corpo:
+ *   isPublic         → biblioteca visível em /u/<usuário>
+ *   showInCommunity  → aparecer em "quem mais tem", "em comum" e recomendações
+ *                      (só vale com a biblioteca pública)
+ *   showActivity     → aceitar seguidores e mostrar atividade a quem foi aprovado
+ */
+async function setPrivacy(userId, body = {}) {
+  const fields = ['isPublic', 'showInCommunity', 'showActivity']
+  const provided = fields.filter(field => body[field] !== undefined)
+
+  if (provided.length === 0) {
+    throw httpError('Nada para alterar.', STATUS.BAD_REQUEST)
   }
 
-  const result = await authRepository.setVisibility(userId, isPublic)
+  const invalid = provided.find(field => typeof body[field] !== 'boolean')
+  if (invalid) {
+    throw httpError(`Campo '${invalid}' precisa ser true ou false.`, STATUS.BAD_REQUEST)
+  }
+
+  const result = await authRepository.setPrivacy(userId, {
+    isPublic: body.isPublic ?? null,
+    showInCommunity: body.showInCommunity ?? null,
+    showActivity: body.showActivity ?? null
+  })
   if (!result) throw httpError('User not found.', STATUS.NOT_FOUND)
 
-  return { isPublic: result.is_public }
+  return {
+    isPublic: result.is_public,
+    showInCommunity: result.show_in_community,
+    showActivity: result.show_activity
+  }
 }
 
 async function deleteAccount(userId, password) {
@@ -184,7 +209,7 @@ export {
   registerUser,
   getUserProfile,
   changePassword,
-  setLibraryVisibility,
+  setPrivacy,
   deleteAccount,
   USERNAME_PATTERN
 }

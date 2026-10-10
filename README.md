@@ -6,11 +6,13 @@ Live at **[librishelf.com](https://librishelf.com)**.
 
 ## Features
 
-- **Your collection, your way** — add books with authors, publisher, ISBN, tags, publication date and cover art.
+- **Your collection, your way** — add books with authors, publisher, ISBN, tags, publication date, cover art and a 1–5 star rating.
+- **ISBN lookup** — type an ISBN and the title, authors, publisher, date and cover are filled in from [Open Library](https://openlibrary.org) (queried by the server, never by the browser). Invalid ISBNs are flagged so you can fix them.
 - **Reading log** — mark books as read and keep the date you finished them.
 - **Search and filters** — search by title or ISBN; filter by author, publisher, tag, reading status and year; sort by any field.
 - **Dashboard** — totals, reading rate, books read per year, top authors and tags.
-- **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf. Libraries are private by default.
+- **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf, with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.
+- **Community (opt-in)** — see who else has a book, their average rating and what people who have it also have. Follow other readers (they approve each request) and get a feed of what they add and finish. Everything is off until the user turns it on.
 - **Account control** — change your password (signs out other sessions) and delete your account with all its data.
 - **Portuguese and English**, light and dark themes, six accent colors.
 
@@ -96,8 +98,9 @@ The compose file expects an external Docker network named `proxy`, shared with t
 ```sh
 docker network create proxy                 # once, if it does not exist
 sudo chown -R 1000:1000 ./uploads           # the API runs as the non-root "node" user
-docker compose up -d --build
-docker compose exec backend npm run db:migrate:docker
+docker compose build
+docker compose run --rm backend npm run db:migrate:docker
+docker compose up -d
 ```
 
 - `librishelf-frontend` serves the built app and proxies `/api/*` to `librishelf-backend:3050`.
@@ -126,15 +129,25 @@ server {
 
 ```sh
 git pull
-docker compose up -d --build
-docker compose exec backend npm run db:migrate:docker
+docker compose build
+docker compose run --rm backend npm run db:migrate:docker   # the API refuses to start with pending migrations
+docker compose up -d
+```
+
+Migrations must run as the role that **owns** the tables (the same `DB_USER` the app uses, if it created them). Back up first: `003_per_user_names_and_community` moves authors, publishers and tags from shared tables to per-user ones (each user gets their own copy; case-only duplicates are merged).
+
+Optional, after upgrading: link books that already have an ISBN to Open Library, so they match other readers' copies even across editions. Set `OPENLIBRARY_CONTACT` (an e-mail, sent in the User-Agent as Open Library asks) and run:
+
+```sh
+docker compose exec backend npm run enrich:isbn:docker -- --dry-run   # preview
+docker compose exec backend npm run enrich:isbn:docker
 ```
 
 `db/manual/drop-legacy-public-schema.sql` removes the old tables left in the `public` schema by earlier versions. It is destructive and optional; back up before running it by hand.
 
 ## Privacy
 
-Libraries are private unless the owner turns on sharing. Session uses a single essential httpOnly cookie; fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
+Libraries are private unless the owner turns on sharing; community and followers are separate opt-ins, both off by default. ISBN lookups go from the server to Open Library with only the ISBN. Session uses a single essential httpOnly cookie; fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
 
 ---
 

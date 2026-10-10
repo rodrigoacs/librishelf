@@ -17,44 +17,51 @@ function extractToken(req) {
   return null
 }
 
-function unauthorized(res, message) {
-  return res.status(STATUS.UNAUTHORIZED).json({ error: message })
-}
-
 /**
- * Token ausente, inválido, expirado, de conta excluída ou emitido antes da
- * última troca de senha → 401. 403 fica para "autenticado, mas sem permissão".
+ * Resolve a sessão da requisição.
+ * → { user } válido, ou { error } com o motivo (sem token, inválido, expirado,
+ *   conta excluída ou token anterior à última troca de senha).
  */
-export async function authenticateToken(req, res, next) {
+async function resolveSession(req) {
   const token = extractToken(req)
-
-  if (!token) {
-    return unauthorized(res, 'Token is required or invalid format')
-  }
+  if (!token) return { error: 'Token is required or invalid format' }
 
   let decoded
   try {
     decoded = jwt.verify(token, SECRET_KEY)
   } catch (err) {
-    return unauthorized(res, err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token')
+    return { error: err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token' }
   }
 
+  const session = await authRepository.getSessionById(decoded.id)
+  if (!session) return { error: 'Session no longer valid' }
+
+  if (session.password_changed_at) {
+    // iat tem resolução de segundos; compara no mesmo grão.
+    const changedAtSeconds = Math.floor(new Date(session.password_changed_at).getTime() / 1000)
+    if (decoded.iat < changedAtSeconds) return { error: 'Session no longer valid' }
+  }
+
+  return { user: decoded }
+}
+
+/** Exige sessão válida: 401 caso contrário (403 fica para "sem permissão"). */
+export async function authenticateToken(req, res, next) {
   try {
-    const session = await authRepository.getSessionById(decoded.id)
+    const { user, error } = await resolveSession(req)
+    if (!user) return res.status(STATUS.UNAUTHORIZED).json({ error })
+    req.user = user
+    next()
+  } catch (err) {
+    next(err)
+  }
+}
 
-    if (!session) {
-      return unauthorized(res, 'Session no longer valid')
-    }
-
-    if (session.password_changed_at) {
-      // iat tem resolução de segundos; compara no mesmo grão.
-      const changedAtSeconds = Math.floor(new Date(session.password_changed_at).getTime() / 1000)
-      if (decoded.iat < changedAtSeconds) {
-        return unauthorized(res, 'Session no longer valid')
-      }
-    }
-
-    req.user = decoded
+/** Rotas públicas que mostram algo a mais para quem está logado. Nunca recusa. */
+export async function optionalAuth(req, res, next) {
+  try {
+    const { user } = await resolveSession(req)
+    if (user) req.user = user
     next()
   } catch (err) {
     next(err)

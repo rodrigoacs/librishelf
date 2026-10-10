@@ -3,7 +3,9 @@ import fs from 'fs/promises'
 import path from 'path'
 import multer from 'multer'
 import * as libraryService from '../services/libraryService.js'
-import { authenticateToken } from '../middlewares/auth.js'
+import { authenticateToken, optionalAuth } from '../middlewares/auth.js'
+import * as communityService from '../services/communityService.js'
+import { fetchCover } from '../services/openLibraryService.js'
 import { validateNumericId } from '../middlewares/validateId.js'
 import STATUS from '../utils/statusCodes.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
@@ -77,6 +79,15 @@ router.get('/public/u/:username', publicLimiter, async (req, res) => {
   }
 })
 
+// Estatísticas do perfil público; quem está logado vê também "em comum" e seguir.
+router.get('/public/u/:username/profile', publicLimiter, optionalAuth, async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await communityService.publicProfile(req.params.username, req.user?.id))
+  } catch (error) {
+    sendError(res, error, 'Erro ao buscar perfil público')
+  }
+})
+
 router.get('/public/u/:username/book/:id', publicLimiter, validateNumericId(), async (req, res) => {
   try {
     const { username, id } = req.params
@@ -130,6 +141,22 @@ router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), async
     }
 
     const newBookId = await libraryService.addNewBook(bookData)
+
+    // Sem arquivo, mas com capa escolhida na busca por ISBN: o servidor baixa
+    // do Open Library. Se falhar, o livro fica salvo sem capa.
+    const olCoverId = Number(req.body?.olCoverId)
+    if (!req.file && Number.isInteger(olCoverId) && olCoverId > 0) {
+      try {
+        const image = await fetchCover(olCoverId)
+        if (image) {
+          await saveBookCover(image, newBookId)
+          return res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: true })
+        }
+      } catch (coverError) {
+        logger.warn('Capa do Open Library não foi salva', { bookId: newBookId, olCoverId, message: coverError.message })
+      }
+      return res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: false })
+    }
 
     if (req.file) {
       try {
@@ -196,6 +223,16 @@ router.delete('/:id', validateNumericId(), async (req, res) => {
     res.status(STATUS.NO_CONTENT).send()
   } catch (error) {
     sendError(res, error, 'Erro ao deletar livro')
+  }
+})
+
+// Nota rápida direto no detalhe do livro, sem entrar em modo de edição.
+router.patch('/:id/rating', validateNumericId(), async (req, res) => {
+  try {
+    const rating = await libraryService.setRating(req.params.id, req.user.id, req.body?.rating)
+    res.status(STATUS.OK).json({ rating })
+  } catch (error) {
+    sendError(res, error, 'Erro ao salvar nota')
   }
 })
 

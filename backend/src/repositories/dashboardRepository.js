@@ -10,6 +10,7 @@ export async function getDashboardStats(userId) {
     readBooks: row.read_books,
     readingByYear: row.reading_by_year,
     topAuthors: row.top_authors,
-    topTags: row.top_tags
+    topTags: row.top_tags,
+    invalidIsbn: row.invalid_isbn
   }
 }

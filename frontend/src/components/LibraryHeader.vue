@@ -88,6 +88,13 @@
           class="custom-chip theme-border"
         />
         <Chip
+          v-if="filters.isbnStatus === 'invalid'"
+          :label="t('library.invalid_isbn_chip')"
+          removable
+          @remove="emitFilter('isbnStatus', 'all')"
+          class="custom-chip theme-border"
+        />
+        <Chip
           v-for="name in filters.author"
           :key="`author-${name}`"
           :label="name"
@@ -298,7 +305,8 @@ const sortOptions = computed(() => [
   { label: t('library.sort.title'), value: 'title' },
   { label: t('library.sort.author'), value: 'authors' },
   { label: t('library.sort.read_date'), value: 'readDate' },
-  { label: t('library.sort.pub_date'), value: 'pubDate' }
+  { label: t('library.sort.pub_date'), value: 'pubDate' },
+  { label: t('library.sort.rating'), value: 'rating' }
 ])
 
 const yearOptions = computed(() => {
@@ -316,6 +324,7 @@ const hasActiveFilters = computed(() => {
   const f = props.filters
   return f.readState !== 'all' ||
     hasReadYear.value ||
+    f.isbnStatus === 'invalid' ||
     f.author.length > 0 ||
     f.publisher.length > 0 ||
     f.tags.length > 0

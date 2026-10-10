@@ -54,4 +54,20 @@ const publicLimiter = buildLimiter({
   message: 'Muitas requisições. Tente novamente em instantes.'
 })
 
-export { loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter }
+// Busca por ISBN: cada consulta vira chamadas ao Open Library.
+const isbnLimiter = buildLimiter({
+  windowMs: 60 * 1000,
+  max: 30,
+  perUser: true,
+  message: 'Muitas buscas por ISBN em pouco tempo. Aguarde um minuto.'
+})
+
+// Seguir/aceitar/remover: evita spam de pedidos.
+const socialLimiter = buildLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  perUser: true,
+  message: 'Muitas ações em pouco tempo. Tente novamente em alguns minutos.'
+})
+
+export { loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, isbnLimiter, socialLimiter }

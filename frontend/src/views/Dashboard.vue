@@ -54,6 +54,22 @@
       v-else
       class="dashboard-content"
     >
+      <router-link
+        v-if="stats.invalidIsbn > 0"
+        :to="{ name: 'library', query: { isbn: 'invalid' } }"
+        class="isbn-notice"
+      >
+        <i
+          class="pi pi-exclamation-triangle"
+          aria-hidden="true"
+        ></i>
+        <span>{{ t('dashboard.invalidIsbn', { n: stats.invalidIsbn }, stats.invalidIsbn) }}</span>
+        <i
+          class="pi pi-angle-right"
+          aria-hidden="true"
+        ></i>
+      </router-link>
+
       <div class="kpi-grid">
         <div class="kpi-card total">
           <div class="kpi-icon"><i class="pi pi-book" aria-hidden="true"></i></div>
@@ -251,6 +267,33 @@ onMounted(loadStats)
 </script>
 
 <style scoped>
+.isbn-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.isbn-notice .pi-exclamation-triangle {
+  color: #f59e0b;
+}
+
+.isbn-notice .pi-angle-right {
+  margin-left: auto;
+  color: var(--text-secondary);
+}
+
+.isbn-notice:hover {
+  background: rgba(245, 158, 11, 0.14);
+}
+
 .dashboard-container {
   padding: 2rem;
   min-height: 100vh;

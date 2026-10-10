@@ -8,6 +8,9 @@ import authorRoutes from './routes/author.js'
 import publisherRoutes from './routes/publisher.js'
 import tagsRoutes from './routes/tags.js'
 import dashboardRoutes from './routes/dashboard.js'
+import isbnRoutes from './routes/isbn.js'
+import communityRoutes from './routes/community.js'
+import socialRoutes from './routes/social.js'
 import errorHandler from './middlewares/errorHandler.js'
 import UPLOAD_DIR from './config/uploadDir.js'
 import corsOptions from './config/corsOptions.js'
@@ -39,6 +42,9 @@ app.use('/author', authorRoutes)
 app.use('/publisher', publisherRoutes)
 app.use('/tags', tagsRoutes)
 app.use('/dashboard', dashboardRoutes)
+app.use('/isbn', isbnRoutes)
+app.use('/community', communityRoutes)
+app.use('/social', socialRoutes)
 app.get('/ping', (req, res) => { res.json({ message: 'pong' }) })
 
 app.use(errorHandler)

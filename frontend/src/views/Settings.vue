@@ -20,7 +20,7 @@
               inputId="settings-public-toggle"
               :modelValue="isPublic"
               :disabled="savingVisibility"
-              @update:modelValue="toggleVisibility"
+              @update:modelValue="value => savePrivacy('isPublic', value)"
             />
             <label for="settings-public-toggle">{{ t('settings.public.toggle') }}</label>
           </div>
@@ -44,6 +44,51 @@
                 class="p-button-outlined p-button-secondary"
                 @click="copyLink"
               />
+            </div>
+          </div>
+        </section>
+
+        <!-- Comunidade -->
+        <section
+          class="settings-card"
+          aria-labelledby="settings-community-title"
+        >
+          <h2 id="settings-community-title">{{ t('settings.community.title') }}</h2>
+          <p class="card-desc">{{ t('settings.community.desc') }}</p>
+
+          <div class="stack">
+            <div class="toggle-block">
+              <div class="toggle-row">
+                <InputSwitch
+                  inputId="settings-community-toggle"
+                  :modelValue="showInCommunity"
+                  :disabled="savingVisibility || !isPublic"
+                  aria-describedby="settings-community-help"
+                  @update:modelValue="value => savePrivacy('showInCommunity', value)"
+                />
+                <label for="settings-community-toggle">{{ t('settings.community.toggle') }}</label>
+              </div>
+              <small
+                id="settings-community-help"
+                class="toggle-help"
+              >{{ isPublic ? t('settings.community.help') : t('settings.community.needs_public') }}</small>
+            </div>
+
+            <div class="toggle-block">
+              <div class="toggle-row">
+                <InputSwitch
+                  inputId="settings-activity-toggle"
+                  :modelValue="showActivity"
+                  :disabled="savingVisibility"
+                  aria-describedby="settings-activity-help"
+                  @update:modelValue="value => savePrivacy('showActivity', value)"
+                />
+                <label for="settings-activity-toggle">{{ t('settings.activity.toggle') }}</label>
+              </div>
+              <small
+                id="settings-activity-help"
+                class="toggle-help"
+              >{{ t('settings.activity.help') }}</small>
             </div>
           </div>
         </section>
@@ -211,17 +256,30 @@ const router = useRouter()
 
 const user = currentUser
 const isPublic = computed(() => Boolean(user.value?.isPublic))
+const showInCommunity = computed(() => Boolean(user.value?.showInCommunity))
+const showActivity = computed(() => Boolean(user.value?.showActivity))
 const publicUrl = computed(() => `${window.location.origin}/u/${encodeURIComponent(user.value?.name || '')}`)
 
 const savingVisibility = ref(false)
 const copied = ref(false)
 
-async function toggleVisibility(value) {
+const PRIVACY_MESSAGES = {
+  isPublic: ['settings.public.on', 'settings.public.off'],
+  showInCommunity: ['settings.community.on', 'settings.community.off'],
+  showActivity: ['settings.activity.on', 'settings.activity.off']
+}
+
+async function savePrivacy(field, value) {
   savingVisibility.value = true
   try {
-    const result = await api.setLibraryVisibility(value)
-    updateUser({ isPublic: result.isPublic })
-    toast.add({ severity: 'success', summary: t('common.success'), detail: result.isPublic ? t('settings.public.on') : t('settings.public.off'), life: 3000 })
+    const result = await api.setPrivacy({ [field]: value })
+    updateUser({
+      isPublic: result.isPublic,
+      showInCommunity: result.showInCommunity,
+      showActivity: result.showActivity
+    })
+    const [onKey, offKey] = PRIVACY_MESSAGES[field]
+    toast.add({ severity: 'success', summary: t('common.success'), detail: result[field] ? t(onKey) : t(offKey), life: 3000 })
   } catch (error) {
     toast.add({ severity: 'error', summary: t('common.error'), detail: error.message || t('settings.public.error'), life: 4000 })
   } finally {
@@ -356,6 +414,19 @@ async function deleteAccount() {
   color: var(--text-secondary);
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+.toggle-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.toggle-help {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  padding-left: 3.75rem;
 }
 
 .toggle-row {

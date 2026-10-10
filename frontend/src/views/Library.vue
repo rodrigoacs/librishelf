@@ -219,7 +219,8 @@ onMounted(() => {
   setFilters({
     author: queryList(route.query.author),
     publisher: queryList(route.query.publisher),
-    tags: queryList(route.query.tags)
+    tags: queryList(route.query.tags),
+    isbnStatus: route.query.isbn === 'invalid' ? 'invalid' : 'all'
   })
 })
 

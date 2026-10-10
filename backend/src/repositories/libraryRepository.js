@@ -27,6 +27,7 @@ async function getAllBooksByUser(userId, filters = {}) {
     author,
     publisher,
     tags,
+    isbnStatus,
     page = 1,
     limit = 20,
     sortField = 'recent',
@@ -85,18 +86,25 @@ async function getAllBooksByUser(userId, filters = {}) {
     paramIndex++
   }
 
+  // Livros com ISBN preenchido que não passa na validação (para o usuário corrigir).
+  if (isbnStatus === 'invalid') {
+    query += ` AND b.isbn IS NOT NULL AND btrim(b.isbn) <> '' AND b.isbn13 IS NULL`
+  }
+
   const sortMapping = {
     'title': 'b.title',
     'authors': 'authors',
     'pubDate': 'b.publication_date',
     'readDate': 'b.read_date',
+    'rating': 'b.rating',
     'recent': 'b.id'
   }
 
   const dbSortField = sortMapping[sortField] || 'b.id'
   const dbSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
 
-  query += ` ORDER BY ${dbSortField} ${dbSortOrder}`
+  // Sem nota/data vai para o fim nas duas direções; b.id desempata (paginação estável).
+  query += ` ORDER BY ${dbSortField} ${dbSortOrder} NULLS LAST, b.id ${dbSortOrder}`
 
   const { page: pageVal, limit: limitVal, offset } = resolvePagination(page, limit)
 
@@ -140,7 +148,10 @@ async function createBook(bookInfo) {
     bookInfo.tags,
     bookInfo.readDate,
     bookInfo.isbn,
-    bookInfo.user_id
+    bookInfo.user_id,
+    bookInfo.rating ?? null,
+    bookInfo.olWorkKey ?? null,
+    bookInfo.olEditionKey ?? null
   ]
 
   try {
@@ -167,7 +178,10 @@ async function updateBook(bookId, bookInfo) {
     bookInfo.publisher,
     bookInfo.tags,
     readDate,
-    bookInfo.isbn
+    bookInfo.isbn,
+    bookInfo.rating ?? null,
+    bookInfo.olWorkKey ?? null,
+    bookInfo.olEditionKey ?? null
   ]
 
   try {
@@ -181,6 +195,15 @@ async function updateBook(bookId, bookInfo) {
 async function deleteBookById(bookId) {
   await db.query(q.DELETE_BOOK, [bookId])
   return true
+}
+
+async function updateRating(bookId, rating) {
+  const result = await db.query(q.UPDATE_RATING, [rating, bookId])
+  return result.rows[0]?.rating ?? null
+}
+
+async function pruneUserNames(userId) {
+  await db.query(q.PRUNE_USER_NAMES, [userId])
 }
 
 async function updateReadDate(bookId, readDate) {
@@ -197,5 +220,7 @@ export {
   getBookOwner,
   updateBook,
   deleteBookById,
-  updateReadDate
+  updateReadDate,
+  updateRating,
+  pruneUserNames
 }

@@ -15,7 +15,9 @@
     "openMenu": "Open menu",
     "settings": "Account",
     "preferences": "Preferences",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "community": "Community",
+    "pending_requests": "{n} follow request | {n} follow requests"
   },
   "common": {
     "save": "Save",
@@ -117,7 +119,8 @@
       "author": "Author",
       "read_date": "Date Read",
       "pub_date": "Publication Date",
-      "all_years": "All years"
+      "all_years": "All years",
+      "rating": "Rating"
     },
     "empty_title": "No books found",
     "empty_msg": "We couldn't find anything with the current filters.",
@@ -126,7 +129,8 @@
     "sort_desc": "Descending order",
     "read_year_chip": "Read in {year}",
     "search_label": "Search books",
-    "load_error": "Could not load your books."
+    "load_error": "Could not load your books.",
+    "invalid_isbn_chip": "Invalid ISBN"
   },
   "bookDialog": {
     "bookCover": "Book Cover",
@@ -166,7 +170,8 @@
     "dialog_label": "Book details",
     "cannotEdit": "Cannot edit: the book details did not load.",
     "validationTitle": "Title is required.",
-    "validationAuthors": "Author is required."
+    "validationAuthors": "Author is required.",
+    "isbnInvalid": "This ISBN looks wrong (check digit doesn't match). Fix it so the book shows up in the community."
   },
   "authors": {
     "title": "Authors",
@@ -209,7 +214,8 @@
     "noAuthorsData": "No author data available",
     "books": "Books",
     "loadError": "Could not load your statistics.",
-    "noYearData": "No reading recorded yet"
+    "noYearData": "No reading recorded yet",
+    "invalidIsbn": "{n} book with an invalid ISBN — fix it so it shows up in the community. | {n} books with an invalid ISBN — fix them so they show up in the community."
   },
   "login": {
     "header": "Your personal library, everywhere.",
@@ -316,7 +322,22 @@
       "confirmButton": "Delete everything",
       "success": "Your account has been deleted."
     },
-    "privacyLink": "Read the privacy policy"
+    "privacyLink": "Read the privacy policy",
+    "community": {
+      "title": "Community",
+      "desc": "Choose how other readers can interact with you. Everything starts off.",
+      "toggle": "Join the community",
+      "help": "Other readers will see that you have the same books, your rating and how many books you share.",
+      "needs_public": "Only available when your library is public.",
+      "on": "You're now part of the community.",
+      "off": "Other readers can't see you anymore."
+    },
+    "activity": {
+      "toggle": "Accept followers",
+      "help": "People can ask to follow you. Only those you approve see in their feed the books you add and finish.",
+      "on": "You now accept follow requests.",
+      "off": "Your followers can't see your activity anymore."
+    }
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -327,7 +348,7 @@
         "title": "What we collect",
         "paragraphs": [
           "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
-          "Content you add: your books and their details (title, authors, publisher, ISBN, tags and dates) and the covers you upload.",
+          "Content you add: your books and their details (title, authors, publisher, ISBN, tags, dates and ratings) and the covers you upload.",
           "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts."
         ]
       },
@@ -343,6 +364,19 @@
         "paragraphs": [
           "Your library is private by default. If you turn on sharing in Account, anyone with your link can see your books and covers, and some covers may appear on the site's sign-in pages.",
           "You can turn it off whenever you want, and the change is immediate."
+        ]
+      },
+      {
+        "title": "Community and followers",
+        "paragraphs": [
+          "Both options start off and live in Account. \"Join the community\" (only with a public library) lets other signed-in readers see that you have the same book, your rating for it and how many books you share.",
+          "\"Accept followers\" lets other people ask to follow you. Only those you approve see, in their feed, the books you add and finish. You can remove followers or turn the option off at any time, and the change takes effect immediately."
+        ]
+      },
+      {
+        "title": "ISBN lookup",
+        "paragraphs": [
+          "When you click Look up, Librishelf checks the ISBN on Open Library (openlibrary.org), a public book catalog. The request is made by our server: Open Library only receives the ISBN, never your data or your account."
         ]
       },
       {
@@ -377,5 +411,77 @@
     "title": "Page not found",
     "message": "The address you opened does not exist or has moved.",
     "goHome": "Go to home"
+  },
+  "rating": {
+    "label": "Your rating",
+    "value": "Rating: {n} of 5",
+    "none": "No rating",
+    "set": "Rate {n} of 5 stars",
+    "clear": "Remove rating"
+  },
+  "isbn": {
+    "placeholder": "ISBN (10 or 13 digits)",
+    "search": "Look up",
+    "hint": "Type the ISBN and click Look up to fill in the details automatically.",
+    "found": "Found on Open Library. Check before saving — only empty fields were filled.",
+    "not_found": "We couldn't find this ISBN. Fill in the details by hand.",
+    "error": "Lookup is unavailable right now. Fill in the details by hand or try later.",
+    "invalid": "This ISBN isn't valid. Check the digits."
+  },
+  "community": {
+    "book_title": "Community",
+    "load_error": "Couldn't load the community.",
+    "no_readers": "Nobody else in the community has this book yet.",
+    "readers_count": "No other reader has this book | 1 other reader has this book | {n} other readers have this book",
+    "average": "average {avg} ({n} rating) | average {avg} ({n} ratings)",
+    "has_read": "Has read it",
+    "also_have": "People who have this book also have",
+    "readers_short": "{n} reader | {n} readers",
+    "join_hint": "Other readers can't see you. To join, turn on the community in {settings}.",
+    "settings_link": "Account"
+  },
+  "profile": {
+    "title": "Profile",
+    "own_page": "This is your public page.",
+    "privacy_settings": "Privacy",
+    "following": "Following",
+    "cancel_request": "Cancel request",
+    "follow": "Follow",
+    "login_to_follow": "Sign in to follow",
+    "books": "books",
+    "read": "read",
+    "avg_rating": "average rating ({n} book) | average rating ({n} books)",
+    "in_common": "in common with you | in common with you",
+    "by_year": "Reading by year",
+    "top_authors": "Top authors",
+    "top_tags": "Categories",
+    "recently_read": "Recently read",
+    "common_books": "Books in common",
+    "common_more": "and {n} more.",
+    "request_sent": "Request sent. You'll follow them once they accept."
+  },
+  "communityView": {
+    "title": "Community",
+    "subtitle": "What the people you follow are reading.",
+    "activity_off": "You don't accept followers — nobody sees your activity. You can still follow others. To change it, go to {settings}.",
+    "tab_feed": "Feed",
+    "tab_requests": "Requests",
+    "tab_following": "Following",
+    "tab_followers": "Followers",
+    "load_error": "Couldn't load.",
+    "feed_empty": "Nothing here yet. Find readers in a book's Community section and ask to follow them from their public page.",
+    "event_read": "finished",
+    "event_added": "added",
+    "no_requests": "No requests waiting.",
+    "accept": "Accept",
+    "reject": "Decline",
+    "accepted": "{'@'}{name} now follows you.",
+    "rejected": "Request from {'@'}{name} declined.",
+    "no_following": "You don't follow anyone yet.",
+    "pending": "Pending",
+    "unfollow": "Unfollow",
+    "no_followers": "Nobody follows you yet.",
+    "remove": "Remove",
+    "remove_confirm": "Remove {'@'}{name} from your followers? They won't be notified."
   }
 }

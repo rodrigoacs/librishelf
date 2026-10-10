@@ -38,8 +38,8 @@ async function updatePassword(id, hashedPassword) {
   return result.rows[0] || null
 }
 
-async function setVisibility(id, isPublic) {
-  const result = await db.query(q.SET_VISIBILITY, [id, isPublic])
+async function setPrivacy(id, { isPublic, showInCommunity, showActivity }) {
+  const result = await db.query(q.SET_PRIVACY, [id, isPublic, showInCommunity, showActivity])
   return result.rows[0] || null
 }
 
@@ -72,6 +72,6 @@ export {
   getPasswordHashById,
   createUser,
   updatePassword,
-  setVisibility,
+  setPrivacy,
   deleteUser
 }
