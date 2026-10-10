@@ -1,0 +1,8 @@
+node_modules
+dist
+dist-ssr
+npm-debug.log*
+.git
+Dockerfile
+.dockerignore
+# .env do frontend NÃO é ignorado: o Vite precisa do VITE_API_URL no build.

@@ -1,6 +1,56 @@
 import { ref } from 'vue'
 import api from '../services/api.js'
 
+const SEARCH_DEBOUNCE_MS = 500
+
+function defaultFilters() {
+  return {
+    search: '',
+    readState: 'all',
+    readYear: 'all',
+    author: [],
+    publisher: [],
+    tags: [],
+    sortField: 'recent',
+    sortOrder: 'desc',
+    page: 1,
+    limit: 20
+  }
+}
+
+function buildParams(filters) {
+  const params = {
+    page: filters.page,
+    limit: filters.limit,
+    sort: filters.sortField,
+    order: filters.sortOrder
+  }
+
+  if (filters.search) params.search = filters.search
+
+  if (filters.readState !== 'all') {
+    params.readState = filters.readState === 'read' ? 'true' : 'false'
+  }
+
+  if (filters.author?.length > 0) {
+    params.author = filters.author.map(a => a.name || a).join(',')
+  }
+
+  if (filters.publisher?.length > 0) {
+    params.publisher = filters.publisher.map(p => p.name || p).join(',')
+  }
+
+  if (filters.tags?.length > 0) {
+    params.tags = filters.tags.map(t => t.name || t).join(',')
+  }
+
+  if (filters.readYear && filters.readYear !== 'all') {
+    params.readYear = filters.readYear
+  }
+
+  return params
+}
+
 export function useLibrary() {
   const books = ref([])
   const loading = ref(false)
@@ -9,78 +59,62 @@ export function useLibrary() {
 
   const totalRecords = ref(0)
 
-  const filters = ref({
-    search: '',
-    readState: 'all',
-    author: [],
-    publisher: [],
-    tags: [],
-    sortField: 'recent',
-    sortOrder: 'desc',
-    page: 1,
-    limit: 20
-  })
+  const filters = ref(defaultFilters())
+
+  // Uma busca nova (filtro, ordenação, refresh) cancela a anterior em vez de ser
+  // descartada: o resultado na tela sempre corresponde aos filtros atuais.
+  // `requestId` impede que a resposta de uma requisição antiga sobrescreva a nova.
+  let controller = null
+  let requestId = 0
+  let searchTimeout = null
 
   async function fetchBooks(isLoadMore = false) {
-    if (loading.value || loadingMore.value) return
-    if (isLoadMore && books.value.length >= totalRecords.value && totalRecords.value > 0) return
+    if (isLoadMore) {
+      if (loading.value || loadingMore.value) return
+      if (books.value.length >= totalRecords.value) return
+    }
+
+    if (controller) controller.abort()
+    controller = new AbortController()
+    const currentRequest = ++requestId
+
+    const nextPage = isLoadMore ? filters.value.page + 1 : 1
 
     if (isLoadMore) {
       loadingMore.value = true
-      filters.value.page++
     } else {
       loading.value = true
-      filters.value.page = 1
+      loadingMore.value = false
     }
 
+    error.value = null
+
     try {
-      const params = {
-        page: filters.value.page,
-        limit: filters.value.limit,
-        sort: filters.value.sortField,
-        order: filters.value.sortOrder
-      }
+      const params = buildParams({ ...filters.value, page: nextPage })
+      const response = await api.getBooks(params, { signal: controller.signal })
 
-      if (filters.value.search) params.search = filters.value.search
+      if (currentRequest !== requestId) return
 
-      if (filters.value.readState !== 'all') {
-        params.readState = filters.value.readState === 'read' ? 'true' : 'false'
-      }
-
-      if (filters.value.author && filters.value.author.length > 0) {
-        params.author = filters.value.author.map(a => a.name || a).join(',')
-      }
-
-      if (filters.value.publisher && filters.value.publisher.length > 0) {
-        params.publisher = filters.value.publisher.map(p => p.name || p).join(',')
-      }
-
-      if (filters.value.tags && filters.value.tags.length > 0) {
-        params.tags = filters.value.tags.map(t => t.name || t).join(',')
-      }
-
-      if (filters.value.readYear && filters.value.readYear !== 'all') {
-        params.readYear = filters.value.readYear
-      }
-
-      const response = await api.getBooks(params)
-
+      filters.value.page = nextPage
       totalRecords.value = response.total || 0
 
       if (isLoadMore) {
-        if (response.result && response.result.length > 0) {
+        if (response.result?.length > 0) {
           books.value.push(...response.result)
         }
       } else {
         books.value = response.result || []
       }
-
     } catch (err) {
+      if (err.name === 'AbortError' || currentRequest !== requestId) return
+
       console.error('Erro no composable useLibrary:', err)
       error.value = 'Erro ao carregar livros.'
     } finally {
-      loading.value = false
-      loadingMore.value = false
+      if (currentRequest === requestId) {
+        loading.value = false
+        loadingMore.value = false
+      }
     }
   }
 
@@ -88,18 +122,39 @@ export function useLibrary() {
     fetchBooks(true)
   }
 
-  let timeout = null
-  function setFilter(key, value) {
+  function cancelPendingSearch() {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+      searchTimeout = null
+    }
+  }
+
+  function setFilter(key, value, { fetch = true } = {}) {
     filters.value[key] = value
 
+    if (!fetch || key === 'page') return
+
     if (key === 'search') {
-      if (timeout) clearTimeout(timeout)
-      timeout = setTimeout(() => {
+      cancelPendingSearch()
+      searchTimeout = setTimeout(() => {
+        searchTimeout = null
         fetchBooks(false)
-      }, 500)
-    } else {
-      if (key !== 'page') fetchBooks(false)
+      }, SEARCH_DEBOUNCE_MS)
+      return
     }
+
+    cancelPendingSearch()
+    fetchBooks(false)
+  }
+
+  // Limpa todos os filtros de uma vez e faz uma única requisição.
+  function resetFilters() {
+    cancelPendingSearch()
+
+    const { sortField, sortOrder, limit } = filters.value
+    filters.value = { ...defaultFilters(), sortField, sortOrder, limit }
+
+    fetchBooks(false)
   }
 
   return {
@@ -111,6 +166,7 @@ export function useLibrary() {
     filters,
     fetchBooks: () => fetchBooks(false),
     loadMore,
-    setFilter
+    setFilter,
+    resetFilters
   }
 }

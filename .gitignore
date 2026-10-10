@@ -32,4 +32,6 @@ coverage
 .env
 .env.test
 
-git commit -m "chore: ignora backend/uploads/ (gerado localmente pelos testes)"package-lock.jsonuploads/
+# Capas enviadas pelos usuários (volume do Docker e pasta local dos testes)
+uploads/
+backend/uploads/

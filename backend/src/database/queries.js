@@ -24,7 +24,7 @@ export const LIBRARY_QUERIES = {
       LEFT JOIN librishelf.publishers AS p ON b.publisher_id = p.id
   `,
 
-  GET_BOOK_BY_ID: `
+  GET_BOOK_BY_ID_FOR_USER: `
     SELECT
       b.id, -- Frontend aceita 'id' ou 'book_id', aqui retorna 'id'
       b.title,
@@ -44,7 +44,7 @@ export const LIBRARY_QUERIES = {
       ) AS tags
     FROM librishelf.books AS b
     LEFT JOIN librishelf.publishers AS p ON b.publisher_id = p.id
-    WHERE b.id = $1
+    WHERE b.id = $1 AND b.user_id = $2
   `,
 
   GET_OWNER: 'SELECT user_id FROM librishelf.books WHERE id = $1',
@@ -60,6 +60,11 @@ export const AUTH_QUERIES = {
     SELECT id, name, password_hash, email 
     FROM librishelf.users 
     WHERE name = $1 OR email = $1
+  `,
+  FIND_USER_BY_NAME: `
+    SELECT id, name
+    FROM librishelf.users
+    WHERE name = $1
   `,
   FIND_USER_BY_ID: `
     SELECT id, name, email
@@ -132,41 +137,46 @@ export const TAG_QUERIES = {
 }
 
 export const DASHBOARD_QUERIES = {
-  COUNT_TOTAL: `SELECT COUNT(*) as count FROM librishelf.books WHERE user_id = $1`,
-
-  COUNT_READ: `
-    SELECT COUNT(*) as count FROM librishelf.books 
-    WHERE user_id = $1 AND read_date IS NOT NULL
-  `,
-
-  READ_BY_YEAR: `
-    SELECT EXTRACT(YEAR FROM read_date::date) as year, COUNT(*) as count
-    FROM librishelf.books
-    WHERE user_id = $1 AND read_date IS NOT NULL
-    GROUP BY year
-    ORDER BY year DESC
-    LIMIT 5
-  `,
-
-  TOP_AUTHORS: `
-    SELECT a.name, COUNT(b.id) as count
-    FROM librishelf.authors a
-    JOIN librishelf.books_authors_link bal ON a.id = bal.author_id
-    JOIN librishelf.books b ON bal.book_id = b.id
-    WHERE b.user_id = $1
-    GROUP BY a.name
-    ORDER BY count DESC
-    LIMIT 6
-  `,
-
-  TOP_TAGS: `
-    SELECT t.name, COUNT(b.id) as count
-    FROM librishelf.tags t
-    JOIN librishelf.books_tags_link btl ON t.id = btl.tag_id
-    JOIN librishelf.books b ON btl.book_id = b.id
-    WHERE b.user_id = $1
-    GROUP BY t.name
-    ORDER BY count DESC
-    LIMIT 6
+  // Uma única ida ao banco: o CTE filtra os livros do usuário uma vez e cada
+  // bloco agrega a partir dele. json_agg devolve números (não strings, como o
+  // COUNT/EXTRACT puros do pg), e COALESCE garante [] quando não há dados.
+  STATS: `
+    WITH user_books AS (
+      SELECT id, read_date
+      FROM librishelf.books
+      WHERE user_id = $1
+    ),
+    reading_by_year AS (
+      SELECT EXTRACT(YEAR FROM read_date::date)::int AS year, COUNT(*)::int AS count
+      FROM user_books
+      WHERE read_date IS NOT NULL
+      GROUP BY 1
+      ORDER BY 1 DESC
+      LIMIT 5
+    ),
+    top_authors AS (
+      SELECT a.name, COUNT(ub.id)::int AS count
+      FROM user_books ub
+      JOIN librishelf.books_authors_link bal ON bal.book_id = ub.id
+      JOIN librishelf.authors a ON a.id = bal.author_id
+      GROUP BY a.name
+      ORDER BY count DESC, a.name ASC
+      LIMIT 6
+    ),
+    top_tags AS (
+      SELECT t.name, COUNT(ub.id)::int AS count
+      FROM user_books ub
+      JOIN librishelf.books_tags_link btl ON btl.book_id = ub.id
+      JOIN librishelf.tags t ON t.id = btl.tag_id
+      GROUP BY t.name
+      ORDER BY count DESC, t.name ASC
+      LIMIT 6
+    )
+    SELECT
+      (SELECT COUNT(*)::int FROM user_books) AS total_books,
+      (SELECT COUNT(*)::int FROM user_books WHERE read_date IS NOT NULL) AS read_books,
+      COALESCE((SELECT json_agg(r ORDER BY r.year DESC) FROM reading_by_year r), '[]'::json) AS reading_by_year,
+      COALESCE((SELECT json_agg(a ORDER BY a.count DESC, a.name ASC) FROM top_authors a), '[]'::json) AS top_authors,
+      COALESCE((SELECT json_agg(t ORDER BY t.count DESC, t.name ASC) FROM top_tags t), '[]'::json) AS top_tags
   `
 }

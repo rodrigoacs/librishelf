@@ -33,7 +33,8 @@
     "guest": "Convidado",
     "configurations": "Configurações",
     "language": "Idioma",
-    "theme": "Tema"
+    "theme": "Tema",
+    "openMenu": "Abrir menu"
   },
   "common": {
     "save": "Salvar",

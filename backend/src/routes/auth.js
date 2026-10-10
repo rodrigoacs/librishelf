@@ -10,7 +10,7 @@ const router = express.Router()
 
 router.post('/login', loginLimiter, async (req, res) => {
   try {
-    const { username, password } = req.body
+    const { username, password } = req.body ?? {}
 
     const result = await authService.loginUser(username, password)
 
@@ -45,7 +45,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 router.post('/register', registerLimiter, async (req, res) => {
   try {
-    const { username, password, email } = req.body
+    const { username, password, email } = req.body ?? {}
 
     if (!username || !password || !email) {
       const error = new Error('Username, password, and email are required.')

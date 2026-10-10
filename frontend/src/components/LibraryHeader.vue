@@ -35,6 +35,7 @@
           :class="{ 'active-filter': hasActiveFilters }"
           @click="visibleFilters = true"
           v-tooltip.bottom="t('library.filters_adv')"
+          :aria-label="t('library.filters_adv')"
         />
 
         <Button

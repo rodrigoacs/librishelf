@@ -11,7 +11,8 @@
     "guest": "Guest",
     "configurations": "Configurations",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "openMenu": "Open menu"
   },
   "common": {
     "save": "Save",

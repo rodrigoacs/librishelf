@@ -1,5 +1,6 @@
 import request from 'supertest'
 import app from '../../app.js'
+import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 
 let token
@@ -9,7 +10,7 @@ beforeAll(async () => {
 
   await request(app).post('/auth/register').send({ username: 'contracttester', password: 'testpass123', email: 'contracttester@example.com' })
   const res = await request(app).post('/auth/login').send({ username: 'contracttester', password: 'testpass123' })
-  token = res.body.token
+  token = tokenFrom(res)
 })
 
 afterAll(async () => {

@@ -87,14 +87,16 @@
               v-if="!isReadOnly"
               icon="pi pi-trash"
               class="p-button-rounded p-button-text p-button-danger"
-              :v-tooltip.bottom="$t('bookDialog.delete')"
+              v-tooltip.bottom="$t('bookDialog.delete')"
+              :aria-label="$t('bookDialog.delete')"
               @click="deleteBook"
             />
             <Button
               v-if="!isEditing && !isReadOnly"
               icon="pi pi-pencil"
               class="p-button-rounded p-button-text p-button-secondary"
-              :v-tooltip.bottom="$t('bookDialog.edit')"
+              v-tooltip.bottom="$t('bookDialog.edit')"
+              :aria-label="$t('bookDialog.edit')"
               @click="editMode"
             />
             <div
@@ -104,12 +106,14 @@
               <Button
                 icon="pi pi-times"
                 class="p-button-rounded p-button-text p-button-secondary"
+                :aria-label="$t('common.cancel')"
                 @click="cancelEdit"
                 :disabled="isSaving"
               />
               <Button
                 icon="pi pi-check"
                 class="p-button-rounded btn-action-primary"
+                :aria-label="$t('common.save')"
                 @click="confirmSave"
                 :loading="isSaving"
               />
@@ -226,7 +230,9 @@ const { t } = useI18n()
 const props = defineProps({
   modelValue: Boolean,
   bookId: Number,
-  isReadOnly: { type: Boolean, default: false }
+  isReadOnly: { type: Boolean, default: false },
+  // Dono da biblioteca pública; obrigatório quando isReadOnly for true.
+  ownerUsername: { type: String, default: '' }
 })
 
 const emits = defineEmits(['update:modelValue', 'refresh'])
@@ -417,7 +423,7 @@ async function loadBookData() {
     let response
 
     if (props.isReadOnly) {
-      response = await api.getPublicBook(props.bookId)
+      response = await api.getPublicBook(props.ownerUsername, props.bookId)
     } else {
       response = await api.getBookById(props.bookId)
     }

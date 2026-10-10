@@ -1,5 +1,6 @@
 import request from 'supertest'
 import app from '../../app.js'
+import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 
 let token
@@ -9,7 +10,7 @@ beforeAll(async () => {
 
   await request(app).post('/auth/register').send({ username: 'libuser', password: 'testpass123', email: 'libuser@example.com' })
   const res = await request(app).post('/auth/login').send({ username: 'libuser', password: 'testpass123' })
-  token = res.body.token
+  token = tokenFrom(res)
 })
 
 afterAll(async () => {
@@ -45,7 +46,7 @@ describe('Library Endpoints', () => {
 
   it('should fail without token', async () => {
     const res = await request(app).get('/library')
-    expect(res.statusCode).toEqual(403)
+    expect(res.statusCode).toEqual(401)
   })
 })
 

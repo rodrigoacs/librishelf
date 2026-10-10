@@ -3,60 +3,104 @@ import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { deleteBookCover } from '../utils/imageProcessor.js'
 
+const READ_YEAR_PATTERN = /^\d{4}$/
+
+function httpError(message, status) {
+  const error = new Error(message)
+  error.status = status
+  return error
+}
+
 function normalizeIsbn(isbn) {
   if (typeof isbn !== 'string') return isbn ?? null
   const trimmed = isbn.trim()
   return trimmed ? trimmed : null
 }
 
+/**
+ * Converte a data recebida para 'YYYY-MM-DD' (ou null quando vazia).
+ * Data inválida vira 400 em vez de estourar como 500 no `toISOString()` ou no Postgres.
+ */
+function normalizeDate(value, fieldName) {
+  if (value === undefined || value === null || value === '') return null
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    throw httpError(`Data inválida em '${fieldName}'.`, STATUS.BAD_REQUEST)
+  }
+
+  return parsed.toISOString().split('T')[0]
+}
+
+function normalizeReadYear(readYear) {
+  if (readYear === undefined || readYear === null || readYear === '' || readYear === 'all') return 'all'
+
+  if (!READ_YEAR_PATTERN.test(String(readYear))) {
+    throw httpError("Parâmetro 'readYear' inválido: use um ano com 4 dígitos.", STATUS.BAD_REQUEST)
+  }
+
+  return String(readYear)
+}
+
 async function getPublicLibraryByUsername(username, query) {
-  const user = await authRepository.getUserByUsername(username)
+  const user = await authRepository.getUserByName(username)
 
   if (!user) {
-    const error = new Error('User not found.')
-    error.status = STATUS.NOT_FOUND
-    throw error
+    throw httpError('User not found.', STATUS.NOT_FOUND)
   }
 
   const booksData = await getAllBooksByUser(user.id, query)
 
   return {
-    owner: user.name || user.username,
+    owner: user.name,
     ...booksData
   }
+}
+
+/**
+ * Livro da biblioteca pública: só é encontrado se pertencer ao usuário da URL.
+ * Antes qualquer id era aceito, o que permitia percorrer os livros de todos os
+ * usuários incrementando o id.
+ */
+async function getPublicBook(username, bookId) {
+  const user = await authRepository.getUserByName(username)
+  if (!user) return null
+
+  return await libraryRepository.getBookByIdForUser(bookId, user.id)
 }
 
 async function getAllBooksByUser(userId, query) {
   const filters = {
     search: query.search || undefined,
     readState: query.readState || 'all',
-    readYear: query.readYear || 'all',
+    readYear: normalizeReadYear(query.readYear),
     author: query.author || undefined,
     publisher: query.publisher || undefined,
     tags: query.tags || undefined,
     page: query.page || 1,
     limit: query.limit || 20,
     sortField: query.sort || 'recent',
-    sortOrder: query.order || 'desc'
+    sortOrder: typeof query.order === 'string' ? query.order : 'desc'
   }
 
   return await libraryRepository.getAllBooksByUser(userId, filters)
 }
 
-async function getBookById(id) {
-  return await libraryRepository.getBookById(id)
+async function getBookById(id, userId) {
+  return await libraryRepository.getBookByIdForUser(id, userId)
 }
 
 async function addNewBook(bookData) {
   bookData.isbn = normalizeIsbn(bookData.isbn)
+  bookData.pubDate = normalizeDate(bookData.pubDate, 'pubDate')
+  bookData.readDate = normalizeDate(bookData.readDate, 'readDate')
 
   if (bookData.isbn) {
     const existingBook = await libraryRepository.findBookByIsbn(bookData.isbn, bookData.user_id)
 
     if (existingBook) {
-      const error = new Error('ISBN already exists for this user.')
-      error.status = STATUS.CONFLICT
-      throw error
+      throw httpError('ISBN already exists for this user.', STATUS.CONFLICT)
     }
   }
 
@@ -66,19 +110,7 @@ async function addNewBook(bookData) {
 }
 
 async function updateBookDetails(bookId, userId, bookData) {
-  const bookOwner = await libraryRepository.getBookOwner(bookId)
-
-  if (!bookOwner) {
-    const error = new Error('Book not found.')
-    error.status = STATUS.NOT_FOUND
-    throw error
-  }
-
-  if (bookOwner.user_id !== userId) {
-    const error = new Error('Permission denied.')
-    error.status = STATUS.FORBIDDEN
-    throw error
-  }
+  await checkBookOwnership(bookId, userId)
 
   if (typeof bookData.tags === 'string') {
     bookData.tags = bookData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
@@ -88,6 +120,9 @@ async function updateBookDetails(bookId, userId, bookData) {
     bookData.isbn = normalizeIsbn(bookData.isbn)
   }
 
+  bookData.pubDate = normalizeDate(bookData.pubDate, 'pubDate')
+  bookData.readDate = normalizeDate(bookData.readDate, 'readDate')
+
   return await libraryRepository.updateBook(bookId, bookData)
 }
 
@@ -95,15 +130,11 @@ async function checkBookOwnership(bookId, userId) {
   const bookOwner = await libraryRepository.getBookOwner(bookId)
 
   if (!bookOwner) {
-    const error = new Error('Book not found.')
-    error.status = STATUS.NOT_FOUND
-    throw error
+    throw httpError('Book not found.', STATUS.NOT_FOUND)
   }
 
   if (bookOwner.user_id !== userId) {
-    const error = new Error('Permission denied.')
-    error.status = STATUS.FORBIDDEN
-    throw error
+    throw httpError('Permission denied.', STATUS.FORBIDDEN)
   }
 
   return true
@@ -128,4 +159,17 @@ async function markBookAsUnread(bookId, userId) {
   return await libraryRepository.updateReadDate(bookId, null)
 }
 
-export { getAllBooksByUser, getBookById, addNewBook, updateBookDetails, checkBookOwnership, deleteBook, markBookAsRead, markBookAsUnread, getPublicLibraryByUsername }
+export {
+  getAllBooksByUser,
+  getBookById,
+  getPublicBook,
+  addNewBook,
+  updateBookDetails,
+  checkBookOwnership,
+  deleteBook,
+  markBookAsRead,
+  markBookAsUnread,
+  getPublicLibraryByUsername,
+  normalizeDate,
+  normalizeReadYear
+}

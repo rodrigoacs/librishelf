@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { AUTH_COOKIE_NAME } from '../config/cookieOptions.js'
+import STATUS from '../utils/statusCodes.js'
 
 const SECRET_KEY = process.env.SECRET_KEY
 
@@ -15,11 +16,13 @@ function extractToken(req) {
   return null
 }
 
+// Token ausente, inválido ou expirado é falta de autenticação → 401.
+// 403 fica reservado para "autenticado, mas sem permissão" (ex.: livro de outro usuário).
 export function authenticateToken(req, res, next) {
   const token = extractToken(req)
 
   if (!token) {
-    return res.status(403).json({ error: 'Token is required or invalid format' })
+    return res.status(STATUS.UNAUTHORIZED).json({ error: 'Token is required or invalid format' })
   }
 
   try {
@@ -27,6 +30,7 @@ export function authenticateToken(req, res, next) {
     req.user = decoded
     next()
   } catch (err) {
-    return res.status(403).json({ error: 'Invalid token' })
+    const message = err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token'
+    return res.status(STATUS.UNAUTHORIZED).json({ error: message })
   }
 }

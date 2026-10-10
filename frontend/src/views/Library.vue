@@ -109,9 +109,11 @@ const {
   loadingMore,
   fetchBooks,
   loadMore,
-  setFilter
+  setFilter,
+  resetFilters
 } = useLibrary()
 
+const scrollContainer = ref(null)
 const sentinel = ref(null)
 let observer = null
 
@@ -121,18 +123,11 @@ function refreshData() {
 
 function handleFilterChange({ key, value }) {
   setFilter(key, value)
-  const container = document.querySelector('.library-container')
-  if (container) container.scrollTo({ top: 0, behavior: 'smooth' })
+  scrollContainer.value?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function clearFilters() {
-  setFilter('search', '')
-  setFilter('readState', 'all')
-  setFilter('author', [])
-  setFilter('publisher', [])
-  setFilter('tags', [])
-  setFilter('readYear', 'all')
-  refreshData()
+  resetFilters()
 }
 
 function setupIntersectionObserver() {
@@ -143,7 +138,7 @@ function setupIntersectionObserver() {
       loadMore()
     }
   }, {
-    root: document.querySelector('.library-container'),
+    root: scrollContainer.value,
     rootMargin: '400px',
     threshold: 0.1
   })
@@ -160,16 +155,17 @@ watchEffect(() => {
 })
 
 onMounted(() => {
+  // Aplica os filtros vindos da URL sem disparar uma busca para cada um.
   if (route.query.author) {
-    setFilter('author', [{ name: route.query.author }])
+    setFilter('author', [{ name: route.query.author }], { fetch: false })
   }
 
   if (route.query.publisher) {
-    setFilter('publisher', [{ name: route.query.publisher }])
+    setFilter('publisher', [{ name: route.query.publisher }], { fetch: false })
   }
 
   if (route.query.tags) {
-    setFilter('tags', [{ name: route.query.tags }])
+    setFilter('tags', [{ name: route.query.tags }], { fetch: false })
   }
 
   fetchBooks()

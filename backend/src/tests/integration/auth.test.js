@@ -1,5 +1,6 @@
 import request from 'supertest'
 import app from '../../app.js'
+import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 
 beforeAll(async () => {
@@ -42,7 +43,26 @@ describe('Auth Endpoints', () => {
       .send(mockUser)
 
     expect(res.statusCode).toEqual(200)
-    expect(res.body).toHaveProperty('token')
+    expect(res.body).toHaveProperty('user')
+    expect(res.body).not.toHaveProperty('token')
+    expect(tokenFrom(res)).toEqual(expect.any(String))
+    expect(res.headers['set-cookie'].join(';')).toMatch(/HttpOnly/i)
+  })
+
+  it('should reject login with missing credentials as 400', async () => {
+    const res = await request(app)
+      .post('/auth/login')
+      .send({ username: mockUser.username })
+
+    expect(res.statusCode).toEqual(400)
+  })
+
+  it('should reject login for unknown user with the same 401 as a wrong password', async () => {
+    const res = await request(app)
+      .post('/auth/login')
+      .send({ username: 'nao-existe', password: 'qualquer123' })
+
+    expect(res.statusCode).toEqual(401)
   })
 
   it('should reject login with wrong password', async () => {

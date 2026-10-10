@@ -11,14 +11,27 @@ import dashboardRoutes from './routes/dashboard.js'
 import errorHandler from './middlewares/errorHandler.js'
 import UPLOAD_DIR from './config/uploadDir.js'
 import corsOptions from './config/corsOptions.js'
+import trustProxy from './config/trustProxy.js'
+
+const UPLOADS_CACHE_CONTROL = 'public, max-age=3600, stale-while-revalidate=86400'
 
 const app = express()
+
+app.set('trust proxy', trustProxy)
+app.disable('x-powered-by')
 
 app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
-app.use('/uploads', express.static(UPLOAD_DIR))
+app.use('/uploads', express.static(UPLOAD_DIR, {
+  etag: true,
+  lastModified: true,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', UPLOADS_CACHE_CONTROL)
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+  }
+}))
 
 app.use('/auth', authRoutes)
 app.use('/library', libraryRoutes)

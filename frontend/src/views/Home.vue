@@ -6,7 +6,7 @@
         <img
           width="120"
           height="120"
-          src="https://img.icons8.com/external-smashingstocks-isometric-smashing-stocks/440/external-Bookshelf-interior-smashingstocks-isometric-smashing-stocks-3.png"
+          src="/bookshelf.png"
           alt="Librishelf logo"
           class="hero-logo"
         />

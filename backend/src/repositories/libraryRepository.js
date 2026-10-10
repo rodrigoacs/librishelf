@@ -111,8 +111,9 @@ async function getAllBooksByUser(userId, filters = {}) {
   }
 }
 
-async function getBookById(id) {
-  const result = await db.query(q.GET_BOOK_BY_ID, [id])
+// Sempre escopado ao dono: não existe mais busca de livro só por id.
+async function getBookByIdForUser(id, userId) {
+  const result = await db.query(q.GET_BOOK_BY_ID_FOR_USER, [id, userId])
   return result.rows[0] || null
 }
 
@@ -149,8 +150,8 @@ async function getBookOwner(bookId) {
 }
 
 async function updateBook(bookId, bookInfo) {
-  const pubDate = bookInfo.pubDate ? new Date(bookInfo.pubDate).toISOString().split('T')[0] : null
-  const readDate = bookInfo.readDate ? new Date(bookInfo.readDate).toISOString().split('T')[0] : null
+  const pubDate = bookInfo.pubDate ?? null
+  const readDate = bookInfo.readDate ?? null
   const tagsArray = Array.isArray(bookInfo.tags) ? bookInfo.tags : []
 
   const params = [
@@ -184,7 +185,7 @@ async function updateReadDate(bookId, readDate) {
 
 export {
   getAllBooksByUser,
-  getBookById,
+  getBookByIdForUser,
   findBookByIsbn,
   createBook,
   getBookOwner,

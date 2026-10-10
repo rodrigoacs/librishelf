@@ -17,11 +17,11 @@ export default {
     return client.post('/auth/register', userData)
   },
 
-  async getBooks(queryParams = {}) {
+  getBooks(queryParams = {}, config = {}) {
     const queryString = new URLSearchParams(queryParams).toString()
     const url = queryString ? `/library?${queryString}` : '/library'
 
-    return client.get(url)
+    return client.get(url, config)
   },
 
   getBookById(id) {
@@ -53,12 +53,12 @@ export default {
   },
 
   getAuthors(publisherFilter) {
-    const url = publisherFilter ? `/author?publishers=${publisherFilter}` : '/author'
+    const url = publisherFilter ? `/author?publishers=${encodeURIComponent(publisherFilter)}` : '/author'
     return client.get(url)
   },
 
   getPublishers(authorFilter) {
-    const url = authorFilter ? `/publisher?authors=${authorFilter}` : '/publisher'
+    const url = authorFilter ? `/publisher?authors=${encodeURIComponent(authorFilter)}` : '/publisher'
     return client.get(url)
   },
 
@@ -76,10 +76,10 @@ export default {
 
   getPublicLibrary(username, params = {}) {
     const queryString = new URLSearchParams(params).toString()
-    return client.get(`/library/public/u/${username}?${queryString}`)
+    return client.get(`/library/public/u/${encodeURIComponent(username)}?${queryString}`)
   },
 
-  getPublicBook(id) {
-    return client.get(`/library/public/book/${id}`)
+  getPublicBook(username, id) {
+    return client.get(`/library/public/u/${encodeURIComponent(username)}/book/${id}`)
   }
 }

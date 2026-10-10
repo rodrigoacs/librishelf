@@ -1,33 +1,38 @@
-version: '3.8'
-
 services:
   frontend:
     build:
       context: ./frontend
-    container_name: librishelf-frontend  
+    container_name: librishelf-frontend
+    restart: unless-stopped
+    # Só acessível pela própria máquina; o nginx de reverse proxy alcança o
+    # container pelo nome na rede "proxy".
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     volumes:
-      - ./uploads:/usr/share/nginx/html/uploads
+      - ./uploads:/usr/share/nginx/html/uploads:ro
     depends_on:
       - backend
     networks:
-      - proxy  
+      - proxy
 
   backend:
     build:
       context: ./backend
     container_name: librishelf-backend
+    restart: unless-stopped
     ports:
-      - "3050:3050"
+      - "127.0.0.1:3050:3050"
     env_file:
       - ./backend/src/.env
     environment:
       - UPLOAD_DIR=/app/uploads
+      - TRUST_PROXY=1
     volumes:
+      # O container roda como o usuário "node" (uid 1000): a pasta do host
+      # precisa pertencer a ele → sudo chown -R 1000:1000 ./uploads
       - ./uploads:/app/uploads
     networks:
-      - proxy    
+      - proxy
 
 networks:
   proxy:

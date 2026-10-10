@@ -20,7 +20,11 @@ describe('validateNumericId', () => {
     '9;DROP TABLE books',
     ' 1',
     '1 ',
-    '0x1A'
+    '0x1A',
+    '0',
+    '000',
+    '2147483648',
+    '99999999999999999999'
   ]
 
   it.each(invalidIds)('rejeita "%s" com 400 e não chama next()', (id) => {
@@ -38,7 +42,7 @@ describe('validateNumericId', () => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  const validIds = ['1', '42', '007', '999999999']
+  const validIds = ['1', '42', '007', '999999999', '2147483647']
 
   it.each(validIds)('aceita "%s" e chama next() sem responder', (id) => {
     const middleware = validateNumericId()

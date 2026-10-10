@@ -1,5 +1,6 @@
 import request from 'supertest'
 import app from '../../app.js'
+import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 
 let token
@@ -9,7 +10,7 @@ beforeAll(async () => {
 
   await request(app).post('/auth/register').send({ username: 'pubtester', password: 'testpass123', email: 'pubtester@example.com' })
   const loginRes = await request(app).post('/auth/login').send({ username: 'pubtester', password: 'testpass123' })
-  token = loginRes.body.token
+  token = tokenFrom(loginRes)
 
   await request(app).post('/library').set('Authorization', `Bearer ${token}`).field({
     title: 'It', authors: 'Stephen King', publisher: 'Viking Press', tags: 'horror', pubDate: '1986-09-15', isbn: '333'
@@ -59,7 +60,7 @@ describe('Publisher Endpoints', () => {
   it('should not leak publishers from other users sharing the same author', async () => {
     await request(app).post('/auth/register').send({ username: 'pubtester2', password: 'testpass123', email: 'pubtester2@example.com' })
     const loginRes2 = await request(app).post('/auth/login').send({ username: 'pubtester2', password: 'testpass123' })
-    const token2 = loginRes2.body.token
+    const token2 = tokenFrom(loginRes2)
 
     // mesmo autor ("Stephen King") do primeiro usuário, editora diferente
     await request(app).post('/library').set('Authorization', `Bearer ${token2}`).field({

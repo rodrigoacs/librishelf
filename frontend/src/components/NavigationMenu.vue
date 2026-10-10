@@ -5,11 +5,12 @@
       <Button
         icon="pi pi-bars"
         class="p-button-text menu-btn"
+        :aria-label="t('menu.openMenu')"
         @click="mobileMenuOpen = true"
       />
       <div class="mobile-logo-wrapper">
         <img
-          src="https://img.icons8.com/external-smashingstocks-isometric-smashing-stocks/440/external-Bookshelf-interior-smashingstocks-isometric-smashing-stocks-3.png"
+          src="/bookshelf.png"
           alt="Logo"
           width="30"
         />
@@ -36,7 +37,7 @@
       <div class="sidebar-header">
         <div class="logo-wrapper">
           <img
-            src="https://img.icons8.com/external-smashingstocks-isometric-smashing-stocks/440/external-Bookshelf-interior-smashingstocks-isometric-smashing-stocks-3.png"
+            src="/bookshelf.png"
             alt="Logo"
             width="40"
             height="40"
@@ -176,7 +177,8 @@ async function handleLogout() {
   } catch {
     // mesmo se a chamada falhar, seguimos limpando o estado local e redirecionando
   } finally {
-    localStorage.clear()
+    // Só a sessão: tema, cor de destaque e idioma são preferências do aparelho.
+    localStorage.removeItem('user')
     router.push('/login')
   }
 }

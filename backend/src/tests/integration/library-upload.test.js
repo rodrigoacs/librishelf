@@ -3,6 +3,7 @@ import sharp from 'sharp'
 import fs from 'fs'
 import path from 'path'
 import app from '../../app.js'
+import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 import UPLOAD_DIR from '../../config/uploadDir.js'
 
@@ -13,7 +14,7 @@ beforeAll(async () => {
 
   await request(app).post('/auth/register').send({ username: 'uploadtester', password: 'testpass123', email: 'uploadtester@example.com' })
   const res = await request(app).post('/auth/login').send({ username: 'uploadtester', password: 'testpass123' })
-  token = res.body.token
+  token = tokenFrom(res)
 })
 
 afterAll(async () => {

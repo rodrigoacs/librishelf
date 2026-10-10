@@ -1,5 +1,5 @@
 import express from 'express'
-import fs from 'fs'
+import fs from 'fs/promises'
 import multer from 'multer'
 import * as libraryService from '../services/libraryService.js'
 import { authenticateToken } from '../middlewares/auth.js'
@@ -32,15 +32,13 @@ function handleUpload(uploadMiddleware) {
   }
 }
 
+const RANDOM_COVERS_LIMIT = 50
+
 const router = express.Router()
 
-router.get('/covers/random', (req, res) => {
+router.get('/covers/random', async (req, res) => {
   try {
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      return res.json([])
-    }
-
-    const files = fs.readdirSync(UPLOAD_DIR)
+    const files = await fs.readdir(UPLOAD_DIR)
 
     const imageFiles = files.filter(file =>
       /\.(avif)$/i.test(file) && !file.startsWith('.')
@@ -51,11 +49,11 @@ router.get('/covers/random', (req, res) => {
       [imageFiles[i], imageFiles[j]] = [imageFiles[j], imageFiles[i]]
     }
 
-    const selectedCovers = imageFiles.slice(0, 50)
-
-    res.json(selectedCovers)
+    res.json(imageFiles.slice(0, RANDOM_COVERS_LIMIT))
   } catch (error) {
-    console.error('Erro ao buscar capas aleatórias:', error)
+    if (error.code !== 'ENOENT') {
+      logger.error('Erro ao buscar capas aleatórias', { message: error.message })
+    }
     res.json([])
   }
 })
@@ -70,10 +68,10 @@ router.get('/public/u/:username', async (req, res) => {
   }
 })
 
-router.get('/public/book/:id', validateNumericId(), async (req, res) => {
+router.get('/public/u/:username/book/:id', validateNumericId(), async (req, res) => {
   try {
-    const { id } = req.params
-    const book = await libraryService.getBookById(id)
+    const { username, id } = req.params
+    const book = await libraryService.getPublicBook(username, id)
 
     if (!book) return res.status(STATUS.NOT_FOUND).json({ error: 'Livro não encontrado.' })
 
@@ -98,7 +96,8 @@ router.get('/', async (req, res) => {
 router.get('/:id', validateNumericId(), async (req, res) => {
   try {
     const { id } = req.params
-    const book = await libraryService.getBookById(id)
+    // Escopado ao usuário logado: livro de outra pessoa responde 404, igual a inexistente.
+    const book = await libraryService.getBookById(id, req.user.id)
     if (!book) return res.status(STATUS.NOT_FOUND).json({ error: 'Book not found.' })
     res.status(STATUS.OK).json(book)
   } catch (error) {
@@ -108,18 +107,18 @@ router.get('/:id', validateNumericId(), async (req, res) => {
 
 router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => {
   try {
-    const { title, pubDate, authors, publisher, tags, isbn, readDate } = req.body
+    const { title, pubDate, authors, publisher, tags, isbn, readDate } = req.body ?? {}
     const userId = req.user.id
 
-    if (!title) return res.status(STATUS.BAD_REQUEST).json({ error: 'Title is required.' })
-    if (!authors || !authors.trim()) return res.status(STATUS.BAD_REQUEST).json({ error: 'Authors is required.' })
+    if (typeof title !== 'string' || !title.trim()) return res.status(STATUS.BAD_REQUEST).json({ error: 'Title is required.' })
+    if (typeof authors !== 'string' || !authors.trim()) return res.status(STATUS.BAD_REQUEST).json({ error: 'Authors is required.' })
 
     const bookData = {
       title,
       pubDate,
       authors,
       publisher,
-      tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+      tags: typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
       isbn,
       readDate: readDate || null,
       user_id: userId
@@ -140,7 +139,7 @@ router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => 
 router.put('/:id', validateNumericId(), async (req, res) => {
   try {
     const { id } = req.params
-    const bookInfo = req.body
+    const bookInfo = req.body ?? {}
     const userId = req.user.id
 
     await libraryService.updateBookDetails(id, userId, bookInfo)
@@ -163,7 +162,7 @@ router.post('/:id/cover', validateNumericId(), handleUpload(upload.single('cover
 
     await saveBookCover(req.file.buffer, id)
 
-    console.log(`[Upload] Capa processada (jpg + avif) para o livro ${id}`)
+    logger.info('Capa processada (jpg + avif)', { bookId: id, userId })
 
     res.status(STATUS.OK).json({ message: 'Capa atualizada com sucesso.' })
   } catch (error) {
