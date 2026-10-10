@@ -7,7 +7,7 @@
           width="120"
           height="120"
           src="/bookshelf.png"
-          alt="Librishelf logo"
+          alt=""
           class="hero-logo"
         />
       </div>
@@ -37,7 +37,7 @@
       <div class="features-grid">
         <div class="feature-card">
           <div class="icon-box">
-            <i class="pi pi-plus"></i>
+            <i class="pi pi-plus" aria-hidden="true"></i>
           </div>
           <h3>{{ $t("home.manageBooks.title") }}</h3>
           <p>{{ $t("home.manageBooks.desc") }}</p>
@@ -45,7 +45,7 @@
 
         <div class="feature-card">
           <div class="icon-box">
-            <i class="pi pi-check-circle"></i>
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
           </div>
           <h3>{{ $t("home.trackReading.title") }}</h3>
           <p>{{ $t("home.trackReading.desc") }}</p>
@@ -53,7 +53,7 @@
 
         <div class="feature-card">
           <div class="icon-box">
-            <i class="pi pi-filter"></i>
+            <i class="pi pi-filter" aria-hidden="true"></i>
           </div>
           <h3>{{ $t("home.smartSearch.title") }}</h3>
           <p>{{ $t("home.smartSearch.desc") }}</p>
@@ -61,7 +61,7 @@
 
         <div class="feature-card">
           <div class="icon-box">
-            <i class="pi pi-th-large"></i>
+            <i class="pi pi-th-large" aria-hidden="true"></i>
           </div>
           <h3>{{ $t("home.visual.title") }}</h3>
           <p>{{ $t("home.visual.desc") }}</p>
@@ -75,9 +75,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
-import { useI18n } from 'vue-i18n'
 
-const { t, locale } = useI18n()
 const router = useRouter()
 
 function goToLibrary() {

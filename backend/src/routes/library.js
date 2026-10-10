@@ -1,18 +1,22 @@
 import express from 'express'
 import fs from 'fs/promises'
+import path from 'path'
 import multer from 'multer'
 import * as libraryService from '../services/libraryService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import { validateNumericId } from '../middlewares/validateId.js'
 import STATUS from '../utils/statusCodes.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
-import { saveBookCover } from '../utils/imageProcessor.js'
+import { saveBookCover, isValidImage } from '../utils/imageProcessor.js'
+import { uploadLimiter, publicLimiter } from '../middlewares/rateLimiter.js'
 import sendError from '../utils/sendError.js'
 import logger from '../utils/logger.js'
 
+const MAX_UPLOAD_MB = 10
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 1024 * 1024 * 10 },
+  limits: { fileSize: 1024 * 1024 * MAX_UPLOAD_MB, files: 1 },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
       return cb(new Error('Apenas arquivos de imagem são permitidos.'))
@@ -25,7 +29,10 @@ function handleUpload(uploadMiddleware) {
   return (req, res, next) => {
     uploadMiddleware(req, res, (err) => {
       if (err) {
-        return res.status(STATUS.BAD_REQUEST).json({ error: err.message })
+        const message = err.code === 'LIMIT_FILE_SIZE'
+          ? `A imagem pode ter no máximo ${MAX_UPLOAD_MB} MB.`
+          : err.message
+        return res.status(STATUS.BAD_REQUEST).json({ error: message })
       }
       next()
     })
@@ -33,32 +40,34 @@ function handleUpload(uploadMiddleware) {
 }
 
 const RANDOM_COVERS_LIMIT = 50
+// Nem todo livro tem capa; busca mais candidatos do que exibe.
+const RANDOM_COVERS_CANDIDATES = 150
 
 const router = express.Router()
 
-router.get('/covers/random', async (req, res) => {
+// Mosaico das telas de login/cadastro: só capas de bibliotecas públicas.
+router.get('/covers/random', publicLimiter, async (req, res) => {
   try {
-    const files = await fs.readdir(UPLOAD_DIR)
+    const bookIds = await libraryService.getRandomPublicBookIds(RANDOM_COVERS_CANDIDATES)
 
-    const imageFiles = files.filter(file =>
-      /\.(avif)$/i.test(file) && !file.startsWith('.')
-    )
+    const existing = await Promise.all(bookIds.map(async (id) => {
+      const file = `${id}.avif`
+      try {
+        await fs.access(path.join(UPLOAD_DIR, file))
+        return file
+      } catch {
+        return null
+      }
+    }))
 
-    for (let i = imageFiles.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [imageFiles[i], imageFiles[j]] = [imageFiles[j], imageFiles[i]]
-    }
-
-    res.json(imageFiles.slice(0, RANDOM_COVERS_LIMIT))
+    res.json(existing.filter(Boolean).slice(0, RANDOM_COVERS_LIMIT))
   } catch (error) {
-    if (error.code !== 'ENOENT') {
-      logger.error('Erro ao buscar capas aleatórias', { message: error.message })
-    }
+    logger.error('Erro ao buscar capas aleatórias', { message: error.message })
     res.json([])
   }
 })
 
-router.get('/public/u/:username', async (req, res) => {
+router.get('/public/u/:username', publicLimiter, async (req, res) => {
   try {
     const { username } = req.params
     const libraryData = await libraryService.getPublicLibraryByUsername(username, req.query)
@@ -68,7 +77,7 @@ router.get('/public/u/:username', async (req, res) => {
   }
 })
 
-router.get('/public/u/:username/book/:id', validateNumericId(), async (req, res) => {
+router.get('/public/u/:username/book/:id', publicLimiter, validateNumericId(), async (req, res) => {
   try {
     const { username, id } = req.params
     const book = await libraryService.getPublicBook(username, id)
@@ -105,7 +114,7 @@ router.get('/:id', validateNumericId(), async (req, res) => {
   }
 })
 
-router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => {
+router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), async (req, res) => {
   try {
     const { title, pubDate, authors, publisher, tags, isbn, readDate } = req.body ?? {}
     const userId = req.user.id
@@ -124,13 +133,27 @@ router.post('/', handleUpload(upload.single('coverImage')), async (req, res) => 
       user_id: userId
     }
 
+    // Valida a imagem ANTES de criar o livro: com imagem inválida a resposta é
+    // 400 e nada fica gravado (antes o livro ficava órfão e o usuário duplicava
+    // ao tentar de novo).
+    if (req.file && !(await isValidImage(req.file.buffer))) {
+      return res.status(STATUS.BAD_REQUEST).json({ error: 'Arquivo enviado não é uma imagem válida.' })
+    }
+
     const newBookId = await libraryService.addNewBook(bookData)
 
     if (req.file) {
-      await saveBookCover(req.file.buffer, newBookId)
+      try {
+        await saveBookCover(req.file.buffer, newBookId)
+      } catch (coverError) {
+        // Imagem válida mas falhou ao gravar (disco, permissão): o livro fica
+        // salvo sem capa e o cliente é avisado.
+        logger.error('Livro criado, mas a capa não foi salva', { bookId: newBookId, message: coverError.message })
+        return res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: false })
+      }
     }
 
-    res.status(STATUS.CREATED).json({ bookId: newBookId })
+    res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: Boolean(req.file) })
   } catch (error) {
     sendError(res, error, 'Erro ao criar livro')
   }
@@ -143,13 +166,17 @@ router.put('/:id', validateNumericId(), async (req, res) => {
     const userId = req.user.id
 
     await libraryService.updateBookDetails(id, userId, bookInfo)
-    res.status(STATUS.OK).json({ message: 'Livro atualizado com sucesso.' })
+
+    // Devolve o livro atualizado para o frontend trocar o item na lista sem
+    // recarregar tudo.
+    const book = await libraryService.getBookById(id, userId)
+    res.status(STATUS.OK).json({ message: 'Livro atualizado com sucesso.', book })
   } catch (error) {
     sendError(res, error, 'Erro ao atualizar livro')
   }
 })
 
-router.post('/:id/cover', validateNumericId(), handleUpload(upload.single('coverImage')), async (req, res) => {
+router.post('/:id/cover', validateNumericId(), uploadLimiter, handleUpload(upload.single('coverImage')), async (req, res) => {
   try {
     const { id } = req.params
     const userId = req.user.id

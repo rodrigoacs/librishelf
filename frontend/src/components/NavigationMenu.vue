@@ -6,13 +6,15 @@
         icon="pi pi-bars"
         class="p-button-text menu-btn"
         :aria-label="t('menu.openMenu')"
+        :aria-expanded="mobileMenuOpen"
         @click="mobileMenuOpen = true"
       />
       <div class="mobile-logo-wrapper">
         <img
           src="/bookshelf.png"
-          alt="Logo"
+          alt=""
           width="30"
+          height="30"
         />
         <div class="logo-text">
           <span class="text-main">LIBRI</span>SHELF
@@ -38,7 +40,7 @@
         <div class="logo-wrapper">
           <img
             src="/bookshelf.png"
-            alt="Logo"
+            alt=""
             width="40"
             height="40"
           />
@@ -47,44 +49,53 @@
           </div>
         </div>
         <button
+          type="button"
           class="close-sidebar-btn"
+          :aria-label="t('menu.closeMenu')"
           @click="mobileMenuOpen = false"
         >
-          <i class="pi pi-times"></i>
+          <i
+            class="pi pi-times"
+            aria-hidden="true"
+          ></i>
         </button>
       </div>
 
-      <nav class="nav-links">
-        <template
+      <nav
+        class="nav-links"
+        :aria-label="t('menu.library')"
+      >
+        <router-link
           v-for="item in items"
-          :key="item.label"
+          :key="item.route"
+          :to="item.route"
+          class="nav-item"
+          active-class="active"
+          @click="mobileMenuOpen = false"
         >
-          <div
-            v-if="item.separator"
-            class="separator"
-          ></div>
+          <i
+            :class="item.icon"
+            aria-hidden="true"
+          ></i>
+          <span>{{ item.label }}</span>
+        </router-link>
 
-          <router-link
-            v-else-if="!item.command"
-            :to="item.route"
-            class="nav-item"
-            active-class="active"
-            @click="mobileMenuOpen = false"
-          >
-            <i :class="item.icon"></i>
-            <span>{{ item.label }}</span>
-          </router-link>
+        <div
+          class="separator"
+          role="separator"
+        ></div>
 
-          <a
-            v-else
-            href="#"
-            class="nav-item action-item"
-            @click.prevent="item.command"
-          >
-            <i :class="item.icon"></i>
-            <span>{{ item.label }}</span>
-          </a>
-        </template>
+        <button
+          type="button"
+          class="nav-item action-item"
+          @click="handleLogout"
+        >
+          <i
+            class="pi pi-sign-out"
+            aria-hidden="true"
+          ></i>
+          <span>{{ t('menu.logout') }}</span>
+        </button>
       </nav>
 
       <div class="sidebar-footer">
@@ -92,6 +103,7 @@
         <Transition name="scale-up">
           <div
             v-if="showSettings"
+            id="nav-preferences"
             class="settings-menu"
           >
             <div class="settings-header">{{ $t('menu.configurations') }}</div>
@@ -111,7 +123,10 @@
 
         <div class="footer-content">
           <div class="user-info">
-            <div class="avatar-circle">{{ userInitial }}</div>
+            <div
+              class="avatar-circle"
+              aria-hidden="true"
+            >{{ userInitial }}</div>
             <div class="user-details">
               <span
                 class="username"
@@ -122,12 +137,19 @@
           </div>
 
           <button
+            type="button"
             class="settings-btn"
             :class="{ active: showSettings }"
+            :aria-label="t('menu.preferences')"
+            :aria-expanded="showSettings"
+            aria-controls="nav-preferences"
+            v-tooltip.top="t('menu.preferences')"
             @click="showSettings = !showSettings"
-            title="Configurações"
           >
-            <i class="pi pi-cog"></i>
+            <i
+              class="pi pi-cog"
+              aria-hidden="true"
+            ></i>
           </button>
         </div>
       </div>
@@ -137,13 +159,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import ThemeSwitcher from './ThemeSwitcher.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 import api from '../services/api.js'
+import { currentUser, clearSession } from '../services/session.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -151,20 +174,8 @@ const { t } = useI18n()
 
 const mobileMenuOpen = ref(false)
 const showSettings = ref(false)
-const currentUser = ref(null)
 
-function updateUser() {
-  const userStr = localStorage.getItem('user')
-  if (userStr) {
-    try { currentUser.value = JSON.parse(userStr) } catch { currentUser.value = null }
-  } else { currentUser.value = null }
-}
-
-const displayName = computed(() => {
-  const user = currentUser.value
-  return user?.name || user?.username || user?.email || t('menu.guest')
-})
-
+const displayName = computed(() => currentUser.value?.name || t('menu.guest'))
 const userInitial = computed(() => displayName.value.charAt(0).toUpperCase())
 
 function truncateName(name) {
@@ -177,19 +188,15 @@ async function handleLogout() {
   } catch {
     // mesmo se a chamada falhar, seguimos limpando o estado local e redirecionando
   } finally {
-    // Só a sessão: tema, cor de destaque e idioma são preferências do aparelho.
-    localStorage.removeItem('user')
+    clearSession()
     router.push('/login')
   }
 }
 
 watch(() => route.path, () => {
-  updateUser()
   showSettings.value = false
   mobileMenuOpen.value = false
 })
-
-onMounted(() => updateUser())
 
 const items = computed(() => [
   { label: t('menu.home'), icon: 'pi pi-home', route: '/' },
@@ -198,12 +205,7 @@ const items = computed(() => [
   { label: t('menu.publishers'), icon: 'pi pi-building', route: '/publishers' },
   { label: t('menu.categories'), icon: 'pi pi-tags', route: '/tags' },
   { label: t('menu.dashboard'), icon: 'pi pi-chart-bar', route: '/dashboard' },
-  { separator: true },
-  {
-    label: t('menu.logout'),
-    icon: 'pi pi-sign-out',
-    command: () => handleLogout()
-  },
+  { label: t('menu.settings'), icon: 'pi pi-user', route: '/settings' }
 ])
 </script>
 
@@ -283,6 +285,17 @@ const items = computed(() => [
   font-weight: 500;
   transition: all 0.2s;
   font-size: 0.95rem;
+}
+
+button.nav-item {
+  background: none;
+  border: none;
+  width: 100%;
+  font: inherit;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-align: left;
 }
 
 .nav-item:hover {

@@ -1,65 +1,85 @@
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+
+/**
+ * Tema e cor de destaque. O valor inicial é aplicado também por um script
+ * inline no index.html (antes do CSS carregar), para não piscar o tema errado.
+ */
+export const ACCENT_COLORS = ['blue', 'green', 'purple', 'red', 'orange', 'yellow']
+
+const THEME_KEY = 'user-theme'
+const ACCENT_KEY = 'user-accent'
 
 const currentTheme = ref('dark')
 const accentColor = ref('blue')
+// Incrementado a cada mudança: componentes que leem cores calculadas
+// (gráficos) observam isto para redesenhar.
+const themeVersion = ref(0)
 
-const colorsMap = {
-  blue: 'var(--blue-rgb)',
-  green: 'var(--green-rgb)',
-  purple: 'var(--purple-rgb)',
-  red: 'var(--red-rgb)',
-  orange: 'var(--orange-rgb)',
-  yellow: 'var(--yellow-rgb)'
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // preferências valem só para esta aba
+  }
+}
+
+function applyTheme() {
+  const root = document.documentElement
+  root.setAttribute('data-theme', currentTheme.value)
+  root.style.setProperty('--main-color-rgb', `var(--${accentColor.value}-rgb)`)
+  themeVersion.value++
+}
+
+export function initTheme() {
+  const savedTheme = readStorage(THEME_KEY)
+  const savedAccent = readStorage(ACCENT_KEY)
+
+  if (savedTheme === 'light' || savedTheme === 'dark') {
+    currentTheme.value = savedTheme
+  } else if (window.matchMedia?.('(prefers-color-scheme: light)').matches) {
+    currentTheme.value = 'light'
+  }
+
+  if (ACCENT_COLORS.includes(savedAccent)) {
+    accentColor.value = savedAccent
+  }
+
+  applyTheme()
 }
 
 export function useTheme() {
-
-  function applyTheme() {
-    document.documentElement.setAttribute('data-theme', currentTheme.value)
-
-    const rgb = colorsMap[accentColor.value] || colorsMap.blue
-    document.documentElement.style.setProperty('--main-color-rgb', rgb)
-
-    localStorage.setItem('user-theme', currentTheme.value)
-    localStorage.setItem('user-accent', accentColor.value)
-  }
-
   function toggleTheme() {
     currentTheme.value = currentTheme.value === 'dark' ? 'light' : 'dark'
+    writeStorage(THEME_KEY, currentTheme.value)
     applyTheme()
   }
 
   function setAccent(colorName) {
-    if (colorsMap[colorName]) {
-      accentColor.value = colorName
-      applyTheme()
-    }
-  }
-
-  onMounted(() => {
-    const savedTheme = localStorage.getItem('user-theme')
-    const savedAccent = localStorage.getItem('user-accent')
-
-    if (savedTheme) {
-      currentTheme.value = savedTheme
-    } else {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        currentTheme.value = 'light'
-      }
-    }
-
-    if (savedAccent) {
-      accentColor.value = savedAccent
-    }
-
+    if (!ACCENT_COLORS.includes(colorName)) return
+    accentColor.value = colorName
+    writeStorage(ACCENT_KEY, colorName)
     applyTheme()
-  })
+  }
 
   return {
     currentTheme,
     accentColor,
+    themeVersion,
     toggleTheme,
     setAccent,
-    availableColors: Object.keys(colorsMap)
+    availableColors: ACCENT_COLORS
   }
+}
+
+/** Lê uma variável CSS já resolvida (para bibliotecas que não entendem var()). */
+export function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }

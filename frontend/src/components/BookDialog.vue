@@ -2,55 +2,66 @@
   <Dialog
     v-model:visible="visible"
     :modal="true"
-    :dismissableMask="true"
+    :dismissableMask="!isEditing"
     @hide="closeDialog"
     class="modern-book-dialog"
     :breakpoints="{ '960px': '75vw', '640px': '95vw' }"
     :style="{ width: '900px', maxWidth: '95vw' }"
     :showHeader="false"
+    :aria-label="book.title || t('bookDialog.dialog_label')"
   >
-    <div
-      class="dialog-body"
-      v-if="book"
-    >
+    <div class="dialog-body">
       <button
+        type="button"
         class="close-btn"
+        :aria-label="t('common.close')"
         @click="visible = false"
       >
-        <i class="pi pi-times"></i>
+        <i
+          class="pi pi-times"
+          aria-hidden="true"
+        ></i>
       </button>
 
       <div class="cover-section">
         <img
           :src="displayCoverUrl"
           class="blur-bg"
+          alt=""
           aria-hidden="true"
+          @error="handleCoverError"
         />
         <div class="image-container">
-          <div
+          <component
+            :is="isEditing ? 'button' : 'div'"
+            :type="isEditing ? 'button' : undefined"
             class="cover-wrapper"
             :class="{ 'editable': isEditing }"
+            :aria-label="isEditing ? t('bookDialog.changeCover') : undefined"
             @click="triggerFileInput"
           >
             <img
               :src="displayCoverUrl"
-              @error="handleImageError"
-              :alt="$t('bookDialog.bookCover')"
+              @error="handleCoverError"
+              :alt="t('bookDialog.bookCover')"
               class="main-cover"
             />
-            <div
+            <span
               v-if="isEditing"
               class="edit-overlay"
+              aria-hidden="true"
             >
               <i class="pi pi-camera"></i>
-              <span>{{ $t('bookDialog.changeCover') }}</span>
-            </div>
-          </div>
+              <span>{{ t('bookDialog.changeCover') }}</span>
+            </span>
+          </component>
           <input
             type="file"
             ref="fileInput"
             style="display: none"
             accept="image/*"
+            tabindex="-1"
+            aria-hidden="true"
             @change="onFileSelected"
           />
         </div>
@@ -59,46 +70,58 @@
       <div class="details-section">
         <div class="details-header">
           <div class="title-area">
-            <input
-              v-if="isEditing"
-              v-model="book.title"
-              class="modern-input title-input"
-              :placeholder="$t('bookDialog.bookTitle')"
-            />
-            <h1
-              v-else
-              class="book-title"
-            >{{ book.title || $t('bookDialog.noTitle') }}</h1>
-
-            <input
-              v-if="isEditing"
-              v-model="book.authors"
-              class="modern-input author-input"
-              :placeholder="$t('bookDialog.authorNames')"
-            />
-            <h3
-              v-else
-              class="book-author"
-            >{{ book.authors || $t('bookDialog.unknownAuthor') }}</h3>
+            <template v-if="isEditing">
+              <label
+                for="book-edit-title"
+                class="sr-only"
+              >{{ t('bookDialog.bookTitle') }}</label>
+              <input
+                id="book-edit-title"
+                v-model="book.title"
+                class="modern-input title-input"
+                :placeholder="t('bookDialog.bookTitle')"
+                :aria-invalid="submitted && !book.title.trim()"
+              />
+              <label
+                for="book-edit-authors"
+                class="sr-only"
+              >{{ t('bookDialog.authorNames') }}</label>
+              <input
+                id="book-edit-authors"
+                v-model="book.authors"
+                class="modern-input author-input"
+                :placeholder="t('bookDialog.authorNames')"
+                :aria-invalid="submitted && !book.authors.trim()"
+              />
+            </template>
+            <template v-else>
+              <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}</h1>
+              <h2 class="book-author">{{ book.authors || (loading ? '' : t('bookDialog.unknownAuthor')) }}</h2>
+            </template>
           </div>
 
-          <div class="actions-area">
-            <Button
-              v-if="!isReadOnly"
-              icon="pi pi-trash"
-              class="p-button-rounded p-button-text p-button-danger"
-              v-tooltip.bottom="$t('bookDialog.delete')"
-              :aria-label="$t('bookDialog.delete')"
-              @click="deleteBook"
-            />
-            <Button
-              v-if="!isEditing && !isReadOnly"
-              icon="pi pi-pencil"
-              class="p-button-rounded p-button-text p-button-secondary"
-              v-tooltip.bottom="$t('bookDialog.edit')"
-              :aria-label="$t('bookDialog.edit')"
-              @click="editMode"
-            />
+          <div
+            v-if="!isReadOnly"
+            class="actions-area"
+          >
+            <template v-if="!isEditing">
+              <Button
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                v-tooltip.bottom="t('bookDialog.delete')"
+                :aria-label="t('bookDialog.delete')"
+                :disabled="loading || loadFailed"
+                @click="deleteBook"
+              />
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-secondary"
+                v-tooltip.bottom="loadFailed ? t('bookDialog.cannotEdit') : t('bookDialog.edit')"
+                :aria-label="t('bookDialog.edit')"
+                :disabled="loading || loadFailed"
+                @click="editMode"
+              />
+            </template>
             <div
               v-else
               class="edit-actions"
@@ -106,14 +129,16 @@
               <Button
                 icon="pi pi-times"
                 class="p-button-rounded p-button-text p-button-secondary"
-                :aria-label="$t('common.cancel')"
+                :aria-label="t('common.cancel')"
+                v-tooltip.bottom="t('common.cancel')"
                 @click="cancelEdit"
                 :disabled="isSaving"
               />
               <Button
                 icon="pi pi-check"
                 class="p-button-rounded btn-action-primary"
-                :aria-label="$t('common.save')"
+                :aria-label="t('common.save')"
+                v-tooltip.bottom="t('common.save')"
                 @click="confirmSave"
                 :loading="isSaving"
               />
@@ -123,12 +148,13 @@
 
         <div class="details-content">
           <div class="info-group">
-            <label>{{ $t('bookDialog.tags') }}</label>
+            <label :for="isEditing ? 'book-edit-tags' : undefined">{{ t('bookDialog.tags') }}</label>
             <div v-if="isEditing">
               <input
+                id="book-edit-tags"
                 v-model="book.tags"
                 class="modern-input"
-                :placeholder="$t('bookDialog.tagsPlaceholder')"
+                :placeholder="t('bookDialog.tagsPlaceholder')"
               />
             </div>
             <div
@@ -136,13 +162,13 @@
               class="tags-list"
             >
               <span
-                v-if="!book.tags"
+                v-if="!tagList.length"
                 class="empty-text"
-              >{{ $t('bookDialog.noTags') }}</span>
+              >{{ t('bookDialog.noTags') }}</span>
 
               <Chip
-                v-for="(tag, index) in formatTags(book.tags)"
-                :key="tag"
+                v-for="(tag, index) in tagList"
+                :key="`${tag}-${index}`"
                 :label="tag"
                 class="custom-chip colored-chip"
                 :style="{ '--tag-color': getTagColor(index) }"
@@ -152,34 +178,42 @@
 
           <div class="dates-grid">
             <div class="info-group">
-              <label>{{ $t('bookDialog.readingStatus') }}</label>
+              <label for="book-read-date">{{ t('bookDialog.readingStatus') }}</label>
               <div class="date-input-wrapper">
                 <i
                   class="pi"
                   :class="book.read_date ? 'pi-check-circle text-theme' : 'pi-circle text-gray'"
+                  aria-hidden="true"
                 ></i>
                 <Calendar
+                  inputId="book-read-date"
                   v-model="book.read_date"
                   :disabled="!isEditing"
                   dateFormat="dd/mm/yy"
-                  :placeholder="$t('bookDialog.notRead')"
+                  :placeholder="t('bookDialog.notRead')"
                   class="modern-calendar"
                   :showIcon="false"
+                  showButtonBar
                 />
               </div>
             </div>
 
             <div class="info-group">
-              <label>{{ $t('bookDialog.publication') }}</label>
+              <label for="book-pub-date">{{ t('bookDialog.publication') }}</label>
               <div class="date-input-wrapper">
-                <i class="pi pi-calendar text-gray"></i>
+                <i
+                  class="pi pi-calendar text-gray"
+                  aria-hidden="true"
+                ></i>
                 <Calendar
+                  inputId="book-pub-date"
                   v-model="book.pubdate"
                   :disabled="!isEditing"
                   dateFormat="dd/mm/yy"
-                  :placeholder="$t('bookDialog.dateUnknown')"
+                  :placeholder="t('bookDialog.dateUnknown')"
                   class="modern-calendar"
                   :showIcon="false"
+                  showButtonBar
                 />
               </div>
             </div>
@@ -187,8 +221,9 @@
 
           <div class="meta-grid">
             <div class="info-group">
-              <label>{{ $t('bookDialog.publisher') }}</label>
+              <label for="book-publisher">{{ t('bookDialog.publisher') }}</label>
               <input
+                id="book-publisher"
                 v-model="book.publisher"
                 :readonly="!isEditing"
                 class="modern-input meta-input"
@@ -197,8 +232,9 @@
               />
             </div>
             <div class="info-group">
-              <label>{{ $t('bookDialog.isbn') }}</label>
+              <label for="book-isbn">{{ t('bookDialog.isbn') }}</label>
               <input
+                id="book-isbn"
                 v-model="book.isbn"
                 :readonly="!isEditing"
                 class="modern-input meta-input"
@@ -214,7 +250,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineEmits, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
@@ -223,8 +259,9 @@ import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import api from '../services/api.js'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3050'
+import { coverUrl, handleCoverError } from '../utils/covers.js'
+import { fromApiDate, toApiDate } from '../utils/dates.js'
+import { validateImageFile, createPreviewHandle } from '../utils/files.js'
 
 const { t } = useI18n()
 const props = defineProps({
@@ -235,92 +272,73 @@ const props = defineProps({
   ownerUsername: { type: String, default: '' }
 })
 
-const emits = defineEmits(['update:modelValue', 'refresh'])
+const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])
 const toast = useToast()
 const confirm = useConfirm()
 
+const TAG_COLORS = ['var(--red)', 'var(--green)', 'var(--blue)', 'var(--purple)', 'var(--yellow)', 'var(--orange)']
+
 const visible = ref(props.modelValue)
+const loading = ref(true)
+const loadFailed = ref(false)
 const isEditing = ref(false)
 const isSaving = ref(false)
-const originalBookState = ref(null)
+const submitted = ref(false)
 const fileInput = ref(null)
 const selectedFile = ref(null)
 const previewUrl = ref(null)
-const cacheBuster = ref(Date.now())
+const coverVersion = ref(0)
+const preview = createPreviewHandle()
 
-const book = ref({
-  title: t('bookDialog.loading'),
-  authors: '',
-  publisher: '',
-  tags: '',
-  isbn: '',
-  read_date: null,
-  pubdate: null
-})
-
-const tagColors = [
-  'var(--red)',
-  'var(--green)',
-  'var(--blue)',
-  'var(--purple)',
-  'var(--yellow)',
-  'var(--orange)'
-]
-
-function getTagColor(index) {
-  return tagColors[index % tagColors.length]
+function emptyBook() {
+  return { title: '', authors: '', publisher: '', tags: '', isbn: '', read_date: null, pubdate: null }
 }
 
-const displayCoverUrl = computed(() => {
-  if (previewUrl.value) return previewUrl.value
-  if (!props.bookId) return '/placeholder.png'
-  return `${API_URL}/uploads/${props.bookId}.avif?t=${cacheBuster.value}`
+const book = ref(emptyBook())
+let originalBook = null
+
+const tagList = computed(() => {
+  if (!book.value.tags) return []
+  return book.value.tags.split(',').map(tag => tag.trim()).filter(Boolean)
 })
 
-function handleImageError(e) {
-  const img = e.target
-  if (img.dataset.errorHandled) return
+const displayCoverUrl = computed(() => previewUrl.value || coverUrl(props.bookId, coverVersion.value))
 
-  const src = img.src
-
-  if (src.includes('.avif')) {
-    img.src = src.replace('.avif', '.jpg')
-  } else {
-    img.dataset.errorHandled = true
-    img.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22500%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%232a2a2a%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23aaaaaa%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20dy%3D%22.3em%22%3ENo%20Cover%3C%2Ftext%3E%3C%2Fsvg%3E"
-  }
+function getTagColor(index) {
+  return TAG_COLORS[index % TAG_COLORS.length]
 }
 
 function triggerFileInput() {
-  if (isEditing.value && fileInput.value) fileInput.value.click()
+  if (isEditing.value) fileInput.value?.click()
 }
 
 function onFileSelected(event) {
   const file = event.target.files[0]
-  if (file) {
-    selectedFile.value = file
-    previewUrl.value = URL.createObjectURL(file)
+  event.target.value = ''
+  if (!file) return
+
+  const problem = validateImageFile(file)
+  if (problem) {
+    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t(problem.key, problem.params || {}), life: 4000 })
+    return
   }
+
+  selectedFile.value = file
+  previewUrl.value = preview.set(file)
 }
 
-function formatTags(tagsString) {
-  if (!tagsString) return []
-  return tagsString.split(',').map(t => t.trim()).filter(Boolean)
+function clearSelectedFile() {
+  selectedFile.value = null
+  previewUrl.value = null
+  preview.clear()
 }
 
-function isValidReadDate(dateString) {
-  if (!dateString) return false
-  return true
-}
-
-function formatDateISO(date) {
-  if (!date) return null
-  const d = new Date(date)
-  if (isNaN(d.getTime())) return null
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+function cloneBook(source) {
+  return {
+    ...source,
+    read_date: source.read_date ? new Date(source.read_date) : null,
+    pubdate: source.pubdate ? new Date(source.pubdate) : null
+  }
 }
 
 function deleteBook() {
@@ -336,10 +354,9 @@ function deleteBook() {
       try {
         await api.deleteBook(props.bookId)
         visible.value = false
-        emits('refresh')
+        emit('deleted', props.bookId)
         toast.add({ severity: 'success', summary: t('bookDialog.deleted'), detail: t('bookDialog.bookDeleted'), life: 3000 })
       } catch (error) {
-        console.error('Error deleting book:', error)
         toast.add({ severity: 'error', summary: t('bookDialog.errorDeleted'), detail: error.message || t('bookDialog.deleteFailed'), life: 4000 })
       }
     }
@@ -347,25 +364,43 @@ function deleteBook() {
 }
 
 function editMode() {
-  originalBookState.value = JSON.parse(JSON.stringify(book.value))
-  if (book.value.read_date) originalBookState.value.read_date = book.value.read_date
-  if (book.value.pubdate) originalBookState.value.pubdate = book.value.pubdate
+  if (loading.value || loadFailed.value) return
+  originalBook = cloneBook(book.value)
+  submitted.value = false
   isEditing.value = true
 }
 
 function cancelEdit() {
-  book.value = { ...originalBookState.value }
-  selectedFile.value = null
-  previewUrl.value = null
+  if (originalBook) book.value = cloneBook(originalBook)
+  clearSelectedFile()
+  submitted.value = false
   isEditing.value = false
 }
 
 function closeDialog() {
-  isEditing.value = false
+  if (isEditing.value) cancelEdit()
   visible.value = false
 }
 
+function validate() {
+  submitted.value = true
+
+  if (!book.value.title.trim()) {
+    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.validationTitle'), life: 3000 })
+    return false
+  }
+
+  if (!book.value.authors.trim()) {
+    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.validationAuthors'), life: 3000 })
+    return false
+  }
+
+  return true
+}
+
 function confirmSave() {
+  if (!validate()) return
+
   confirm.require({
     message: t('bookDialog.confirmSave'),
     header: t('bookDialog.confirm'),
@@ -380,86 +415,86 @@ function confirmSave() {
 
 async function saveBookDetails() {
   isSaving.value = true
-  try {
-    const updatedBook = {
-      title: book.value.title,
-      authors: book.value.authors,
-      publisher: book.value.publisher,
-      tags: book.value.tags ? book.value.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-      isbn: book.value.isbn,
-      pubDate: formatDateISO(book.value.pubdate),
-      readDate: formatDateISO(book.value.read_date)
-    }
+  let coverChanged = false
 
-    await api.updateBook(props.bookId, updatedBook)
+  try {
+    const response = await api.updateBook(props.bookId, {
+      title: book.value.title.trim(),
+      authors: book.value.authors.trim(),
+      publisher: book.value.publisher,
+      tags: tagList.value,
+      isbn: book.value.isbn,
+      pubDate: toApiDate(book.value.pubdate),
+      readDate: toApiDate(book.value.read_date)
+    })
 
     if (selectedFile.value) {
       const formData = new FormData()
       formData.append('coverImage', selectedFile.value)
       await api.updateCover(props.bookId, formData)
-      cacheBuster.value = Date.now()
+      coverChanged = true
+      coverVersion.value = Date.now()
     }
 
     isEditing.value = false
-    selectedFile.value = null
-    previewUrl.value = null
-    emits('refresh')
+    submitted.value = false
+    clearSelectedFile()
+    applyResponse(response.book)
+
+    emit('updated', { book: { ...response.book, book_id: props.bookId }, coverChanged })
     toast.add({ severity: 'success', summary: t('bookDialog.success'), detail: t('bookDialog.changesSaved'), life: 3000 })
   } catch (error) {
-    console.error('Error updating book details:', error)
     toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
     isSaving.value = false
   }
 }
 
-async function loadBookData() {
-  if (!props.bookId) return
-
-  previewUrl.value = null
-  selectedFile.value = null
-
-  try {
-    let response
-
-    if (props.isReadOnly) {
-      response = await api.getPublicBook(props.ownerUsername, props.bookId)
-    } else {
-      response = await api.getBookById(props.bookId)
-    }
-
-    book.value.title = response.title || ''
-    book.value.authors = response.authors || ''
-    book.value.isbn = response.isbn || ''
-    book.value.publisher = response.publisher_name || response.publisher || ''
-    book.value.tags = response.tags || ''
-
-    if (isValidReadDate(response.read_date)) {
-      const d = new Date(response.read_date)
-      book.value.read_date = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
-    } else {
-      book.value.read_date = null
-    }
-
-    if (response.publication_date) {
-      const d = new Date(response.publication_date)
-      book.value.pubdate = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
-    } else {
-      book.value.pubdate = null
-    }
-  } catch (error) {
-    console.error('Erro ao buscar detalhes:', error)
-    book.value.title = t('bookDialog.errorLoading')
-    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.couldNotLoad'), life: 3000 })
+function applyResponse(data) {
+  if (!data) return
+  book.value = {
+    title: data.title || '',
+    authors: data.authors || '',
+    isbn: data.isbn || '',
+    publisher: data.publisher_name || data.publisher || '',
+    tags: data.tags || '',
+    read_date: fromApiDate(data.read_date),
+    pubdate: fromApiDate(data.publication_date)
   }
 }
 
-watch(() => props.modelValue, (val) => visible.value = val)
-watch(visible, (val) => emits('update:modelValue', val))
+async function loadBookData() {
+  if (!props.bookId) return
+
+  loading.value = true
+  loadFailed.value = false
+  clearSelectedFile()
+
+  try {
+    const response = props.isReadOnly
+      ? await api.getPublicBook(props.ownerUsername, props.bookId)
+      : await api.getBookById(props.bookId)
+
+    applyResponse(response)
+  } catch (error) {
+    // Sem os dados reais a edição fica bloqueada: antes dava para salvar
+    // "Erro ao carregar" por cima do título verdadeiro.
+    loadFailed.value = true
+    book.value = emptyBook()
+    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.couldNotLoad'), life: 3000 })
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(() => props.modelValue, (val) => { visible.value = val })
+watch(visible, (val) => emit('update:modelValue', val))
 
 onMounted(() => {
   if (visible.value) loadBookData()
 })
+
+onBeforeUnmount(() => preview.clear())
 </script>
 
 <style>
@@ -561,6 +596,15 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+button.cover-wrapper {
+  border: none;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  display: block;
 }
 
 .cover-wrapper.editable {

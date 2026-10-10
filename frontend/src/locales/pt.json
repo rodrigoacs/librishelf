@@ -34,7 +34,10 @@
     "configurations": "Configurações",
     "language": "Idioma",
     "theme": "Tema",
-    "openMenu": "Abrir menu"
+    "openMenu": "Abrir menu",
+    "settings": "Conta",
+    "preferences": "Preferências",
+    "closeMenu": "Fechar menu"
   },
   "common": {
     "save": "Salvar",
@@ -46,7 +49,15 @@
     "filter": "Filtro",
     "new": "Novo",
     "success": "Sucesso",
-    "error": "Erro"
+    "error": "Erro",
+    "close": "Fechar",
+    "retry": "Tentar de novo",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "loadError": "Não foi possível carregar. Verifique sua conexão e tente de novo.",
+    "back": "Voltar",
+    "saving": "Salvando...",
+    "skipToContent": "Pular para o conteúdo"
   },
   "book": {
     "new_title": "Novo Livro",
@@ -65,7 +76,16 @@
     "isbn": "ISBN",
     "validation_title": "Título é obrigatório",
     "toast_added": "Livro adicionado com sucesso!",
-    "toast_updated": "Alterações salvas."
+    "toast_updated": "Alterações salvas.",
+    "validation_authors": "Autor é obrigatório",
+    "change": "Trocar",
+    "toast_error": "Não foi possível adicionar o livro.",
+    "file_too_large": "A imagem pode ter no máximo {mb} MB.",
+    "file_not_image": "Selecione um arquivo de imagem.",
+    "cover_not_saved": "O livro foi salvo, mas a capa não pôde ser enviada. Tente trocar a capa depois.",
+    "select_cover": "Selecionar imagem de capa",
+    "read_ribbon": "Lido",
+    "dialog_label": "Adicionar livro"
   },
   "library": {
     "search_ph": "Pesquisar por título, ISBN...",
@@ -99,7 +119,13 @@
       "all_years": "Todos os anos"
     },
     "empty_title": "Nenhum livro encontrado",
-    "empty_msg": "Não encontramos nada com os filtros atuais."
+    "empty_msg": "Não encontramos nada com os filtros atuais.",
+    "clear_search": "Limpar busca",
+    "sort_asc": "Ordem crescente",
+    "sort_desc": "Ordem decrescente",
+    "read_year_chip": "Lidos em {year}",
+    "search_label": "Pesquisar livros",
+    "load_error": "Não foi possível carregar seus livros."
   },
   "bookDialog": {
     "bookCover": "Capa do Livro",
@@ -127,7 +153,6 @@
     "error": "Falha ao atualizar o livro.",
     "updateFailed": "Falha na atualização.",
     "errorLoading": "Erro ao carregar detalhes do livro.",
-    "attetion": "Atenção",
     "couldNotLoad": "Não foi possível carregar os detalhes do livro.",
     "save": "Salvar Alterações",
     "delete": "Deletar Livro",
@@ -136,28 +161,38 @@
     "bookDeleted": "Livro deletado.",
     "errorDeleted": "Erro ao deletar o livro. Tente novamente.",
     "deleteFailed": "Falha na exclusão.",
-    "attention": "Atenção"
+    "attention": "Atenção",
+    "dialog_label": "Detalhes do livro",
+    "cannotEdit": "Não é possível editar: os dados do livro não carregaram.",
+    "validationTitle": "Título é obrigatório.",
+    "validationAuthors": "Autor é obrigatório."
   },
   "authors": {
     "title": "Autores",
     "subtitle": "Gerencie seus autores de livros.",
     "search_ph": "Pesquisar autores...",
     "notFound": "Nenhum autor encontrado.",
-    "bookCount": "{count} livros",
-    "viewBooks": "Ver Livros"
+    "bookCount": "{count} livro | {count} livros",
+    "viewBooks": "Ver Livros",
+    "loadError": "Não foi possível carregar os autores."
   },
   "publishers": {
     "title": "Editoras",
     "subtitle": "Gerencie suas editoras de livros.",
     "search_ph": "Pesquisar editoras...",
     "notFound": "Nenhuma editora encontrada.",
-    "viewCollection": "Ver Coleção"
+    "viewCollection": "Ver Coleção",
+    "loadError": "Não foi possível carregar as editoras.",
+    "bookCount": "{count} livro | {count} livros"
   },
   "tags": {
     "title": "Tags",
     "subtitle": "Gerencie suas tags de livros.",
     "search_ph": "Pesquisar tags...",
-    "empty": "Nenhuma tag encontrada."
+    "empty": "Nenhuma tag encontrada.",
+    "error": "Não foi possível carregar as tags.",
+    "bookCount": "{count} livro | {count} livros",
+    "viewBooks": "Ver livros"
   },
   "dashboard": {
     "title": "Painel",
@@ -171,7 +206,9 @@
     "topAuthors": "Melhores Autores",
     "noTagsData": "Nenhum dado de tags disponível",
     "noAuthorsData": "Nenhum dado de autores disponível",
-    "books": "Livros"
+    "books": "Livros",
+    "loadError": "Não foi possível carregar as estatísticas.",
+    "noYearData": "Nenhuma leitura registrada ainda"
   },
   "login": {
     "header": "Sua biblioteca pessoal, em todo lugar.",
@@ -186,7 +223,8 @@
     "fillFields": "Por favor, preencha todos os campos.",
     "error": "Erro",
     "invalidCreds": "Credenciais inválidas. Tente novamente.",
-    "success": "Login realizado com sucesso."
+    "success": "Login realizado com sucesso.",
+    "privacy": "Privacidade"
   },
   "register": {
     "register": "Cadastrar",
@@ -209,14 +247,134 @@
     "passwordMismatch": "As senhas não coincidem.",
     "passwordTooWeak": "A senha precisa ter pelo menos 8 caracteres, incluindo letras e números.",
     "error": "Erro",
-    "sucess": "Sucesso",
     "accountCreated": "Sua conta foi criada. Você já pode fazer login.",
-    "errorCreating": "Erro ao criar a conta. Tente novamente."
+    "errorCreating": "Erro ao criar a conta. Tente novamente.",
+    "success": "Sucesso",
+    "privacyNotice": "Ao criar a conta, você concorda com a",
+    "privacyLink": "política de privacidade",
+    "invalidUsername": "Use só letras, números, ponto, hífen e sublinhado."
   },
   "publicLibrary": {
     "title": "Biblioteca de { ownerName }",
     "subtitle": "Explorando coleção pública.",
     "empty": "Nenhum livro encontrado nesta biblioteca.",
-    "loading": "Carregando biblioteca..."
+    "loading": "Carregando biblioteca...",
+    "notFound": "Esta biblioteca não existe ou não é pública.",
+    "loadMore": "Carregar mais",
+    "error": "Não foi possível carregar esta biblioteca.",
+    "count": "{count} livro | {count} livros",
+    "poweredBy": "Feito com Librishelf"
+  },
+  "theme": {
+    "toLight": "Mudar para o tema claro",
+    "toDark": "Mudar para o tema escuro",
+    "accent": "Cor de destaque: {color}",
+    "colors": {
+      "blue": "azul",
+      "green": "verde",
+      "purple": "roxo",
+      "red": "vermelho",
+      "orange": "laranja",
+      "yellow": "amarelo"
+    },
+    "accentGroup": "Cor de destaque"
+  },
+  "language": {
+    "switchTo": "Mudar idioma para {lang}"
+  },
+  "settings": {
+    "title": "Conta",
+    "subtitle": "Privacidade, senha e dados da sua conta.",
+    "public": {
+      "title": "Biblioteca pública",
+      "desc": "Quando ligada, qualquer pessoa com o link vê seus livros (título, autor, editora, tags, datas e capas). Capas de bibliotecas públicas também podem aparecer no mosaico da tela de login. Desligada, ninguém além de você vê nada.",
+      "toggle": "Tornar minha biblioteca pública",
+      "link": "Seu link público",
+      "on": "Sua biblioteca agora é pública.",
+      "off": "Sua biblioteca agora é privada.",
+      "error": "Não foi possível alterar a visibilidade."
+    },
+    "password": {
+      "title": "Alterar senha",
+      "desc": "As outras sessões abertas serão encerradas.",
+      "current": "Senha atual",
+      "new": "Nova senha",
+      "confirm": "Confirmar nova senha",
+      "submit": "Alterar senha",
+      "success": "Senha alterada.",
+      "mismatch": "As novas senhas não coincidem.",
+      "fill": "Preencha os três campos."
+    },
+    "delete": {
+      "title": "Excluir conta",
+      "desc": "Apaga sua conta, todos os seus livros e capas. Não dá para desfazer.",
+      "button": "Excluir minha conta",
+      "confirmTitle": "Excluir conta definitivamente",
+      "confirmMsg": "Digite sua senha para confirmar. Todos os seus dados serão apagados agora.",
+      "password": "Sua senha",
+      "confirmButton": "Excluir tudo",
+      "success": "Sua conta foi excluída."
+    },
+    "privacyLink": "Ler a política de privacidade"
+  },
+  "privacy": {
+    "title": "Política de Privacidade",
+    "updated": "Última atualização: {date}",
+    "intro": "Esta política explica quais dados o Librishelf trata, por quê e como você controla isso.",
+    "sections": [
+      {
+        "title": "Quais dados coletamos",
+        "paragraphs": [
+          "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
+          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, tags e datas) e as capas que você enviar.",
+          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login."
+        ]
+      },
+      {
+        "title": "Para que usamos",
+        "paragraphs": [
+          "Só para o Librishelf funcionar: manter você conectado, guardar e mostrar sua biblioteca e proteger sua conta.",
+          "Não vendemos nem compartilhamos seus dados com ninguém, e não usamos publicidade nem ferramentas de rastreamento."
+        ]
+      },
+      {
+        "title": "Biblioteca pública",
+        "paragraphs": [
+          "Sua biblioteca é privada por padrão. Se você ativar o compartilhamento em Conta, qualquer pessoa com o seu link pode ver seus livros e capas, e algumas capas podem aparecer nas telas de entrada do site.",
+          "Você pode desativar quando quiser, e a mudança vale na hora."
+        ]
+      },
+      {
+        "title": "Cookies",
+        "paragraphs": [
+          "Usamos apenas um cookie essencial, que mantém você conectado. Ele não serve para rastreamento nem publicidade.",
+          "Suas preferências de tema e idioma ficam salvas só no seu navegador."
+        ]
+      },
+      {
+        "title": "Por quanto tempo guardamos",
+        "paragraphs": [
+          "Enquanto sua conta existir. Quando você exclui a conta, todos os seus dados são apagados na hora.",
+          "Cópias de segurança podem manter esses dados por um período limitado, até serem substituídas."
+        ]
+      },
+      {
+        "title": "Seus direitos (LGPD)",
+        "paragraphs": [
+          "Você pode consultar, corrigir, pedir uma cópia ou excluir seus dados a qualquer momento. Correções e a exclusão da conta você faz pelo próprio app; para os outros pedidos, fale com a gente pelo contato abaixo."
+        ]
+      },
+      {
+        "title": "Contato",
+        "paragraphs": [
+          "Responsável pelos dados: {email}"
+        ]
+      }
+    ]
+  },
+  "notFound": {
+    "title": "Página não encontrada",
+    "message": "O endereço que você abriu não existe ou foi movido.",
+    "goHome": "Ir para o início"
   }
 }

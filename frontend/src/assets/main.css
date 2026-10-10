@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Georgia:wght@400;700&display=swap');
 
 :root {
+  --font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --p-focus-ring-color: var(--main-color);
 
   --main-color-rgb: 58, 134, 255;
@@ -68,11 +68,57 @@
 }
 
 * {
-  font-family: 'Inter', sans-serif;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+  font-family: var(--font-family);
   box-sizing: border-box;
+}
+
+/* Controles e navegação não selecionam texto ao clicar; o conteúdo (títulos,
+   autores, ISBN, textos) continua selecionável e copiável. */
+button,
+.p-button,
+nav,
+.nav-item,
+img {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: var(--main-color);
+  color: var(--text-inverse);
+  text-decoration: none;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {

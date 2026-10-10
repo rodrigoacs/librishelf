@@ -1,92 +1,103 @@
 <template>
-  <div
-    class="book-card"
-    @click="openDialog"
-  >
-    <div class="cover-wrapper">
-      <img
-        :src="bookCoverUrl"
-        @error="handleImageError"
-        alt="Book Cover"
-        loading="lazy"
-      />
-      <div class="cover-overlay"></div>
+  <div class="book-card-wrapper">
+    <button
+      type="button"
+      class="book-card"
+      :aria-label="ariaLabel"
+      @click="displayDialog = true"
+    >
+      <span class="cover-wrapper">
+        <img
+          :src="bookCoverUrl"
+          @error="handleCoverError"
+          :alt="''"
+          loading="lazy"
+          decoding="async"
+        />
+        <span
+          class="cover-overlay"
+          aria-hidden="true"
+        ></span>
 
-      <div
-        v-if="isRead"
-        class="bookmark-ribbon"
-        title="Lido"
-      >
-      </div>
-    </div>
+        <span
+          v-if="isRead"
+          class="bookmark-ribbon"
+          :title="t('book.read_ribbon')"
+          aria-hidden="true"
+        ></span>
+      </span>
 
-    <div class="book-details">
-      <h3
-        class="book-title"
-        :title="book.title"
-      >{{ book.title }}</h3>
-      <p
-        class="book-author"
-        :title="book.authors"
-      >{{ book.authors }}</p>
-    </div>
+      <span class="book-details">
+        <span
+          class="book-title"
+          :title="book.title"
+        >{{ book.title }}</span>
+        <span
+          class="book-author"
+          :title="book.authors"
+        >{{ book.authors }}</span>
+      </span>
+    </button>
 
     <BookDialog
       v-if="displayDialog"
-      :bookId="book.book_id || book.id"
+      :bookId="bookId"
+      :isReadOnly="readOnly"
+      :ownerUsername="ownerUsername"
       :modelValue="displayDialog"
       @update:modelValue="displayDialog = $event"
-      @refresh="emit('refresh')"
+      @updated="payload => emit('updated', payload)"
+      @deleted="id => emit('deleted', id)"
     />
   </div>
 </template>
 
 <script setup>
-import { defineEmits, ref, computed } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BookDialog from './BookDialog.vue'
+import { coverUrl, handleCoverError } from '../utils/covers.js'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3050'
+const { t } = useI18n()
 
 const props = defineProps({
-  book: { type: Object, required: true }
+  book: { type: Object, required: true },
+  coverVersion: { type: Number, default: 0 },
+  readOnly: { type: Boolean, default: false },
+  ownerUsername: { type: String, default: '' }
 })
 
-const emit = defineEmits(['refresh'])
+const emit = defineEmits(['updated', 'deleted'])
 const displayDialog = ref(false)
 
-const isRead = computed(() => {
-  const date = props.book.read_date
-  return date && !date.startsWith('0101')
+const bookId = computed(() => props.book.book_id ?? props.book.id)
+const isRead = computed(() => Boolean(props.book.read_date))
+const bookCoverUrl = computed(() => coverUrl(bookId.value, props.coverVersion))
+
+const ariaLabel = computed(() => {
+  const parts = [props.book.title, props.book.authors].filter(Boolean)
+  if (isRead.value) parts.push(t('book.read_ribbon'))
+  return parts.join(' — ')
 })
-
-const bookCoverUrl = computed(() => {
-  const id = props.book.book_id || props.book.id
-  if (!id) return '/placeholder.png'
-  return `${API_URL}/uploads/${id}.avif`
-})
-
-function handleImageError(event) {
-  const img = event.target
-
-  if (img.dataset.errorHandled) return
-
-  const src = img.src
-
-  if (src.includes('.avif')) {
-    img.src = src.replace('.avif', '.jpg')
-  }
-  else {
-    img.dataset.errorHandled = true
-    img.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22450%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%232a2a2a%22%2F%3E%3Cpath%20d%3D%22M100%20180%20L150%20130%20L200%20180%22%20stroke%3D%22%23444%22%20stroke-width%3D%225%22%20fill%3D%22none%22%2F%3E%3C%2Fsvg%3E"
-  }
-}
-
-function openDialog() {
-  displayDialog.value = true
-}
 </script>
 
 <style scoped>
+.book-card-wrapper {
+  display: flex;
+  min-width: 0;
+}
+
+button.book-card {
+  flex: 1;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  width: 100%;
+  appearance: none;
+}
+
 .book-card {
   display: flex;
   flex-direction: column;
@@ -113,6 +124,7 @@ function openDialog() {
 }
 
 .cover-wrapper {
+  display: block;
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
@@ -174,6 +186,7 @@ function openDialog() {
 }
 
 .book-details {
+  display: block;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -183,6 +196,7 @@ function openDialog() {
 }
 
 .book-title {
+  display: block;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -196,6 +210,7 @@ function openDialog() {
 }
 
 .book-author {
+  display: block;
   font-size: 0.85rem;
   color: var(--text-secondary);
   margin: 0;

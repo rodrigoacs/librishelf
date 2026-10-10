@@ -7,13 +7,19 @@
     :breakpoints="{ '960px': '75vw', '640px': '95vw' }"
     :style="{ width: '900px', maxWidth: '95vw' }"
     :showHeader="false"
+    :aria-label="t('book.dialog_label')"
   >
     <div class="dialog-body">
       <button
+        type="button"
         class="close-btn"
+        :aria-label="t('common.close')"
         @click="visible = false"
       >
-        <i class="pi pi-times"></i>
+        <i
+          class="pi pi-times"
+          aria-hidden="true"
+        ></i>
       </button>
 
       <div class="cover-section">
@@ -21,48 +27,58 @@
           v-if="previewUrl"
           :src="previewUrl"
           class="blur-bg"
+          alt=""
           aria-hidden="true"
-          @error="handlePreviewError"
         />
 
-        <div
+        <button
+          type="button"
           class="upload-container"
-          @click="triggerFileInput"
+          :aria-label="t('book.select_cover')"
+          @click="fileInput?.click()"
         >
-          <div
+          <span
             v-if="previewUrl"
             class="preview-wrapper"
           >
             <img
               :src="previewUrl"
               class="cover-preview"
-              @error="handlePreviewError"
+              alt=""
             />
-            <div class="change-overlay">
+            <span
+              class="change-overlay"
+              aria-hidden="true"
+            >
               <i class="pi pi-refresh"></i>
-              <span>Trocar</span>
-            </div>
-          </div>
+              <span>{{ t('book.change') }}</span>
+            </span>
+          </span>
 
-          <div
+          <span
             v-else
             class="upload-placeholder"
           >
-            <div class="icon-circle">
+            <span
+              class="icon-circle"
+              aria-hidden="true"
+            >
               <i class="pi pi-camera"></i>
-            </div>
+            </span>
             <span class="upload-text">{{ t('book.add_cover') }}</span>
             <span class="upload-subtext">{{ t('book.click_select') }}</span>
-          </div>
+          </span>
+        </button>
 
-          <input
-            type="file"
-            ref="fileInput"
-            accept="image/*"
-            class="hidden-input"
-            @change="onFileSelect"
-          />
-        </div>
+        <input
+          type="file"
+          ref="fileInput"
+          accept="image/*"
+          class="hidden-input"
+          tabindex="-1"
+          aria-hidden="true"
+          @change="onFileSelect"
+        />
       </div>
 
       <div class="form-section">
@@ -71,32 +87,70 @@
           <p>{{ t('book.new_subtitle') }}</p>
         </div>
 
-        <div class="form-content">
+        <form
+          class="form-content"
+          novalidate
+          @submit.prevent="saveBook"
+        >
           <div class="input-group main-group">
+            <label
+              for="new-book-title"
+              class="sr-only"
+            >{{ t('book.title_ph') }}</label>
             <input
+              id="new-book-title"
               v-model="book.title"
               class="modern-input title-input"
               :placeholder="t('book.title_ph')"
-              :class="{ 'error': submitted && !book.title }"
+              :class="{ 'error': submitted && !book.title.trim() }"
+              :aria-invalid="submitted && !book.title.trim()"
+              aria-describedby="new-book-title-error"
+              required
             />
             <small
-              v-if="submitted && !book.title"
+              v-if="submitted && !book.title.trim()"
+              id="new-book-title-error"
               class="error-msg"
             >{{ t('book.validation_title') }}</small>
           </div>
 
           <div class="input-group">
-            <i class="pi pi-user input-icon"></i>
+            <i
+              class="pi pi-user input-icon"
+              aria-hidden="true"
+            ></i>
+            <label
+              for="new-book-authors"
+              class="sr-only"
+            >{{ t('book.author_ph') }}</label>
             <input
+              id="new-book-authors"
               v-model="book.authors"
               class="modern-input"
-              :placeholder="t('book.author_ph')"
+              :placeholder="`${t('book.author_ph')} *`"
+              :class="{ 'error': submitted && !book.authors.trim() }"
+              :aria-invalid="submitted && !book.authors.trim()"
+              aria-describedby="new-book-authors-error"
+              required
             />
+            <small
+              v-if="submitted && !book.authors.trim()"
+              id="new-book-authors-error"
+              class="error-msg"
+            >{{ t('book.validation_authors') }}</small>
           </div>
 
           <div class="input-group">
-            <i class="pi pi-tags input-icon"></i>
+            <i
+              class="pi pi-tags input-icon"
+              aria-hidden="true"
+            ></i>
+            <label
+              for="new-book-tags"
+              class="sr-only"
+            >{{ t('book.tags_ph') }}</label>
             <input
+              id="new-book-tags"
               v-model="book.tags"
               class="modern-input"
               :placeholder="t('book.tags_ph')"
@@ -105,32 +159,40 @@
 
           <div class="dates-grid">
             <div class="input-group">
-              <label>{{ t('book.read_status') }}</label>
+              <label for="new-book-read-date">{{ t('book.read_status') }}</label>
               <div class="date-wrapper">
                 <i
                   class="pi"
                   :class="book.readDate ? 'pi-check-circle text-theme' : 'pi-circle text-gray'"
+                  aria-hidden="true"
                 ></i>
                 <Calendar
+                  inputId="new-book-read-date"
                   v-model="book.readDate"
                   dateFormat="dd/mm/yy"
                   :placeholder="t('book.unread')"
                   class="modern-calendar"
                   :showIcon="false"
+                  showButtonBar
                 />
               </div>
             </div>
 
             <div class="input-group">
-              <label>{{ t('book.pub_date') }}</label>
+              <label for="new-book-pub-date">{{ t('book.pub_date') }}</label>
               <div class="date-wrapper">
-                <i class="pi pi-calendar text-gray"></i>
+                <i
+                  class="pi pi-calendar text-gray"
+                  aria-hidden="true"
+                ></i>
                 <Calendar
+                  inputId="new-book-pub-date"
                   v-model="book.pubDate"
                   dateFormat="dd/mm/yy"
                   :placeholder="t('book.pub_date')"
                   class="modern-calendar"
                   :showIcon="false"
+                  showButtonBar
                 />
               </div>
             </div>
@@ -138,51 +200,57 @@
 
           <div class="meta-grid">
             <div class="input-group">
-              <label>{{ t('book.publisher') }}</label>
+              <label for="new-book-publisher">{{ t('book.publisher') }}</label>
               <input
+                id="new-book-publisher"
                 v-model="book.publisher"
                 class="modern-input meta-input"
                 placeholder="-"
               />
             </div>
             <div class="input-group">
-              <label>ISBN</label>
+              <label for="new-book-isbn">{{ t('book.isbn') }}</label>
               <input
+                id="new-book-isbn"
                 v-model="book.isbn"
                 class="modern-input meta-input"
                 placeholder="-"
+                inputmode="numeric"
               />
             </div>
           </div>
-        </div>
 
-        <div class="form-footer">
-          <Button
-            :label="t('common.cancel')"
-            class="p-button-text p-button-secondary"
-            @click="visible = false"
-          />
-          <Button
-            :label="t('common.new')"
-            icon="pi pi-plus"
-            class="btn-action-primary"
-            @click="saveBook"
-            :loading="loading"
-          />
-        </div>
+          <div class="form-footer">
+            <Button
+              type="button"
+              :label="t('common.cancel')"
+              class="p-button-text p-button-secondary"
+              @click="visible = false"
+            />
+            <Button
+              type="submit"
+              :label="t('common.new')"
+              icon="pi pi-plus"
+              class="btn-action-primary"
+              :loading="loading"
+            />
+          </div>
+        </form>
       </div>
     </div>
   </Dialog>
 </template>
 
 <script setup>
-import { ref, reactive, watch, defineEmits } from 'vue'
+import { ref, reactive, watch, onBeforeUnmount } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Calendar from 'primevue/calendar'
 import { useToast } from 'primevue/usetoast'
 import api from '../services/api.js'
 import { useI18n } from 'vue-i18n'
+import { toApiDate } from '../utils/dates.js'
+import { validateImageFile, createPreviewHandle } from '../utils/files.js'
 
 const { t } = useI18n()
 
@@ -199,6 +267,7 @@ const submitted = ref(false)
 const fileInput = ref(null)
 const previewUrl = ref(null)
 const selectedFile = ref(null)
+const preview = createPreviewHandle()
 
 const initialBookState = {
   title: '',
@@ -214,41 +283,35 @@ const book = reactive({ ...initialBookState })
 
 watch(() => props.visible, (newVal) => {
   visible.value = newVal
-  if (newVal) {
-    resetForm()
-  }
+  if (newVal) resetForm()
 })
 
 watch(visible, (newVal) => {
   emit('update:visible', newVal)
+  if (!newVal) preview.clear()
 })
 
 function resetForm() {
   Object.assign(book, initialBookState)
   selectedFile.value = null
   previewUrl.value = null
+  preview.clear()
   submitted.value = false
-}
-
-function triggerFileInput() {
-  fileInput.value.click()
 }
 
 function onFileSelect(event) {
   const file = event.target.files[0]
-  if (file) {
-    selectedFile.value = file
-    previewUrl.value = URL.createObjectURL(file)
-  }
-}
+  event.target.value = ''
+  if (!file) return
 
-function formatDateISO(date) {
-  if (!date) return null
-  const d = new Date(date)
-  if (isNaN(d.getTime())) return null
-  const offset = d.getTimezoneOffset()
-  const localDate = new Date(d.getTime() - (offset * 60 * 1000))
-  return localDate.toISOString().split('T')[0]
+  const problem = validateImageFile(file)
+  if (problem) {
+    toast.add({ severity: 'warn', summary: t('common.error'), detail: t(problem.key, problem.params || {}), life: 4000 })
+    return
+  }
+
+  selectedFile.value = file
+  previewUrl.value = preview.set(file)
 }
 
 async function saveBook() {
@@ -259,47 +322,47 @@ async function saveBook() {
     return
   }
 
+  if (!book.authors.trim()) {
+    toast.add({ severity: 'warn', summary: t('common.error'), detail: t('book.validation_authors'), life: 3000 })
+    return
+  }
+
   loading.value = true
 
   try {
     const formData = new FormData()
 
-    formData.append('title', book.title)
-    formData.append('authors', book.authors || '')
+    formData.append('title', book.title.trim())
+    formData.append('authors', book.authors.trim())
     formData.append('publisher', book.publisher || '')
     formData.append('isbn', book.isbn || '')
+    formData.append('tags', book.tags || '')
 
-    formData.append('tags', book.tags)
-
-    if (book.pubDate) formData.append('pubDate', formatDateISO(book.pubDate))
-    if (book.readDate) formData.append('readDate', formatDateISO(book.readDate))
+    if (book.pubDate) formData.append('pubDate', toApiDate(book.pubDate))
+    if (book.readDate) formData.append('readDate', toApiDate(book.readDate))
 
     if (selectedFile.value) {
       formData.append('coverImage', selectedFile.value)
     }
 
-    await api.createBook(formData)
+    const result = await api.createBook(formData)
 
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('book.toast_added'), life: 3000 })
-    emit('save')
+    if (selectedFile.value && result?.coverSaved === false) {
+      toast.add({ severity: 'warn', summary: t('common.success'), detail: t('book.cover_not_saved'), life: 6000 })
+    } else {
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('book.toast_added'), life: 3000 })
+    }
+
+    emit('save', result)
     visible.value = false
-
   } catch (error) {
-    console.error('Erro ao criar livro:', error)
     toast.add({ severity: 'error', summary: t('common.error'), detail: error.message || t('book.toast_error'), life: 4000 })
   } finally {
     loading.value = false
   }
 }
 
-function handlePreviewError(event) {
-  const img = event.target
-  if (img.src.startsWith('blob:')) return
-
-  if (img.src.includes('.avif')) {
-    img.src = img.src.replace('.avif', '.jpg')
-  }
-}
+onBeforeUnmount(() => preview.clear())
 </script>
 
 <style>
@@ -389,6 +452,15 @@ function handlePreviewError(event) {
   transform: scale(1.2);
 }
 
+button.upload-container {
+  border: none;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
 .upload-container {
   width: 100%;
   max-width: 250px;
@@ -440,6 +512,11 @@ function handlePreviewError(event) {
   font-size: 1.5rem;
 }
 
+.upload-text,
+.upload-subtext {
+  display: block;
+}
+
 .upload-text {
   font-weight: 600;
   font-size: 1rem;
@@ -456,6 +533,7 @@ function handlePreviewError(event) {
 }
 
 .preview-wrapper {
+  display: block;
   width: 100%;
   height: 100%;
   position: relative;
@@ -483,6 +561,7 @@ function handlePreviewError(event) {
   gap: 0.5rem;
 }
 
+.upload-container:focus-visible .change-overlay,
 .preview-wrapper:hover .change-overlay {
   opacity: 1;
 }

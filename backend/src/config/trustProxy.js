@@ -26,7 +26,7 @@ function parseTrustProxy(raw) {
 const trustProxy = parseTrustProxy(process.env.TRUST_PROXY)
 
 if (process.env.TRUST_PROXY === undefined) {
-  logger.info('TRUST_PROXY não definido, usando padrão sem proxy (false). Defina TRUST_PROXY=1 atrás do nginx.')
+  logger.info('TRUST_PROXY não definido, usando padrão sem proxy (false). Defina o número de proxies na frente da API (2 no docker-compose).')
 }
 
 export { parseTrustProxy }

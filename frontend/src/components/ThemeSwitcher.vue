@@ -1,49 +1,50 @@
 <template>
   <div class="theme-switcher">
     <button
+      type="button"
       class="mode-btn"
       @click="toggleTheme"
-      :title="currentTheme === 'dark' ? 'Mudar para Claro' : 'Mudar para Escuro'"
+      :aria-label="currentTheme === 'dark' ? t('theme.toLight') : t('theme.toDark')"
+      v-tooltip.top="currentTheme === 'dark' ? t('theme.toLight') : t('theme.toDark')"
     >
       <i
         class="pi"
         :class="currentTheme === 'dark' ? 'pi-sun' : 'pi-moon'"
+        aria-hidden="true"
       ></i>
     </button>
 
-    <div class="divider"></div>
+    <div
+      class="divider"
+      aria-hidden="true"
+    ></div>
 
-    <div class="colors-list">
+    <div
+      class="colors-list"
+      role="group"
+      :aria-label="t('theme.accentGroup')"
+    >
       <button
         v-for="color in availableColors"
         :key="color"
+        type="button"
         class="color-dot"
         :class="{ active: accentColor === color }"
-        :style="{ backgroundColor: `rgb(${getRxgb(color)})` }"
+        :style="{ backgroundColor: `rgb(var(--${color}-rgb))` }"
+        :aria-label="t('theme.accent', { color: t(`theme.colors.${color}`) })"
+        :aria-pressed="accentColor === color"
         @click="setAccent(color)"
-        :title="color"
       ></button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { useTheme } from '../composables/useTheme.js'
 
+const { t } = useI18n()
 const { currentTheme, accentColor, toggleTheme, setAccent, availableColors } = useTheme()
-
-const colorsMap = {
-  blue: '58, 134, 255',
-  green: '169, 255, 84',
-  purple: '141, 120, 250',
-  red: '255, 75, 120',
-  orange: '255, 138, 80',
-  yellow: '253, 212, 87'
-}
-
-function getRxgb(name) {
-  return colorsMap[name]
-}
 </script>
 
 <style scoped>

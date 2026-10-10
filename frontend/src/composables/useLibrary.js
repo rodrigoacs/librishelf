@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import api from '../services/api.js'
 
 const SEARCH_DEBOUNCE_MS = 500
@@ -60,6 +60,9 @@ export function useLibrary() {
   const totalRecords = ref(0)
 
   const filters = ref(defaultFilters())
+
+  // bookId → timestamp da última troca de capa; vira ?v= na URL para furar o cache.
+  const coverVersions = reactive({})
 
   // Uma busca nova (filtro, ordenação, refresh) cancela a anterior em vez de ser
   // descartada: o resultado na tela sempre corresponde aos filtros atuais.
@@ -157,8 +160,37 @@ export function useLibrary() {
     fetchBooks(false)
   }
 
+  // Aplica vários filtros de uma vez (ex.: vindos da URL) com uma busca só.
+  function setFilters(patch, { fetch = true } = {}) {
+    cancelPendingSearch()
+    Object.assign(filters.value, patch)
+    if (fetch) fetchBooks(false)
+  }
+
+  /**
+   * Troca o item editado na lista sem recarregar tudo (antes a edição voltava
+   * o scroll infinito para a página 1).
+   */
+  function updateBookInList(updated, { coverChanged = false } = {}) {
+    const id = updated.book_id ?? updated.id
+    const index = books.value.findIndex(book => (book.book_id ?? book.id) === id)
+
+    if (index !== -1) {
+      books.value[index] = { ...books.value[index], ...updated, book_id: id }
+    }
+
+    if (coverChanged) coverVersions[id] = Date.now()
+  }
+
+  function removeBookFromList(id) {
+    const before = books.value.length
+    books.value = books.value.filter(book => (book.book_id ?? book.id) !== id)
+    if (books.value.length < before) totalRecords.value = Math.max(0, totalRecords.value - 1)
+  }
+
   return {
     books,
+    coverVersions,
     totalRecords,
     loading,
     loadingMore,
@@ -167,6 +199,9 @@ export function useLibrary() {
     fetchBooks: () => fetchBooks(false),
     loadMore,
     setFilter,
-    resetFilters
+    setFilters,
+    resetFilters,
+    updateBookInList,
+    removeBookFromList
   }
 }

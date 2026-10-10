@@ -8,9 +8,16 @@ import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
 import Tooltip from 'primevue/tooltip'
 
+import '@fontsource-variable/inter'
 import 'primevue/resources/themes/aura-dark-teal/theme.css'
 import 'primeicons/primeicons.css'
 import './assets/main.css'
+
+// Registra o tratamento de sessão expirada antes da primeira requisição.
+import './services/session.js'
+import { initTheme } from './composables/useTheme.js'
+
+initTheme()
 
 const app = createApp(App)
 

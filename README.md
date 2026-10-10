@@ -1,121 +1,141 @@
-# Librishelf: Your Digital Bookshelf 📚
+# Librishelf 📚
 
-**Librishelf** is a personal library management system that allows you to organize, track, and manage your book collections in a personalized, secure, and accessible way.
+**Librishelf** is a personal library manager: catalog your books, track what you have read and find anything in your collection in seconds.
 
------
+Live at **[librishelf.com](https://librishelf.com)**.
 
-## 🌟 About the Project
+## Features
 
-For book lovers, keeping track of a growing collection can be a challenge. Librishelf was born from the need for a simple yet powerful tool to catalog and manage books, offering a visually pleasing interface and intuitive features.
+- **Your collection, your way** — add books with authors, publisher, ISBN, tags, publication date and cover art.
+- **Reading log** — mark books as read and keep the date you finished them.
+- **Search and filters** — search by title or ISBN; filter by author, publisher, tag, reading status and year; sort by any field.
+- **Dashboard** — totals, reading rate, books read per year, top authors and tags.
+- **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf. Libraries are private by default.
+- **Account control** — change your password (signs out other sessions) and delete your account with all its data.
+- **Portuguese and English**, light and dark themes, six accent colors.
 
-With Librishelf, you can:
+## Tech stack
 
-  * Add new books to your collection with details like author, publisher, publication date, and cover art.
-  * Mark books as read and record the reading date.
-  * Filter and search your library by title, author, or publisher.
-  * View your collection in a responsive and attractive grid layout.
+| Layer    | Tech                                                                 |
+|----------|----------------------------------------------------------------------|
+| Frontend | Vue 3, Vite, PrimeVue 3, vue-i18n, Chart.js                           |
+| Backend  | Node.js 22+, Express 5, `pg`, `sharp` (covers → AVIF/JPG), JWT in an httpOnly cookie |
+| Database | PostgreSQL (schema `librishelf`)                                     |
+| Deploy   | Docker Compose; nginx serves the SPA and proxies `/api` to the backend |
 
-### ✨ Tech Stack
+```
+backend/
+  db/schema.sql            full schema (fresh install)
+  db/migrations/           incremental changes for existing databases
+  db/manual/               optional, destructive scripts (never run automatically)
+  src/                     Express app (routes → services → repositories)
+frontend/
+  src/                     Vue app
+  nginx.conf               production server + /api proxy
+docker-compose.yml
+```
 
-  * **Frontend:**
-      * [Vue.js](https://vuejs.org/)
-      * [PrimeVue](https://primevue.org/)
-  * **Backend:**
-      * [Node.js](https://nodejs.org/)
-      * [Express](https://expressjs.com/)
-  * **Database:**
-      * [PostgreSQL](https://www.postgresql.org/)
+## Running locally
 
------
+**Requirements:** Node.js 22.12+ and PostgreSQL 14+.
 
-## 🚀 Getting Started
+1. **Install dependencies**
 
-To get Librishelf up and running on your local machine, follow these simple steps.
+   ```sh
+   git clone https://github.com/rodrigoacs/librishelf.git
+   cd librishelf
+   (cd backend && npm install)
+   (cd frontend && npm install)
+   ```
 
-### Prerequisites
+2. **Configure the backend** — copy `backend/src/.env.example` to `backend/src/.env` and fill it in. The important ones:
 
-  * Node.js and npm
-  * PostgreSQL
-  * Vue CLI
+   | Variable | Notes |
+   |----------|-------|
+   | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | PostgreSQL connection |
+   | `SECRET_KEY` | at least 32 characters (the server refuses to start otherwise) |
+   | `COOKIE_SECURE` | leave empty: it follows `NODE_ENV` (secure in production) |
+   | `ALLOWED_ORIGINS` | only matters for cross-origin calls; in dev the Vite proxy makes it same-origin |
+   | `TRUST_PROXY` | number of reverse proxies in front of the API (empty in dev) |
+   | `DB_SSL` | `true` to connect over SSL |
 
-### Installation
+3. **Create the database schema**
 
-1.  **Clone the repository:**
+   ```sh
+   cd backend
+   npm run db:migrate
+   ```
 
-    ```sh
-    git clone https://github.com/rodrigoacs/Librishelf.git
-    cd Librishelf
-    ```
+   On an empty database this applies `db/schema.sql`; on an existing one it applies only the pending files in `db/migrations/`.
 
-2.  **Install backend dependencies:**
+4. **Start both servers**
 
-    ```sh
-    cd backend
-    npm install
-    ```
+   ```sh
+   cd backend && npm run server     # API on http://localhost:3050 (node --watch)
+   cd frontend && npm run dev       # app on http://localhost:5173
+   ```
 
-3.  **Install frontend dependencies:**
+   The Vite dev server proxies `/api` to `http://localhost:3050`, the same way nginx does in production. To point it elsewhere, set `VITE_DEV_API_TARGET` in `frontend/.env`.
 
-    ```sh
-    cd ../frontend
-    npm install
-    ```
+## Tests
 
-4.  **Set up environment variables:**
+The integration tests truncate tables, so they only run against a database whose name contains `test` **and** with `ALLOW_DESTRUCTIVE_TEST_DB=true`.
 
-    Create a `.env` file in the `backend/src` folder and fill it with your database credentials:
+```sh
+cd backend
+cp src/.env.test.example src/.env.test   # point it to e.g. librishelf_test
+npm run db:migrate:test
+npm test                                  # unit + integration
+npm run test:unit                         # unit only, no database needed
+```
 
-    ```plaintext
-    DB_USER=
-    DB_HOST=
-    DB_NAME=
-    DB_PASSWORD=
-    DB_PORT=
-    SECRET_KEY=
-    ```
+## Deploying with Docker
 
-### Running the Application
+The compose file expects an external Docker network named `proxy`, shared with the reverse proxy on the host.
 
-1.  **Start the backend server:**
-    ```sh
-    cd backend
-    npm run server
-    ```
-2.  **Start the frontend development server:**
-    ```sh
-    cd ../frontend
-    npm run dev
-    ```
+```sh
+docker network create proxy                 # once, if it does not exist
+sudo chown -R 1000:1000 ./uploads           # the API runs as the non-root "node" user
+docker compose up -d --build
+docker compose exec backend npm run db:migrate:docker
+```
 
------
+- `librishelf-frontend` serves the built app and proxies `/api/*` to `librishelf-backend:3050`.
+- The backend publishes no host port; only the frontend container talks to it.
+- Covers are stored in `./uploads` (mounted into the backend).
 
-## 📖 Features
+Point your host reverse proxy at the frontend container. Example for nginx:
 
-  * **User Authentication:** Secure login and registration system to protect your collection.
-  * **Add Books:** Easily add new books with detailed information and a cover image.
-  * **Grid View:** Browse your collection with a beautiful grid display of book covers.
-  * **Search and Filter:** Quickly find books with filters for title, author, and publisher.
-  * **Mark as Read:** Track your reading progress by marking books as read.
-  * **Edit Details:** Edit the information of any book on your shelf.
+```nginx
+server {
+  server_name librishelf.com;
+  client_max_body_size 12m;                       # covers up to 10 MB
 
------
+  location / {
+    proxy_pass http://librishelf-frontend:80;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+```
 
-## 🎉 Join Us\!
+`TRUST_PROXY=2` in `docker-compose.yml` matches this chain (host nginx → frontend nginx → API) so rate limiting sees the real client IP.
 
-Create your account and start managing your library today at [librishelf.com](https://librishelf.com)\!
+### Upgrading an existing installation
 
------
+```sh
+git pull
+docker compose up -d --build
+docker compose exec backend npm run db:migrate:docker
+```
 
-## 🤝 Contributing
+`db/manual/drop-legacy-public-schema.sql` removes the old tables left in the `public` schema by earlier versions. It is destructive and optional; back up before running it by hand.
 
-Any contributions you make are **greatly appreciated**.
+## Privacy
 
-1.  **Fork the Project**
-2.  **Create your Feature Branch:** `git checkout -b feature/AmazingFeature`
-3.  **Commit your Changes:** `git commit -m 'Add some AmazingFeature'`
-4.  **Push to the Branch:** `git push origin feature/AmazingFeature`
-5.  **Open a Pull Request**
+Libraries are private unless the owner turns on sharing. Session uses a single essential httpOnly cookie; fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
 
------
+---
 
 Made with ❤️ by **[acs](https://github.com/rodrigoacs)**

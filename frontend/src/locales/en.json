@@ -12,7 +12,10 @@
     "configurations": "Configurations",
     "language": "Language",
     "theme": "Theme",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "settings": "Account",
+    "preferences": "Preferences",
+    "closeMenu": "Close menu"
   },
   "common": {
     "save": "Save",
@@ -24,7 +27,15 @@
     "filter": "Filter",
     "new": "New",
     "success": "Success",
-    "error": "Error"
+    "error": "Error",
+    "close": "Close",
+    "retry": "Try again",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "loadError": "Could not load. Check your connection and try again.",
+    "back": "Back",
+    "saving": "Saving...",
+    "skipToContent": "Skip to content"
   },
   "home": {
     "welcome": "Welcome to ",
@@ -65,7 +76,16 @@
     "isbn": "ISBN",
     "validation_title": "Title is required",
     "toast_added": "Book added successfully!",
-    "toast_updated": "Changes saved."
+    "toast_updated": "Changes saved.",
+    "validation_authors": "Author is required",
+    "change": "Change",
+    "toast_error": "Could not add the book.",
+    "file_too_large": "The image can be at most {mb} MB.",
+    "file_not_image": "Please select an image file.",
+    "cover_not_saved": "The book was saved, but the cover could not be uploaded. Try changing the cover later.",
+    "select_cover": "Select cover image",
+    "read_ribbon": "Read",
+    "dialog_label": "Add book"
   },
   "library": {
     "search_ph": "Search by title, ISBN...",
@@ -99,7 +119,13 @@
       "all_years": "All years"
     },
     "empty_title": "No books found",
-    "empty_msg": "We couldn't find anything with the current filters."
+    "empty_msg": "We couldn't find anything with the current filters.",
+    "clear_search": "Clear search",
+    "sort_asc": "Ascending order",
+    "sort_desc": "Descending order",
+    "read_year_chip": "Read in {year}",
+    "search_label": "Search books",
+    "load_error": "Could not load your books."
   },
   "bookDialog": {
     "bookCover": "Book Cover",
@@ -127,7 +153,6 @@
     "error": "Failed to update book.",
     "updateFailed": "Update failed.",
     "errorLoading": "Error loading book details.",
-    "attetion": "Attention",
     "couldNotLoad": "Could not load book details.",
     "save": "Save Changes",
     "delete": "Delete Book",
@@ -136,28 +161,38 @@
     "bookDeleted": "Book deleted.",
     "errorDeleted": "Error deleting the book. Please try again.",
     "deleteFailed": "Deletion failed.",
-    "attention": "Attention"
+    "attention": "Attention",
+    "dialog_label": "Book details",
+    "cannotEdit": "Cannot edit: the book details did not load.",
+    "validationTitle": "Title is required.",
+    "validationAuthors": "Author is required."
   },
   "authors": {
     "title": "Authors",
     "subtitle": "Manage your book authors.",
     "search_ph": "Search authors...",
     "notFound": "No authors found.",
-    "bookCount": "{count} books",
-    "viewBooks": "View Books"
+    "bookCount": "{count} book | {count} books",
+    "viewBooks": "View Books",
+    "loadError": "Could not load authors."
   },
   "publishers": {
     "title": "Publishers",
     "subtitle": "Manage your book publishers.",
     "search_ph": "Search publishers...",
     "notFound": "No publishers found.",
-    "viewCollection": "View Collection"
+    "viewCollection": "View Collection",
+    "loadError": "Could not load publishers.",
+    "bookCount": "{count} book | {count} books"
   },
   "tags": {
     "title": "Tags",
     "subtitle": "Manage your book tags.",
     "search_ph": "Search tags...",
-    "empty": "No tags found."
+    "empty": "No tags found.",
+    "error": "Could not load tags.",
+    "bookCount": "{count} book | {count} books",
+    "viewBooks": "View books"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -171,7 +206,9 @@
     "topAuthors": "Top Authors",
     "noTagsData": "No tag data available",
     "noAuthorsData": "No author data available",
-    "books": "Books"
+    "books": "Books",
+    "loadError": "Could not load your statistics.",
+    "noYearData": "No reading recorded yet"
   },
   "login": {
     "header": "Your personal library, everywhere.",
@@ -186,7 +223,8 @@
     "fillFields": "Please fill in all fields.",
     "error": "Error",
     "invalidCreds": "Invalid credentials. Try again.",
-    "success": "Login successful."
+    "success": "Login successful.",
+    "privacy": "Privacy"
   },
   "register": {
     "register": "Register",
@@ -209,14 +247,134 @@
     "passwordMismatch": "Passwords do not match.",
     "passwordTooWeak": "Password must be at least 8 characters long and include letters and numbers.",
     "error": "Error",
-    "sucess": "Success",
     "accountCreated": "Your account has been created. You can now login.",
-    "errorCreating": "Error creating account. Try again."
+    "errorCreating": "Error creating account. Try again.",
+    "success": "Success",
+    "privacyNotice": "By creating an account, you agree to the",
+    "privacyLink": "privacy policy",
+    "invalidUsername": "Use only letters, numbers, dot, hyphen and underscore."
   },
   "publicLibrary": {
     "title": "{ ownerName }'s Library",
     "subtitle": "Exploring public collection.",
     "empty": "No books found in this library.",
-    "loading": "Loading library..."
+    "loading": "Loading library...",
+    "notFound": "This library does not exist or is not public.",
+    "loadMore": "Load more",
+    "error": "Could not load this library.",
+    "count": "{count} book | {count} books",
+    "poweredBy": "Made with Librishelf"
+  },
+  "theme": {
+    "toLight": "Switch to light theme",
+    "toDark": "Switch to dark theme",
+    "accent": "Accent color: {color}",
+    "colors": {
+      "blue": "blue",
+      "green": "green",
+      "purple": "purple",
+      "red": "red",
+      "orange": "orange",
+      "yellow": "yellow"
+    },
+    "accentGroup": "Accent color"
+  },
+  "language": {
+    "switchTo": "Switch language to {lang}"
+  },
+  "settings": {
+    "title": "Account",
+    "subtitle": "Privacy, password and your account data.",
+    "public": {
+      "title": "Public library",
+      "desc": "When on, anyone with the link can see your books (title, author, publisher, tags, dates and covers). Covers from public libraries may also appear in the login page mosaic. When off, nobody but you sees anything.",
+      "toggle": "Make my library public",
+      "link": "Your public link",
+      "on": "Your library is now public.",
+      "off": "Your library is now private.",
+      "error": "Could not change visibility."
+    },
+    "password": {
+      "title": "Change password",
+      "desc": "Your other open sessions will be signed out.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Change password",
+      "success": "Password changed.",
+      "mismatch": "The new passwords do not match.",
+      "fill": "Fill in all three fields."
+    },
+    "delete": {
+      "title": "Delete account",
+      "desc": "Deletes your account, all your books and covers. This cannot be undone.",
+      "button": "Delete my account",
+      "confirmTitle": "Delete account permanently",
+      "confirmMsg": "Enter your password to confirm. All your data will be deleted now.",
+      "password": "Your password",
+      "confirmButton": "Delete everything",
+      "success": "Your account has been deleted."
+    },
+    "privacyLink": "Read the privacy policy"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "updated": "Last updated: {date}",
+    "intro": "This policy explains what data Librishelf processes, why, and how you control it.",
+    "sections": [
+      {
+        "title": "What we collect",
+        "paragraphs": [
+          "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
+          "Content you add: your books and their details (title, authors, publisher, ISBN, tags and dates) and the covers you upload.",
+          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts."
+        ]
+      },
+      {
+        "title": "How we use it",
+        "paragraphs": [
+          "Only to run Librishelf: keep you signed in, store and show your library, and protect your account.",
+          "We do not sell or share your data with anyone, and we use no advertising or tracking tools."
+        ]
+      },
+      {
+        "title": "Public library",
+        "paragraphs": [
+          "Your library is private by default. If you turn on sharing in Account, anyone with your link can see your books and covers, and some covers may appear on the site's sign-in pages.",
+          "You can turn it off whenever you want, and the change is immediate."
+        ]
+      },
+      {
+        "title": "Cookies",
+        "paragraphs": [
+          "We use a single essential cookie that keeps you signed in. It is not used for tracking or advertising.",
+          "Your theme and language preferences are saved only in your browser."
+        ]
+      },
+      {
+        "title": "How long we keep it",
+        "paragraphs": [
+          "For as long as your account exists. When you delete your account, all your data is removed immediately.",
+          "Backups may keep this data for a limited period until they are replaced."
+        ]
+      },
+      {
+        "title": "Your rights (LGPD)",
+        "paragraphs": [
+          "You can view, correct, request a copy of or delete your data at any time. You can make corrections and delete your account in the app itself; for other requests, reach us at the contact below."
+        ]
+      },
+      {
+        "title": "Contact",
+        "paragraphs": [
+          "Data controller: {email}"
+        ]
+      }
+    ]
+  },
+  "notFound": {
+    "title": "Page not found",
+    "message": "The address you opened does not exist or has moved.",
+    "goHome": "Go to home"
   }
 }

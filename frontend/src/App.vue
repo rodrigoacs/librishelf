@@ -1,8 +1,20 @@
 <template>
-  <div class="app-layout">
-    <NavigationMenu v-if="!isAuthRoute" />
+  <div
+    class="app-layout"
+    :class="{ 'is-standalone': !showNavigation }"
+  >
+    <a
+      class="skip-link"
+      href="#main-content"
+    >{{ t('common.skipToContent') }}</a>
 
-    <main class="main-content">
+    <NavigationMenu v-if="showNavigation" />
+
+    <main
+      class="main-content"
+      id="main-content"
+      tabindex="-1"
+    >
       <Toast position="bottom-right" />
       <ConfirmDialog />
       <router-view />
@@ -13,19 +25,21 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import NavigationMenu from './components/NavigationMenu.vue'
 import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
+import { isAuthenticated } from './services/session.js'
 
 const route = useRoute()
-const isAuthRoute = computed(() => {
-  const allowedPatterns = [
-    /^\/login$/,
-    /^\/register$/,
-    /^\/u\/[a-zA-Z0-9_-]+$/
-  ]
+const { t } = useI18n()
 
-  return allowedPatterns.some(regex => regex.test(route.path))
+// Menu só para quem está logado e fora das telas cheias (login, cadastro,
+// biblioteca pública). Privacidade e 404 mostram o menu se houver sessão.
+const showNavigation = computed(() => {
+  if (route.meta.standalone) return false
+  if (route.meta.public) return isAuthenticated.value
+  return Boolean(route.meta.requiresAuth)
 })
 </script>
 

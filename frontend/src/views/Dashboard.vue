@@ -33,12 +33,30 @@
     </div>
 
     <div
+      v-else-if="loadError"
+      class="error-state"
+      role="alert"
+    >
+      <i
+        class="pi pi-exclamation-triangle"
+        aria-hidden="true"
+      ></i>
+      <p>{{ $t('dashboard.loadError') }}</p>
+      <Button
+        :label="$t('common.retry')"
+        icon="pi pi-refresh"
+        class="p-button-outlined p-button-secondary"
+        @click="loadStats"
+      />
+    </div>
+
+    <div
       v-else
       class="dashboard-content"
     >
       <div class="kpi-grid">
         <div class="kpi-card total">
-          <div class="kpi-icon"><i class="pi pi-book"></i></div>
+          <div class="kpi-icon"><i class="pi pi-book" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ $t('dashboard.totalBooks') }}</span>
             <span class="value">{{ stats.totalBooks }}</span>
@@ -46,7 +64,7 @@
         </div>
 
         <div class="kpi-card read">
-          <div class="kpi-icon"><i class="pi pi-check-circle"></i></div>
+          <div class="kpi-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ $t('dashboard.readBooks') }}</span>
             <span class="value">{{ stats.readBooks }}</span>
@@ -54,7 +72,7 @@
         </div>
 
         <div class="kpi-card unread">
-          <div class="kpi-icon"><i class="pi pi-bookmark"></i></div>
+          <div class="kpi-icon"><i class="pi pi-bookmark" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ $t('dashboard.unreadBooks') }}</span>
             <span class="value">{{ unreadBooks }}</span>
@@ -62,7 +80,7 @@
         </div>
 
         <div class="kpi-card rate">
-          <div class="kpi-icon"><i class="pi pi-percentage"></i></div>
+          <div class="kpi-icon"><i class="pi pi-percentage" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ $t('dashboard.readingRate') }}</span>
             <span class="value">{{ readingRate }}%</span>
@@ -73,8 +91,13 @@
       <div class="charts-grid">
         <div class="chart-card main-chart">
           <h3>{{ $t('dashboard.readingByYear') }}</h3>
-          <div class="chart-wrapper">
+          <div class="chart-wrapper flex-center">
+            <div
+              v-if="stats.readingByYear.length === 0"
+              class="no-data"
+            >{{ $t('dashboard.noYearData') }}</div>
             <Chart
+              v-else
               type="bar"
               :data="yearChartData"
               :options="yearChartOptions"
@@ -128,11 +151,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Chart from 'primevue/chart'
 import Skeleton from 'primevue/skeleton'
+import Button from 'primevue/button'
 import api from '../services/api.js'
+import { useTheme, cssVar } from '../composables/useTheme.js'
 
-const { t, locale } = useI18n() 
+const { t, locale } = useI18n()
+const { themeVersion } = useTheme()
 
 const loading = ref(true)
+const loadError = ref(false)
 const stats = ref({
   totalBooks: 0,
   readBooks: 0,
@@ -153,67 +180,74 @@ const readingRate = computed(() => {
   return Math.round((stats.value.readBooks / stats.value.totalBooks) * 100)
 })
 
-const unreadBooks = computed(() => {
-  return stats.value.totalBooks - stats.value.readBooks
-})
+const unreadBooks = computed(() => stats.value.totalBooks - stats.value.readBooks)
 
-const mainColor = '#3a86ff'
-const gridColor = 'rgba(255,255,255,0.1)'
-const textColor = '#a1a1aa'
+// O chart.js não entende var(--x): lê os valores resolvidos e recalcula quando
+// o tema ou a cor de destaque mudam.
+const palette = computed(() => {
+  themeVersion.value // dependência reativa: muda quando o tema muda
+  return {
+    main: cssVar('--main-color') || '#3a86ff',
+    text: cssVar('--text-secondary') || '#a1a1aa',
+    grid: cssVar('--border-color') || 'rgba(255,255,255,0.1)',
+    series: ['--red', '--green', '--blue', '--purple', '--yellow', '--orange'].map(name => cssVar(name))
+  }
+})
 
 const yearChartData = computed(() => {
   const sorted = [...stats.value.readingByYear].sort((a, b) => a.year - b.year)
   return {
-    labels: sorted.map(i => i.year),
+    labels: sorted.map(item => item.year),
     datasets: [{
       label: t('dashboard.readBooks'),
-      data: sorted.map(i => i.count),
-      backgroundColor: mainColor,
+      data: sorted.map(item => item.count),
+      backgroundColor: palette.value.main,
       borderRadius: 6
     }]
   }
 })
 
-const yearChartOptions = {
+const yearChartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: { legend: { display: false } },
   scales: {
-    y: { grid: { color: gridColor }, ticks: { color: textColor, precision: 0 } },
-    x: { grid: { display: false }, ticks: { color: textColor } }
+    y: { grid: { color: palette.value.grid }, ticks: { color: palette.value.text, precision: 0 } },
+    x: { grid: { display: false }, ticks: { color: palette.value.text } }
   }
-}
+}))
 
-const tagsChartData = computed(() => {
-  return {
-    labels: stats.value.topTags.map(t => t.name),
-    datasets: [{
-      data: stats.value.topTags.map(t => t.count),
-      backgroundColor: ['#ff4b78', '#a9ff54', '#4ed3fc', '#8d78fa', '#fdd457', '#ff8a50'],
-      borderWidth: 0,
-      hoverOffset: 10
-    }]
-  }
-})
+const tagsChartData = computed(() => ({
+  labels: stats.value.topTags.map(tag => tag.name),
+  datasets: [{
+    data: stats.value.topTags.map(tag => tag.count),
+    backgroundColor: palette.value.series,
+    borderWidth: 0,
+    hoverOffset: 10
+  }]
+}))
 
-const doughnutOptions = {
+const doughnutOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { position: 'right', labels: { color: textColor, usePointStyle: true } }
+    legend: { position: 'right', labels: { color: palette.value.text, usePointStyle: true } }
   }
-}
+}))
 
-onMounted(async () => {
+async function loadStats() {
+  loading.value = true
+  loadError.value = false
   try {
-    const data = await api.getDashboardStats()
-    stats.value = data
+    stats.value = await api.getDashboardStats()
   } catch (error) {
-    console.error('Dashboard load failed:', error)
+    loadError.value = true
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadStats)
 </script>
 
 <style scoped>
@@ -448,5 +482,18 @@ onMounted(async () => {
     align-items: flex-start;
     gap: 0.5rem;
   }
+}
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.error-state > i {
+  font-size: 2.5rem;
 }
 </style>

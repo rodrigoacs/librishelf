@@ -2,7 +2,7 @@ import express from 'express'
 import * as authService from '../services/authService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
-import { loginLimiter, registerLimiter } from '../middlewares/rateLimiter.js'
+import { loginLimiter, registerLimiter, sensitiveLimiter } from '../middlewares/rateLimiter.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import { AUTH_COOKIE_NAME, authCookieOptions } from '../config/cookieOptions.js'
 
@@ -58,6 +58,43 @@ router.post('/register', registerLimiter, async (req, res) => {
     res.status(STATUS.CREATED).json({ message: 'User registered successfully', user })
   } catch (error) {
     sendError(res, error, 'Erro no registro')
+  }
+})
+
+router.put('/password', authenticateToken, sensitiveLimiter, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body ?? {}
+
+    const result = await authService.changePassword(req.user.id, currentPassword, newPassword)
+
+    // Sessão atual continua com um token novo; as demais caem no middleware.
+    res.cookie(AUTH_COOKIE_NAME, result.token, authCookieOptions)
+    res.status(STATUS.OK).json({ user: result.user })
+  } catch (error) {
+    sendError(res, error, 'Erro ao trocar senha')
+  }
+})
+
+router.patch('/me/visibility', authenticateToken, async (req, res) => {
+  try {
+    const { isPublic } = req.body ?? {}
+    const result = await authService.setLibraryVisibility(req.user.id, isPublic)
+    res.status(STATUS.OK).json(result)
+  } catch (error) {
+    sendError(res, error, 'Erro ao alterar visibilidade')
+  }
+})
+
+router.delete('/me', authenticateToken, sensitiveLimiter, async (req, res) => {
+  try {
+    const { password } = req.body ?? {}
+
+    await authService.deleteAccount(req.user.id, password)
+
+    res.clearCookie(AUTH_COOKIE_NAME, { ...authCookieOptions, maxAge: undefined })
+    res.status(STATUS.NO_CONTENT).send()
+  } catch (error) {
+    sendError(res, error, 'Erro ao excluir conta')
   }
 })
 

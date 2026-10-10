@@ -1,50 +1,49 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3050'
-const APP_BASE = import.meta.env.BASE_URL || '/'
+import { API_URL } from '../config/site.js'
 
-// Rotas de auth respondem 401 por credenciais erradas, não por sessão expirada.
+// Rotas de auth respondem 401 por credencial errada (login, senha atual
+// incorreta), não por sessão expirada.
 const AUTH_ENDPOINT_PREFIX = '/auth/'
-const PUBLIC_PATHS = ['login', 'register', 'u/']
+const SESSION_ENDPOINT = '/auth/me'
 
-function isOnPublicPage() {
-  const path = window.location.pathname.slice(APP_BASE.length)
-  return PUBLIC_PATHS.some(publicPath => path.startsWith(publicPath))
+let onSessionExpired = () => {}
+
+/** O módulo de sessão registra aqui o que fazer quando a API responde 401. */
+export function setSessionExpiredHandler(handler) {
+  onSessionExpired = handler
 }
 
-function handleSessionExpired() {
-  localStorage.removeItem('user')
-
-  if (!isOnPublicPage()) {
-    window.location.assign(`${APP_BASE}login`)
+export class ApiError extends Error {
+  constructor(message, status, body) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.body = body
   }
 }
 
 async function parseError(response) {
-  const errorMessage = await response.text()
+  const text = await response.text()
 
   try {
-    const jsonError = JSON.parse(errorMessage)
-    return new Error(jsonError.error || jsonError.message || 'Erro desconhecido')
+    const json = JSON.parse(text)
+    return new ApiError(json.error || json.message || 'Erro desconhecido', response.status, json)
   } catch {
-    return new Error(errorMessage || 'Erro na requisição')
+    return new ApiError(text || 'Erro na requisição', response.status, null)
   }
 }
 
 async function client(endpoint, { body, ...customConfig } = {}) {
-  const headers = {
-    'Content-Type': 'application/json',
-  }
-
   const config = {
     method: body ? 'POST' : 'GET',
     credentials: 'include',
     ...customConfig,
     headers: {
-      ...headers,
-      ...customConfig.headers,
-    },
+      'Content-Type': 'application/json',
+      ...customConfig.headers
+    }
   }
 
-  if (body) {
+  if (body !== undefined) {
     if (body instanceof FormData) {
       delete config.headers['Content-Type']
       config.body = body
@@ -53,11 +52,16 @@ async function client(endpoint, { body, ...customConfig } = {}) {
     }
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, config)
+  const response = await fetch(`${API_URL}${endpoint}`, config)
 
-  if (response.status === 401 && !endpoint.startsWith(AUTH_ENDPOINT_PREFIX)) {
-    handleSessionExpired()
-    throw new Error('Sessão expirada. Faça login novamente.')
+  if (response.status === 401) {
+    const isSessionCheck = endpoint === SESSION_ENDPOINT
+    const isCredentialCheck = endpoint.startsWith(AUTH_ENDPOINT_PREFIX) && !isSessionCheck
+
+    if (!isCredentialCheck) {
+      onSessionExpired({ silent: isSessionCheck })
+      throw new ApiError('Sessão expirada. Faça login novamente.', 401, null)
+    }
   }
 
   if (!response.ok) {
@@ -76,5 +80,5 @@ export default {
   post: (endpoint, body, config) => client(endpoint, { ...config, body, method: 'POST' }),
   put: (endpoint, body, config) => client(endpoint, { ...config, body, method: 'PUT' }),
   patch: (endpoint, body, config) => client(endpoint, { ...config, body, method: 'PATCH' }),
-  delete: (endpoint, config) => client(endpoint, { ...config, method: 'DELETE' }),
+  delete: (endpoint, body, config) => client(endpoint, { ...config, body, method: 'DELETE' })
 }

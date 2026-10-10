@@ -1,11 +1,16 @@
 {
-  "name": "my-lib",
-  "version": "0.0.0",
+  "name": "librishelf-api",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "server": "node --env-file=./src/.env --watch src/server.js",
-    "test": "cross-env NODE_ENV=test node --env-file=./src/.env.test --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
+    "start": "node src/server.js",
+    "db:migrate": "node --env-file=./src/.env src/database/migrate.js",
+    "db:migrate:test": "node --env-file=./src/.env.test src/database/migrate.js",
+    "db:migrate:docker": "node src/database/migrate.js",
+    "test": "cross-env NODE_ENV=test node --env-file=./src/.env.test --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:unit": "cross-env NODE_ENV=test SECRET_KEY=unit-test-secret-key-with-32-chars-min node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand src/tests/unit src/tests/integration/cors.test.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -22,5 +27,8 @@
     "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "supertest": "^7.1.4"
+  },
+  "engines": {
+    "node": ">=22.12"
   }
 }

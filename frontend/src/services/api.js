@@ -1,6 +1,9 @@
 import client from './fetchClient.js'
 
+const enc = encodeURIComponent
+
 export default {
+  // --- Auth / conta ---
   login(credentials) {
     return client.post('/auth/login', credentials)
   },
@@ -17,6 +20,19 @@ export default {
     return client.post('/auth/register', userData)
   },
 
+  changePassword(currentPassword, newPassword) {
+    return client.put('/auth/password', { currentPassword, newPassword })
+  },
+
+  setLibraryVisibility(isPublic) {
+    return client.patch('/auth/me/visibility', { isPublic })
+  },
+
+  deleteAccount(password) {
+    return client.delete('/auth/me', { password })
+  },
+
+  // --- Livros ---
   getBooks(queryParams = {}, config = {}) {
     const queryString = new URLSearchParams(queryParams).toString()
     const url = queryString ? `/library?${queryString}` : '/library'
@@ -52,13 +68,14 @@ export default {
     return client.delete(`/library/${id}/read`)
   },
 
+  // --- Listas ---
   getAuthors(publisherFilter) {
-    const url = publisherFilter ? `/author?publishers=${encodeURIComponent(publisherFilter)}` : '/author'
+    const url = publisherFilter ? `/author?publishers=${enc(publisherFilter)}` : '/author'
     return client.get(url)
   },
 
   getPublishers(authorFilter) {
-    const url = authorFilter ? `/publisher?authors=${encodeURIComponent(authorFilter)}` : '/publisher'
+    const url = authorFilter ? `/publisher?authors=${enc(authorFilter)}` : '/publisher'
     return client.get(url)
   },
 
@@ -66,20 +83,21 @@ export default {
     return client.get('/tags')
   },
 
-  getRandomCovers() {
-    return client.get('/library/covers/random')
-  },
-
   getDashboardStats() {
     return client.get('/dashboard/stats')
   },
 
+  // --- Público ---
+  getRandomCovers() {
+    return client.get('/library/covers/random')
+  },
+
   getPublicLibrary(username, params = {}) {
     const queryString = new URLSearchParams(params).toString()
-    return client.get(`/library/public/u/${encodeURIComponent(username)}?${queryString}`)
+    return client.get(`/library/public/u/${enc(username)}?${queryString}`)
   },
 
   getPublicBook(username, id) {
-    return client.get(`/library/public/u/${encodeURIComponent(username)}/book/${id}`)
+    return client.get(`/library/public/u/${enc(username)}/book/${id}`)
   }
 }

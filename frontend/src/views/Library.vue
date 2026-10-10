@@ -6,9 +6,12 @@
 
     <div class="header-section">
       <LibraryHeader
+        ref="header"
         :books-quantity="totalRecords"
+        :filters="filters"
         @filter-change="handleFilterChange"
-        @refresh="refreshData"
+        @reset="clearFilters"
+        @book-created="refreshData"
       />
     </div>
 
@@ -17,6 +20,7 @@
       <div
         v-if="loading && books.length === 0"
         class="books-grid"
+        aria-busy="true"
       >
         <div
           v-for="n in 12"
@@ -42,6 +46,26 @@
       </div>
 
       <div
+        v-else-if="error && books.length === 0"
+        class="empty-state"
+        role="alert"
+      >
+        <div class="empty-icon-circle">
+          <i
+            class="pi pi-exclamation-triangle"
+            aria-hidden="true"
+          ></i>
+        </div>
+        <h3>{{ t('library.load_error') }}</h3>
+        <Button
+          :label="t('common.retry')"
+          icon="pi pi-refresh"
+          class="p-button-outlined p-button-secondary mt-3"
+          @click="refreshData"
+        />
+      </div>
+
+      <div
         v-else-if="books.length > 0"
         class="books-grid-wrapper"
       >
@@ -54,7 +78,9 @@
             v-for="item in books"
             :key="item.book_id || item.id"
             :book="item"
-            @refresh="refreshData"
+            :cover-version="coverVersions[item.book_id || item.id]"
+            @updated="onBookUpdated"
+            @deleted="onBookDeleted"
           />
         </TransitionGroup>
 
@@ -66,6 +92,7 @@
           <i
             v-if="loadingMore"
             class="pi pi-spin pi-spinner loading-more-icon"
+            :aria-label="t('common.loading')"
           ></i>
         </div>
       </div>
@@ -75,13 +102,16 @@
         class="empty-state"
       >
         <div class="empty-icon-circle">
-          <i class="pi pi-search"></i>
+          <i
+            class="pi pi-search"
+            aria-hidden="true"
+          ></i>
         </div>
-        <h3>Nenhum livro encontrado</h3>
-        <p>Não encontramos nada com os filtros atuais.</p>
+        <h3>{{ t('library.empty_title') }}</h3>
+        <p>{{ t('library.empty_msg') }}</p>
 
         <Button
-          label="Limpar Filtros"
+          :label="t('library.clear_all')"
           icon="pi pi-filter-slash"
           class="p-button-outlined p-button-secondary mt-3"
           @click="clearFilters"
@@ -95,39 +125,63 @@
 <script setup>
 import { onMounted, onUnmounted, ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import LibraryHeader from '../components/LibraryHeader.vue'
 import BookItem from '../components/BookItem.vue'
 import Skeleton from 'primevue/skeleton'
 import Button from 'primevue/button'
 import { useLibrary } from '../composables/useLibrary.js'
 
+const { t } = useI18n()
 const route = useRoute()
 const {
   books,
   totalRecords,
   loading,
   loadingMore,
+  error,
+  filters,
+  coverVersions,
   fetchBooks,
   loadMore,
   setFilter,
-  resetFilters
+  setFilters,
+  resetFilters,
+  updateBookInList,
+  removeBookFromList
 } = useLibrary()
 
 const scrollContainer = ref(null)
 const sentinel = ref(null)
+const header = ref(null)
 let observer = null
 
 function refreshData() {
   fetchBooks()
 }
 
+function scrollToTop() {
+  scrollContainer.value?.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 function handleFilterChange({ key, value }) {
   setFilter(key, value)
-  scrollContainer.value?.scrollTo({ top: 0, behavior: 'smooth' })
+  scrollToTop()
 }
 
 function clearFilters() {
   resetFilters()
+  scrollToTop()
+}
+
+function onBookUpdated({ book, coverChanged }) {
+  updateBookInList(book, { coverChanged })
+  header.value?.reloadOptions()
+}
+
+function onBookDeleted(id) {
+  removeBookFromList(id)
+  header.value?.reloadOptions()
 }
 
 function setupIntersectionObserver() {
@@ -154,21 +208,19 @@ watchEffect(() => {
   }
 })
 
+function queryList(value) {
+  if (!value) return []
+  return (Array.isArray(value) ? value : [value]).filter(Boolean)
+}
+
 onMounted(() => {
-  // Aplica os filtros vindos da URL sem disparar uma busca para cada um.
-  if (route.query.author) {
-    setFilter('author', [{ name: route.query.author }], { fetch: false })
-  }
-
-  if (route.query.publisher) {
-    setFilter('publisher', [{ name: route.query.publisher }], { fetch: false })
-  }
-
-  if (route.query.tags) {
-    setFilter('tags', [{ name: route.query.tags }], { fetch: false })
-  }
-
-  fetchBooks()
+  // Filtros vindos de Autores/Editoras/Tags (?author=X) entram no estado
+  // compartilhado, então aparecem como chips no cabeçalho e podem ser removidos.
+  setFilters({
+    author: queryList(route.query.author),
+    publisher: queryList(route.query.publisher),
+    tags: queryList(route.query.tags)
+  })
 })
 
 onUnmounted(() => {

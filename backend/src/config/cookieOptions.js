@@ -1,9 +1,16 @@
 import logger from '../utils/logger.js'
 
-const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true'
+const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
+// Sem valor explícito, segue o ambiente: em produção o cookie de sessão nunca
+// sai sem a flag Secure por esquecimento. COOKIE_SECURE=false só para testar
+// a imagem de produção sem HTTPS.
+const COOKIE_SECURE = process.env.COOKIE_SECURE === undefined || process.env.COOKIE_SECURE === ''
+  ? IS_PRODUCTION
+  : process.env.COOKIE_SECURE === 'true'
 
 if (process.env.COOKIE_SECURE === undefined) {
-  logger.info('COOKIE_SECURE não definido, usando padrão de desenvolvimento (false). Defina COOKIE_SECURE=true em produção (HTTPS).')
+  logger.info('COOKIE_SECURE não definido; usando o padrão do ambiente', { secure: COOKIE_SECURE })
 }
 
 const AUTH_COOKIE_NAME = 'token'

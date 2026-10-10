@@ -117,6 +117,11 @@ async function getBookByIdForUser(id, userId) {
   return result.rows[0] || null
 }
 
+async function getRandomPublicBookIds(limit) {
+  const result = await db.query(q.RANDOM_PUBLIC_BOOK_IDS, [limit])
+  return result.rows.map(row => row.id)
+}
+
 async function findBookByIsbn(isbn, userId) {
   const result = await db.query(q.FIND_BY_ISBN, [isbn, userId])
   return result.rows[0] || null
@@ -186,6 +191,7 @@ async function updateReadDate(bookId, readDate) {
 export {
   getAllBooksByUser,
   getBookByIdForUser,
+  getRandomPublicBookIds,
   findBookByIsbn,
   createBook,
   getBookOwner,

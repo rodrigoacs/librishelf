@@ -46,8 +46,9 @@ function normalizeReadYear(readYear) {
 async function getPublicLibraryByUsername(username, query) {
   const user = await authRepository.getUserByName(username)
 
-  if (!user) {
-    throw httpError('User not found.', STATUS.NOT_FOUND)
+  // Biblioteca privada responde igual a usuário inexistente: não confirma que a conta existe.
+  if (!user || !user.is_public) {
+    throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND)
   }
 
   const booksData = await getAllBooksByUser(user.id, query)
@@ -65,7 +66,7 @@ async function getPublicLibraryByUsername(username, query) {
  */
 async function getPublicBook(username, bookId) {
   const user = await authRepository.getUserByName(username)
-  if (!user) return null
+  if (!user || !user.is_public) return null
 
   return await libraryRepository.getBookByIdForUser(bookId, user.id)
 }
@@ -85,6 +86,17 @@ async function getAllBooksByUser(userId, query) {
   }
 
   return await libraryRepository.getAllBooksByUser(userId, filters)
+}
+
+async function getRandomPublicBookIds(limit) {
+  return await libraryRepository.getRandomPublicBookIds(limit)
+}
+
+function requireText(value, fieldName) {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw httpError(`${fieldName} is required.`, STATUS.BAD_REQUEST)
+  }
+  return value.trim()
 }
 
 async function getBookById(id, userId) {
@@ -111,6 +123,10 @@ async function addNewBook(bookData) {
 
 async function updateBookDetails(bookId, userId, bookData) {
   await checkBookOwnership(bookId, userId)
+
+  // Mesmo contrato do POST: título e autores são obrigatórios na edição também.
+  bookData.title = requireText(bookData.title, 'Title')
+  bookData.authors = requireText(bookData.authors, 'Authors')
 
   if (typeof bookData.tags === 'string') {
     bookData.tags = bookData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
@@ -163,6 +179,7 @@ export {
   getAllBooksByUser,
   getBookById,
   getPublicBook,
+  getRandomPublicBookIds,
   addNewBook,
   updateBookDetails,
   checkBookOwnership,

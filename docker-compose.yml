@@ -4,14 +4,13 @@ services:
       context: ./frontend
     container_name: librishelf-frontend
     restart: unless-stopped
-    # Só acessível pela própria máquina; o nginx de reverse proxy alcança o
-    # container pelo nome na rede "proxy".
+    # O nginx da VPS aponta para este container (pelo nome, na rede "proxy").
+    # A porta local fica só para teste na própria máquina.
     ports:
       - "127.0.0.1:8080:80"
-    volumes:
-      - ./uploads:/usr/share/nginx/html/uploads:ro
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - proxy
 
@@ -20,13 +19,13 @@ services:
       context: ./backend
     container_name: librishelf-backend
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:3050:3050"
+    # Sem porta publicada: só o nginx do frontend fala com a API, em /api.
     env_file:
       - ./backend/src/.env
     environment:
       - UPLOAD_DIR=/app/uploads
-      - TRUST_PROXY=1
+      # nginx da VPS → nginx do frontend → backend
+      - TRUST_PROXY=2
     volumes:
       # O container roda como o usuário "node" (uid 1000): a pasta do host
       # precisa pertencer a ele → sudo chown -R 1000:1000 ./uploads

@@ -1,25 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
-    <meta property="og:title" content="Librishelf" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://librishelf.com/" />
-    <meta
-      property="og:image"
-      content="https://img.icons8.com/external-smashingstocks-isometric-smashing-stocks/440/external-Bookshelf-interior-smashingstocks-isometric-smashing-stocks-3.png"
-    />
-    <meta property="og:description" content="Librishelf, gerenciador de livros online." />
-    <meta property="og:site_name" content="Librishelf" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="article:author" content="Rodrigo Soares" />
-    <meta property="article:published_time" content="2024-08-21T12:00:00+00:00" />
-    <meta property="article:modified_time" content="2024-08-21T12:00:00+00:00" />
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Librishelf</title>
+    <meta name="description" content="Librishelf — organize sua biblioteca pessoal: cadastre livros, acompanhe o que já leu e encontre qualquer obra da sua coleção." />
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f0f0f3" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/bookshelf.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Librishelf" />
+    <meta property="og:title" content="Librishelf" />
+    <meta property="og:description" content="Sua biblioteca pessoal, em todo lugar." />
+    <meta property="og:url" content="https://librishelf.com/" />
+    <meta property="og:image" content="https://librishelf.com/bookshelf.png" />
+    <meta property="og:image:alt" content="Ícone de estante de livros do Librishelf" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary" />
+
+    <script>
+      // Aplica tema, cor de destaque e idioma antes do CSS e do Vue carregarem
+      // (evita piscar o tema errado). A mesma lógica vive em useTheme.js / i18n.js.
+      (function () {
+        var root = document.documentElement
+        var accents = ['blue', 'green', 'purple', 'red', 'orange', 'yellow']
+        try {
+          var theme = localStorage.getItem('user-theme')
+          var accent = localStorage.getItem('user-accent')
+          var lang = localStorage.getItem('user-locale')
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+          }
+          root.setAttribute('data-theme', theme)
+          if (accents.indexOf(accent) !== -1) root.style.setProperty('--main-color-rgb', 'var(--' + accent + '-rgb)')
+          if (lang === 'en') root.lang = 'en'
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
+    <noscript>O Librishelf precisa de JavaScript habilitado. / Librishelf requires JavaScript.</noscript>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
