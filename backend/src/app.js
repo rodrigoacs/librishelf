@@ -11,12 +11,10 @@ import dashboardRoutes from './routes/dashboard.js'
 import isbnRoutes from './routes/isbn.js'
 import communityRoutes from './routes/community.js'
 import socialRoutes from './routes/social.js'
+import uploadsRoutes from './routes/uploads.js'
 import errorHandler from './middlewares/errorHandler.js'
-import UPLOAD_DIR from './config/uploadDir.js'
 import corsOptions from './config/corsOptions.js'
 import trustProxy from './config/trustProxy.js'
-
-const UPLOADS_CACHE_CONTROL = 'public, max-age=3600, stale-while-revalidate=86400'
 
 const app = express()
 
@@ -27,14 +25,8 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
-app.use('/uploads', express.static(UPLOAD_DIR, {
-  etag: true,
-  lastModified: true,
-  setHeaders: (res) => {
-    res.setHeader('Cache-Control', UPLOADS_CACHE_CONTROL)
-    res.setHeader('X-Content-Type-Options', 'nosniff')
-  }
-}))
+// Capas: só o dono, ou qualquer um quando a biblioteca é pública.
+app.use('/uploads', uploadsRoutes)
 
 app.use('/auth', authRoutes)
 app.use('/library', libraryRoutes)

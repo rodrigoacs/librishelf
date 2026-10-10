@@ -81,6 +81,13 @@ export const LIBRARY_QUERIES = {
     WHERE b.id = $1 AND b.user_id = $2
   `,
 
+  // Quem pode ver a capa: o dono, ou qualquer um se a biblioteca for pública.
+  COVER_ACCESS: `
+    SELECT b.user_id, u.is_public
+    FROM librishelf.books b
+    JOIN librishelf.users u ON u.id = b.user_id
+    WHERE b.id = $1
+  `,
   GET_OWNER: 'SELECT user_id FROM librishelf.books WHERE id = $1',
   FIND_BY_ISBN: 'SELECT * FROM librishelf.books WHERE isbn = $1 AND user_id = $2',
   DELETE_BOOK: 'DELETE FROM librishelf.books WHERE id = $1',

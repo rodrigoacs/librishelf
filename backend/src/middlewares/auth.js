@@ -22,7 +22,7 @@ function extractToken(req) {
  * → { user } válido, ou { error } com o motivo (sem token, inválido, expirado,
  *   conta excluída ou token anterior à última troca de senha).
  */
-async function resolveSession(req) {
+export async function resolveSession(req) {
   const token = extractToken(req)
   if (!token) return { error: 'Token is required or invalid format' }
 

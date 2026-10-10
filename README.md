@@ -79,6 +79,21 @@ docker-compose.yml
 
    The Vite dev server proxies `/api` to `http://localhost:3050`, the same way nginx does in production. To point it elsewhere, set `VITE_DEV_API_TARGET` in `frontend/.env`.
 
+### Local database with sample data
+
+A throwaway Postgres with dozens of fictional readers, thousands of books (several editions of the same work, ISBN-10/13, invalid ISBNs, ratings, reading dates), generated covers, privacy settings, followers and pending requests:
+
+```sh
+docker compose -f docker-compose.local.yml up -d     # Postgres 16 on 127.0.0.1:5433
+cp backend/src/.env.local.example backend/src/.env.local
+cd backend
+npm run db:migrate:local
+npm run db:seed                                      # --reset to start over; --users=80 --books=150 for more
+npm run server:local                                 # API on :3050 using the local database
+```
+
+Log in as `demo` / `senha12345` (every seeded account uses that password; `privado` has everything off, `vazio` has no books). The seed refuses to run against a non-local host, with `NODE_ENV=production`, or on a database that already has users (unless `--reset`).
+
 ## Tests
 
 The integration tests truncate tables, so they only run against a database whose name contains `test` **and** with `ALLOW_DESTRUCTIVE_TEST_DB=true`.

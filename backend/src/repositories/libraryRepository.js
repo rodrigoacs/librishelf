@@ -162,6 +162,11 @@ async function createBook(bookInfo) {
   }
 }
 
+async function getCoverAccess(bookId) {
+  const result = await db.query(q.COVER_ACCESS, [bookId])
+  return result.rows[0] || null
+}
+
 async function getBookOwner(bookId) {
   const result = await db.query(q.GET_OWNER, [bookId])
   return result.rows[0] || null
@@ -218,6 +223,7 @@ export {
   findBookByIsbn,
   createBook,
   getBookOwner,
+  getCoverAccess,
   updateBook,
   deleteBookById,
   updateReadDate,
