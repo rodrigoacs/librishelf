@@ -99,12 +99,10 @@
             </span>
             <div class="feed-body">
               <p class="feed-text">
-                <router-link
-                  v-if="event.isPublic"
-                  :to="{ name: 'public-library', params: { username: event.username } }"
-                  class="user-link"
-                >@{{ event.username }}</router-link>
-                <strong v-else>@{{ event.username }}</strong>
+                <ReaderName
+                  :username="event.username"
+                  :is-public="event.isPublic"
+                />
                 {{ event.type === 'read' ? t('communityView.event_read') : t('communityView.event_added') }}
                 <router-link
                   v-if="event.isPublic"
@@ -162,7 +160,10 @@
             v-for="person in connections.requests"
             :key="person.username"
           >
-            <PersonName :person="person" />
+            <ReaderName
+              :username="person.username"
+              :is-public="person.isPublic"
+            />
             <div class="actions">
               <Button
                 :label="t('communityView.accept')"
@@ -202,7 +203,10 @@
             v-for="person in connections.following"
             :key="person.username"
           >
-            <PersonName :person="person" />
+            <ReaderName
+              :username="person.username"
+              :is-public="person.isPublic"
+            />
             <div class="actions">
               <span
                 v-if="person.status === 'pending'"
@@ -239,7 +243,10 @@
             v-for="person in connections.followers"
             :key="person.username"
           >
-            <PersonName :person="person" />
+            <ReaderName
+              :username="person.username"
+              :is-public="person.isPublic"
+            />
             <div class="actions">
               <Button
                 :label="t('communityView.remove')"
@@ -256,14 +263,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, h } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import api from '../services/api.js'
 import StarRating from '../components/StarRating.vue'
+import ReaderName from '../components/ReaderName.vue'
 import { currentUser } from '../services/session.js'
 import { refreshPendingRequests } from '../services/social.js'
 
@@ -272,11 +279,6 @@ const toast = useToast()
 const confirm = useConfirm()
 const user = currentUser
 
-// Nome com link só quando a biblioteca da pessoa é pública.
-const PersonName = (props) => props.person.isPublic
-  ? h(RouterLink, { to: { name: 'public-library', params: { username: props.person.username } }, class: 'user-link' }, () => `@${props.person.username}`)
-  : h('span', { class: 'user-name' }, `@${props.person.username}`)
-PersonName.props = ['person']
 
 const activeTab = ref('feed')
 const events = ref([])
@@ -534,22 +536,16 @@ onMounted(async () => {
   margin-left: 0.4rem;
 }
 
-:deep(.user-link),
 .book-link {
   color: var(--main-color);
   text-decoration: none;
   font-weight: 600;
 }
 
-:deep(.user-link):hover,
 .book-link:hover {
   text-decoration: underline;
 }
 
-:deep(.user-name) {
-  color: var(--text-primary);
-  font-weight: 600;
-}
 
 .people-list li {
   display: flex;

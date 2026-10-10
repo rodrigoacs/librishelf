@@ -227,21 +227,20 @@ function buildCatalog(count) {
       tags: [genre, ...pickSome(EXTRA_TAGS, int(0, 2))],
       olWorkKey: chance(0.7) ? `/works/OL${90000000 + i}W` : null,
       editions: [],
-      // Popularidade: as primeiras obras aparecem em muito mais estantes.
       weight: 1 / Math.pow(i + 1, 0.85),
       color: pick(PALETTE)
     }
 
     const editionCount = chance(0.6) ? 1 : chance(0.7) ? 2 : 3
     for (let e = 0; e < editionCount; e++) {
-      const year = Math.min(2026, pubYear + (e === 0 ? 0 : int(1, 40)))
+      const year = Math.min(new Date(NOW).getUTCFullYear(), pubYear + (e === 0 ? 0 : int(1, 40)))
+      const pubTime = Math.min(Date.UTC(year, int(0, 11), int(1, 28)), NOW - int(30, 365) * DAY)
       work.editions.push({
         key: `${i}-${e}`,
         isbn13: newIsbn13(),
         olEditionKey: work.olWorkKey ? `/books/OL${80000000 + i * 3 + e}M` : null,
         publisher: pick(PUBLISHERS),
-        pubDate: chance(0.2) ? null : iso(Date.UTC(year, int(0, 11), int(1, 28))),
-        // Edições traduzidas às vezes têm outro título.
+        pubDate: chance(0.2) ? null : iso(pubTime),
         title: e > 0 && chance(0.3) ? `${title} (${pick(['edição de bolso', 'edição comentada', 'nova tradução'])})` : title,
         hasCover: chance(0.85),
         bookIds: []
@@ -352,7 +351,8 @@ function shelfEntry(work, edition, user, usedIsbns) {
   const addedAt = between(user.createdAt, NOW)
   const isRead = chance(0.55)
   const pubTime = edition.pubDate ? Date.parse(edition.pubDate) : Date.UTC(2000, 0, 1)
-  const readAt = isRead ? between(Math.max(pubTime, user.createdAt - 4 * 365 * DAY, Date.UTC(2012, 0, 1)), NOW) : null
+  const readStart = Math.min(Math.max(pubTime, user.createdAt - 4 * 365 * DAY, Date.UTC(2012, 0, 1)), NOW - DAY)
+  const readAt = isRead ? Math.min(between(readStart, NOW), NOW - DAY) : null
 
   let rating = null
   if (isRead && chance(0.65)) rating = pick([2, 3, 3, 4, 4, 4, 5, 5, 5, 1])

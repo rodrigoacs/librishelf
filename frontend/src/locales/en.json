@@ -482,6 +482,7 @@
     "unfollow": "Unfollow",
     "no_followers": "Nobody follows you yet.",
     "remove": "Remove",
-    "remove_confirm": "Remove {'@'}{name} from your followers? They won't be notified."
+    "remove_confirm": "Remove {'@'}{name} from your followers? They won't be notified.",
+    "private_library": "Private library"
   }
 }

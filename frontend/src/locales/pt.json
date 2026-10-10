@@ -482,6 +482,7 @@
     "unfollow": "Deixar de seguir",
     "no_followers": "Ninguém segue você ainda.",
     "remove": "Remover",
-    "remove_confirm": "Remover {'@'}{name} dos seus seguidores? A pessoa não é avisada."
+    "remove_confirm": "Remover {'@'}{name} dos seus seguidores? A pessoa não é avisada.",
+    "private_library": "Biblioteca privada"
   }
 }
