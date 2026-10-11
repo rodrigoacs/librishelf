@@ -156,7 +156,14 @@ const filteredItems = computed(() => {
 })
 
 function initials(name) {
-  return name ? name.substring(0, 2).toUpperCase() : '?'
+  if (!name) return '?'
+  // "Sobrenome, Nome" vira "Nome Sobrenome" antes de pegar as letras.
+  const [last, first] = name.split(',').map(part => part.trim())
+  const ordered = first ? `${first} ${last}` : name
+  const words = ordered.split(/\s+/).filter(word => /^\p{L}/u.test(word))
+  if (words.length === 0) return name.trim().charAt(0).toUpperCase() || '?'
+  const letters = words.length === 1 ? words[0].slice(0, 2) : words[0][0] + words.at(-1)[0]
+  return letters.toUpperCase()
 }
 
 // Cor pelo nome (não pela posição): não muda ao filtrar a lista.

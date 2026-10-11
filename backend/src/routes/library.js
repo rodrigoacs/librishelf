@@ -239,7 +239,7 @@ router.patch('/:id/rating', validateNumericId(), async (req, res) => {
 router.patch('/:id/read', validateNumericId(), async (req, res) => {
   try {
     const userId = req.user.id
-    await libraryService.markBookAsRead(req.params.id, userId)
+    await libraryService.markBookAsRead(req.params.id, userId, req.body?.readDate)
     res.status(STATUS.OK).json({ message: 'Book marked as read.' })
   } catch (error) {
     sendError(res, error, 'Erro ao marcar livro como lido')

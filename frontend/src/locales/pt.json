@@ -1,25 +1,24 @@
 {
   "home": {
-    "welcome": "Bem vindo ao ",
-    "hero": "Sua biblioteca digital. Organize, rastreie e redescubra sua coleção de livros com elegância e segurança.",
-    "accessLibrary": "Acesse sua biblioteca",
-    "features": "O que você pode fazer",
-    "manageBooks": {
-      "title": "Gerenciamento Completo",
-      "desc": "Adicione livros com detalhes: autor, editora, data e capa personalizada."
-    },
-    "trackReading": {
-      "title": "Rastreio de Leitura",
-      "desc": "Marque livros como lidos, registre datas e acompanhe seu progresso literário."
-    },
-    "smartSearch": {
-      "title": "Busca Inteligente",
-      "desc": "Encontre qualquer obra instantaneamente filtrando por título, autor, editora ou tags."
-    },
-    "visual": {
-      "title": "Visual Premium",
-      "desc": "Sua coleção apresentada em um layout responsivo, limpo e de visual agradável."
-    }
+    "morning": "Bom dia, {name}",
+    "afternoon": "Boa tarde, {name}",
+    "evening": "Boa noite, {name}",
+    "totalBooks": "{n} livro na estante | {n} livros na estante",
+    "readThisYear": "nenhum lido este ano | {n} lido este ano | {n} lidos este ano",
+    "addBook": "Adicionar livro",
+    "pendingRequests": "{n} pessoa quer seguir você | {n} pessoas querem seguir você",
+    "recentlyAdded": "Adicionados recentemente",
+    "seeLibrary": "Ver biblioteca",
+    "recentlyRead": "Lidos recentemente",
+    "seeStats": "Ver painel",
+    "community": "Quem você segue",
+    "seeCommunity": "Ver comunidade",
+    "emptyTitle": "Sua estante está vazia",
+    "emptyText": "Comece pelo livro que está mais perto de você. Com o ISBN, título, autor, editora e capa vêm sozinhos.",
+    "addFirst": "Adicionar o primeiro livro",
+    "tipIsbn": "Digite o ISBN (fica no verso, perto do código de barras) e clique em Buscar.",
+    "tipRead": "Marque os livros que já leu e dê uma nota de 1 a 5 estrelas.",
+    "tipShare": "Em Conta, torne a biblioteca pública para compartilhar o link e encontrar outros leitores."
   },
   "menu": {
     "home": "Início",
@@ -171,7 +170,12 @@
     "cannotEdit": "Não é possível editar: os dados do livro não carregaram.",
     "validationTitle": "Título é obrigatório.",
     "validationAuthors": "Autor é obrigatório.",
-    "isbnInvalid": "Este ISBN parece incorreto (dígito verificador não confere). Corrija para o livro aparecer na comunidade."
+    "isbnInvalid": "Este ISBN parece incorreto (dígito verificador não confere). Corrija para o livro aparecer na comunidade.",
+    "readOn": "Lido em {date}",
+    "markRead": "Marcar como lido",
+    "undoRead": "Desfazer",
+    "readDateLabel": "Data de leitura",
+    "publishedOn": "Publicado em {date}"
   },
   "authors": {
     "title": "Autores",
@@ -192,11 +196,11 @@
     "bookCount": "{count} livro | {count} livros"
   },
   "tags": {
-    "title": "Tags",
-    "subtitle": "Gerencie suas tags de livros.",
-    "search_ph": "Pesquisar tags...",
-    "empty": "Nenhuma tag encontrada.",
-    "error": "Não foi possível carregar as tags.",
+    "title": "Categorias",
+    "subtitle": "As categorias (tags) dos seus livros.",
+    "search_ph": "Pesquisar categorias...",
+    "empty": "Nenhuma categoria encontrada.",
+    "error": "Não foi possível carregar as categorias.",
     "bookCount": "{count} livro | {count} livros",
     "viewBooks": "Ver livros"
   },

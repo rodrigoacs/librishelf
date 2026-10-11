@@ -167,39 +167,24 @@
           </div>
         </div>
 
-        <div class="details-content">
+        <!-- Edição: formulário completo -->
+        <div
+          v-if="isEditing"
+          class="details-content"
+        >
           <div class="info-group">
-            <label :for="isEditing ? 'book-edit-tags' : undefined">{{ t('bookDialog.tags') }}</label>
-            <div v-if="isEditing">
-              <input
-                id="book-edit-tags"
-                v-model="book.tags"
-                class="modern-input"
-                :placeholder="t('bookDialog.tagsPlaceholder')"
-              />
-            </div>
-            <div
-              v-else
-              class="tags-list"
-            >
-              <span
-                v-if="!tagList.length"
-                class="empty-text"
-              >{{ t('bookDialog.noTags') }}</span>
-
-              <Chip
-                v-for="(tag, index) in tagList"
-                :key="`${tag}-${index}`"
-                :label="tag"
-                class="custom-chip colored-chip"
-                :style="{ '--tag-color': getTagColor(index) }"
-              />
-            </div>
+            <label for="book-edit-tags">{{ t('bookDialog.tags') }}</label>
+            <input
+              id="book-edit-tags"
+              v-model="book.tags"
+              class="modern-input"
+              :placeholder="t('bookDialog.tagsPlaceholder')"
+            />
           </div>
 
           <div class="dates-grid">
             <div class="info-group">
-              <label for="book-read-date">{{ t('bookDialog.readingStatus') }}</label>
+              <label for="book-read-date">{{ t('bookDialog.readDateLabel') }}</label>
               <div class="date-input-wrapper">
                 <i
                   class="pi"
@@ -209,7 +194,6 @@
                 <Calendar
                   inputId="book-read-date"
                   v-model="book.read_date"
-                  :disabled="!isEditing"
                   dateFormat="dd/mm/yy"
                   :placeholder="t('bookDialog.notRead')"
                   class="modern-calendar"
@@ -229,7 +213,6 @@
                 <Calendar
                   inputId="book-pub-date"
                   v-model="book.pubdate"
-                  :disabled="!isEditing"
                   dateFormat="dd/mm/yy"
                   :placeholder="t('bookDialog.dateUnknown')"
                   class="modern-calendar"
@@ -246,9 +229,7 @@
               <input
                 id="book-publisher"
                 v-model="book.publisher"
-                :readonly="!isEditing"
                 class="modern-input meta-input"
-                :class="{ 'readonly': !isEditing }"
                 placeholder="-"
               />
             </div>
@@ -257,117 +238,195 @@
               <input
                 id="book-isbn"
                 v-model="book.isbn"
-                :readonly="!isEditing"
                 class="modern-input meta-input"
-                :class="{ 'readonly': !isEditing }"
                 placeholder="-"
-                :aria-describedby="showIsbnWarning ? 'book-isbn-warning' : undefined"
               />
-              <small
-                v-if="showIsbnWarning"
-                id="book-isbn-warning"
-                class="isbn-warning"
-              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Visualização: o livro primeiro, o resto a um clique -->
+        <div
+          v-else-if="!loading && !loadFailed"
+          class="details-content view"
+        >
+          <div
+            v-if="!isReadOnly || book.read_date"
+            class="read-state"
+          >
+            <template v-if="book.read_date">
+              <span class="read-pill">
                 <i
-                  class="pi pi-exclamation-triangle"
+                  class="pi pi-check"
                   aria-hidden="true"
                 ></i>
-                {{ t('bookDialog.isbnInvalid') }}
-              </small>
-            </div>
+                {{ t('bookDialog.readOn', { date: formatDate(book.read_date) }) }}
+              </span>
+              <button
+                v-if="!isReadOnly"
+                type="button"
+                class="link-btn"
+                :disabled="readSaving"
+                @click="markUnread"
+              >{{ t('bookDialog.undoRead') }}</button>
+            </template>
+            <Button
+              v-else
+              :label="t('bookDialog.markRead')"
+              icon="pi pi-check"
+              class="p-button-sm mark-read-btn"
+              :loading="readSaving"
+              @click="markRead"
+            />
+          </div>
+
+          <ul
+            v-if="metaItems.length"
+            class="meta-line"
+          >
+            <li
+              v-for="item in metaItems"
+              :key="item.key"
+              :title="item.title"
+            >{{ item.text }}</li>
+          </ul>
+
+          <p
+            v-if="showIsbnWarning"
+            id="book-isbn-warning"
+            class="isbn-warning"
+          >
+            <i
+              class="pi pi-exclamation-triangle"
+              aria-hidden="true"
+            ></i>
+            {{ t('bookDialog.isbnInvalid') }}
+          </p>
+
+          <div
+            v-if="tagList.length"
+            class="tags-list"
+            :aria-label="t('bookDialog.tags')"
+          >
+            <span
+              v-for="(tag, index) in tagList"
+              :key="`${tag}-${index}`"
+              class="tag-chip"
+              :style="{ '--tag-color': getTagColor(index) }"
+            >{{ tag }}</span>
           </div>
 
           <section
             v-if="showCommunity"
             class="community-section"
-            :aria-label="t('community.book_title')"
           >
-            <h3 class="community-title">
-              <i
-                class="pi pi-users"
-                aria-hidden="true"
-              ></i>
-              {{ t('community.book_title') }}
-            </h3>
-
             <p
               v-if="communityLoading"
-              class="empty-text"
+              class="muted-line"
             >{{ t('common.loading') }}</p>
 
             <p
               v-else-if="communityError"
-              class="empty-text"
+              class="muted-line"
             >{{ t('community.load_error') }}</p>
 
             <template v-else-if="community">
               <p
                 v-if="community.readerCount === 0"
-                class="empty-text"
-              >{{ t('community.no_readers') }}</p>
+                class="muted-line"
+              >
+                <i
+                  class="pi pi-users"
+                  aria-hidden="true"
+                ></i>
+                {{ t('community.no_readers') }}
+              </p>
 
               <template v-else>
-                <p class="community-summary">
-                  {{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}
-                  <span
-                    v-if="community.averageRating"
-                    class="avg-rating"
-                  >
-                    · <i
-                      class="pi pi-star-fill"
-                      aria-hidden="true"
-                    ></i>
-                    {{ t('community.average', { avg: formatAverage(community.averageRating), n: community.ratingCount }, community.ratingCount) }}
+                <button
+                  type="button"
+                  class="community-toggle"
+                  :aria-expanded="communityOpen"
+                  aria-controls="book-community-panel"
+                  @click="communityOpen = !communityOpen"
+                >
+                  <i
+                    class="pi pi-users"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="toggle-text">
+                    {{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}
+                    <span
+                      v-if="community.averageRating"
+                      class="avg-rating"
+                    >
+                      <i
+                        class="pi pi-star-fill"
+                        aria-hidden="true"
+                      ></i>
+                      {{ formatAverage(community.averageRating) }}
+                    </span>
                   </span>
-                </p>
-
-                <ul class="reader-list">
-                  <li
-                    v-for="reader in community.readers"
-                    :key="reader.username"
-                  >
-                    <router-link
-                      :to="{ name: 'public-library', params: { username: reader.username } }"
-                      class="reader-link"
-                    >@{{ reader.username }}</router-link>
-                    <i
-                      v-if="reader.hasRead"
-                      class="pi pi-check-circle text-theme"
-                      v-tooltip.top="t('community.has_read')"
-                      :aria-label="t('community.has_read')"
-                    ></i>
-                    <StarRating
-                      v-if="reader.rating"
-                      :model-value="reader.rating"
-                      size="sm"
-                      readonly
-                    />
-                  </li>
-                </ul>
+                  <i
+                    class="pi pi-chevron-down chevron"
+                    :class="{ open: communityOpen }"
+                    aria-hidden="true"
+                  ></i>
+                </button>
 
                 <div
-                  v-if="community.alsoHave.length"
-                  class="also-have"
+                  v-show="communityOpen"
+                  id="book-community-panel"
+                  class="community-panel"
                 >
-                  <h4>{{ t('community.also_have') }}</h4>
-                  <ul>
+                  <ul class="reader-list">
                     <li
-                      v-for="item in community.alsoHave"
-                      :key="`${item.owner}-${item.bookId}`"
+                      v-for="reader in community.readers"
+                      :key="reader.username"
                     >
                       <router-link
-                        :to="{ name: 'public-library', params: { username: item.owner }, query: { book: item.bookId } }"
-                        class="also-link"
-                      >
-                        <span class="also-title">{{ item.title }}</span>
-                        <span
-                          v-if="item.authors"
-                          class="also-authors"
-                        >{{ item.authors }}</span>
-                      </router-link>
-                      <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers) }}</span>
+                        :to="{ name: 'public-library', params: { username: reader.username } }"
+                        class="reader-link"
+                      >@{{ reader.username }}</router-link>
+                      <i
+                        v-if="reader.hasRead"
+                        class="pi pi-check-circle text-theme"
+                        v-tooltip.top="t('community.has_read')"
+                        :aria-label="t('community.has_read')"
+                      ></i>
+                      <StarRating
+                        v-if="reader.rating"
+                        :model-value="reader.rating"
+                        size="sm"
+                        readonly
+                      />
                     </li>
                   </ul>
+
+                  <div
+                    v-if="community.alsoHave.length"
+                    class="also-have"
+                  >
+                    <h3>{{ t('community.also_have') }}</h3>
+                    <ul>
+                      <li
+                        v-for="item in community.alsoHave.slice(0, ALSO_HAVE_SHOWN)"
+                        :key="`${item.owner}-${item.bookId}`"
+                      >
+                        <router-link
+                          :to="{ name: 'public-library', params: { username: item.owner }, query: { book: item.bookId } }"
+                          class="also-link"
+                        >
+                          <span class="also-title">{{ item.title }}</span>
+                          <span
+                            v-if="item.authors"
+                            class="also-authors"
+                          >{{ item.authors }}</span>
+                        </router-link>
+                        <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers) }}</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </template>
 
@@ -375,10 +434,6 @@
                 v-if="!currentUser?.showInCommunity"
                 class="community-hint"
               >
-                <i
-                  class="pi pi-info-circle"
-                  aria-hidden="true"
-                ></i>
                 <i18n-t
                   scope="global"
                   keypath="community.join_hint"
@@ -400,7 +455,6 @@
 <script setup>
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Chip from 'primevue/chip'
 import Dialog from 'primevue/dialog'
 import Calendar from 'primevue/calendar'
 import Button from 'primevue/button'
@@ -414,7 +468,7 @@ import { coverUrl, handleCoverError } from '../utils/covers.js'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const props = defineProps({
   modelValue: Boolean,
   bookId: Number,
@@ -454,13 +508,64 @@ const tagList = computed(() => {
   return book.value.tags.split(',').map(tag => tag.trim()).filter(Boolean)
 })
 
+const ALSO_HAVE_SHOWN = 3
+
 const ratingSaving = ref(false)
+const readSaving = ref(false)
+const communityOpen = ref(false)
 const community = ref(null)
 const communityLoading = ref(false)
 const communityError = ref(false)
 
 const showIsbnWarning = computed(() => !isEditing.value && !loading.value && !book.value.isbnValid)
 const showCommunity = computed(() => !props.isReadOnly && !isEditing.value && !loading.value && !loadFailed.value)
+
+function formatDate(value) {
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(locale.value)
+}
+
+// Editora · ano · ISBN numa linha só; a data completa fica no title.
+const metaItems = computed(() => {
+  const items = []
+  if (book.value.publisher) items.push({ key: 'publisher', text: book.value.publisher })
+  if (book.value.pubdate) {
+    items.push({
+      key: 'year',
+      text: String(book.value.pubdate.getFullYear()),
+      title: t('bookDialog.publishedOn', { date: formatDate(book.value.pubdate) })
+    })
+  }
+  if (book.value.isbn) items.push({ key: 'isbn', text: `ISBN ${book.value.isbn}` })
+  return items
+})
+
+async function markRead() {
+  readSaving.value = true
+  try {
+    const today = new Date()
+    await api.markAsRead(props.bookId, toApiDate(today))
+    book.value.read_date = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    emit('updated', { book: { book_id: props.bookId, read_date: toApiDate(today) }, coverChanged: false })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
+  } finally {
+    readSaving.value = false
+  }
+}
+
+async function markUnread() {
+  readSaving.value = true
+  try {
+    await api.markAsUnread(props.bookId)
+    book.value.read_date = null
+    emit('updated', { book: { book_id: props.bookId, read_date: null }, coverChanged: false })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
+  } finally {
+    readSaving.value = false
+  }
+}
 
 function formatAverage(value) {
   return Number(value).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -727,7 +832,7 @@ onBeforeUnmount(() => preview.clear())
 .dialog-body {
   display: flex;
   flex-direction: row;
-  min-height: 500px;
+  min-height: 440px;
   position: relative;
   width: 100%;
   background-color: var(--bg-panel);
@@ -857,7 +962,7 @@ button.cover-wrapper {
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   overflow-y: auto;
   max-height: 85vh;
 }
@@ -867,6 +972,8 @@ button.cover-wrapper {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+  /* Espaço para o X do canto não encostar no lixo/lápis. */
+  padding-right: 2.25rem;
 }
 
 .title-area {
@@ -877,7 +984,8 @@ button.cover-wrapper {
 }
 
 .book-title {
-  font-size: 2rem;
+  font-family: 'Georgia', serif;
+  font-size: 1.9rem;
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
@@ -909,8 +1017,16 @@ button.cover-wrapper {
 }
 
 .title-input {
-  font-size: 2rem;
+  font-family: 'Georgia', serif;
+  font-size: 1.9rem;
   font-weight: 700;
+}
+
+/* Na edição, todos os campos de baixo com a mesma cara. */
+.details-content .modern-input {
+  background-color: var(--bg-input);
+  padding: 0.7rem 0.75rem;
+  border-radius: 8px;
 }
 
 .author-input {
@@ -921,79 +1037,209 @@ button.cover-wrapper {
 .info-group label {
   display: block;
   font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  font-weight: 500;
 }
 
-.tags-list {
+.details-content {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.custom-chip.colored-chip {
-  background-color: transparent !important;
-  background-image: none !important;
-  color: var(--tag-color) !important;
-  border: 1px solid var(--tag-color) !important;
-  box-shadow: none !important;
-  font-weight: 600;
-}
-
-.custom-chip.colored-chip:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-.empty-text {
-  color: var(--text-muted);
-  font-style: italic;
+.details-content.view {
+  gap: 1.1rem;
 }
 
 .rating-row {
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+/* Lido / marcar como lido */
+.read-state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.read-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(var(--main-color-rgb), 0.12);
+  color: var(--main-color);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.read-pill .pi {
+  font-size: 0.8rem;
+}
+
+.mark-read-btn.p-button {
+  background: transparent;
+  border: 1px solid var(--main-color);
+  color: var(--main-color);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.mark-read-btn.p-button:enabled:hover {
+  background: rgba(var(--main-color-rgb), 0.12);
+  border-color: var(--main-color);
+  color: var(--main-color);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link-btn:hover {
+  color: var(--text-primary);
+}
+
+.link-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Editora · ano · ISBN */
+.meta-line {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.meta-line li + li::before {
+  content: '·';
+  margin: 0 0.5rem;
+  color: var(--text-muted);
 }
 
 .isbn-warning {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.4rem;
+  gap: 0.4rem;
+  margin: -0.4rem 0 0;
   color: #f59e0b;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
 
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tag-chip {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  color: var(--tag-color);
+  background: color-mix(in srgb, var(--tag-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
+}
+
+/* Comunidade recolhida */
 .community-section {
   border-top: 1px solid var(--border-color);
-  padding-top: 1.25rem;
+  padding-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.community-title {
+.muted-line {
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin: 0;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
-.community-summary {
-  margin: 0;
+.community-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.35rem 0;
+  font: inherit;
   color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.community-toggle > .pi-users {
+  color: var(--text-secondary);
+}
+
+.toggle-text {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.community-toggle:hover .toggle-text {
+  color: var(--main-color);
+}
+
+.community-toggle:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.avg-rating {
+  margin-left: 0.5rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .avg-rating .pi {
   color: #f5b301;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+}
+
+.chevron {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+.community-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .reader-list,
@@ -1006,7 +1252,7 @@ button.cover-wrapper {
 .reader-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .reader-list li {
@@ -1015,7 +1261,7 @@ button.cover-wrapper {
   gap: 0.4rem;
   background: var(--bg-input);
   border-radius: 999px;
-  padding: 0.3rem 0.75rem;
+  padding: 0.25rem 0.7rem;
   font-size: 0.85rem;
 }
 
@@ -1032,8 +1278,8 @@ button.cover-wrapper {
   text-decoration: underline;
 }
 
-.also-have h4 {
-  margin: 0.25rem 0 0.5rem;
+.also-have h3 {
+  margin: 0 0 0.35rem;
   font-size: 0.85rem;
   color: var(--text-secondary);
   font-weight: 500;
@@ -1044,7 +1290,7 @@ button.cover-wrapper {
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
-  padding: 0.35rem 0;
+  padding: 0.45rem 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1062,6 +1308,7 @@ button.cover-wrapper {
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .also-authors,
@@ -1075,12 +1322,10 @@ button.cover-wrapper {
 }
 
 .community-hint {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
+  line-height: 1.45;
 }
 
 .dates-grid,
@@ -1140,19 +1385,48 @@ button.cover-wrapper {
 }
 
 @media (max-width: 768px) {
+  /* Celular/tablet em pé: capa compacta em cima e só os detalhes rolam,
+     para o botão de fechar e o título ficarem sempre à vista. */
   .dialog-body {
     flex-direction: column;
+    min-height: 0;
+    max-height: calc(100dvh - 2rem);
   }
 
   .cover-section {
+    flex: none;
     max-width: 100%;
-    height: 250px;
+    height: 190px;
     border-bottom: 1px solid var(--border-color);
   }
 
   .details-section {
-    padding: 1.5rem;
-    gap: 1.5rem;
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .book-title {
+    font-size: 1.5rem;
+  }
+
+  /* Capa inteira e pequena, em vez de um recorte gigante. */
+  .image-container {
+    padding: 1rem;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  .cover-wrapper {
+    width: auto;
+    height: 100%;
+    max-width: none;
+  }
+
+  .details-header {
+    padding-right: 0;
   }
 
   .dates-grid,

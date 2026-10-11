@@ -612,34 +612,83 @@ defineExpose({ reloadOptions: loadOptions })
 }
 
 @media (max-width: 768px) {
+
+  /* Celular: duas linhas só — título e ações em cima, busca embaixo. O
+     cabeçalho é fixo no topo, então cada pixel aqui é um pixel a menos de estante. */
+  .library-header-wrapper {
+    padding: 0.75rem 1rem;
+  }
+
   .top-bar {
-    flex-wrap: wrap;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title actions"
+      "search search";
+    gap: 0.6rem 0.75rem;
   }
 
   .header-title {
-    width: 100%;
-    justify-content: center;
+    grid-area: title;
+    gap: 0.6rem;
   }
 
-  .search-area {
-    order: 3;
-    min-width: 100%;
+  .header-title h1 {
+    font-size: 1.3rem;
   }
 
   .actions {
-    order: 2;
-    width: 100%;
-    justify-content: space-between;
+    grid-area: actions;
+    gap: 0.25rem;
+  }
+
+  .search-area {
+    grid-area: search;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .custom-search-input {
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
   }
 
   .add-btn {
     width: auto;
+    padding: 0.5rem 0.95rem;
   }
 
+  /* Filtros ativos numa linha só: os chips rolam para o lado e o
+     "Limpar tudo" fica sempre à mão no fim. */
   .active-filters-bar {
-    flex-direction: column;
-    align-items: flex-start;
+    margin-top: 0.6rem;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+  }
+
+  .filter-label {
+    display: none;
+  }
+
+  .chips-container {
+    flex: 1;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chips-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chips-container .custom-chip {
+    flex-shrink: 0;
+  }
+
+  .clear-all-btn {
+    flex-shrink: 0;
+    padding: 0.35rem 0.5rem !important;
   }
 }
 </style>

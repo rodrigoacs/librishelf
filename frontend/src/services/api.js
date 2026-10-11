@@ -79,8 +79,9 @@ export default {
     return client.post(`/library/${id}/cover`, formData)
   },
 
-  markAsRead(id) {
-    return client.patch(`/library/${id}/read`)
+  /** readDate: 'YYYY-MM-DD' no fuso da pessoa (padrão: hoje no servidor). */
+  markAsRead(id, readDate) {
+    return client.patch(`/library/${id}/read`, readDate ? { readDate } : undefined)
   },
 
   markAsUnread(id) {

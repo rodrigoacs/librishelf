@@ -40,26 +40,25 @@
     "skipToContent": "Skip to content"
   },
   "home": {
-    "welcome": "Welcome to ",
-    "hero": "Your digital library. Organize, track, and rediscover your book collection with elegance and security.",
-    "accessLibrary": "Access Your Library",
-    "features": "What you can do",
-    "manageBooks": {
-      "title": "Complete Management",
-      "desc": "Add books with details: author, publisher, date, and custom cover."
-    },
-    "trackReading": {
-      "title": "Reading Tracking",
-      "desc": "Mark books as read, log dates, and track your literary progress."
-    },
-    "smartSearch": {
-      "title": "Smart Search",
-      "desc": "Find any work instantly by filtering by title, author, publisher, or tags."
-    },
-    "visual": {
-      "title": "Premium Visuals",
-      "desc": "Your collection presented in a responsive, clean, and visually pleasing layout."
-    }
+    "morning": "Good morning, {name}",
+    "afternoon": "Good afternoon, {name}",
+    "evening": "Good evening, {name}",
+    "totalBooks": "{n} book on the shelf | {n} books on the shelf",
+    "readThisYear": "none read this year | {n} read this year | {n} read this year",
+    "addBook": "Add book",
+    "pendingRequests": "{n} person wants to follow you | {n} people want to follow you",
+    "recentlyAdded": "Recently added",
+    "seeLibrary": "See library",
+    "recentlyRead": "Recently read",
+    "seeStats": "See dashboard",
+    "community": "People you follow",
+    "seeCommunity": "See community",
+    "emptyTitle": "Your shelf is empty",
+    "emptyText": "Start with the book closest to you. With the ISBN, title, author, publisher and cover fill in on their own.",
+    "addFirst": "Add your first book",
+    "tipIsbn": "Type the ISBN (on the back, near the barcode) and click Look up.",
+    "tipRead": "Mark the books you have read and give them 1 to 5 stars.",
+    "tipShare": "In Account, make your library public to share the link and find other readers."
   },
   "book": {
     "new_title": "New Book",
@@ -171,7 +170,12 @@
     "cannotEdit": "Cannot edit: the book details did not load.",
     "validationTitle": "Title is required.",
     "validationAuthors": "Author is required.",
-    "isbnInvalid": "This ISBN looks wrong (check digit doesn't match). Fix it so the book shows up in the community."
+    "isbnInvalid": "This ISBN looks wrong (check digit doesn't match). Fix it so the book shows up in the community.",
+    "readOn": "Read on {date}",
+    "markRead": "Mark as read",
+    "undoRead": "Undo",
+    "readDateLabel": "Date read",
+    "publishedOn": "Published on {date}"
   },
   "authors": {
     "title": "Authors",
@@ -192,11 +196,11 @@
     "bookCount": "{count} book | {count} books"
   },
   "tags": {
-    "title": "Tags",
-    "subtitle": "Manage your book tags.",
-    "search_ph": "Search tags...",
-    "empty": "No tags found.",
-    "error": "Could not load tags.",
+    "title": "Categories",
+    "subtitle": "The categories (tags) of your books.",
+    "search_ph": "Search categories...",
+    "empty": "No categories found.",
+    "error": "Could not load categories.",
     "bookCount": "{count} book | {count} books",
     "viewBooks": "View books"
   },

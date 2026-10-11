@@ -3,10 +3,12 @@
 
     <div class="mobile-header">
       <Button
+        ref="menuButton"
         icon="pi pi-bars"
         class="p-button-text menu-btn"
         :aria-label="t('menu.openMenu')"
         :aria-expanded="mobileMenuOpen"
+        aria-controls="app-sidebar"
         @click="mobileMenuOpen = true"
       />
       <div class="mobile-logo-wrapper">
@@ -32,8 +34,10 @@
     </Transition>
 
     <aside
+      id="app-sidebar"
       class="sidebar"
       :class="{ 'sidebar-mobile-open': mobileMenuOpen }"
+      @keydown.esc="mobileMenuOpen = false"
     >
 
       <div class="sidebar-header">
@@ -49,6 +53,7 @@
           </div>
         </div>
         <button
+          ref="closeButton"
           type="button"
           class="close-sidebar-btn"
           :aria-label="t('menu.closeMenu')"
@@ -164,7 +169,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
@@ -179,6 +184,19 @@ const route = useRoute()
 const { t } = useI18n()
 
 const mobileMenuOpen = ref(false)
+const menuButton = ref(null)
+const closeButton = ref(null)
+
+// Menu do celular: trava a rolagem da página, leva o foco para dentro ao abrir
+// e devolve ao botão do menu ao fechar (teclado e leitor de tela).
+watch(mobileMenuOpen, async (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+  await nextTick()
+  if (open) closeButton.value?.focus()
+  else if (document.activeElement?.closest?.('#app-sidebar')) menuButton.value?.$el?.focus()
+})
+
+onBeforeUnmount(() => { document.body.style.overflow = '' })
 const showSettings = ref(false)
 
 const displayName = computed(() => currentUser.value?.name || t('menu.guest'))
@@ -518,11 +536,16 @@ button.nav-item {
     background-color: var(--bg-panel);
     box-shadow: none;
     transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Fechado também fica invisível para teclado e leitor de tela; o
+       visibility espera a animação terminar antes de esconder. */
+    visibility: hidden;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.3s;
   }
 
   .sidebar.sidebar-mobile-open {
     transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
   }
 

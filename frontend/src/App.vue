@@ -15,7 +15,10 @@
       id="main-content"
       tabindex="-1"
     >
-      <Toast position="bottom-right" />
+      <Toast
+        position="bottom-right"
+        :breakpoints="{ '640px': { width: 'calc(100vw - 2rem)', left: '1rem', right: '1rem' } }"
+      />
       <ConfirmDialog />
       <router-view />
     </main>

@@ -105,6 +105,23 @@ it('should mark book as read (PATCH)', async () => {
   expect(checkRes.body.read_date).not.toBeNull()
 })
 
+it('marca como lido na data enviada pelo cliente (dia local) e recusa data inválida', async () => {
+  const res = await request(app)
+    .patch(`/library/${createdBookId}/read`)
+    .set('Authorization', `Bearer ${token}`)
+    .send({ readDate: '2024-03-15' })
+  expect(res.statusCode).toEqual(200)
+
+  const checkRes = await request(app).get(`/library/${createdBookId}`).set('Authorization', `Bearer ${token}`)
+  expect(new Date(checkRes.body.read_date).toISOString().slice(0, 10)).toBe('2024-03-15')
+
+  const bad = await request(app)
+    .patch(`/library/${createdBookId}/read`)
+    .set('Authorization', `Bearer ${token}`)
+    .send({ readDate: 'ontem' })
+  expect(bad.statusCode).toEqual(400)
+})
+
 it('should mark book as unread (DELETE action)', async () => {
   const res = await request(app)
     .delete(`/library/${createdBookId}/read`)

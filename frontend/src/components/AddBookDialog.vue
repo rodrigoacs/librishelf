@@ -897,20 +897,26 @@ button.upload-container {
 @media (max-width: 768px) {
   .dialog-body {
     flex-direction: column;
+    min-height: 0;
+    max-height: calc(100dvh - 2rem);
   }
 
   .cover-section {
+    flex: none;
     max-width: 100%;
-    padding: 2rem 1rem;
+    padding: 1rem;
     height: auto;
   }
 
   .upload-container {
-    max-width: 150px;
+    max-width: 110px;
   }
 
   .form-section {
-    padding: 1.5rem;
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    padding: 1.25rem;
   }
 
   .form-header h2 {

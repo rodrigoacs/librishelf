@@ -186,9 +186,11 @@ const stats = ref({
 
 const currentDate = computed(() => {
   const dateLocale = locale.value === 'pt' ? 'pt-BR' : 'en-US'
-  return new Date().toLocaleDateString(dateLocale, {
+  const text = new Date().toLocaleDateString(dateLocale, {
     weekday: 'long', day: 'numeric', month: 'long'
   })
+  // Só a primeira letra: "Sábado, 10 de outubro" (o CSS capitalize fazia "De Outubro").
+  return text.charAt(0).toUpperCase() + text.slice(1)
 })
 
 const readingRate = computed(() => {
@@ -298,7 +300,9 @@ onMounted(loadStats)
   padding: 2rem;
   min-height: 100vh;
   background-color: var(--bg-app);
-  margin: 0 10vw;
+  max-width: 1100px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .header-section {
@@ -323,12 +327,11 @@ onMounted(loadStats)
 .date-display {
   color: var(--main-color);
   font-weight: 600;
-  text-transform: capitalize;
 }
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -405,6 +408,7 @@ onMounted(loadStats)
 }
 
 .chart-card {
+  min-width: 0;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -501,6 +505,12 @@ onMounted(loadStats)
   margin-bottom: 1.5rem;
 }
 
+@media (max-width: 1100px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .charts-grid {
     grid-template-columns: 1fr;
@@ -513,11 +523,44 @@ onMounted(loadStats)
 
 @media (max-width: 600px) {
   .dashboard-container {
-    padding: 1rem;
+    padding: 1.25rem 1rem;
   }
 
+  /* Dois por linha: os quatro números cabem na primeira tela. */
   .kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .kpi-card {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .kpi-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+  }
+
+  .kpi-info .label {
+    font-size: 0.72rem;
+  }
+
+  .kpi-info .value {
+    font-size: 1.5rem;
+  }
+
+  .charts-grid {
+    gap: 1rem;
+  }
+
+  .chart-card {
+    padding: 1.1rem;
   }
 
   .header-section {

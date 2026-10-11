@@ -215,9 +215,13 @@ async function setRating(bookId, userId, value) {
   return await libraryRepository.updateRating(bookId, normalizeRating(value))
 }
 
-async function markBookAsRead(bookId, userId) {
+/**
+ * Marca como lido. O cliente manda a data local (YYYY-MM-DD): com o relógio do
+ * servidor em UTC, quem marca às 22h em Brasília veria "lido amanhã".
+ */
+async function markBookAsRead(bookId, userId, rawDate) {
   await checkBookOwnership(bookId, userId)
-  const readDate = new Date()
+  const readDate = normalizeDate(rawDate, 'readDate') ?? new Date()
   return await libraryRepository.updateReadDate(bookId, readDate)
 }
 

@@ -576,6 +576,14 @@ onMounted(async () => {
 }
 
 @media (max-width: 640px) {
+  /* As quatro abas cabem na largura do celular, sem rolagem lateral. */
+  .tab {
+    flex: 1;
+    justify-content: center;
+    padding: 0.7rem 0.35rem;
+    font-size: 0.9rem;
+  }
+
   .community-container {
     padding: 1.25rem;
   }
