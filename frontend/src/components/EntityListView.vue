@@ -82,7 +82,7 @@
           <router-link
             :to="{ path: '/books', query: { [queryParam]: item.name } }"
             class="entity-card"
-            :style="variant === 'tag' ? { '--accent-color': tagColor(index) } : undefined"
+            :style="variant === 'tag' ? { '--accent-color': tagColor(item.name) } : undefined"
           >
             <span
               class="avatar-wrapper"
@@ -121,6 +121,7 @@
 </template>
 
 <script setup>
+import { tagColor } from '../utils/tagColors.js'
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
@@ -142,7 +143,6 @@ const props = defineProps({
 
 const { t } = useI18n()
 
-const TAG_COLORS = ['var(--red)', 'var(--green)', 'var(--blue)', 'var(--purple)', 'var(--yellow)', 'var(--orange)']
 
 const items = ref([])
 const loading = ref(true)
@@ -166,13 +166,6 @@ function initials(name) {
   return letters.toUpperCase()
 }
 
-// Cor pelo nome (não pela posição): não muda ao filtrar a lista.
-function tagColor(index) {
-  const name = filteredItems.value[index]?.name || ''
-  let hash = 0
-  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) | 0
-  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length]
-}
 
 async function load() {
   loading.value = true
@@ -364,14 +357,22 @@ onMounted(load)
   text-align: center;
 }
 
-.empty-state > i {
+.empty-state>i {
   font-size: 2.5rem;
 }
 
 @keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
 }
 
 @media (max-width: 640px) {

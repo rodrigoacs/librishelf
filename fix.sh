@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  Librishelf — revisão do frontend (versão completa)
+#  Librishelf — cores por nome em todo o app
 #
-#  1. Revisão responsiva: Início pessoal, Painel, diálogos no celular, menu
-#     acessível, avisos, abas da Comunidade, iniciais, "Categorias"
-#     (o mesmo conteúdo do librishelf-frontend.sh)
-#  2. Cabeçalho da Biblioteca compacto no celular
-#  3. Modal do livro enxuto: "Marcar como lido" direto, dados numa linha,
-#     comunidade recolhida, sem rótulos em maiúsculas
-#     (+ backend: PATCH /library/:id/read aceita a data local)
+#  Mesma cor sempre para o mesmo nome (paleta red/green/blue/purple/yellow/orange):
+#  categorias, autores, editoras, leitores, capas desenhadas para livros sem
+#  capa, anos e números do Painel e do perfil público. Inclui também o rodapé
+#  com "Editar/Excluir" no modal do livro.
 #
-#  Uso:   bash librishelf-frontend-v2.sh [caminho/do/repo]
-#  Base:  commit 2e36b86. Quem já aplicou o librishelf-frontend.sh ou copiou o
-#         LibraryHeader.vue recebe só o que falta. NÃO commita, NÃO faz push.
+#  Uso:   bash librishelf-cores.sh [caminho/do/repo]
+#  Base:  commit 16b848e. Aceita os arquivos avulsos que mandei depois dele
+#         (rodapé do modal e cores das categorias). NÃO commita, NÃO faz push.
 # =============================================================================
 set -euo pipefail
 
@@ -25,2239 +22,802 @@ fail() { printf '%s  ✘ %s%s\n' "$R" "$*" "$N" >&2; exit 1; }
 cd "${1:-$PWD}" || fail "Pasta não encontrada."
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "Não é um repositório git: $PWD"
 cd "$(git rev-parse --show-toplevel)"
-[ -f backend/src/routes/uploads.js ] || fail "Falta o commit 2e36b86 (capas privadas). Aplique o librishelf-capas.sh antes."
+[ -f frontend/src/views/Home.vue ] || fail "Não parece ser o repositório do Librishelf."
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
-P1="$TMP_DIR/1-revisao.patch"
-P2="$TMP_DIR/2-modal-cabecalho.patch"
 
-cat > "$P1" <<'P1_EOF'
-diff --git a/frontend/src/App.vue b/frontend/src/App.vue
-index 49d738e..fa81705 100644
---- a/frontend/src/App.vue
-+++ b/frontend/src/App.vue
-@@ -15,7 +15,10 @@
-       id="main-content"
-       tabindex="-1"
-     >
--      <Toast position="bottom-right" />
-+      <Toast
-+        position="bottom-right"
-+        :breakpoints="{ '640px': { width: 'calc(100vw - 2rem)', left: '1rem', right: '1rem' } }"
-+      />
-       <ConfirmDialog />
-       <router-view />
-     </main>
-diff --git a/frontend/src/components/AddBookDialog.vue b/frontend/src/components/AddBookDialog.vue
-index 1a2bb36..8d55cca 100644
---- a/frontend/src/components/AddBookDialog.vue
-+++ b/frontend/src/components/AddBookDialog.vue
-@@ -897,20 +897,26 @@ button.upload-container {
- @media (max-width: 768px) {
-   .dialog-body {
-     flex-direction: column;
-+    min-height: 0;
-+    max-height: calc(100dvh - 2rem);
-   }
- 
-   .cover-section {
-+    flex: none;
-     max-width: 100%;
--    padding: 2rem 1rem;
-+    padding: 1rem;
-     height: auto;
-   }
- 
-   .upload-container {
--    max-width: 150px;
-+    max-width: 110px;
-   }
- 
-   .form-section {
--    padding: 1.5rem;
-+    flex: 1;
-+    min-height: 0;
-+    max-height: none;
-+    padding: 1.25rem;
-   }
- 
-   .form-header h2 {
-diff --git a/frontend/src/components/BookDialog.vue b/frontend/src/components/BookDialog.vue
-index f7565bd..81b34b9 100644
---- a/frontend/src/components/BookDialog.vue
-+++ b/frontend/src/components/BookDialog.vue
-@@ -1140,19 +1140,31 @@ button.cover-wrapper {
- }
- 
- @media (max-width: 768px) {
-+  /* Celular/tablet em pé: capa compacta em cima e só os detalhes rolam,
-+     para o botão de fechar e o título ficarem sempre à vista. */
-   .dialog-body {
-     flex-direction: column;
-+    min-height: 0;
-+    max-height: calc(100dvh - 2rem);
-   }
- 
-   .cover-section {
-+    flex: none;
-     max-width: 100%;
--    height: 250px;
-+    height: 190px;
-     border-bottom: 1px solid var(--border-color);
-   }
- 
-   .details-section {
--    padding: 1.5rem;
--    gap: 1.5rem;
-+    flex: 1;
-+    min-height: 0;
-+    max-height: none;
-+    padding: 1.25rem;
-+    gap: 1.25rem;
-+  }
-+
-+  .book-title {
-+    font-size: 1.5rem;
-   }
- 
-   .dates-grid,
-diff --git a/frontend/src/components/EntityListView.vue b/frontend/src/components/EntityListView.vue
-index 3e026e7..cd9b9be 100644
---- a/frontend/src/components/EntityListView.vue
-+++ b/frontend/src/components/EntityListView.vue
-@@ -156,7 +156,14 @@ const filteredItems = computed(() => {
- })
- 
- function initials(name) {
--  return name ? name.substring(0, 2).toUpperCase() : '?'
-+  if (!name) return '?'
-+  // "Sobrenome, Nome" vira "Nome Sobrenome" antes de pegar as letras.
-+  const [last, first] = name.split(',').map(part => part.trim())
-+  const ordered = first ? `${first} ${last}` : name
-+  const words = ordered.split(/\s+/).filter(word => /^\p{L}/u.test(word))
-+  if (words.length === 0) return name.trim().charAt(0).toUpperCase() || '?'
-+  const letters = words.length === 1 ? words[0].slice(0, 2) : words[0][0] + words.at(-1)[0]
-+  return letters.toUpperCase()
- }
- 
- // Cor pelo nome (não pela posição): não muda ao filtrar a lista.
-diff --git a/frontend/src/components/NavigationMenu.vue b/frontend/src/components/NavigationMenu.vue
-index d52ccb2..4eead55 100644
---- a/frontend/src/components/NavigationMenu.vue
-+++ b/frontend/src/components/NavigationMenu.vue
-@@ -3,10 +3,12 @@
- 
-     <div class="mobile-header">
-       <Button
-+        ref="menuButton"
-         icon="pi pi-bars"
-         class="p-button-text menu-btn"
-         :aria-label="t('menu.openMenu')"
-         :aria-expanded="mobileMenuOpen"
-+        aria-controls="app-sidebar"
-         @click="mobileMenuOpen = true"
-       />
-       <div class="mobile-logo-wrapper">
-@@ -32,8 +34,10 @@
-     </Transition>
- 
-     <aside
-+      id="app-sidebar"
-       class="sidebar"
-       :class="{ 'sidebar-mobile-open': mobileMenuOpen }"
-+      @keydown.esc="mobileMenuOpen = false"
-     >
- 
-       <div class="sidebar-header">
-@@ -49,6 +53,7 @@
-           </div>
-         </div>
-         <button
-+          ref="closeButton"
-           type="button"
-           class="close-sidebar-btn"
-           :aria-label="t('menu.closeMenu')"
-@@ -164,7 +169,7 @@
- </template>
- 
- <script setup>
--import { ref, computed, watch } from 'vue'
-+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
- import { useRouter, useRoute } from 'vue-router'
- import { useI18n } from 'vue-i18n'
- import Button from 'primevue/button'
-@@ -179,6 +184,19 @@ const route = useRoute()
- const { t } = useI18n()
- 
- const mobileMenuOpen = ref(false)
-+const menuButton = ref(null)
-+const closeButton = ref(null)
-+
-+// Menu do celular: trava a rolagem da página, leva o foco para dentro ao abrir
-+// e devolve ao botão do menu ao fechar (teclado e leitor de tela).
-+watch(mobileMenuOpen, async (open) => {
-+  document.body.style.overflow = open ? 'hidden' : ''
-+  await nextTick()
-+  if (open) closeButton.value?.focus()
-+  else if (document.activeElement?.closest?.('#app-sidebar')) menuButton.value?.$el?.focus()
-+})
-+
-+onBeforeUnmount(() => { document.body.style.overflow = '' })
- const showSettings = ref(false)
- 
- const displayName = computed(() => currentUser.value?.name || t('menu.guest'))
-@@ -518,11 +536,16 @@ button.nav-item {
-     background-color: var(--bg-panel);
-     box-shadow: none;
-     transform: translateX(-100%);
--    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-+    /* Fechado também fica invisível para teclado e leitor de tela; o
-+       visibility espera a animação terminar antes de esconder. */
-+    visibility: hidden;
-+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.3s;
-   }
- 
-   .sidebar.sidebar-mobile-open {
-     transform: translateX(0);
-+    visibility: visible;
-+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
-     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
-   }
- 
-diff --git a/frontend/src/locales/en.json b/frontend/src/locales/en.json
-index d51e3ad..eb66cf6 100644
---- a/frontend/src/locales/en.json
-+++ b/frontend/src/locales/en.json
-@@ -40,26 +40,25 @@
-     "skipToContent": "Skip to content"
-   },
-   "home": {
--    "welcome": "Welcome to ",
--    "hero": "Your digital library. Organize, track, and rediscover your book collection with elegance and security.",
--    "accessLibrary": "Access Your Library",
--    "features": "What you can do",
--    "manageBooks": {
--      "title": "Complete Management",
--      "desc": "Add books with details: author, publisher, date, and custom cover."
--    },
--    "trackReading": {
--      "title": "Reading Tracking",
--      "desc": "Mark books as read, log dates, and track your literary progress."
--    },
--    "smartSearch": {
--      "title": "Smart Search",
--      "desc": "Find any work instantly by filtering by title, author, publisher, or tags."
--    },
--    "visual": {
--      "title": "Premium Visuals",
--      "desc": "Your collection presented in a responsive, clean, and visually pleasing layout."
--    }
-+    "morning": "Good morning, {name}",
-+    "afternoon": "Good afternoon, {name}",
-+    "evening": "Good evening, {name}",
-+    "totalBooks": "{n} book on the shelf | {n} books on the shelf",
-+    "readThisYear": "none read this year | {n} read this year | {n} read this year",
-+    "addBook": "Add book",
-+    "pendingRequests": "{n} person wants to follow you | {n} people want to follow you",
-+    "recentlyAdded": "Recently added",
-+    "seeLibrary": "See library",
-+    "recentlyRead": "Recently read",
-+    "seeStats": "See dashboard",
-+    "community": "People you follow",
-+    "seeCommunity": "See community",
-+    "emptyTitle": "Your shelf is empty",
-+    "emptyText": "Start with the book closest to you. With the ISBN, title, author, publisher and cover fill in on their own.",
-+    "addFirst": "Add your first book",
-+    "tipIsbn": "Type the ISBN (on the back, near the barcode) and click Look up.",
-+    "tipRead": "Mark the books you have read and give them 1 to 5 stars.",
-+    "tipShare": "In Account, make your library public to share the link and find other readers."
-   },
-   "book": {
-     "new_title": "New Book",
-@@ -192,11 +191,11 @@
-     "bookCount": "{count} book | {count} books"
-   },
-   "tags": {
--    "title": "Tags",
--    "subtitle": "Manage your book tags.",
--    "search_ph": "Search tags...",
--    "empty": "No tags found.",
--    "error": "Could not load tags.",
-+    "title": "Categories",
-+    "subtitle": "The categories (tags) of your books.",
-+    "search_ph": "Search categories...",
-+    "empty": "No categories found.",
-+    "error": "Could not load categories.",
-     "bookCount": "{count} book | {count} books",
-     "viewBooks": "View books"
-   },
-diff --git a/frontend/src/locales/pt.json b/frontend/src/locales/pt.json
-index de9c1c5..a445eff 100644
---- a/frontend/src/locales/pt.json
-+++ b/frontend/src/locales/pt.json
-@@ -1,25 +1,24 @@
- {
-   "home": {
--    "welcome": "Bem vindo ao ",
--    "hero": "Sua biblioteca digital. Organize, rastreie e redescubra sua coleção de livros com elegância e segurança.",
--    "accessLibrary": "Acesse sua biblioteca",
--    "features": "O que você pode fazer",
--    "manageBooks": {
--      "title": "Gerenciamento Completo",
--      "desc": "Adicione livros com detalhes: autor, editora, data e capa personalizada."
--    },
--    "trackReading": {
--      "title": "Rastreio de Leitura",
--      "desc": "Marque livros como lidos, registre datas e acompanhe seu progresso literário."
--    },
--    "smartSearch": {
--      "title": "Busca Inteligente",
--      "desc": "Encontre qualquer obra instantaneamente filtrando por título, autor, editora ou tags."
--    },
--    "visual": {
--      "title": "Visual Premium",
--      "desc": "Sua coleção apresentada em um layout responsivo, limpo e de visual agradável."
--    }
-+    "morning": "Bom dia, {name}",
-+    "afternoon": "Boa tarde, {name}",
-+    "evening": "Boa noite, {name}",
-+    "totalBooks": "{n} livro na estante | {n} livros na estante",
-+    "readThisYear": "nenhum lido este ano | {n} lido este ano | {n} lidos este ano",
-+    "addBook": "Adicionar livro",
-+    "pendingRequests": "{n} pessoa quer seguir você | {n} pessoas querem seguir você",
-+    "recentlyAdded": "Adicionados recentemente",
-+    "seeLibrary": "Ver biblioteca",
-+    "recentlyRead": "Lidos recentemente",
-+    "seeStats": "Ver painel",
-+    "community": "Quem você segue",
-+    "seeCommunity": "Ver comunidade",
-+    "emptyTitle": "Sua estante está vazia",
-+    "emptyText": "Comece pelo livro que está mais perto de você. Com o ISBN, título, autor, editora e capa vêm sozinhos.",
-+    "addFirst": "Adicionar o primeiro livro",
-+    "tipIsbn": "Digite o ISBN (fica no verso, perto do código de barras) e clique em Buscar.",
-+    "tipRead": "Marque os livros que já leu e dê uma nota de 1 a 5 estrelas.",
-+    "tipShare": "Em Conta, torne a biblioteca pública para compartilhar o link e encontrar outros leitores."
-   },
-   "menu": {
-     "home": "Início",
-@@ -192,11 +191,11 @@
-     "bookCount": "{count} livro | {count} livros"
-   },
-   "tags": {
--    "title": "Tags",
--    "subtitle": "Gerencie suas tags de livros.",
--    "search_ph": "Pesquisar tags...",
--    "empty": "Nenhuma tag encontrada.",
--    "error": "Não foi possível carregar as tags.",
-+    "title": "Categorias",
-+    "subtitle": "As categorias (tags) dos seus livros.",
-+    "search_ph": "Pesquisar categorias...",
-+    "empty": "Nenhuma categoria encontrada.",
-+    "error": "Não foi possível carregar as categorias.",
-     "bookCount": "{count} livro | {count} livros",
-     "viewBooks": "Ver livros"
-   },
-diff --git a/frontend/src/views/Community.vue b/frontend/src/views/Community.vue
-index ab3edb8..8db55c1 100644
---- a/frontend/src/views/Community.vue
-+++ b/frontend/src/views/Community.vue
-@@ -576,6 +576,14 @@ onMounted(async () => {
- }
- 
- @media (max-width: 640px) {
-+  /* As quatro abas cabem na largura do celular, sem rolagem lateral. */
-+  .tab {
-+    flex: 1;
-+    justify-content: center;
-+    padding: 0.7rem 0.35rem;
-+    font-size: 0.9rem;
-+  }
-+
-   .community-container {
-     padding: 1.25rem;
-   }
-diff --git a/frontend/src/views/Dashboard.vue b/frontend/src/views/Dashboard.vue
-index 25d90ff..8b7f27b 100644
---- a/frontend/src/views/Dashboard.vue
-+++ b/frontend/src/views/Dashboard.vue
-@@ -186,9 +186,11 @@ const stats = ref({
- 
- const currentDate = computed(() => {
-   const dateLocale = locale.value === 'pt' ? 'pt-BR' : 'en-US'
--  return new Date().toLocaleDateString(dateLocale, {
-+  const text = new Date().toLocaleDateString(dateLocale, {
-     weekday: 'long', day: 'numeric', month: 'long'
-   })
-+  // Só a primeira letra: "Sábado, 10 de outubro" (o CSS capitalize fazia "De Outubro").
-+  return text.charAt(0).toUpperCase() + text.slice(1)
- })
- 
- const readingRate = computed(() => {
-@@ -298,7 +300,9 @@ onMounted(loadStats)
-   padding: 2rem;
-   min-height: 100vh;
-   background-color: var(--bg-app);
--  margin: 0 10vw;
-+  max-width: 1100px;
-+  margin: 0 auto;
-+  box-sizing: border-box;
- }
- 
- .header-section {
-@@ -323,12 +327,11 @@ onMounted(loadStats)
- .date-display {
-   color: var(--main-color);
-   font-weight: 600;
--  text-transform: capitalize;
- }
- 
- .kpi-grid {
-   display: grid;
--  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-+  grid-template-columns: repeat(4, minmax(0, 1fr));
-   gap: 1.5rem;
-   margin-bottom: 2rem;
- }
-@@ -405,6 +408,7 @@ onMounted(loadStats)
- }
- 
- .chart-card {
-+  min-width: 0;
-   background-color: var(--bg-panel);
-   border: 1px solid var(--border-color);
-   border-radius: 16px;
-@@ -501,6 +505,12 @@ onMounted(loadStats)
-   margin-bottom: 1.5rem;
- }
- 
-+@media (max-width: 1100px) {
-+  .kpi-grid {
-+    grid-template-columns: repeat(2, minmax(0, 1fr));
-+  }
-+}
-+
- @media (max-width: 900px) {
-   .charts-grid {
-     grid-template-columns: 1fr;
-@@ -513,11 +523,44 @@ onMounted(loadStats)
- 
- @media (max-width: 600px) {
-   .dashboard-container {
--    padding: 1rem;
-+    padding: 1.25rem 1rem;
-   }
- 
-+  /* Dois por linha: os quatro números cabem na primeira tela. */
-   .kpi-grid {
--    grid-template-columns: 1fr;
-+    grid-template-columns: repeat(2, minmax(0, 1fr));
-+    gap: 0.75rem;
-+    margin-bottom: 1.25rem;
-+  }
-+
-+  .kpi-card {
-+    padding: 1rem;
-+    flex-direction: column;
-+    align-items: flex-start;
-+    gap: 0.6rem;
-+  }
-+
-+  .kpi-icon {
-+    width: 36px;
-+    height: 36px;
-+    font-size: 1.1rem;
-+    border-radius: 10px;
-+  }
-+
-+  .kpi-info .label {
-+    font-size: 0.72rem;
-+  }
-+
-+  .kpi-info .value {
-+    font-size: 1.5rem;
-+  }
-+
-+  .charts-grid {
-+    gap: 1rem;
-+  }
-+
-+  .chart-card {
-+    padding: 1.1rem;
-   }
- 
-   .header-section {
-diff --git a/frontend/src/views/Home.vue b/frontend/src/views/Home.vue
-index 7aec893..6dfb106 100644
---- a/frontend/src/views/Home.vue
-+++ b/frontend/src/views/Home.vue
-@@ -1,277 +1,472 @@
- <template>
-   <div class="home-container">
--
--    <section class="hero-section">
--      <div class="logo-animation">
--        <img
--          width="120"
--          height="120"
--          src="/bookshelf.png"
--          alt=""
--          class="hero-logo"
--        />
--      </div>
--
--      <h1 class="hero-title">
--        {{ $t("home.welcome") }} <span class="highlight">Librishelf</span>
--      </h1>
--
--      <p class="hero-subtitle">
--        {{ $t("home.hero") }}
--      </p>
--
--      <div class="hero-actions">
--        <Button
--          :label="$t('home.accessLibrary')"
--          icon="pi pi-arrow-right"
--          iconPos="right"
--          class="p-button-rounded hero-btn"
--          @click="goToLibrary"
--        />
-+    <header class="home-header">
-+      <div class="greeting">
-+        <h1>{{ greeting }}</h1>
-+        <p
-+          v-if="summary"
-+          class="summary"
-+        >{{ summary }}</p>
-       </div>
-+      <Button
-+        v-if="!isEmpty"
-+        :label="t('home.addBook')"
-+        icon="pi pi-plus"
-+        class="btn-action-primary add-btn-home"
-+        @click="addDialogVisible = true"
-+      />
-+    </header>
-+
-+    <router-link
-+      v-if="pendingRequests > 0"
-+      :to="{ name: 'community' }"
-+      class="notice"
-+    >
-+      <i
-+        class="pi pi-user-plus"
-+        aria-hidden="true"
-+      ></i>
-+      <span>{{ t('home.pendingRequests', { n: pendingRequests }, pendingRequests) }}</span>
-+      <i
-+        class="pi pi-angle-right notice-arrow"
-+        aria-hidden="true"
-+      ></i>
-+    </router-link>
-+
-+    <!-- Carregando -->
-+    <div
-+      v-if="loading"
-+      class="shelf-skeleton"
-+      aria-busy="true"
-+    >
-+      <Skeleton
-+        v-for="n in 6"
-+        :key="n"
-+        height="260px"
-+        border-radius="12px"
-+      />
-+    </div>
-+
-+    <!-- Estante vazia: primeiro passo -->
-+    <section
-+      v-else-if="isEmpty"
-+      class="empty-start"
-+    >
-+      <img
-+        src="/bookshelf.png"
-+        alt=""
-+        width="96"
-+        height="96"
-+      />
-+      <h2>{{ t('home.emptyTitle') }}</h2>
-+      <p>{{ t('home.emptyText') }}</p>
-+      <Button
-+        :label="t('home.addFirst')"
-+        icon="pi pi-plus"
-+        class="btn-action-primary"
-+        @click="addDialogVisible = true"
-+      />
-+      <ul class="tips">
-+        <li>
-+          <i
-+            class="pi pi-search"
-+            aria-hidden="true"
-+          ></i>
-+          <span>{{ t('home.tipIsbn') }}</span>
-+        </li>
-+        <li>
-+          <i
-+            class="pi pi-check-circle"
-+            aria-hidden="true"
-+          ></i>
-+          <span>{{ t('home.tipRead') }}</span>
-+        </li>
-+        <li>
-+          <i
-+            class="pi pi-globe"
-+            aria-hidden="true"
-+          ></i>
-+          <span>{{ t('home.tipShare') }}</span>
-+        </li>
-+      </ul>
-     </section>
- 
--    <section class="features-section">
--      <h2>{{ $t("home.features") }}</h2>
--
--      <div class="features-grid">
--        <div class="feature-card">
--          <div class="icon-box">
--            <i class="pi pi-plus" aria-hidden="true"></i>
--          </div>
--          <h3>{{ $t("home.manageBooks.title") }}</h3>
--          <p>{{ $t("home.manageBooks.desc") }}</p>
-+    <template v-else>
-+      <section
-+        class="shelf"
-+        aria-labelledby="home-recent-title"
-+      >
-+        <div class="shelf-head">
-+          <h2 id="home-recent-title">{{ t('home.recentlyAdded') }}</h2>
-+          <router-link
-+            :to="{ name: 'library' }"
-+            class="see-all"
-+          >{{ t('home.seeLibrary') }}</router-link>
-         </div>
--
--        <div class="feature-card">
--          <div class="icon-box">
--            <i class="pi pi-check-circle" aria-hidden="true"></i>
--          </div>
--          <h3>{{ $t("home.trackReading.title") }}</h3>
--          <p>{{ $t("home.trackReading.desc") }}</p>
-+        <div class="shelf-row">
-+          <BookItem
-+            v-for="book in recentBooks"
-+            :key="book.book_id"
-+            :book="book"
-+            @updated="reload"
-+            @deleted="reload"
-+          />
-         </div>
--
--        <div class="feature-card">
--          <div class="icon-box">
--            <i class="pi pi-filter" aria-hidden="true"></i>
--          </div>
--          <h3>{{ $t("home.smartSearch.title") }}</h3>
--          <p>{{ $t("home.smartSearch.desc") }}</p>
-+      </section>
-+
-+      <section
-+        v-if="readBooks.length"
-+        class="shelf"
-+        aria-labelledby="home-read-title"
-+      >
-+        <div class="shelf-head">
-+          <h2 id="home-read-title">{{ t('home.recentlyRead') }}</h2>
-+          <router-link
-+            :to="{ name: 'dashboard' }"
-+            class="see-all"
-+          >{{ t('home.seeStats') }}</router-link>
-         </div>
--
--        <div class="feature-card">
--          <div class="icon-box">
--            <i class="pi pi-th-large" aria-hidden="true"></i>
--          </div>
--          <h3>{{ $t("home.visual.title") }}</h3>
--          <p>{{ $t("home.visual.desc") }}</p>
-+        <div class="shelf-row">
-+          <BookItem
-+            v-for="book in readBooks"
-+            :key="book.book_id"
-+            :book="book"
-+            @updated="reload"
-+            @deleted="reload"
-+          />
-         </div>
--      </div>
--    </section>
--
-+      </section>
-+
-+      <section
-+        v-if="events.length"
-+        class="activity"
-+        aria-labelledby="home-activity-title"
-+      >
-+        <div class="shelf-head">
-+          <h2 id="home-activity-title">{{ t('home.community') }}</h2>
-+          <router-link
-+            :to="{ name: 'community' }"
-+            class="see-all"
-+          >{{ t('home.seeCommunity') }}</router-link>
-+        </div>
-+        <ul class="activity-list">
-+          <li
-+            v-for="event in events"
-+            :key="`${event.type}-${event.bookId}-${event.at}`"
-+          >
-+            <ReaderName
-+              :username="event.username"
-+              :is-public="event.isPublic"
-+            />
-+            {{ event.type === 'read' ? t('communityView.event_read') : t('communityView.event_added') }}
-+            <strong>{{ event.title }}</strong>
-+          </li>
-+        </ul>
-+      </section>
-+    </template>
-+
-+    <AddBookDialog
-+      v-model:visible="addDialogVisible"
-+      @save="reload"
-+    />
-   </div>
- </template>
- 
- <script setup>
--import { useRouter } from 'vue-router'
-+import { ref, computed, onMounted } from 'vue'
-+import { useI18n } from 'vue-i18n'
- import Button from 'primevue/button'
-+import Skeleton from 'primevue/skeleton'
-+import api from '../services/api.js'
-+import BookItem from '../components/BookItem.vue'
-+import AddBookDialog from '../components/AddBookDialog.vue'
-+import ReaderName from '../components/ReaderName.vue'
-+import { currentUser } from '../services/session.js'
-+import { pendingRequests } from '../services/social.js'
-+
-+const SHELF_SIZE = 6
-+const ACTIVITY_SIZE = 4
-+
-+const { t } = useI18n()
-+
-+const loading = ref(true)
-+const recentBooks = ref([])
-+const readBooks = ref([])
-+const total = ref(0)
-+const readThisYear = ref(0)
-+const events = ref([])
-+const addDialogVisible = ref(false)
-+
-+const isEmpty = computed(() => !loading.value && total.value === 0)
-+
-+const greeting = computed(() => {
-+  const hour = new Date().getHours()
-+  const key = hour < 5 ? 'home.evening' : hour < 12 ? 'home.morning' : hour < 18 ? 'home.afternoon' : 'home.evening'
-+  return t(key, { name: currentUser.value?.name ?? '' })
-+})
-+
-+const summary = computed(() => {
-+  if (loading.value || total.value === 0) return ''
-+  return `${t('home.totalBooks', { n: total.value }, total.value)} · ${t('home.readThisYear', { n: readThisYear.value }, readThisYear.value)}`
-+})
-+
-+async function reload() {
-+  try {
-+    const [recent, read, stats] = await Promise.all([
-+      api.getBooks({ page: 1, limit: SHELF_SIZE, sort: 'recent', order: 'desc' }),
-+      api.getBooks({ page: 1, limit: SHELF_SIZE, sort: 'readDate', order: 'desc', readState: 'true' }),
-+      api.getDashboardStats()
-+    ])
-+    recentBooks.value = recent.result || []
-+    total.value = recent.total || 0
-+    readBooks.value = read.result || []
-+    const year = new Date().getFullYear()
-+    readThisYear.value = stats.readingByYear?.find(entry => Number(entry.year) === year)?.count ?? 0
-+  } catch {
-+    recentBooks.value = []
-+    readBooks.value = []
-+  } finally {
-+    loading.value = false
-+  }
-+}
- 
--const router = useRouter()
--
--function goToLibrary() {
--  router.push('/books')
-+async function loadActivity() {
-+  try {
-+    const feed = await api.getFeed(1)
-+    events.value = (feed.events || []).slice(0, ACTIVITY_SIZE)
-+  } catch {
-+    events.value = []
-+  }
- }
-+
-+onMounted(() => {
-+  reload()
-+  loadActivity()
-+})
- </script>
- 
- <style scoped>
- .home-container {
-+  width: 100%;
-+  min-width: 0;
-   min-height: 100vh;
-   background-color: var(--bg-app);
-   color: var(--text-primary);
--  padding: 4rem 2rem;
--  display: flex;
--  flex-direction: column;
--  align-items: center;
-+  padding: 2.5rem 2rem 3rem;
-   max-width: 1200px;
-   margin: 0 auto;
-+  box-sizing: border-box;
-+  display: flex;
-+  flex-direction: column;
-+  gap: 2.25rem;
- }
- 
--.hero-section {
--  text-align: center;
--  max-width: 800px;
--  margin-bottom: 5rem;
--  animation: fadeUp 0.8s ease-out;
-+.home-header {
-+  display: flex;
-+  justify-content: space-between;
-+  align-items: flex-end;
-+  gap: 1rem;
-+  flex-wrap: wrap;
- }
- 
--.hero-logo {
--  filter: drop-shadow(0 0 20px rgba(var(--main-color-rgb), 0.3));
--  margin-bottom: 1.5rem;
--  transition: transform 0.3s ease;
-+.greeting h1 {
-+  font-family: 'Georgia', serif;
-+  font-size: 2.4rem;
-+  margin: 0;
-+  line-height: 1.15;
- }
- 
--.hero-logo:hover {
--  transform: scale(1.05) rotate(-5deg);
-+.summary {
-+  margin: 0.5rem 0 0;
-+  color: var(--text-secondary);
- }
- 
--.hero-title {
--  font-family: 'Georgia', serif;
--  font-size: 3.5rem;
--  font-weight: 700;
--  margin: 0 0 1rem 0;
--  line-height: 1.1;
--  letter-spacing: -1px;
-+.notice {
-+  display: flex;
-+  align-items: center;
-+  gap: 0.75rem;
-+  padding: 0.85rem 1.1rem;
-+  border-radius: 10px;
-+  border: 1px solid rgba(var(--main-color-rgb), 0.35);
-+  background: rgba(var(--main-color-rgb), 0.08);
-+  color: var(--text-primary);
-+  text-decoration: none;
-+  margin-top: -1rem;
- }
- 
--.highlight {
-+.notice .pi-user-plus {
-   color: var(--main-color);
--  position: relative;
--  display: inline-block;
- }
- 
--.highlight::after {
--  content: '';
--  position: absolute;
--  width: 100%;
--  height: 4px;
--  bottom: 5px;
--  left: 0;
--  background-color: var(--main-color);
--  opacity: 0.3;
--  transition: height 0.2s;
-+.notice-arrow {
-+  margin-left: auto;
-+  color: var(--text-secondary);
- }
- 
--.hero-title:hover .highlight::after {
--  height: 12px;
-+.notice:hover {
-+  background: rgba(var(--main-color-rgb), 0.14);
- }
- 
--.hero-subtitle {
-+.shelf-head {
-+  display: flex;
-+  justify-content: space-between;
-+  align-items: baseline;
-+  gap: 1rem;
-+  margin-bottom: 1rem;
-+}
-+
-+.shelf-head h2 {
-+  margin: 0;
-   font-size: 1.25rem;
--  color: #a1a1aa;
--  line-height: 1.6;
--  margin-bottom: 2.5rem;
-+  font-weight: 600;
- }
- 
--.hero-btn {
--  background-color: var(--main-color) !important;
--  border-color: var(--main-color) !important;
--  color: var(--text-primary) !important;
--  font-weight: 700 !important;
--  font-size: 1.1rem !important;
--  padding: 0.8rem 2rem !important;
--  transition: transform 0.2s !important;
-+.see-all {
-+  color: var(--main-color);
-+  text-decoration: none;
-+  font-size: 0.9rem;
-+  white-space: nowrap;
- }
- 
--.hero-btn:hover {
--  transform: translateY(-2px);
--  filter: brightness(1.1);
-+.see-all:hover {
-+  text-decoration: underline;
- }
- 
--.features-section {
--  width: 100%;
--  animation: fadeUp 0.8s ease-out 0.2s backwards;
-+.shelf-row,
-+.shelf-skeleton {
-+  display: grid;
-+  grid-template-columns: repeat(6, minmax(0, 1fr));
-+  gap: 1.25rem;
- }
- 
--.features-section h2 {
--  text-align: center;
--  font-size: 1.8rem;
--  margin-bottom: 3rem;
--  color: var(--text-primary);
--  font-weight: 600;
--  letter-spacing: -0.5px;
-+.activity-list {
-+  list-style: none;
-+  margin: 0;
-+  padding: 0;
-+  background: var(--bg-panel);
-+  border: 1px solid var(--border-color);
-+  border-radius: 12px;
- }
- 
--.features-grid {
--  display: grid;
--  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
--  gap: 2rem;
-+.activity-list li {
-+  padding: 0.85rem 1.1rem;
-+  border-bottom: 1px solid var(--border-color);
-+  color: var(--text-secondary);
-+  line-height: 1.45;
- }
- 
--.feature-card {
--  background-color: var(--bg-panel);
--  border: 1px solid var(--border-color);
--  border-radius: 16px;
--  padding: 2rem;
--  display: flex;
--  flex-direction: column;
--  align-items: flex-start;
--  transition: all 0.3s ease;
--  position: relative;
--  overflow: hidden;
-+.activity-list li:last-child {
-+  border-bottom: none;
- }
- 
--.feature-card:hover {
--  transform: translateY(-5px);
--  border-color: var(--main-color);
--  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-+.activity-list strong {
-+  color: var(--text-primary);
-+  font-weight: 600;
- }
- 
--.icon-box {
--  width: 50px;
--  height: 50px;
--  border-radius: 12px;
--  background-color: var(--main-color);
-+.empty-start {
-+  text-align: center;
-+  max-width: 560px;
-+  margin: 1rem auto 0;
-   display: flex;
-+  flex-direction: column;
-   align-items: center;
--  justify-content: center;
--  margin-bottom: 1.5rem;
--  transition: background 0.3s;
-+  gap: 1rem;
- }
- 
--.feature-card:hover .icon-box {
--  background-color: var(--main-color);
-+.empty-start h2 {
-+  font-family: 'Georgia', serif;
-+  font-size: 1.8rem;
-+  margin: 0.5rem 0 0;
- }
- 
--.icon-box i {
--  font-size: 1.5rem;
--  color: #fff;
--  transition: color 0.3s;
-+.empty-start p {
-+  margin: 0;
-+  color: var(--text-secondary);
-+  line-height: 1.55;
- }
- 
--.feature-card:hover .icon-box i {
--  color: var(--text-primary);
-+.tips {
-+  list-style: none;
-+  margin: 1.5rem 0 0;
-+  padding: 0;
-+  display: flex;
-+  flex-direction: column;
-+  gap: 0.75rem;
-+  text-align: left;
-+  width: 100%;
- }
- 
--.feature-card h3 {
--  font-size: 1.25rem;
--  margin: 0 0 0.8rem 0;
--  color: var(--text-primary);
--  font-weight: 700;
-+.tips li {
-+  display: flex;
-+  gap: 0.85rem;
-+  align-items: flex-start;
-+  background: var(--bg-panel);
-+  border: 1px solid var(--border-color);
-+  border-radius: 10px;
-+  padding: 0.9rem 1rem;
-+  color: var(--text-secondary);
-+  line-height: 1.45;
- }
- 
--.feature-card p {
--  font-size: 1rem;
--  color: var(--text-secondary);
--  margin: 0;
--  line-height: 1.6;
-+.tips .pi {
-+  color: var(--main-color);
-+  margin-top: 0.15rem;
- }
- 
--@keyframes fadeUp {
--  from {
--    opacity: 0;
--    transform: translateY(30px);
-+@media (max-width: 1100px) {
-+  .shelf-row,
-+  .shelf-skeleton {
-+    grid-template-columns: repeat(4, minmax(0, 1fr));
-   }
- 
--  to {
--    opacity: 1;
--    transform: translateY(0);
-+  .shelf-row > :nth-child(n + 5),
-+  .shelf-skeleton > :nth-child(n + 5) {
-+    display: none;
-   }
- }
- 
--@media (max-width: 768px) {
-+@media (max-width: 640px) {
-   .home-container {
--    padding: 2rem 1rem;
-+    padding: 1.5rem 1rem 2.5rem;
-+    gap: 1.75rem;
-+  }
-+
-+  .greeting h1 {
-+    font-size: 1.8rem;
-+  }
-+
-+  .add-btn-home {
-+    width: 100%;
-+  }
-+
-+  /* Celular: a estante rola para o lado, como uma prateleira. O contain
-+     impede que a largura dos livros estique a página inteira. */
-+  .shelf-row {
-+    contain: inline-size;
-+    display: flex;
-+    overflow-x: auto;
-+    scroll-snap-type: x mandatory;
-+    gap: 0.85rem;
-+    margin: 0 -1rem;
-+    padding: 0 1rem 0.5rem;
-+  }
-+
-+  .shelf-row > * {
-+    flex: 0 0 42%;
-+    scroll-snap-align: start;
-   }
- 
--  .hero-title {
--    font-size: 2.5rem;
-+  .shelf-row > :nth-child(n + 5) {
-+    display: flex;
-   }
- 
--  .hero-subtitle {
--    font-size: 1.1rem;
-+  .shelf-skeleton {
-+    grid-template-columns: repeat(2, minmax(0, 1fr));
-   }
- 
--  .features-grid {
--    grid-template-columns: 1fr;
-+  .shelf-skeleton > :nth-child(n + 3) {
-+    display: none;
-   }
- }
- </style>
-P1_EOF
+# arquivo  hash-final  hashes-aceitos... (conteúdo normalizado com \n no fim)
+cat > "$TMP_DIR/manifest.txt" <<'MANIFEST_EOF'
+frontend/src/components/BookDialog.vue 828143a33200358034ad42f8a15fa01512bb33bd 31d6a94130fa80e85175a02826f578f579d0d0e2 525e6409413ef7c630795852cbd8e69ee15fd827 828143a33200358034ad42f8a15fa01512bb33bd 993d48e9d5a836c24c386078c7bf0eb3ce5c6019
+frontend/src/components/BookItem.vue 23a20e7333ebabd1fd922505b2e249a159e6ab93 23a20e7333ebabd1fd922505b2e249a159e6ab93 502405fdfa9e02c410da8c06a3595af7fd293cff
+frontend/src/components/EntityListView.vue 7508545992fad36cce976ceafa03d40688902f92 7508545992fad36cce976ceafa03d40688902f92 cd9b9bee81e604f47684343085479ac86cfea4de d71f614a614521de4825ef0ad714fd8b36ff090e
+frontend/src/components/GeneratedCover.vue af8e47c283d8eb160628ada15ee25061cd26b6ef ABSENT af8e47c283d8eb160628ada15ee25061cd26b6ef
+frontend/src/components/LibraryHeader.vue e994a8bbbe417932868e277605592ce99e256f3e 71e4608276eb42e4b006c07667937fbea115af02 c530842b6f038d03faaa8babefce30035e0539d6 e994a8bbbe417932868e277605592ce99e256f3e
+frontend/src/components/ReaderAvatar.vue d3ac6d6ab40b40027b290fb68173b379b8be603a ABSENT d3ac6d6ab40b40027b290fb68173b379b8be603a
+frontend/src/locales/en.json 06fd9b32b9dcc5d831deb29ef12768e97b16596f 06fd9b32b9dcc5d831deb29ef12768e97b16596f b5d702f47b671538529b96108a82f3c009b14b0b
+frontend/src/locales/pt.json a37c586fb79f7b63bbb8d715477c5f6cd4f755e2 a37c586fb79f7b63bbb8d715477c5f6cd4f755e2 ba6888b0e99aad01296f9f0b27175cc357c10a84
+frontend/src/utils/covers.js efbe7dc9b57abdb13c1eb88e0e2be759dc38b177 9d125e7b5dba2c32a67b96e39848275bc2e69db9 efbe7dc9b57abdb13c1eb88e0e2be759dc38b177
+frontend/src/utils/tagColors.js 5e3c8a0e728572ce62b6a93ee12a8530f9512a2f 1259a77581482e2f20e25c7a09a00b5bd8fa8eae 5e3c8a0e728572ce62b6a93ee12a8530f9512a2f ABSENT
+frontend/src/views/Community.vue c150ff440b323c2a75e72f02cbb90d0565cb808a 740d1cebead07a040aadc14e76818c37943f762e c150ff440b323c2a75e72f02cbb90d0565cb808a
+frontend/src/views/Dashboard.vue ee850fd24ccd1ad0dc160c6e59b3ce6d9dc8a24a 8b7f27b135d1fd6a88992d2dcf125d7813f56703 ee850fd24ccd1ad0dc160c6e59b3ce6d9dc8a24a
+frontend/src/views/Home.vue 2aeaab3be5ca3f9ff773d3a500edfc54a828b924 2aeaab3be5ca3f9ff773d3a500edfc54a828b924 6dfb1060bfa03a8841678a02877a0b8bbc5b06b0
+frontend/src/views/PublicLibrary.vue 4abe05e0fe04c51b3555755996d5a32d5c960870 064881c12d51224ce418260c0268dfc34dfa98fe 4abe05e0fe04c51b3555755996d5a32d5c960870 a383209ffcaaf3b4ea78832ac5bea208a7fd8cf6
+MANIFEST_EOF
 
-cat > "$P2" <<'P2_EOF'
-diff --git a/backend/src/routes/library.js b/backend/src/routes/library.js
-index 41f202e..168ba0a 100644
---- a/backend/src/routes/library.js
-+++ b/backend/src/routes/library.js
-@@ -239,7 +239,7 @@ router.patch('/:id/rating', validateNumericId(), async (req, res) => {
- router.patch('/:id/read', validateNumericId(), async (req, res) => {
-   try {
-     const userId = req.user.id
--    await libraryService.markBookAsRead(req.params.id, userId)
-+    await libraryService.markBookAsRead(req.params.id, userId, req.body?.readDate)
-     res.status(STATUS.OK).json({ message: 'Book marked as read.' })
-   } catch (error) {
-     sendError(res, error, 'Erro ao marcar livro como lido')
-diff --git a/backend/src/services/libraryService.js b/backend/src/services/libraryService.js
-index 83638f0..dbe47eb 100644
---- a/backend/src/services/libraryService.js
-+++ b/backend/src/services/libraryService.js
-@@ -215,9 +215,13 @@ async function setRating(bookId, userId, value) {
-   return await libraryRepository.updateRating(bookId, normalizeRating(value))
- }
- 
--async function markBookAsRead(bookId, userId) {
-+/**
-+ * Marca como lido. O cliente manda a data local (YYYY-MM-DD): com o relógio do
-+ * servidor em UTC, quem marca às 22h em Brasília veria "lido amanhã".
-+ */
-+async function markBookAsRead(bookId, userId, rawDate) {
-   await checkBookOwnership(bookId, userId)
--  const readDate = new Date()
-+  const readDate = normalizeDate(rawDate, 'readDate') ?? new Date()
-   return await libraryRepository.updateReadDate(bookId, readDate)
- }
- 
-diff --git a/backend/src/tests/integration/library.test.js b/backend/src/tests/integration/library.test.js
-index 061e202..75e0eb1 100644
---- a/backend/src/tests/integration/library.test.js
-+++ b/backend/src/tests/integration/library.test.js
-@@ -105,6 +105,23 @@ it('should mark book as read (PATCH)', async () => {
-   expect(checkRes.body.read_date).not.toBeNull()
- })
- 
-+it('marca como lido na data enviada pelo cliente (dia local) e recusa data inválida', async () => {
-+  const res = await request(app)
-+    .patch(`/library/${createdBookId}/read`)
-+    .set('Authorization', `Bearer ${token}`)
-+    .send({ readDate: '2024-03-15' })
-+  expect(res.statusCode).toEqual(200)
-+
-+  const checkRes = await request(app).get(`/library/${createdBookId}`).set('Authorization', `Bearer ${token}`)
-+  expect(new Date(checkRes.body.read_date).toISOString().slice(0, 10)).toBe('2024-03-15')
-+
-+  const bad = await request(app)
-+    .patch(`/library/${createdBookId}/read`)
-+    .set('Authorization', `Bearer ${token}`)
-+    .send({ readDate: 'ontem' })
-+  expect(bad.statusCode).toEqual(400)
-+})
-+
- it('should mark book as unread (DELETE action)', async () => {
-   const res = await request(app)
-     .delete(`/library/${createdBookId}/read`)
-diff --git a/frontend/src/components/BookDialog.vue b/frontend/src/components/BookDialog.vue
-index 81b34b9..6d3d047 100644
---- a/frontend/src/components/BookDialog.vue
-+++ b/frontend/src/components/BookDialog.vue
-@@ -167,39 +167,24 @@
-           </div>
-         </div>
- 
--        <div class="details-content">
-+        <!-- Edição: formulário completo -->
-+        <div
-+          v-if="isEditing"
-+          class="details-content"
-+        >
-           <div class="info-group">
--            <label :for="isEditing ? 'book-edit-tags' : undefined">{{ t('bookDialog.tags') }}</label>
--            <div v-if="isEditing">
--              <input
--                id="book-edit-tags"
--                v-model="book.tags"
--                class="modern-input"
--                :placeholder="t('bookDialog.tagsPlaceholder')"
--              />
--            </div>
--            <div
--              v-else
--              class="tags-list"
--            >
--              <span
--                v-if="!tagList.length"
--                class="empty-text"
--              >{{ t('bookDialog.noTags') }}</span>
--
--              <Chip
--                v-for="(tag, index) in tagList"
--                :key="`${tag}-${index}`"
--                :label="tag"
--                class="custom-chip colored-chip"
--                :style="{ '--tag-color': getTagColor(index) }"
--              />
--            </div>
-+            <label for="book-edit-tags">{{ t('bookDialog.tags') }}</label>
-+            <input
-+              id="book-edit-tags"
-+              v-model="book.tags"
-+              class="modern-input"
-+              :placeholder="t('bookDialog.tagsPlaceholder')"
-+            />
-           </div>
- 
-           <div class="dates-grid">
-             <div class="info-group">
--              <label for="book-read-date">{{ t('bookDialog.readingStatus') }}</label>
-+              <label for="book-read-date">{{ t('bookDialog.readDateLabel') }}</label>
-               <div class="date-input-wrapper">
-                 <i
-                   class="pi"
-@@ -209,7 +194,6 @@
-                 <Calendar
-                   inputId="book-read-date"
-                   v-model="book.read_date"
--                  :disabled="!isEditing"
-                   dateFormat="dd/mm/yy"
-                   :placeholder="t('bookDialog.notRead')"
-                   class="modern-calendar"
-@@ -229,7 +213,6 @@
-                 <Calendar
-                   inputId="book-pub-date"
-                   v-model="book.pubdate"
--                  :disabled="!isEditing"
-                   dateFormat="dd/mm/yy"
-                   :placeholder="t('bookDialog.dateUnknown')"
-                   class="modern-calendar"
-@@ -246,9 +229,7 @@
-               <input
-                 id="book-publisher"
-                 v-model="book.publisher"
--                :readonly="!isEditing"
-                 class="modern-input meta-input"
--                :class="{ 'readonly': !isEditing }"
-                 placeholder="-"
-               />
-             </div>
-@@ -257,117 +238,195 @@
-               <input
-                 id="book-isbn"
-                 v-model="book.isbn"
--                :readonly="!isEditing"
-                 class="modern-input meta-input"
--                :class="{ 'readonly': !isEditing }"
-                 placeholder="-"
--                :aria-describedby="showIsbnWarning ? 'book-isbn-warning' : undefined"
-               />
--              <small
--                v-if="showIsbnWarning"
--                id="book-isbn-warning"
--                class="isbn-warning"
--              >
-+            </div>
-+          </div>
-+        </div>
-+
-+        <!-- Visualização: o livro primeiro, o resto a um clique -->
-+        <div
-+          v-else-if="!loading && !loadFailed"
-+          class="details-content view"
-+        >
-+          <div
-+            v-if="!isReadOnly || book.read_date"
-+            class="read-state"
-+          >
-+            <template v-if="book.read_date">
-+              <span class="read-pill">
-                 <i
--                  class="pi pi-exclamation-triangle"
-+                  class="pi pi-check"
-                   aria-hidden="true"
-                 ></i>
--                {{ t('bookDialog.isbnInvalid') }}
--              </small>
--            </div>
-+                {{ t('bookDialog.readOn', { date: formatDate(book.read_date) }) }}
-+              </span>
-+              <button
-+                v-if="!isReadOnly"
-+                type="button"
-+                class="link-btn"
-+                :disabled="readSaving"
-+                @click="markUnread"
-+              >{{ t('bookDialog.undoRead') }}</button>
-+            </template>
-+            <Button
-+              v-else
-+              :label="t('bookDialog.markRead')"
-+              icon="pi pi-check"
-+              class="p-button-sm mark-read-btn"
-+              :loading="readSaving"
-+              @click="markRead"
-+            />
-+          </div>
-+
-+          <ul
-+            v-if="metaItems.length"
-+            class="meta-line"
-+          >
-+            <li
-+              v-for="item in metaItems"
-+              :key="item.key"
-+              :title="item.title"
-+            >{{ item.text }}</li>
-+          </ul>
-+
-+          <p
-+            v-if="showIsbnWarning"
-+            id="book-isbn-warning"
-+            class="isbn-warning"
-+          >
-+            <i
-+              class="pi pi-exclamation-triangle"
-+              aria-hidden="true"
-+            ></i>
-+            {{ t('bookDialog.isbnInvalid') }}
-+          </p>
-+
-+          <div
-+            v-if="tagList.length"
-+            class="tags-list"
-+            :aria-label="t('bookDialog.tags')"
-+          >
-+            <span
-+              v-for="(tag, index) in tagList"
-+              :key="`${tag}-${index}`"
-+              class="tag-chip"
-+              :style="{ '--tag-color': getTagColor(index) }"
-+            >{{ tag }}</span>
-           </div>
- 
-           <section
-             v-if="showCommunity"
-             class="community-section"
--            :aria-label="t('community.book_title')"
-           >
--            <h3 class="community-title">
--              <i
--                class="pi pi-users"
--                aria-hidden="true"
--              ></i>
--              {{ t('community.book_title') }}
--            </h3>
--
-             <p
-               v-if="communityLoading"
--              class="empty-text"
-+              class="muted-line"
-             >{{ t('common.loading') }}</p>
- 
-             <p
-               v-else-if="communityError"
--              class="empty-text"
-+              class="muted-line"
-             >{{ t('community.load_error') }}</p>
- 
-             <template v-else-if="community">
-               <p
-                 v-if="community.readerCount === 0"
--                class="empty-text"
--              >{{ t('community.no_readers') }}</p>
-+                class="muted-line"
-+              >
-+                <i
-+                  class="pi pi-users"
-+                  aria-hidden="true"
-+                ></i>
-+                {{ t('community.no_readers') }}
-+              </p>
- 
-               <template v-else>
--                <p class="community-summary">
--                  {{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}
--                  <span
--                    v-if="community.averageRating"
--                    class="avg-rating"
--                  >
--                    · <i
--                      class="pi pi-star-fill"
--                      aria-hidden="true"
--                    ></i>
--                    {{ t('community.average', { avg: formatAverage(community.averageRating), n: community.ratingCount }, community.ratingCount) }}
-+                <button
-+                  type="button"
-+                  class="community-toggle"
-+                  :aria-expanded="communityOpen"
-+                  aria-controls="book-community-panel"
-+                  @click="communityOpen = !communityOpen"
-+                >
-+                  <i
-+                    class="pi pi-users"
-+                    aria-hidden="true"
-+                  ></i>
-+                  <span class="toggle-text">
-+                    {{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}
-+                    <span
-+                      v-if="community.averageRating"
-+                      class="avg-rating"
-+                    >
-+                      <i
-+                        class="pi pi-star-fill"
-+                        aria-hidden="true"
-+                      ></i>
-+                      {{ formatAverage(community.averageRating) }}
-+                    </span>
-                   </span>
--                </p>
--
--                <ul class="reader-list">
--                  <li
--                    v-for="reader in community.readers"
--                    :key="reader.username"
--                  >
--                    <router-link
--                      :to="{ name: 'public-library', params: { username: reader.username } }"
--                      class="reader-link"
--                    >@{{ reader.username }}</router-link>
--                    <i
--                      v-if="reader.hasRead"
--                      class="pi pi-check-circle text-theme"
--                      v-tooltip.top="t('community.has_read')"
--                      :aria-label="t('community.has_read')"
--                    ></i>
--                    <StarRating
--                      v-if="reader.rating"
--                      :model-value="reader.rating"
--                      size="sm"
--                      readonly
--                    />
--                  </li>
--                </ul>
-+                  <i
-+                    class="pi pi-chevron-down chevron"
-+                    :class="{ open: communityOpen }"
-+                    aria-hidden="true"
-+                  ></i>
-+                </button>
- 
-                 <div
--                  v-if="community.alsoHave.length"
--                  class="also-have"
-+                  v-show="communityOpen"
-+                  id="book-community-panel"
-+                  class="community-panel"
-                 >
--                  <h4>{{ t('community.also_have') }}</h4>
--                  <ul>
-+                  <ul class="reader-list">
-                     <li
--                      v-for="item in community.alsoHave"
--                      :key="`${item.owner}-${item.bookId}`"
-+                      v-for="reader in community.readers"
-+                      :key="reader.username"
-                     >
-                       <router-link
--                        :to="{ name: 'public-library', params: { username: item.owner }, query: { book: item.bookId } }"
--                        class="also-link"
--                      >
--                        <span class="also-title">{{ item.title }}</span>
--                        <span
--                          v-if="item.authors"
--                          class="also-authors"
--                        >{{ item.authors }}</span>
--                      </router-link>
--                      <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers) }}</span>
-+                        :to="{ name: 'public-library', params: { username: reader.username } }"
-+                        class="reader-link"
-+                      >@{{ reader.username }}</router-link>
-+                      <i
-+                        v-if="reader.hasRead"
-+                        class="pi pi-check-circle text-theme"
-+                        v-tooltip.top="t('community.has_read')"
-+                        :aria-label="t('community.has_read')"
-+                      ></i>
-+                      <StarRating
-+                        v-if="reader.rating"
-+                        :model-value="reader.rating"
-+                        size="sm"
-+                        readonly
-+                      />
-                     </li>
-                   </ul>
-+
-+                  <div
-+                    v-if="community.alsoHave.length"
-+                    class="also-have"
-+                  >
-+                    <h3>{{ t('community.also_have') }}</h3>
-+                    <ul>
-+                      <li
-+                        v-for="item in community.alsoHave.slice(0, ALSO_HAVE_SHOWN)"
-+                        :key="`${item.owner}-${item.bookId}`"
-+                      >
-+                        <router-link
-+                          :to="{ name: 'public-library', params: { username: item.owner }, query: { book: item.bookId } }"
-+                          class="also-link"
-+                        >
-+                          <span class="also-title">{{ item.title }}</span>
-+                          <span
-+                            v-if="item.authors"
-+                            class="also-authors"
-+                          >{{ item.authors }}</span>
-+                        </router-link>
-+                        <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers) }}</span>
-+                      </li>
-+                    </ul>
-+                  </div>
-                 </div>
-               </template>
- 
-@@ -375,10 +434,6 @@
-                 v-if="!currentUser?.showInCommunity"
-                 class="community-hint"
-               >
--                <i
--                  class="pi pi-info-circle"
--                  aria-hidden="true"
--                ></i>
-                 <i18n-t
-                   scope="global"
-                   keypath="community.join_hint"
-@@ -400,7 +455,6 @@
- <script setup>
- import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
- import { useI18n } from 'vue-i18n'
--import Chip from 'primevue/chip'
- import Dialog from 'primevue/dialog'
- import Calendar from 'primevue/calendar'
- import Button from 'primevue/button'
-@@ -414,7 +468,7 @@ import { coverUrl, handleCoverError } from '../utils/covers.js'
- import { fromApiDate, toApiDate } from '../utils/dates.js'
- import { validateImageFile, createPreviewHandle } from '../utils/files.js'
- 
--const { t } = useI18n()
-+const { t, locale } = useI18n()
- const props = defineProps({
-   modelValue: Boolean,
-   bookId: Number,
-@@ -454,7 +508,11 @@ const tagList = computed(() => {
-   return book.value.tags.split(',').map(tag => tag.trim()).filter(Boolean)
- })
- 
-+const ALSO_HAVE_SHOWN = 3
-+
- const ratingSaving = ref(false)
-+const readSaving = ref(false)
-+const communityOpen = ref(false)
- const community = ref(null)
- const communityLoading = ref(false)
- const communityError = ref(false)
-@@ -462,6 +520,53 @@ const communityError = ref(false)
- const showIsbnWarning = computed(() => !isEditing.value && !loading.value && !book.value.isbnValid)
- const showCommunity = computed(() => !props.isReadOnly && !isEditing.value && !loading.value && !loadFailed.value)
- 
-+function formatDate(value) {
-+  const date = value instanceof Date ? value : new Date(value)
-+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(locale.value)
-+}
-+
-+// Editora · ano · ISBN numa linha só; a data completa fica no title.
-+const metaItems = computed(() => {
-+  const items = []
-+  if (book.value.publisher) items.push({ key: 'publisher', text: book.value.publisher })
-+  if (book.value.pubdate) {
-+    items.push({
-+      key: 'year',
-+      text: String(book.value.pubdate.getFullYear()),
-+      title: t('bookDialog.publishedOn', { date: formatDate(book.value.pubdate) })
-+    })
-+  }
-+  if (book.value.isbn) items.push({ key: 'isbn', text: `ISBN ${book.value.isbn}` })
-+  return items
-+})
-+
-+async function markRead() {
-+  readSaving.value = true
-+  try {
-+    const today = new Date()
-+    await api.markAsRead(props.bookId, toApiDate(today))
-+    book.value.read_date = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-+    emit('updated', { book: { book_id: props.bookId, read_date: toApiDate(today) }, coverChanged: false })
-+  } catch (error) {
-+    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
-+  } finally {
-+    readSaving.value = false
-+  }
-+}
-+
-+async function markUnread() {
-+  readSaving.value = true
-+  try {
-+    await api.markAsUnread(props.bookId)
-+    book.value.read_date = null
-+    emit('updated', { book: { book_id: props.bookId, read_date: null }, coverChanged: false })
-+  } catch (error) {
-+    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
-+  } finally {
-+    readSaving.value = false
-+  }
-+}
-+
- function formatAverage(value) {
-   return Number(value).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
- }
-@@ -727,7 +832,7 @@ onBeforeUnmount(() => preview.clear())
- .dialog-body {
-   display: flex;
-   flex-direction: row;
--  min-height: 500px;
-+  min-height: 440px;
-   position: relative;
-   width: 100%;
-   background-color: var(--bg-panel);
-@@ -857,7 +962,7 @@ button.cover-wrapper {
-   color: var(--text-primary);
-   display: flex;
-   flex-direction: column;
--  gap: 2rem;
-+  gap: 1.5rem;
-   overflow-y: auto;
-   max-height: 85vh;
- }
-@@ -867,6 +972,8 @@ button.cover-wrapper {
-   justify-content: space-between;
-   align-items: flex-start;
-   gap: 1rem;
-+  /* Espaço para o X do canto não encostar no lixo/lápis. */
-+  padding-right: 2.25rem;
- }
- 
- .title-area {
-@@ -877,7 +984,8 @@ button.cover-wrapper {
- }
- 
- .book-title {
--  font-size: 2rem;
-+  font-family: 'Georgia', serif;
-+  font-size: 1.9rem;
-   font-weight: 700;
-   margin: 0;
-   line-height: 1.2;
-@@ -909,10 +1017,18 @@ button.cover-wrapper {
- }
- 
- .title-input {
--  font-size: 2rem;
-+  font-family: 'Georgia', serif;
-+  font-size: 1.9rem;
-   font-weight: 700;
- }
- 
-+/* Na edição, todos os campos de baixo com a mesma cara. */
-+.details-content .modern-input {
-+  background-color: var(--bg-input);
-+  padding: 0.7rem 0.75rem;
-+  border-radius: 8px;
-+}
-+
- .author-input {
-   font-size: 1.2rem;
-   color: var(--text-secondary);
-@@ -921,79 +1037,209 @@ button.cover-wrapper {
- .info-group label {
-   display: block;
-   font-size: 0.85rem;
--  text-transform: uppercase;
--  letter-spacing: 0.05em;
--  color: var(--text-muted);
--  margin-bottom: 0.5rem;
--  font-weight: 600;
-+  color: var(--text-secondary);
-+  margin-bottom: 0.4rem;
-+  font-weight: 500;
- }
- 
--.tags-list {
-+.details-content {
-   display: flex;
-+  flex-direction: column;
-+  gap: 1.25rem;
-+}
-+
-+.details-content.view {
-+  gap: 1.1rem;
-+}
-+
-+.rating-row {
-+  margin-top: 0.35rem;
-+}
-+
-+/* Lido / marcar como lido */
-+.read-state {
-+  display: flex;
-+  align-items: center;
-+  gap: 0.75rem;
-   flex-wrap: wrap;
--  gap: 0.5rem;
--  margin-bottom: 0.5rem;
- }
- 
--.custom-chip.colored-chip {
--  background-color: transparent !important;
--  background-image: none !important;
--  color: var(--tag-color) !important;
--  border: 1px solid var(--tag-color) !important;
--  box-shadow: none !important;
-+.read-pill {
-+  display: inline-flex;
-+  align-items: center;
-+  gap: 0.45rem;
-+  padding: 0.4rem 0.85rem;
-+  border-radius: 999px;
-+  background: rgba(var(--main-color-rgb), 0.12);
-+  color: var(--main-color);
-   font-weight: 600;
-+  font-size: 0.9rem;
- }
- 
--.custom-chip.colored-chip:hover {
--  background-color: rgba(255, 255, 255, 0.05) !important;
-+.read-pill .pi {
-+  font-size: 0.8rem;
- }
- 
--.empty-text {
--  color: var(--text-muted);
--  font-style: italic;
-+.mark-read-btn.p-button {
-+  background: transparent;
-+  border: 1px solid var(--main-color);
-+  color: var(--main-color);
-+  border-radius: 999px;
-+  font-weight: 600;
- }
- 
--.rating-row {
--  margin-top: 0.5rem;
-+.mark-read-btn.p-button:enabled:hover {
-+  background: rgba(var(--main-color-rgb), 0.12);
-+  border-color: var(--main-color);
-+  color: var(--main-color);
-+}
-+
-+.link-btn {
-+  background: none;
-+  border: none;
-+  padding: 0.25rem;
-+  color: var(--text-secondary);
-+  font: inherit;
-+  font-size: 0.85rem;
-+  cursor: pointer;
-+  text-decoration: underline;
-+  text-underline-offset: 3px;
-+}
-+
-+.link-btn:hover {
-+  color: var(--text-primary);
-+}
-+
-+.link-btn:disabled {
-+  opacity: 0.5;
-+  cursor: default;
-+}
-+
-+/* Editora · ano · ISBN */
-+.meta-line {
-+  list-style: none;
-+  margin: 0;
-+  padding: 0;
-+  display: flex;
-+  flex-wrap: wrap;
-+  color: var(--text-secondary);
-+  font-size: 0.92rem;
-+  line-height: 1.6;
-+}
-+
-+.meta-line li + li::before {
-+  content: '·';
-+  margin: 0 0.5rem;
-+  color: var(--text-muted);
- }
- 
- .isbn-warning {
-   display: flex;
-   align-items: center;
--  gap: 0.35rem;
--  margin-top: 0.4rem;
-+  gap: 0.4rem;
-+  margin: -0.4rem 0 0;
-   color: #f59e0b;
-+  font-size: 0.82rem;
-+}
-+
-+.tags-list {
-+  display: flex;
-+  flex-wrap: wrap;
-+  gap: 0.4rem;
-+}
-+
-+.tag-chip {
-   font-size: 0.8rem;
-+  font-weight: 500;
-+  padding: 0.25rem 0.7rem;
-+  border-radius: 999px;
-+  color: var(--tag-color);
-+  background: color-mix(in srgb, var(--tag-color) 12%, transparent);
-+  border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
- }
- 
-+/* Comunidade recolhida */
- .community-section {
-   border-top: 1px solid var(--border-color);
--  padding-top: 1.25rem;
-+  padding-top: 1rem;
-   display: flex;
-   flex-direction: column;
-   gap: 0.75rem;
- }
- 
--.community-title {
-+.muted-line {
-+  margin: 0;
-   display: flex;
-   align-items: center;
-   gap: 0.5rem;
--  margin: 0;
--  font-size: 0.85rem;
--  text-transform: uppercase;
--  letter-spacing: 0.05em;
--  color: var(--text-muted);
--  font-weight: 600;
-+  color: var(--text-secondary);
-+  font-size: 0.9rem;
- }
- 
--.community-summary {
--  margin: 0;
-+.community-toggle {
-+  display: flex;
-+  align-items: center;
-+  gap: 0.6rem;
-+  width: 100%;
-+  background: none;
-+  border: none;
-+  padding: 0.35rem 0;
-+  font: inherit;
-   color: var(--text-primary);
-+  cursor: pointer;
-+  text-align: left;
-+}
-+
-+.community-toggle > .pi-users {
-+  color: var(--text-secondary);
-+}
-+
-+.toggle-text {
-+  flex: 1;
-+  font-size: 0.95rem;
-+}
-+
-+.community-toggle:hover .toggle-text {
-+  color: var(--main-color);
-+}
-+
-+.community-toggle:focus-visible {
-+  outline: 2px solid var(--main-color);
-+  outline-offset: 2px;
-+  border-radius: 6px;
-+}
-+
-+.avg-rating {
-+  margin-left: 0.5rem;
-+  color: var(--text-secondary);
-+  white-space: nowrap;
- }
- 
- .avg-rating .pi {
-   color: #f5b301;
--  font-size: 0.85rem;
-+  font-size: 0.8rem;
-+}
-+
-+.chevron {
-+  color: var(--text-muted);
-+  font-size: 0.8rem;
-+  transition: transform 0.2s ease;
-+}
-+
-+.chevron.open {
-+  transform: rotate(180deg);
-+}
-+
-+@media (prefers-reduced-motion: reduce) {
-+  .chevron {
-+    transition: none;
-+  }
-+}
-+
-+.community-panel {
-+  display: flex;
-+  flex-direction: column;
-+  gap: 1rem;
- }
- 
- .reader-list,
-@@ -1006,7 +1252,7 @@ button.cover-wrapper {
- .reader-list {
-   display: flex;
-   flex-wrap: wrap;
--  gap: 0.5rem;
-+  gap: 0.4rem;
- }
- 
- .reader-list li {
-@@ -1015,7 +1261,7 @@ button.cover-wrapper {
-   gap: 0.4rem;
-   background: var(--bg-input);
-   border-radius: 999px;
--  padding: 0.3rem 0.75rem;
-+  padding: 0.25rem 0.7rem;
-   font-size: 0.85rem;
- }
- 
-@@ -1032,8 +1278,8 @@ button.cover-wrapper {
-   text-decoration: underline;
- }
- 
--.also-have h4 {
--  margin: 0.25rem 0 0.5rem;
-+.also-have h3 {
-+  margin: 0 0 0.35rem;
-   font-size: 0.85rem;
-   color: var(--text-secondary);
-   font-weight: 500;
-@@ -1044,7 +1290,7 @@ button.cover-wrapper {
-   justify-content: space-between;
-   align-items: baseline;
-   gap: 1rem;
--  padding: 0.35rem 0;
-+  padding: 0.45rem 0;
-   border-bottom: 1px solid var(--border-color);
- }
- 
-@@ -1062,6 +1308,7 @@ button.cover-wrapper {
-   color: var(--text-primary);
-   overflow: hidden;
-   text-overflow: ellipsis;
-+  white-space: nowrap;
- }
- 
- .also-authors,
-@@ -1075,12 +1322,10 @@ button.cover-wrapper {
- }
- 
- .community-hint {
--  display: flex;
--  gap: 0.5rem;
--  align-items: flex-start;
-   margin: 0;
--  font-size: 0.8rem;
-+  font-size: 0.82rem;
-   color: var(--text-secondary);
-+  line-height: 1.45;
- }
- 
- .dates-grid,
-@@ -1167,6 +1412,23 @@ button.cover-wrapper {
-     font-size: 1.5rem;
-   }
- 
-+  /* Capa inteira e pequena, em vez de um recorte gigante. */
-+  .image-container {
-+    padding: 1rem;
-+    height: 100%;
-+    box-sizing: border-box;
-+  }
-+
-+  .cover-wrapper {
-+    width: auto;
-+    height: 100%;
-+    max-width: none;
-+  }
-+
-+  .details-header {
-+    padding-right: 0;
-+  }
-+
-   .dates-grid,
-   .meta-grid {
-     grid-template-columns: 1fr;
-diff --git a/frontend/src/components/LibraryHeader.vue b/frontend/src/components/LibraryHeader.vue
-index 0573f80..71e4608 100644
---- a/frontend/src/components/LibraryHeader.vue
-+++ b/frontend/src/components/LibraryHeader.vue
-@@ -612,34 +612,82 @@ defineExpose({ reloadOptions: loadOptions })
- }
- 
- @media (max-width: 768px) {
-+  /* Celular: duas linhas só — título e ações em cima, busca embaixo. O
-+     cabeçalho é fixo no topo, então cada pixel aqui é um pixel a menos de estante. */
-+  .library-header-wrapper {
-+    padding: 0.75rem 1rem;
-+  }
-+
-   .top-bar {
--    flex-wrap: wrap;
--    gap: 1rem;
-+    display: grid;
-+    grid-template-columns: minmax(0, 1fr) auto;
-+    grid-template-areas:
-+      "title actions"
-+      "search search";
-+    gap: 0.6rem 0.75rem;
-   }
- 
-   .header-title {
--    width: 100%;
--    justify-content: center;
-+    grid-area: title;
-+    gap: 0.6rem;
-   }
- 
--  .search-area {
--    order: 3;
--    min-width: 100%;
-+  .header-title h1 {
-+    font-size: 1.3rem;
-   }
- 
-   .actions {
--    order: 2;
--    width: 100%;
--    justify-content: space-between;
-+    grid-area: actions;
-+    gap: 0.25rem;
-+  }
-+
-+  .search-area {
-+    grid-area: search;
-+    min-width: 0;
-+    max-width: none;
-+  }
-+
-+  .custom-search-input {
-+    padding-top: 0.6rem;
-+    padding-bottom: 0.6rem;
-   }
- 
-   .add-btn {
-     width: auto;
-+    padding: 0.5rem 0.95rem;
-   }
- 
-+  /* Filtros ativos numa linha só: os chips rolam para o lado e o
-+     "Limpar tudo" fica sempre à mão no fim. */
-   .active-filters-bar {
--    flex-direction: column;
--    align-items: flex-start;
-+    margin-top: 0.6rem;
-+    gap: 0.5rem;
-+    flex-wrap: nowrap;
-+  }
-+
-+  .filter-label {
-+    display: none;
-+  }
-+
-+  .chips-container {
-+    flex: 1;
-+    min-width: 0;
-+    flex-wrap: nowrap;
-+    overflow-x: auto;
-+    scrollbar-width: none;
-+  }
-+
-+  .chips-container::-webkit-scrollbar {
-+    display: none;
-+  }
-+
-+  .chips-container .custom-chip {
-+    flex-shrink: 0;
-+  }
-+
-+  .clear-all-btn {
-+    flex-shrink: 0;
-+    padding: 0.35rem 0.5rem !important;
-   }
- }
- </style>
-diff --git a/frontend/src/locales/en.json b/frontend/src/locales/en.json
-index eb66cf6..1f84879 100644
---- a/frontend/src/locales/en.json
-+++ b/frontend/src/locales/en.json
-@@ -170,7 +170,12 @@
-     "cannotEdit": "Cannot edit: the book details did not load.",
-     "validationTitle": "Title is required.",
-     "validationAuthors": "Author is required.",
--    "isbnInvalid": "This ISBN looks wrong (check digit doesn't match). Fix it so the book shows up in the community."
-+    "isbnInvalid": "This ISBN looks wrong (check digit doesn't match). Fix it so the book shows up in the community.",
-+    "readOn": "Read on {date}",
-+    "markRead": "Mark as read",
-+    "undoRead": "Undo",
-+    "readDateLabel": "Date read",
-+    "publishedOn": "Published on {date}"
-   },
-   "authors": {
-     "title": "Authors",
-diff --git a/frontend/src/locales/pt.json b/frontend/src/locales/pt.json
-index a445eff..6c55ab1 100644
---- a/frontend/src/locales/pt.json
-+++ b/frontend/src/locales/pt.json
-@@ -170,7 +170,12 @@
-     "cannotEdit": "Não é possível editar: os dados do livro não carregaram.",
-     "validationTitle": "Título é obrigatório.",
-     "validationAuthors": "Autor é obrigatório.",
--    "isbnInvalid": "Este ISBN parece incorreto (dígito verificador não confere). Corrija para o livro aparecer na comunidade."
-+    "isbnInvalid": "Este ISBN parece incorreto (dígito verificador não confere). Corrija para o livro aparecer na comunidade.",
-+    "readOn": "Lido em {date}",
-+    "markRead": "Marcar como lido",
-+    "undoRead": "Desfazer",
-+    "readDateLabel": "Data de leitura",
-+    "publishedOn": "Publicado em {date}"
-   },
-   "authors": {
-     "title": "Autores",
-diff --git a/frontend/src/services/api.js b/frontend/src/services/api.js
-index 535fb4b..90e4a37 100644
---- a/frontend/src/services/api.js
-+++ b/frontend/src/services/api.js
-@@ -79,8 +79,9 @@ export default {
-     return client.post(`/library/${id}/cover`, formData)
-   },
- 
--  markAsRead(id) {
--    return client.patch(`/library/${id}/read`)
-+  /** readDate: 'YYYY-MM-DD' no fuso da pessoa (padrão: hoje no servidor). */
-+  markAsRead(id, readDate) {
-+    return client.patch(`/library/${id}/read`, readDate ? { readDate } : undefined)
-   },
- 
-   markAsUnread(id) {
-P2_EOF
+base64 -d > "$TMP_DIR/payload.tgz" <<'PAYLOAD_EOF'
+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
+PAYLOAD_EOF
+mkdir -p "$TMP_DIR/payload"
+tar -xzf "$TMP_DIR/payload.tgz" -C "$TMP_DIR/payload"
 
-# Arquivo por arquivo: o que já estiver aplicado é pulado.
-SKIPPED=()
-APPLIED=0
-apply_layer() {
-  local patch="$1"
-  APPLIED=0
-  for file in $(grep '^+++ b/' "$patch" | sed 's#^+++ b/##'); do
-    if git apply --reverse --check --include="$file" --whitespace=nowarn "$patch" 2>/dev/null; then
-      :
-    elif git apply --check --include="$file" --whitespace=nowarn "$patch" 2>/dev/null; then
-      git apply --include="$file" --whitespace=nowarn "$patch"
-      APPLIED=$((APPLIED + 1))
-    else
-      SKIPPED+=("$file")
-    fi
-  done
+norm_hash() {
+  if [ -f "$1" ]; then sed -e '$a\' "$1" | git hash-object --stdin; else echo ABSENT; fi
 }
 
-step "1/4 Aplicando"
-apply_layer "$P1"; ok "Revisão responsiva: $APPLIED arquivo(s) aplicados agora."
-apply_layer "$P2"; ok "Modal do livro e cabeçalho: $APPLIED arquivo(s) aplicados agora."
-if [ ${#SKIPPED[@]} -gt 0 ]; then
-  warn "Não encaixaram (mudanças locais nesses arquivos); ficaram como estavam:"
-  printf '      %s\n' "${SKIPPED[@]}" | sort -u
-  fail "Rode 'git stash' nesses arquivos e execute de novo."
+step "1/3 Conferindo os arquivos"
+TO_WRITE=(); UP_TO_DATE=0; BLOCKED=()
+while read -r file final accepted; do
+  [ -n "$file" ] || continue
+  current=$(norm_hash "$file")
+  if [ "$current" = "$final" ]; then
+    UP_TO_DATE=$((UP_TO_DATE + 1))
+  elif [[ " $accepted " == *" $current "* ]]; then
+    TO_WRITE+=("$file")
+  else
+    BLOCKED+=("$file")
+  fi
+done < "$TMP_DIR/manifest.txt"
+
+if [ ${#BLOCKED[@]} -gt 0 ]; then
+  warn "Estes arquivos têm mudanças que eu não conheço; nada foi alterado:"
+  printf '      %s\n' "${BLOCKED[@]}"
+  fail "Faça 'git stash' (ou commit) dessas mudanças e rode de novo."
 fi
+ok "${#TO_WRITE[@]} para atualizar, $UP_TO_DATE já em dia."
 
-step "2/4 Testes unitários"
-[ -d backend/node_modules ] || (cd backend && npm ci --no-audit --no-fund --loglevel=error >/dev/null)
-if (cd backend && npm run --silent test:unit -- --silent 2>&1 | grep -E '^(Tests|Test Suites):' | sed 's/^/  /'; exit "${PIPESTATUS[0]}"); then ok "Passando"; else fail "Falharam (rode 'npm run test:unit' em backend/)."; fi
+for file in "${TO_WRITE[@]}"; do
+  mkdir -p "$(dirname "$file")"
+  cp "$TMP_DIR/payload/$file" "$file"
+done
 
-step "3/4 Build do frontend"
+step "2/3 Build do frontend"
 [ -d frontend/node_modules ] || (cd frontend && npm ci --no-audit --no-fund --loglevel=error >/dev/null)
 if (cd frontend && npx --no-install vite build >"$TMP_DIR/build.log" 2>&1); then ok "OK"; else tail -20 "$TMP_DIR/build.log" >&2; fail "Build falhou."; fi
 
-step "4/4 Pronto — nada foi commitado"
+step "3/3 Pronto — nada foi commitado"
 git status --short | sed 's/^/  /'
 
 cat <<'MSG'
 
-Conferir: cd backend && npm test (inclui a data de leitura local)
-Produção: docker compose build && docker compose up -d   (backend e frontend mudaram; sem migration)
+Produção: docker compose build frontend && docker compose up -d frontend
 
 Sugestão de commit
-  feat: frontend revisado — início pessoal, modal do livro enxuto e celular
+  feat: cores por nome em todo o app
 
-  - Início vira a estante da pessoa (recentes, lidos, quem ela segue, primeiro passo)
-  - modal do livro: "Marcar como lido" direto, editora · ano · ISBN numa linha,
-    comunidade recolhida com resumo, campos de formulário só na edição
-  - marcar como lido usa a data local (antes podia gravar o dia seguinte à noite)
-  - cabeçalho da Biblioteca em duas linhas no celular; filtros numa linha só
-  - Painel, diálogos, menu, avisos e abas da Comunidade ajustados ao celular
-  - menu do celular fechado fora do Tab; Esc fecha
-  - iniciais certas em Autores; "Categorias" em todo lugar
+  - utils/tagColors.js: a mesma cor sempre para o mesmo nome
+  - categorias, autores e editoras com avatar colorido; filtro e livro com a
+    cor da categoria
+  - livros sem capa ganham capa desenhada (título e autor, cor do título)
+  - leitores com avatar colorido na Comunidade e no Início
+  - Painel e perfil público: cores por número, ano e autor
+  - modal do livro: Editar/Excluir no rodapé, longe do X
 MSG

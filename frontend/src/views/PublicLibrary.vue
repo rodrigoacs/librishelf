@@ -126,9 +126,9 @@
                 class="bar-track"
                 aria-hidden="true"
               ><span
-                class="bar-fill"
-                :style="{ width: `${bar.percent}%` }"
-              ></span></span>
+                  class="bar-fill"
+                  :style="{ width: `${bar.percent}%` }"
+                ></span></span>
               <span class="bar-count">{{ bar.count }}</span>
             </li>
           </ul>
@@ -155,6 +155,7 @@
                 v-for="tag in stats.topTags"
                 :key="tag.name"
                 class="tag-pill"
+                :style="{ '--tag-color': tagColor(tag.name) }"
               >#{{ tag.name }}</span>
             </div>
           </template>
@@ -220,7 +221,9 @@
           <p
             v-if="viewer.commonCount > viewer.commonBooks.length"
             class="muted small"
-          >{{ t('profile.common_more', { n: viewer.commonCount - viewer.commonBooks.length }) }}</p>
+          >{{ t('profile.common_more', {
+            n:
+              viewer.commonCount - viewer.commonBooks.length }) }}</p>
         </div>
       </div>
     </section>
@@ -325,6 +328,7 @@ import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import BookDialog from '../components/BookDialog.vue'
 import StarRating from '../components/StarRating.vue'
+import { tagColor } from '../utils/tagColors.js'
 import { fromApiDate } from '../utils/dates.js'
 
 const PAGE_SIZE = 40
@@ -646,11 +650,13 @@ watch(username, () => {
 }
 
 .tag-pill {
-  background: var(--bg-input);
   border-radius: 999px;
   padding: 0.2rem 0.65rem;
   font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-weight: 500;
+  color: var(--tag-color);
+  background: color-mix(in srgb, var(--tag-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
 }
 
 .recent-list li {

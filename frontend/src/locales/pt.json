@@ -175,7 +175,10 @@
     "markRead": "Marcar como lido",
     "undoRead": "Desfazer",
     "readDateLabel": "Data de leitura",
-    "publishedOn": "Publicado em {date}"
+    "publishedOn": "Publicado em {date}",
+    "editShort": "Editar",
+    "deleteShort": "Excluir",
+    "saveShort": "Salvar alterações"
   },
   "authors": {
     "title": "Autores",

@@ -116,7 +116,8 @@
           :label="'#' + name"
           removable
           @remove="removeFromList('tags', name)"
-          class="custom-chip theme-border"
+          class="custom-chip tag-chip"
+          :style="{ '--tag-color': tagColor(name) }"
         />
       </div>
       <Button
@@ -263,6 +264,7 @@
 </template>
 
 <script setup>
+import { tagColor } from '../utils/tagColors.js'
 import { ref, computed, watch, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Sidebar from 'primevue/sidebar'
@@ -547,6 +549,12 @@ defineExpose({ reloadOptions: loadOptions })
   border: 1px solid var(--border-color);
 }
 
+.custom-chip.tag-chip {
+  color: var(--tag-color);
+  background: color-mix(in srgb, var(--tag-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag-color) 40%, transparent);
+}
+
 .custom-chip.theme-border {
   border-color: rgba(var(--main-color-rgb), 0.3);
   background-color: rgba(var(--main-color-rgb), 0.05);
@@ -612,7 +620,6 @@ defineExpose({ reloadOptions: loadOptions })
 }
 
 @media (max-width: 768px) {
-
   /* Celular: duas linhas só — título e ações em cima, busca embaixo. O
      cabeçalho é fixo no topo, então cada pixel aqui é um pixel a menos de estante. */
   .library-header-wrapper {

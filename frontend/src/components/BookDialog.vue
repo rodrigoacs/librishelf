@@ -100,7 +100,8 @@
               />
             </template>
             <template v-else>
-              <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}</h1>
+              <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}
+              </h1>
               <h2 class="book-author">{{ book.authors || (loading ? '' : t('bookDialog.unknownAuthor')) }}</h2>
               <template v-if="!loading && !loadFailed">
                 <StarRating
@@ -121,50 +122,6 @@
             </template>
           </div>
 
-          <div
-            v-if="!isReadOnly"
-            class="actions-area"
-          >
-            <template v-if="!isEditing">
-              <Button
-                icon="pi pi-trash"
-                class="p-button-rounded p-button-text p-button-danger"
-                v-tooltip.bottom="t('bookDialog.delete')"
-                :aria-label="t('bookDialog.delete')"
-                :disabled="loading || loadFailed"
-                @click="deleteBook"
-              />
-              <Button
-                icon="pi pi-pencil"
-                class="p-button-rounded p-button-text p-button-secondary"
-                v-tooltip.bottom="loadFailed ? t('bookDialog.cannotEdit') : t('bookDialog.edit')"
-                :aria-label="t('bookDialog.edit')"
-                :disabled="loading || loadFailed"
-                @click="editMode"
-              />
-            </template>
-            <div
-              v-else
-              class="edit-actions"
-            >
-              <Button
-                icon="pi pi-times"
-                class="p-button-rounded p-button-text p-button-secondary"
-                :aria-label="t('common.cancel')"
-                v-tooltip.bottom="t('common.cancel')"
-                @click="cancelEdit"
-                :disabled="isSaving"
-              />
-              <Button
-                icon="pi pi-check"
-                class="p-button-rounded btn-action-primary"
-                :aria-label="t('common.save')"
-                v-tooltip.bottom="t('common.save')"
-                @click="confirmSave"
-                :loading="isSaving"
-              />
-            </div>
-          </div>
         </div>
 
         <!-- Edição: formulário completo -->
@@ -312,7 +269,7 @@
               v-for="(tag, index) in tagList"
               :key="`${tag}-${index}`"
               class="tag-chip"
-              :style="{ '--tag-color': getTagColor(index) }"
+              :style="{ '--tag-color': tagColor(tag) }"
             >{{ tag }}</span>
           </div>
 
@@ -423,7 +380,8 @@
                             class="also-authors"
                           >{{ item.authors }}</span>
                         </router-link>
-                        <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers) }}</span>
+                        <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers)
+                          }}</span>
                       </li>
                     </ul>
                   </div>
@@ -447,6 +405,43 @@
             </template>
           </section>
         </div>
+
+        <!-- Ações do dono, longe do X de fechar e com nome escrito -->
+        <div
+          v-if="!isReadOnly && !loading && !loadFailed"
+          class="dialog-footer"
+          :class="{ editing: isEditing }"
+        >
+          <template v-if="!isEditing">
+            <Button
+              :label="t('bookDialog.deleteShort')"
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm"
+              @click="deleteBook"
+            />
+            <Button
+              :label="t('bookDialog.editShort')"
+              icon="pi pi-pencil"
+              class="p-button-outlined p-button-secondary p-button-sm footer-edit"
+              @click="editMode"
+            />
+          </template>
+          <template v-else>
+            <Button
+              :label="t('bookDialog.cancel')"
+              class="p-button-text p-button-secondary p-button-sm"
+              :disabled="isSaving"
+              @click="cancelEdit"
+            />
+            <Button
+              :label="t('bookDialog.saveShort')"
+              icon="pi pi-check"
+              class="btn-action-primary p-button-sm"
+              :loading="isSaving"
+              @click="confirmSave"
+            />
+          </template>
+        </div>
       </div>
     </div>
   </Dialog>
@@ -463,6 +458,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import api from '../services/api.js'
 import AuthorsInput from './AuthorsInput.vue'
 import StarRating from './StarRating.vue'
+import { tagColor } from '../utils/tagColors.js'
 import { currentUser } from '../services/session.js'
 import { coverUrl, handleCoverError } from '../utils/covers.js'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
@@ -481,7 +477,6 @@ const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])
 const toast = useToast()
 const confirm = useConfirm()
 
-const TAG_COLORS = ['var(--red)', 'var(--green)', 'var(--blue)', 'var(--purple)', 'var(--yellow)', 'var(--orange)']
 
 const visible = ref(props.modelValue)
 const loading = ref(true)
@@ -604,9 +599,6 @@ async function quickRate(value) {
 
 const displayCoverUrl = computed(() => previewUrl.value || coverUrl(props.bookId, coverVersion.value))
 
-function getTagColor(index) {
-  return TAG_COLORS[index % TAG_COLORS.length]
-}
 
 function triggerFileInput() {
   if (isEditing.value) fileInput.value?.click()
@@ -972,8 +964,8 @@ button.cover-wrapper {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  /* Espaço para o X do canto não encostar no lixo/lápis. */
-  padding-right: 2.25rem;
+  /* Espaço para o X do canto não encostar no título. */
+  padding-right: 2rem;
 }
 
 .title-area {
@@ -1127,7 +1119,7 @@ button.cover-wrapper {
   line-height: 1.6;
 }
 
-.meta-line li + li::before {
+.meta-line li+li::before {
   content: '·';
   margin: 0 0.5rem;
   color: var(--text-muted);
@@ -1190,7 +1182,7 @@ button.cover-wrapper {
   text-align: left;
 }
 
-.community-toggle > .pi-users {
+.community-toggle>.pi-users {
   color: var(--text-secondary);
 }
 
@@ -1328,6 +1320,24 @@ button.cover-wrapper {
   line-height: 1.45;
 }
 
+.dialog-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dialog-footer.editing {
+  justify-content: flex-end;
+}
+
+.footer-edit.p-button {
+  border-radius: 8px;
+}
+
 .dates-grid,
 .meta-grid {
   display: grid;
@@ -1385,6 +1395,7 @@ button.cover-wrapper {
 }
 
 @media (max-width: 768px) {
+
   /* Celular/tablet em pé: capa compacta em cima e só os detalhes rolam,
      para o botão de fechar e o título ficarem sempre à vista. */
   .dialog-body {

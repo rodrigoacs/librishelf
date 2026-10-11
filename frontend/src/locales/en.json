@@ -175,7 +175,10 @@
     "markRead": "Mark as read",
     "undoRead": "Undo",
     "readDateLabel": "Date read",
-    "publishedOn": "Published on {date}"
+    "publishedOn": "Published on {date}",
+    "editShort": "Edit",
+    "deleteShort": "Delete",
+    "saveShort": "Save changes"
   },
   "authors": {
     "title": "Authors",
