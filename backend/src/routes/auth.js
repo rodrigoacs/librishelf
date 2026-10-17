@@ -2,7 +2,7 @@ import express from 'express'
 import * as authService from '../services/authService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
-import { loginLimiter, registerLimiter, sensitiveLimiter } from '../middlewares/rateLimiter.js'
+import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimiter } from '../middlewares/rateLimiter.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import { AUTH_COOKIE_NAME, authCookieOptions } from '../config/cookieOptions.js'
 
@@ -45,7 +45,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 router.post('/register', registerLimiter, async (req, res) => {
   try {
-    const { username, password, email } = req.body ?? {}
+    const { username, password, email, locale } = req.body ?? {}
 
     if (!username || !password || !email) {
       const error = new Error('Username, password, and email are required.')
@@ -53,7 +53,7 @@ router.post('/register', registerLimiter, async (req, res) => {
       throw error
     }
 
-    const user = await authService.registerUser(username, password, email)
+    const user = await authService.registerUser(username, password, email, locale)
 
     res.status(STATUS.CREATED).json({ message: 'User registered successfully', user })
   } catch (error) {
@@ -72,6 +72,51 @@ router.put('/password', authenticateToken, sensitiveLimiter, async (req, res) =>
     res.status(STATUS.OK).json({ user: result.user })
   } catch (error) {
     sendError(res, error, 'Erro ao trocar senha')
+  }
+})
+
+// --- Esqueci minha senha -----------------------------------------------------
+
+// Sempre 200 com a mesma mensagem: não revela se o e-mail tem conta.
+router.post('/password/forgot', mailLimiter, async (req, res) => {
+  try {
+    const { email, locale } = req.body ?? {}
+    await authService.requestPasswordReset(email, locale)
+    res.status(STATUS.OK).json({ message: 'Se o e-mail estiver cadastrado, enviamos um link para redefinir a senha.' })
+  } catch (error) {
+    sendError(res, error, 'Erro ao pedir recuperação de senha')
+  }
+})
+
+router.post('/password/reset', tokenLimiter, async (req, res) => {
+  try {
+    const { token, newPassword } = req.body ?? {}
+    await authService.resetPassword(token, newPassword)
+    // Todas as sessões caem (password_changed_at); esta também, por garantia.
+    res.clearCookie(AUTH_COOKIE_NAME, { ...authCookieOptions, maxAge: undefined })
+    res.status(STATUS.OK).json({ message: 'Senha redefinida. Entre com a senha nova.' })
+  } catch (error) {
+    sendError(res, error, 'Erro ao redefinir senha')
+  }
+})
+
+// --- Confirmação de e-mail ----------------------------------------------------
+
+router.post('/email/verify', tokenLimiter, async (req, res) => {
+  try {
+    await authService.verifyEmail(req.body?.token)
+    res.status(STATUS.OK).json({ message: 'E-mail confirmado.' })
+  } catch (error) {
+    sendError(res, error, 'Erro ao confirmar e-mail')
+  }
+})
+
+router.post('/email/verify/resend', authenticateToken, mailLimiter, async (req, res) => {
+  try {
+    const result = await authService.resendVerification(req.user.id, req.body?.locale)
+    res.status(STATUS.OK).json(result)
+  } catch (error) {
+    sendError(res, error, 'Erro ao reenviar confirmação')
   }
 })
 

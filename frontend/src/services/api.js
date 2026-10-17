@@ -41,6 +41,22 @@ export default {
     return client.post('/auth/register', userData)
   },
 
+  forgotPassword(email, locale) {
+    return client.post('/auth/password/forgot', { email, locale })
+  },
+
+  resetPassword(token, newPassword) {
+    return client.post('/auth/password/reset', { token, newPassword })
+  },
+
+  verifyEmail(token) {
+    return client.post('/auth/email/verify', { token })
+  },
+
+  resendVerification(locale) {
+    return client.post('/auth/email/verify/resend', { locale })
+  },
+
   changePassword(currentPassword, newPassword) {
     return client.put('/auth/password', { currentPassword, newPassword })
   },

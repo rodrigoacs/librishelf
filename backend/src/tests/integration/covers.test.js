@@ -5,6 +5,7 @@ import path from 'path'
 import app from '../../app.js'
 import UPLOAD_DIR from '../../config/uploadDir.js'
 import { AUTH_COOKIE_NAME } from '../../config/cookieOptions.js'
+import { confirmEmail } from '../helpers/confirmEmail.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 
@@ -17,6 +18,7 @@ let bookId
 
 async function signUp(name) {
   await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await confirmEmail(name)
   const res = await request(app).post('/auth/login').send({ username: name, password: 'senha12345' })
   tokens[name] = tokenFrom(res)
 }

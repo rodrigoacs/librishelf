@@ -238,7 +238,8 @@
     "error": "Erro",
     "invalidCreds": "Credenciais inválidas. Tente novamente.",
     "success": "Login realizado com sucesso.",
-    "privacy": "Privacidade"
+    "privacy": "Privacidade",
+    "forgot": "Esqueci minha senha"
   },
   "register": {
     "register": "Cadastrar",
@@ -266,7 +267,8 @@
     "success": "Sucesso",
     "privacyNotice": "Ao criar a conta, você concorda com a",
     "privacyLink": "política de privacidade",
-    "invalidUsername": "Use só letras, números, ponto, hífen e sublinhado."
+    "invalidUsername": "Use só letras, números, ponto, hífen e sublinhado.",
+    "accountCreatedVerify": "Conta criada! Enviamos um link para confirmar seu e-mail."
   },
   "publicLibrary": {
     "title": "Biblioteca de { ownerName }",
@@ -344,7 +346,8 @@
       "help": "Pessoas podem pedir para seguir você. Só quem você aprovar vê no feed os livros que você adiciona e termina de ler.",
       "on": "Agora você aceita pedidos para seguir.",
       "off": "Seus seguidores não veem mais sua atividade."
-    }
+    },
+    "verifyFirst": "Confirme seu e-mail para ligar estas opções. Use o link que enviamos ou o botão \"Reenviar link\" no topo da página."
   },
   "privacy": {
     "title": "Política de Privacidade",
@@ -384,6 +387,13 @@
         "title": "Busca por ISBN",
         "paragraphs": [
           "Quando você clica em Buscar, o Librishelf consulta o ISBN no Open Library (openlibrary.org), um catálogo público de livros. A consulta é feita pelo nosso servidor: o Open Library recebe só o ISBN, nunca seus dados ou sua conta."
+        ]
+      },
+      {
+        "title": "E-mails que enviamos",
+        "paragraphs": [
+          "Usamos seu e-mail só para assuntos da sua conta: confirmar o endereço no cadastro e enviar o link de recuperação de senha quando você pedir. Não mandamos propaganda.",
+          "Os links valem por pouco tempo (1 hora para a senha, 3 dias para a confirmação), funcionam uma vez só e guardamos apenas uma versão cifrada deles."
         ]
       },
       {
@@ -491,5 +501,43 @@
     "remove": "Remover",
     "remove_confirm": "Remover {'@'}{name} dos seus seguidores? A pessoa não é avisada.",
     "private_library": "Biblioteca privada"
+  },
+  "forgot": {
+    "title": "Esqueci minha senha",
+    "text": "Digite o e-mail da sua conta. Vamos enviar um link para você escolher uma senha nova.",
+    "email": "E-mail",
+    "submit": "Enviar link",
+    "invalidEmail": "Digite um e-mail válido.",
+    "sentText": "Se {email} estiver cadastrado, o link chega em alguns minutos. Ele vale por 1 hora.",
+    "checkSpam": "Não chegou? Confira o spam ou peça de novo.",
+    "tryAgain": "Enviar para outro e-mail",
+    "backToLogin": "Voltar para o login"
+  },
+  "reset": {
+    "title": "Escolha uma senha nova",
+    "text": "Depois de salvar, todas as sessões abertas são encerradas e você entra com a senha nova.",
+    "noToken": "Este link está incompleto. Abra o link do e-mail de novo ou peça outro.",
+    "newPassword": "Senha nova",
+    "confirm": "Confirmar senha nova",
+    "submit": "Salvar senha nova",
+    "done": "Senha alterada. Entre com a senha nova.",
+    "askNew": "Pedir um link novo"
+  },
+  "verify": {
+    "loading": "Confirmando seu e-mail…",
+    "doneTitle": "E-mail confirmado",
+    "doneText": "Pronto! Agora você pode deixar a biblioteca pública, participar da comunidade e recuperar a senha por e-mail.",
+    "failedTitle": "Não deu para confirmar",
+    "failedText": "Este link é inválido ou expirou.",
+    "goHome": "Ir para o início",
+    "goLogin": "Entrar",
+    "resend": "Enviar um link novo",
+    "sent": "Enviamos um link novo para o seu e-mail.",
+    "already": "Seu e-mail já está confirmado."
+  },
+  "emailBanner": {
+    "text": "Confirme seu e-mail: enviamos um link para {email}. Até lá, biblioteca pública, comunidade e seguidores ficam bloqueados.",
+    "resend": "Reenviar link",
+    "sent": "Link enviado"
   }
 }

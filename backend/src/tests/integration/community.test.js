@@ -4,6 +4,7 @@ import request from 'supertest'
 import app from '../../app.js'
 import { db } from '../../database/connection.js'
 import UPLOAD_DIR from '../../config/uploadDir.js'
+import { confirmEmail } from '../helpers/confirmEmail.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 import { normalizeIsbn13 } from '../../utils/isbn.js'
@@ -15,6 +16,7 @@ const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
 
 async function signUp(name) {
   await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await confirmEmail(name)
   const res = await request(app).post('/auth/login').send({ username: name, password: 'senha12345' })
   tokens[name] = tokenFrom(res)
 }

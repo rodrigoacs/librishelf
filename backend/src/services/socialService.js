@@ -25,6 +25,11 @@ export async function requestFollow(viewerId, username) {
   if (target.id === viewerId) throw httpError('Você não pode seguir a si mesmo.', STATUS.BAD_REQUEST)
   if (!target.show_activity) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND)
 
+  const viewer = await authRepository.getUserById(viewerId)
+  if (!viewer?.email_verified_at) {
+    throw httpError('Confirme seu e-mail para seguir outros leitores.', STATUS.FORBIDDEN)
+  }
+
   const status = await socialRepository.requestFollow(viewerId, target.id)
   return { username: target.name, status }
 }

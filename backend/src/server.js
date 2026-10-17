@@ -2,6 +2,8 @@ import app from './app.js'
 import logger from './utils/logger.js'
 import { db } from './database/connection.js'
 import { pendingMigrations } from './database/migrate.js'
+import { verifySmtp } from './services/mailService.js'
+import { deleteStale as deleteStaleTokens } from './repositories/tokenRepository.js'
 
 const PORT = process.env.PORT || 3050
 const MIN_SECRET_LENGTH = 32
@@ -21,6 +23,14 @@ function validateEnv() {
   if (missingDbVars.length > 0) {
     logger.error('Variáveis de banco ausentes', { missing: missingDbVars })
     process.exit(1)
+  }
+
+  // Sem isso os links dos e-mails apontam para localhost.
+  if (process.env.NODE_ENV === 'production' && !process.env.APP_URL?.trim()) {
+    logger.warn('APP_URL não definido: os links dos e-mails vão apontar para http://localhost:5173')
+  }
+  if (!process.env.SMTP_HOST?.trim()) {
+    logger.warn('SMTP_HOST não definido: e-mails de senha e confirmação só aparecem no log')
   }
 }
 
@@ -48,6 +58,16 @@ await ensureDatabaseIsMigrated()
 const server = app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`)
 })
+
+verifySmtp()
+
+// Links de e-mail vencidos ou usados saem do banco uma vez por dia.
+const TOKEN_CLEANUP_MS = 24 * 60 * 60 * 1000
+setInterval(() => {
+  deleteStaleTokens()
+    .then(removed => { if (removed) logger.info('Links de e-mail antigos removidos', { removed }) })
+    .catch(err => logger.warn('Falha ao limpar links de e-mail antigos', { message: err.message }))
+}, TOKEN_CLEANUP_MS).unref()
 
 // `docker stop` manda SIGTERM: para de aceitar conexões, termina as requisições
 // em andamento e fecha o pool antes de sair, em vez de esperar o SIGKILL.

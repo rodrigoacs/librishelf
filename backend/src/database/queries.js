@@ -120,9 +120,21 @@ export const AUTH_QUERIES = {
     WHERE name = $1
   `,
   FIND_USER_BY_ID: `
-    SELECT id, name, email, is_public, show_in_community, show_activity
+    SELECT id, name, email, is_public, show_in_community, show_activity, email_verified_at
     FROM librishelf.users
     WHERE id = $1
+  `,
+  // "Esqueci minha senha": e-mail sem diferenciar maiúsculas.
+  FIND_USER_BY_EMAIL: `
+    SELECT id, name, email, email_verified_at
+    FROM librishelf.users
+    WHERE lower(email) = lower($1) AND is_active IS NOT FALSE
+  `,
+  MARK_EMAIL_VERIFIED: `
+    UPDATE librishelf.users
+    SET email_verified_at = COALESCE(email_verified_at, now()), updated_at = now()
+    WHERE id = $1
+    RETURNING email_verified_at
   `,
   // Usado pelo middleware de auth a cada requisição autenticada.
   FIND_SESSION_BY_ID: `
@@ -138,7 +150,7 @@ export const AUTH_QUERIES = {
   CREATE_USER: `
     INSERT INTO librishelf.users (name, password_hash, email)
     VALUES ($1, $2, $3)
-    RETURNING id, name, email, is_public, show_in_community, show_activity
+    RETURNING id, name, email, is_public, show_in_community, show_activity, email_verified_at
   `,
   UPDATE_PASSWORD: `
     UPDATE librishelf.users
@@ -443,5 +455,24 @@ export const SOCIAL_QUERIES = {
     JOIN librishelf.users u ON u.id = e.user_id
     ORDER BY e.at DESC, e.book_id DESC, e.type
     LIMIT $2 OFFSET $3
+  `
+}
+
+export const TOKEN_QUERIES = {
+  DELETE_UNUSED: 'DELETE FROM librishelf.user_tokens WHERE user_id = $1 AND purpose = $2 AND used_at IS NULL',
+  INSERT: `
+    INSERT INTO librishelf.user_tokens (user_id, purpose, token_hash, expires_at)
+    VALUES ($1, $2, $3, $4)
+  `,
+  // Atômico: dois cliques no mesmo link não usam o link duas vezes.
+  CONSUME: `
+    UPDATE librishelf.user_tokens
+    SET used_at = now()
+    WHERE token_hash = $1 AND purpose = $2 AND used_at IS NULL AND expires_at > now()
+    RETURNING user_id
+  `,
+  DELETE_STALE: `
+    DELETE FROM librishelf.user_tokens
+    WHERE expires_at < now() - interval '7 days' OR used_at < now() - interval '7 days'
   `
 }

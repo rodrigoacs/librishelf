@@ -1,3 +1,4 @@
+import { confirmEmail } from '../helpers/confirmEmail.js'
 import request from 'supertest'
 import app from '../../app.js'
 import { tokenFrom } from '../helpers/authToken.js'
@@ -8,6 +9,7 @@ const other = { username: 'other', password: 'senha12345', email: 'other@example
 
 async function registerAndLogin(user) {
   await request(app).post('/auth/register').send(user)
+  await confirmEmail(user.username)
   const res = await request(app).post('/auth/login').send({ username: user.username, password: user.password })
   return tokenFrom(res)
 }

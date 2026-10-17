@@ -21,6 +21,7 @@
  *   demo     pública, na comunidade, aceita seguidores; tem pedidos pendentes
  *   privado  tudo desligado
  *   vazio    sem livros
+ *   pendente e-mail ainda não confirmado (vê o aviso e os limites)
  *
  * Segurança: recusa NODE_ENV=production, host remoto (sem --allow-host) e
  * banco que já tenha usuários (sem --reset).
@@ -267,14 +268,15 @@ function pickWork(catalog) {
 // ---------------------------------------------------------------------------
 
 function buildUsers(count) {
-  const used = new Set(['demo', 'privado', 'vazio'])
+  const used = new Set(['demo', 'privado', 'vazio', 'pendente'])
   const users = [
     { name: 'demo', isPublic: true, showInCommunity: true, showActivity: true, bookCount: 150, fixed: true },
     { name: 'privado', isPublic: false, showInCommunity: false, showActivity: false, bookCount: 60, fixed: true },
-    { name: 'vazio', isPublic: true, showInCommunity: true, showActivity: true, bookCount: 0, fixed: true }
+    { name: 'vazio', isPublic: true, showInCommunity: true, showActivity: true, bookCount: 0, fixed: true },
+    { name: 'pendente', isPublic: false, showInCommunity: false, showActivity: false, bookCount: 12, fixed: true, unverified: true }
   ]
 
-  while (users.length < count + 3) {
+  while (users.length < count + 4) {
     const first = pick(FIRST_NAMES)
     const last = pick(LAST_NAMES)
     const style = int(0, 3)
@@ -326,10 +328,11 @@ async function insertUsers(users) {
   const hash = await bcrypt.hash(PASSWORD, 10)
   for (const user of users) {
     const { rows: [row] } = await db.query(`
-      INSERT INTO librishelf.users (name, email, password_hash, is_public, show_in_community, show_activity, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO librishelf.users (name, email, password_hash, is_public, show_in_community, show_activity, created_at, email_verified_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id
-    `, [user.name, `${user.name}@exemplo.test`, hash, user.isPublic, user.showInCommunity, user.showActivity, new Date(user.createdAt)])
+    `, [user.name, `${user.name}@exemplo.test`, hash, user.isPublic, user.showInCommunity, user.showActivity,
+      new Date(user.createdAt), user.unverified ? null : new Date(user.createdAt)])
     user.id = row.id
   }
 }

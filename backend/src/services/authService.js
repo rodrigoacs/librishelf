@@ -5,6 +5,10 @@ import { deleteBookCover } from '../utils/imageProcessor.js'
 import logger from '../utils/logger.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from 'node:crypto'
+import * as tokenRepository from '../repositories/tokenRepository.js'
+import { sendMail } from './mailService.js'
+import { resetPasswordEmail, verifyEmailEmail } from './emailTemplates.js'
 
 const SECRET_KEY = process.env.SECRET_KEY
 const TOKEN_TTL = '7d'
@@ -29,6 +33,29 @@ function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0
 }
 
+const RESET_TTL_MS = 60 * 60 * 1000             // 1 hora
+const VERIFY_TTL_MS = 3 * 24 * 60 * 60 * 1000   // 3 dias
+const INVALID_LINK = 'Este link é inválido ou expirou. Peça um novo.'
+
+/** Endereço público do app, usado nos links dos e-mails. */
+function appUrl() {
+  return (process.env.APP_URL?.trim() || 'http://localhost:5173').replace(/\/$/, '')
+}
+
+const hashToken = raw => crypto.createHash('sha256').update(raw).digest('hex')
+
+/** Gera um link de uso único; só o hash vai para o banco. */
+async function createLinkToken(userId, purpose, ttlMs) {
+  const raw = crypto.randomBytes(32).toString('base64url')
+  await tokenRepository.replaceToken(userId, purpose, hashToken(raw), new Date(Date.now() + ttlMs))
+  return raw
+}
+
+async function consumeLinkToken(raw, purpose) {
+  if (typeof raw !== 'string' || raw.length < 20 || raw.length > 200) return null
+  return tokenRepository.consumeToken(hashToken(raw), purpose)
+}
+
 function issueToken(user) {
   return jwt.sign({ id: user.id, username: user.name }, SECRET_KEY, { expiresIn: TOKEN_TTL })
 }
@@ -40,7 +67,8 @@ function toProfile(user) {
     email: user.email,
     isPublic: Boolean(user.is_public),
     showInCommunity: Boolean(user.show_in_community),
-    showActivity: Boolean(user.show_activity)
+    showActivity: Boolean(user.show_activity),
+    emailVerified: Boolean(user.email_verified_at)
   }
 }
 
@@ -83,7 +111,7 @@ async function getUserProfile(id) {
   return user ? toProfile(user) : null
 }
 
-async function registerUser(username, password, email) {
+async function registerUser(username, password, email, locale) {
   if (!isNonEmptyString(username) || !isNonEmptyString(email)) {
     throw httpError('Username, password, and email are required.', STATUS.BAD_REQUEST)
   }
@@ -117,8 +145,9 @@ async function registerUser(username, password, email) {
 
   const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS)
 
+  let created
   try {
-    return toProfile(await authRepository.createUser(cleanUsername, hashedPassword, cleanEmail))
+    created = await authRepository.createUser(cleanUsername, hashedPassword, cleanEmail)
   } catch (err) {
     // Duas requisições simultâneas passam pela checagem acima; a constraint
     // UNIQUE do banco é quem decide, e a violação vira 409 em vez de 500.
@@ -127,6 +156,93 @@ async function registerUser(username, password, email) {
     }
     throw err
   }
+
+  // A conta existe mesmo se o e-mail falhar: dá para reenviar depois.
+  try {
+    await deliverVerification(created, locale)
+  } catch (err) {
+    logger.error('Falha ao enviar confirmação de e-mail no cadastro', { userId: created.id, message: err.message })
+  }
+
+  return toProfile(created)
+}
+
+async function deliverVerification(user, locale) {
+  const raw = await createLinkToken(user.id, 'verify_email', VERIFY_TTL_MS)
+  const mail = verifyEmailEmail({
+    name: user.name,
+    link: `${appUrl()}/verify-email?token=${raw}`,
+    locale
+  })
+  await sendMail({ to: user.email, ...mail })
+}
+
+/** Reenvia a confirmação para quem está logado. */
+async function resendVerification(userId, locale) {
+  const user = await authRepository.getUserById(userId)
+  if (!user) throw httpError('User not found.', STATUS.NOT_FOUND)
+  if (user.email_verified_at) return { alreadyVerified: true }
+
+  try {
+    await deliverVerification(user, locale)
+  } catch (err) {
+    logger.error('Falha ao reenviar confirmação de e-mail', { userId, message: err.message })
+    throw httpError('Não foi possível enviar o e-mail agora. Tente de novo em alguns minutos.', 502)
+  }
+  return { alreadyVerified: false }
+}
+
+async function verifyEmail(token) {
+  const userId = await consumeLinkToken(token, 'verify_email')
+  if (!userId) throw httpError(INVALID_LINK, STATUS.BAD_REQUEST)
+  await authRepository.markEmailVerified(userId)
+  logger.info('E-mail confirmado', { userId })
+}
+
+/**
+ * "Esqueci minha senha". A resposta é sempre a mesma, exista ou não a conta,
+ * para não revelar quais e-mails estão cadastrados.
+ */
+async function requestPasswordReset(email, locale) {
+  if (!isNonEmptyString(email) || !EMAIL_PATTERN.test(email.trim())) {
+    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST)
+  }
+
+  const user = await authRepository.getUserByEmail(email.trim())
+  if (!user) {
+    logger.info('Recuperação de senha para e-mail sem conta')
+    return
+  }
+
+  try {
+    const raw = await createLinkToken(user.id, 'reset_password', RESET_TTL_MS)
+    const mail = resetPasswordEmail({
+      name: user.name,
+      link: `${appUrl()}/reset-password?token=${raw}`,
+      locale
+    })
+    await sendMail({ to: user.email, ...mail })
+  } catch (err) {
+    // Mesmo assim responde igual: o erro fica no log para quem administra.
+    logger.error('Falha ao enviar e-mail de recuperação de senha', { userId: user.id, message: err.message })
+  }
+}
+
+/** Troca a senha pelo link do e-mail. Derruba todas as sessões abertas. */
+async function resetPassword(token, newPassword) {
+  const passwordCheck = validatePassword(newPassword)
+  if (!passwordCheck.valid) {
+    throw httpError(passwordCheck.reason, STATUS.BAD_REQUEST)
+  }
+
+  const userId = await consumeLinkToken(token, 'reset_password')
+  if (!userId) throw httpError(INVALID_LINK, STATUS.BAD_REQUEST)
+
+  const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS)
+  await authRepository.updatePassword(userId, hashedPassword)
+  // Quem recebeu o link no e-mail provou que o e-mail é dele.
+  await authRepository.markEmailVerified(userId)
+  logger.info('Senha redefinida pelo e-mail', { userId })
 }
 
 /**
@@ -174,6 +290,15 @@ async function setPrivacy(userId, body = {}) {
     throw httpError(`Campo '${invalid}' precisa ser true ou false.`, STATUS.BAD_REQUEST)
   }
 
+  // Ligar qualquer opção pública exige e-mail confirmado; desligar, sempre pode.
+  if (provided.some(field => body[field] === true)) {
+    const user = await authRepository.getUserById(userId)
+    if (!user) throw httpError('User not found.', STATUS.NOT_FOUND)
+    if (!user.email_verified_at) {
+      throw httpError('Confirme seu e-mail para deixar a biblioteca pública ou participar da comunidade.', STATUS.FORBIDDEN)
+    }
+  }
+
   const result = await authRepository.setPrivacy(userId, {
     isPublic: body.isPublic ?? null,
     showInCommunity: body.showInCommunity ?? null,
@@ -207,6 +332,10 @@ async function deleteAccount(userId, password) {
 export {
   loginUser,
   registerUser,
+  resendVerification,
+  verifyEmail,
+  requestPasswordReset,
+  resetPassword,
   getUserProfile,
   changePassword,
   setPrivacy,

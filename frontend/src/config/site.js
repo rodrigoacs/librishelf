@@ -1,7 +1,7 @@
 // Dados do site exibidos na política de privacidade e usados nos links.
 // Revise antes de publicar.
 export const CONTACT_EMAIL = 'rodrigohths@gmail.com'
-export const PRIVACY_UPDATED_AT = '2026-10-10'
+export const PRIVACY_UPDATED_AT = '2026-10-17'
 
 // Mesmo limite do backend (routes/library.js → MAX_UPLOAD_MB).
 export const MAX_UPLOAD_MB = 10

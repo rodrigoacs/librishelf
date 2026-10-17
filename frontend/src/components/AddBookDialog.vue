@@ -192,6 +192,7 @@
                 <Calendar
                   inputId="new-book-read-date"
                   v-model="book.readDate"
+                  :maxDate="today"
                   dateFormat="dd/mm/yy"
                   :placeholder="t('book.unread')"
                   class="modern-calendar"
@@ -279,6 +280,9 @@ import { toApiDate } from '../utils/dates.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
 
 const { t } = useI18n()
+
+// Data de leitura não pode estar no futuro (o servidor também recusa).
+const today = new Date()
 
 const props = defineProps({
   visible: Boolean

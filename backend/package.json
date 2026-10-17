@@ -6,6 +6,7 @@
   "scripts": {
     "server": "node --env-file=./src/.env --watch src/server.js",
     "start": "node src/server.js",
+    "email:preview": "node src/scripts/previewEmails.js",
     "db:migrate": "node --env-file=./src/.env src/database/migrate.js",
     "db:migrate:test": "node --env-file=./src/.env.test src/database/migrate.js",
     "db:migrate:docker": "node src/database/migrate.js",
@@ -25,6 +26,7 @@
     "express-rate-limit": "^8.6.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.3.0",
+    "nodemailer": "^10.1.2",
     "pg": "^8.16.3",
     "sharp": "^0.35.3"
   },

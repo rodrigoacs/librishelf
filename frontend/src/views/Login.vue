@@ -39,6 +39,10 @@
           />
           <label for="login-password">{{ t('login.password') }}</label>
         </span>
+        <router-link
+          :to="{ name: 'forgot-password' }"
+          class="forgot-link"
+        >{{ t('login.forgot') }}</router-link>
       </div>
 
       <Button
@@ -105,3 +109,18 @@ async function handleLogin() {
   }
 }
 </script>
+
+<style scoped>
+.forgot-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  color: var(--main-color);
+  text-decoration: underline;
+}
+</style>

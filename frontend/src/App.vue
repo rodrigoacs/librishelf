@@ -20,6 +20,10 @@
         :breakpoints="{ '640px': { width: 'calc(100vw - 2rem)', left: '1rem', right: '1rem' } }"
       />
       <ConfirmDialog />
+      <EmailBanner
+        v-if="showNavigation && currentUser && currentUser.emailVerified === false"
+        :email="currentUser.email"
+      />
       <router-view />
     </main>
   </div>
@@ -32,7 +36,8 @@ import { useI18n } from 'vue-i18n'
 import NavigationMenu from './components/NavigationMenu.vue'
 import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
-import { isAuthenticated } from './services/session.js'
+import { isAuthenticated, currentUser } from './services/session.js'
+import EmailBanner from './components/EmailBanner.vue'
 
 const route = useRoute()
 const { t } = useI18n()

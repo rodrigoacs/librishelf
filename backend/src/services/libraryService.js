@@ -34,6 +34,20 @@ function normalizeDate(value, fieldName) {
   return parsed.toISOString().split('T')[0]
 }
 
+/**
+ * Data de leitura não pode estar no futuro. Tolerância de 1 dia: o cliente
+ * manda a data local, que pode estar à frente da data UTC do servidor.
+ */
+function normalizeReadDate(value) {
+  const date = normalizeDate(value, 'readDate')
+  if (!date) return date
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  if (date > tomorrow) {
+    throw httpError('A data de leitura não pode estar no futuro.', STATUS.BAD_REQUEST)
+  }
+  return date
+}
+
 function normalizeReadYear(readYear) {
   if (readYear === undefined || readYear === null || readYear === '' || readYear === 'all') return 'all'
 
@@ -147,7 +161,7 @@ function normalizeBookInput(raw = {}) {
     publisher: publisher || null,
     isbn: normalizeIsbn(raw.isbn),
     pubDate: normalizeDate(raw.pubDate, 'pubDate'),
-    readDate: normalizeDate(raw.readDate, 'readDate'),
+    readDate: normalizeReadDate(raw.readDate),
     rating: normalizeRating(raw.rating),
     olWorkKey: normalizeOlKey(raw.olWorkKey, OL_WORK_KEY, 'olWorkKey'),
     olEditionKey: normalizeOlKey(raw.olEditionKey, OL_EDITION_KEY, 'olEditionKey')
@@ -221,7 +235,7 @@ async function setRating(bookId, userId, value) {
  */
 async function markBookAsRead(bookId, userId, rawDate) {
   await checkBookOwnership(bookId, userId)
-  const readDate = normalizeDate(rawDate, 'readDate') ?? new Date()
+  const readDate = normalizeReadDate(rawDate) ?? new Date()
   return await libraryRepository.updateReadDate(bookId, readDate)
 }
 

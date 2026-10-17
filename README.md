@@ -13,7 +13,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Dashboard** — totals, reading rate, books read per year, top authors and tags.
 - **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf, with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.
 - **Community (opt-in)** — see who else has a book, their average rating and what people who have it also have. Follow other readers (they approve each request) and get a feed of what they add and finish. Everything is off until the user turns it on.
-- **Account control** — change your password (signs out other sessions) and delete your account with all its data.
+- **Account control** — email confirmation, password recovery by email, change your password (signs out other sessions) and delete your account with all its data.
 - **Portuguese and English**, light and dark themes, six accent colors.
 
 ## Tech stack
@@ -39,7 +39,7 @@ docker-compose.yml
 
 ## Running locally
 
-**Requirements:** Node.js 22.12+ and PostgreSQL 14+.
+**Requirements:** Node.js 22.12+ and PostgreSQL 15+.
 
 1. **Install dependencies**
 
@@ -139,6 +139,24 @@ server {
 ```
 
 `TRUST_PROXY=2` in `docker-compose.yml` matches this chain (host nginx → frontend nginx → API) so rate limiting sees the real client IP.
+
+### Email (password recovery and sign-up confirmation)
+
+The API sends two kinds of email over SMTP: the password reset link (valid for 1 hour) and the sign-up confirmation link (valid for 3 days). Until a user confirms their email, public library, community and following stay locked; accounts that existed before this version count as confirmed.
+
+Set in `backend/src/.env`:
+
+```sh
+APP_URL=https://librishelf.com          # links in the emails point here
+SMTP_HOST=smtp.your-provider.com
+SMTP_PORT=587                           # 587 + SMTP_SECURE=false (STARTTLS) or 465 + SMTP_SECURE=true
+SMTP_SECURE=false
+SMTP_USER=...
+SMTP_PASS=...
+MAIL_FROM="Librishelf <noreply@librishelf.com>"
+```
+
+To send as `@librishelf.com` without landing in spam, add the SPF and DKIM records your SMTP provider gives you to the domain's DNS (and ideally a DMARC record). Without `SMTP_HOST` nothing is sent: the email content, links included, goes to the server log — handy for local development.
 
 ### Upgrading an existing installation
 

@@ -238,7 +238,8 @@
     "error": "Error",
     "invalidCreds": "Invalid credentials. Try again.",
     "success": "Login successful.",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "forgot": "Forgot your password?"
   },
   "register": {
     "register": "Register",
@@ -266,7 +267,8 @@
     "success": "Success",
     "privacyNotice": "By creating an account, you agree to the",
     "privacyLink": "privacy policy",
-    "invalidUsername": "Use only letters, numbers, dot, hyphen and underscore."
+    "invalidUsername": "Use only letters, numbers, dot, hyphen and underscore.",
+    "accountCreatedVerify": "Account created! We sent you a link to confirm your email."
   },
   "publicLibrary": {
     "title": "{ ownerName }'s Library",
@@ -344,7 +346,8 @@
       "help": "People can ask to follow you. Only those you approve see in their feed the books you add and finish.",
       "on": "You now accept follow requests.",
       "off": "Your followers can't see your activity anymore."
-    }
+    },
+    "verifyFirst": "Confirm your email to turn these on. Use the link we sent or the \"Resend link\" button at the top of the page."
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -384,6 +387,13 @@
         "title": "ISBN lookup",
         "paragraphs": [
           "When you click Look up, Librishelf checks the ISBN on Open Library (openlibrary.org), a public book catalog. The request is made by our server: Open Library only receives the ISBN, never your data or your account."
+        ]
+      },
+      {
+        "title": "Emails we send",
+        "paragraphs": [
+          "We use your email only for account matters: confirming the address when you sign up and sending a password recovery link when you ask for one. We don't send marketing.",
+          "Links are short-lived (1 hour for passwords, 3 days for confirmation), work only once, and we store only a hashed version of them."
         ]
       },
       {
@@ -491,5 +501,43 @@
     "remove": "Remove",
     "remove_confirm": "Remove {'@'}{name} from your followers? They won't be notified.",
     "private_library": "Private library"
+  },
+  "forgot": {
+    "title": "Forgot your password",
+    "text": "Enter your account's email. We'll send you a link to choose a new password.",
+    "email": "Email",
+    "submit": "Send link",
+    "invalidEmail": "Enter a valid email.",
+    "sentText": "If {email} has an account, the link will arrive in a few minutes. It is valid for 1 hour.",
+    "checkSpam": "Didn't get it? Check your spam folder or ask again.",
+    "tryAgain": "Send to another email",
+    "backToLogin": "Back to sign in"
+  },
+  "reset": {
+    "title": "Choose a new password",
+    "text": "After saving, all open sessions are signed out and you'll sign in with the new password.",
+    "noToken": "This link is incomplete. Open the link from the email again or ask for a new one.",
+    "newPassword": "New password",
+    "confirm": "Confirm new password",
+    "submit": "Save new password",
+    "done": "Password changed. Sign in with your new password.",
+    "askNew": "Ask for a new link"
+  },
+  "verify": {
+    "loading": "Confirming your email…",
+    "doneTitle": "Email confirmed",
+    "doneText": "Done! You can now make your library public, join the community and recover your password by email.",
+    "failedTitle": "Couldn't confirm",
+    "failedText": "This link is invalid or has expired.",
+    "goHome": "Go to home",
+    "goLogin": "Sign in",
+    "resend": "Send a new link",
+    "sent": "We sent a new link to your email.",
+    "already": "Your email is already confirmed."
+  },
+  "emailBanner": {
+    "text": "Confirm your email: we sent a link to {email}. Until then, public library, community and followers are locked.",
+    "resend": "Resend link",
+    "sent": "Link sent"
   }
 }

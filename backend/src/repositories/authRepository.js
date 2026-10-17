@@ -28,6 +28,16 @@ async function getPasswordHashById(id) {
   return result.rows[0] || null
 }
 
+async function getUserByEmail(email) {
+  const result = await db.query(q.FIND_USER_BY_EMAIL, [email])
+  return result.rows[0] || null
+}
+
+async function markEmailVerified(id) {
+  const result = await db.query(q.MARK_EMAIL_VERIFIED, [id])
+  return result.rows[0] || null
+}
+
 async function createUser(username, hashedPassword, email) {
   const result = await db.query(q.CREATE_USER, [username, hashedPassword, email])
   return result.rows[0]
@@ -68,6 +78,8 @@ export {
   getUserByUsername,
   getUserByName,
   getUserById,
+  getUserByEmail,
+  markEmailVerified,
   getSessionById,
   getPasswordHashById,
   createUser,

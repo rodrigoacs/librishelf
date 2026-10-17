@@ -26,6 +26,10 @@ const router = createRouter({
     { path: '/login', name: 'login', component: () => import('../views/Login.vue'), meta: { guestOnly: true, standalone: true } },
     { path: '/register', name: 'register', component: () => import('../views/Register.vue'), meta: { guestOnly: true, standalone: true } },
 
+    { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPassword.vue'), meta: { standalone: true } },
+    { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPassword.vue'), meta: { standalone: true } },
+    { path: '/verify-email', name: 'verify-email', component: () => import('../views/VerifyEmail.vue'), meta: { standalone: true } },
+
     { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true } },
     { path: '/privacy', name: 'privacy', component: () => import('../views/Privacy.vue'), meta: { public: true } },
 

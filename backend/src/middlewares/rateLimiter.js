@@ -70,4 +70,18 @@ const socialLimiter = buildLimiter({
   message: 'Muitas ações em pouco tempo. Tente novamente em alguns minutos.'
 })
 
-export { loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, isbnLimiter, socialLimiter }
+// E-mails (esqueci minha senha, reenviar confirmação): poucos por hora.
+const mailLimiter = buildLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: 'Muitos pedidos de e-mail. Tente novamente mais tarde.'
+})
+
+// Links recebidos por e-mail (redefinir senha, confirmar e-mail): sem chute em massa.
+const tokenLimiter = buildLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Muitas tentativas. Tente novamente em alguns minutos.'
+})
+
+export { mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, isbnLimiter, socialLimiter }

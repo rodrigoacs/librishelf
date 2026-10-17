@@ -1152,3 +1152,27 @@ $$;
 INSERT INTO librishelf.schema_migrations (version)
 VALUES ('003_per_user_names_and_community')
 ON CONFLICT (version) DO NOTHING;
+
+-- ===========================================================================
+-- 004 — e-mail confirmado e links de uso único
+-- ===========================================================================
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS email_verified_at timestamptz;
+
+CREATE TABLE IF NOT EXISTS librishelf.user_tokens (
+  id          bigserial PRIMARY KEY,
+  user_id     integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  purpose     text NOT NULL CHECK (purpose IN ('reset_password', 'verify_email')),
+  token_hash  text NOT NULL UNIQUE,
+  expires_at  timestamptz NOT NULL,
+  used_at     timestamptz,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_tokens_user_purpose
+  ON librishelf.user_tokens (user_id, purpose);
+
+CREATE INDEX IF NOT EXISTS idx_users_email_lower ON librishelf.users (lower(email));
+
+INSERT INTO librishelf.schema_migrations (version)
+VALUES ('004_email_tokens')
+ON CONFLICT (version) DO NOTHING;

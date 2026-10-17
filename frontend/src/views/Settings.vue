@@ -14,12 +14,22 @@
         >
           <h2 id="settings-public-title">{{ t('settings.public.title') }}</h2>
           <p class="card-desc">{{ t('settings.public.desc') }}</p>
+          <p
+            v-if="!emailVerified"
+            class="verify-note"
+          >
+            <i
+              class="pi pi-envelope"
+              aria-hidden="true"
+            ></i>
+            {{ t('settings.verifyFirst') }}
+          </p>
 
           <div class="toggle-row">
             <InputSwitch
               inputId="settings-public-toggle"
               :modelValue="isPublic"
-              :disabled="savingVisibility"
+              :disabled="savingVisibility || (!emailVerified && !isPublic)"
               @update:modelValue="value => savePrivacy('isPublic', value)"
             />
             <label for="settings-public-toggle">{{ t('settings.public.toggle') }}</label>
@@ -62,7 +72,7 @@
                 <InputSwitch
                   inputId="settings-community-toggle"
                   :modelValue="showInCommunity"
-                  :disabled="savingVisibility || !isPublic"
+                  :disabled="savingVisibility || !isPublic || (!emailVerified && !showInCommunity)"
                   aria-describedby="settings-community-help"
                   @update:modelValue="value => savePrivacy('showInCommunity', value)"
                 />
@@ -79,7 +89,7 @@
                 <InputSwitch
                   inputId="settings-activity-toggle"
                   :modelValue="showActivity"
-                  :disabled="savingVisibility"
+                  :disabled="savingVisibility || (!emailVerified && !showActivity)"
                   aria-describedby="settings-activity-help"
                   @update:modelValue="value => savePrivacy('showActivity', value)"
                 />
@@ -256,6 +266,7 @@ const router = useRouter()
 
 const user = currentUser
 const isPublic = computed(() => Boolean(user.value?.isPublic))
+const emailVerified = computed(() => user.value?.emailVerified !== false)
 const showInCommunity = computed(() => Boolean(user.value?.showInCommunity))
 const showActivity = computed(() => Boolean(user.value?.showActivity))
 const publicUrl = computed(() => `${window.location.origin}/u/${encodeURIComponent(user.value?.name || '')}`)
@@ -414,6 +425,24 @@ async function deleteAccount() {
   color: var(--text-secondary);
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+.verify-note {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin: -0.5rem 0 1.25rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(var(--main-color-rgb), 0.08);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.verify-note .pi {
+  color: var(--main-color);
+  margin-top: 0.15rem;
 }
 
 .toggle-block {

@@ -100,6 +100,7 @@
 </template>
 
 <script setup>
+import { isWeakPassword } from '../utils/password.js'
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -113,10 +114,8 @@ import api from '../services/api.js'
 // Espelha a regra do backend (services/authService.js → USERNAME_PATTERN e
 // utils/passwordPolicy.js); o backend continua sendo quem decide.
 const USERNAME_PATTERN = /^[\p{L}\p{N}._-]+$/u
-const PASSWORD_MIN = 8
-const PASSWORD_MAX_BYTES = 72
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
@@ -140,21 +139,18 @@ async function handleRegister() {
   if (!USERNAME_PATTERN.test(name.value.trim())) return fail(t('register.invalidUsername'))
   if (password.value !== confirmPassword.value) return fail(t('register.passwordMismatch'))
 
-  const weak = password.value.length < PASSWORD_MIN ||
-    new TextEncoder().encode(password.value).length > PASSWORD_MAX_BYTES ||
-    !/[a-zA-Z]/.test(password.value) ||
-    !/[0-9]/.test(password.value)
-  if (weak) return fail(t('register.passwordTooWeak'))
+  if (isWeakPassword(password.value)) return fail(t('register.passwordTooWeak'))
 
   loading.value = true
   try {
     await api.register({
       username: name.value.trim(),
       email: email.value.trim(),
-      password: password.value
+      password: password.value,
+      locale: locale.value
     })
 
-    toast.add({ severity: 'success', summary: t('register.success'), detail: t('register.accountCreated'), life: 3000 })
+    toast.add({ severity: 'success', summary: t('register.success'), detail: t('register.accountCreatedVerify'), life: 7000 })
     router.push({ name: 'login', query: route.query })
   } catch (error) {
     fail(error.message || t('register.errorCreating'))

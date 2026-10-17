@@ -151,6 +151,7 @@
                 <Calendar
                   inputId="book-read-date"
                   v-model="book.read_date"
+                  :maxDate="today"
                   dateFormat="dd/mm/yy"
                   :placeholder="t('bookDialog.notRead')"
                   class="modern-calendar"
@@ -472,6 +473,9 @@ const props = defineProps({
   // Dono da biblioteca pública; obrigatório quando isReadOnly for true.
   ownerUsername: { type: String, default: '' }
 })
+
+// Data de leitura não pode estar no futuro (o servidor também recusa).
+const today = new Date()
 
 const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])
 const toast = useToast()
