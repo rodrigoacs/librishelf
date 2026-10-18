@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken'
 import crypto from 'node:crypto'
 import * as tokenRepository from '../repositories/tokenRepository.js'
 import { sendMail } from './mailService.js'
-import { resetPasswordEmail, verifyEmailEmail } from './emailTemplates.js'
+import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail } from './emailTemplates.js'
 
 const SECRET_KEY = process.env.SECRET_KEY
 const TOKEN_TTL = '7d'
@@ -313,6 +313,90 @@ async function setPrivacy(userId, body = {}) {
   }
 }
 
+/** ro•••@gmail.com: o aviso ao e-mail antigo não entrega o endereço novo inteiro. */
+function maskEmail(email) {
+  const [local, domain] = String(email).split('@')
+  return `${local.slice(0, 2)}•••@${domain}`
+}
+
+/**
+ * Trocar o e-mail: pede a senha, o novo começa sem confirmação (recebe o link)
+ * e o endereço antigo recebe um aviso. Opções públicas já ligadas continuam;
+ * ligar de novo exige confirmar o e-mail novo.
+ */
+async function changeEmail(userId, password, newEmail, locale) {
+  await verifyCurrentPassword(userId, password)
+
+  const email = typeof newEmail === 'string' ? newEmail.trim() : ''
+  if (!EMAIL_PATTERN.test(email) || email.length > 254) {
+    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST)
+  }
+
+  const current = await authRepository.getUserById(userId)
+  if (!current) throw httpError('User not found.', STATUS.NOT_FOUND)
+  if (current.email.toLowerCase() === email.toLowerCase()) {
+    throw httpError('Este já é o seu e-mail.', STATUS.BAD_REQUEST)
+  }
+  if (await authRepository.isEmailTaken(email, userId)) {
+    throw httpError('Este e-mail já está em uso em outra conta.', STATUS.CONFLICT)
+  }
+
+  let updated
+  try {
+    updated = await authRepository.updateEmail(userId, email)
+  } catch (err) {
+    if (err.code === UNIQUE_VIOLATION) throw httpError('Este e-mail já está em uso em outra conta.', STATUS.CONFLICT)
+    throw err
+  }
+
+  try {
+    await deliverVerification(updated, locale)
+  } catch (err) {
+    logger.error('Falha ao enviar confirmação do e-mail novo', { userId, message: err.message })
+  }
+  try {
+    const notice = emailChangedEmail({ name: updated.name, link: `${appUrl()}/forgot-password`, locale, newEmail: maskEmail(email) })
+    await sendMail({ to: current.email, ...notice })
+  } catch (err) {
+    logger.error('Falha ao avisar o e-mail antigo', { userId, message: err.message })
+  }
+
+  logger.info('E-mail da conta trocado', { userId })
+  return toProfile(updated)
+}
+
+/**
+ * Trocar o nome de usuário (também muda o link /u/<nome>). Mesmas regras do
+ * cadastro; não pode repetir o de outra pessoa nem com outras maiúsculas.
+ */
+async function changeUsername(userId, password, newName) {
+  await verifyCurrentPassword(userId, password)
+
+  const name = typeof newName === 'string' ? newName.trim() : ''
+  if (!name) throw httpError('Informe o novo nome de usuário.', STATUS.BAD_REQUEST)
+  if (name.length > MAX_USERNAME_LENGTH) {
+    throw httpError(`O usuário pode ter no máximo ${MAX_USERNAME_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
+  }
+  if (!USERNAME_PATTERN.test(name)) {
+    throw httpError('O usuário só pode ter letras, números, ponto, hífen e sublinhado.', STATUS.BAD_REQUEST)
+  }
+  if (await authRepository.isNameTaken(name, userId)) {
+    throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT)
+  }
+
+  let updated
+  try {
+    updated = await authRepository.updateName(userId, name)
+  } catch (err) {
+    if (err.code === UNIQUE_VIOLATION) throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT)
+    throw err
+  }
+  if (!updated) throw httpError('User not found.', STATUS.NOT_FOUND)
+
+  logger.info('Nome de usuário trocado', { userId })
+  return { token: issueToken(updated), user: toProfile(updated) }
+}
+
 async function deleteAccount(userId, password) {
   await verifyCurrentPassword(userId, password)
 
@@ -338,6 +422,8 @@ export {
   resetPassword,
   getUserProfile,
   changePassword,
+  changeEmail,
+  changeUsername,
   setPrivacy,
   deleteAccount,
   USERNAME_PATTERN

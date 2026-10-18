@@ -74,7 +74,32 @@ async function deleteUser(id) {
   }
 }
 
+/** Outro usuário já usa este e-mail ou nome (sem diferenciar maiúsculas)? */
+async function isEmailTaken(email, exceptId) {
+  const result = await db.query(q.EMAIL_TAKEN, [email, exceptId])
+  return result.rowCount > 0
+}
+
+async function isNameTaken(name, exceptId) {
+  const result = await db.query(q.NAME_TAKEN, [name, exceptId])
+  return result.rowCount > 0
+}
+
+async function updateEmail(id, email) {
+  const result = await db.query(q.UPDATE_EMAIL, [id, email])
+  return result.rows[0] ?? null
+}
+
+async function updateName(id, name) {
+  const result = await db.query(q.UPDATE_NAME, [id, name])
+  return result.rows[0] ?? null
+}
+
 export {
+  isEmailTaken,
+  isNameTaken,
+  updateEmail,
+  updateName,
   getUserByUsername,
   getUserByName,
   getUserById,

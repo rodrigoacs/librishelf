@@ -374,7 +374,41 @@
       "on": "You now accept follow requests.",
       "off": "Your followers can't see your activity anymore."
     },
-    "verifyFirst": "Confirm your email to turn these on. Use the link we sent or the \"Resend link\" button at the top of the page."
+    "verifyFirst": "Confirm your email to turn these on. Use the link we sent or the \"Resend link\" button at the top of the page.",
+    "account": {
+      "title": "Username and email",
+      "desc": "Your username (also your public library address) and contact email.",
+      "username": "Username",
+      "email": "Email",
+      "change": "Change",
+      "notVerified": "not confirmed",
+      "usernameTitle": "Change username",
+      "emailTitle": "Change email",
+      "usernameHint": "Letters, numbers, dot, hyphen and underscore. Your public library link changes too: the old address stops working.",
+      "emailHint": "We'll send a confirmation link to the new email and a notice to the current one.",
+      "newUsername": "New username",
+      "newEmail": "New email",
+      "usernameChanged": "You are now {name}.",
+      "emailChanged": "Email changed. Check the new inbox to confirm it."
+    },
+    "data": {
+      "title": "Your data",
+      "exportDesc": "Download a copy of everything: books, ratings, notes, status, goals and account data. The CSV opens in spreadsheets and can be imported back.",
+      "exportJson": "Download everything (JSON)",
+      "exportCsv": "Download books (CSV)",
+      "importTitle": "Import books",
+      "importDesc": "Bring your Goodreads shelf (or a CSV exported from Librishelf). Books already here are skipped.",
+      "step1": "On Goodreads, from a computer: My Books → Import and export → Export Library.",
+      "step2": "Download the .csv file when the link appears.",
+      "step3": "Choose the file below. Shelves become categories; \"read\", \"currently-reading\" and \"to-read\" become Read, Reading and Want to read.",
+      "chooseFile": "Choose a .csv file",
+      "importing": "Importing... this may take a few seconds.",
+      "imported": "No books imported | {n} book imported | {n} books imported",
+      "duplicates": "{n} was already on your shelf | {n} were already on your shelf",
+      "failed": "{n} with problems | {n} with problems",
+      "errorLine": "Line {line} ({title})",
+      "seeLibrary": "See in library"
+    }
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -385,7 +419,7 @@
         "title": "What we collect",
         "paragraphs": [
           "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
-          "Content you add: your books and their details (title, authors, publisher, ISBN, tags, dates and ratings) and the covers you upload.",
+          "Content you add: your books and their details (title, authors, publisher, ISBN, series, tags, dates, ratings, reading status and goals), personal notes and the covers you upload. Personal notes are yours only: they never appear in your public library.",
           "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts."
         ]
       },
@@ -440,7 +474,7 @@
       {
         "title": "Your rights (LGPD)",
         "paragraphs": [
-          "You can view, correct, request a copy of or delete your data at any time. You can make corrections and delete your account in the app itself; for other requests, reach us at the contact below."
+          "You can view, correct, download a copy of or delete your data at any time, all from the app: in Account → Your data you download everything as JSON or CSV, and deleting your account erases everything right away. For any other request, contact us below."
         ]
       },
       {

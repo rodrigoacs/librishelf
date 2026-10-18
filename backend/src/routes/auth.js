@@ -1,5 +1,6 @@
 import express from 'express'
 import * as authService from '../services/authService.js'
+import * as dataService from '../services/dataService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimiter } from '../middlewares/rateLimiter.js'
@@ -117,6 +118,47 @@ router.post('/email/verify/resend', authenticateToken, mailLimiter, async (req, 
     res.status(STATUS.OK).json(result)
   } catch (error) {
     sendError(res, error, 'Erro ao reenviar confirmação')
+  }
+})
+
+// Trocar e-mail: { email, password, locale } → o novo precisa ser confirmado.
+router.patch('/me/email', authenticateToken, sensitiveLimiter, async (req, res) => {
+  try {
+    const { email, password, locale } = req.body ?? {}
+    const user = await authService.changeEmail(req.user.id, password, email, locale)
+    res.status(STATUS.OK).json({ user })
+  } catch (error) {
+    sendError(res, error, 'Erro ao trocar e-mail')
+  }
+})
+
+// Trocar nome de usuário: { username, password }. Devolve sessão nova (o token leva o nome).
+router.patch('/me/username', authenticateToken, sensitiveLimiter, async (req, res) => {
+  try {
+    const { username, password } = req.body ?? {}
+    const result = await authService.changeUsername(req.user.id, password, username)
+    res.cookie(AUTH_COOKIE_NAME, result.token, authCookieOptions)
+    res.status(STATUS.OK).json({ user: result.user })
+  } catch (error) {
+    sendError(res, error, 'Erro ao trocar nome de usuário')
+  }
+})
+
+// Exportar todos os dados: ?format=json (padrão) ou csv (só os livros).
+router.get('/me/export', authenticateToken, sensitiveLimiter, async (req, res) => {
+  try {
+    const stamp = new Date().toISOString().slice(0, 10)
+    if (req.query.format === 'csv') {
+      const csv = await dataService.exportCsv(req.user.id)
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+      res.setHeader('Content-Disposition', `attachment; filename="librishelf-${stamp}.csv"`)
+      return res.status(STATUS.OK).send(csv)
+    }
+    const data = await dataService.exportJson(req.user.id)
+    res.setHeader('Content-Disposition', `attachment; filename="librishelf-${stamp}.json"`)
+    res.status(STATUS.OK).json(data)
+  } catch (error) {
+    sendError(res, error, 'Erro ao exportar dados')
   }
 })
 

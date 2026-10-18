@@ -3,6 +3,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import multer from 'multer'
 import * as libraryService from '../services/libraryService.js'
+import * as dataService from '../services/dataService.js'
 import { authenticateToken, optionalAuth } from '../middlewares/auth.js'
 import * as communityService from '../services/communityService.js'
 import { fetchCover } from '../services/openLibraryService.js'
@@ -27,12 +28,25 @@ const upload = multer({
   }
 })
 
+const MAX_CSV_MB = 5
+
+// Importação: um CSV (Goodreads ou Librishelf), em memória.
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 1024 * 1024 * MAX_CSV_MB, files: 1 },
+  fileFilter: (req, file, cb) => {
+    const isCsv = /\.csv$/i.test(file.originalname) || /csv|excel|text\/plain/.test(file.mimetype)
+    if (!isCsv) return cb(new Error('Envie um arquivo .csv.'))
+    cb(null, true)
+  }
+})
+
 function handleUpload(uploadMiddleware) {
   return (req, res, next) => {
     uploadMiddleware(req, res, (err) => {
       if (err) {
         const message = err.code === 'LIMIT_FILE_SIZE'
-          ? `A imagem pode ter no máximo ${MAX_UPLOAD_MB} MB.`
+          ? (req.path.endsWith('/import') ? `O arquivo pode ter no máximo ${MAX_CSV_MB} MB.` : `A imagem pode ter no máximo ${MAX_UPLOAD_MB} MB.`)
           : err.message
         return res.status(STATUS.BAD_REQUEST).json({ error: message })
       }
@@ -119,6 +133,16 @@ router.get('/series', async (req, res) => {
     res.status(STATUS.OK).json(await libraryService.getSeries(req.user.id))
   } catch (error) {
     sendError(res, error, 'Erro ao listar séries')
+  }
+})
+
+// Importar livros de um CSV (campo "file"): Goodreads ou o CSV exportado do Librishelf.
+router.post('/import', uploadLimiter, handleUpload(csvUpload.single('file')), async (req, res) => {
+  try {
+    const summary = await dataService.importCsv(req.user.id, req.file?.buffer)
+    res.status(STATUS.OK).json(summary)
+  } catch (error) {
+    sendError(res, error, 'Erro ao importar')
   }
 })
 

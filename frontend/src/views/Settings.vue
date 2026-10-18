@@ -103,6 +103,46 @@
           </div>
         </section>
 
+        <!-- Conta: nome de usuário e e-mail -->
+        <section
+          class="settings-card"
+          aria-labelledby="settings-account-title"
+        >
+          <h2 id="settings-account-title">{{ t('settings.account.title') }}</h2>
+          <p class="card-desc">{{ t('settings.account.desc') }}</p>
+
+          <dl class="account-rows">
+            <div class="account-row">
+              <dt>{{ t('settings.account.username') }}</dt>
+              <dd>
+                <span class="account-value">{{ user?.name }}</span>
+                <Button
+                  :label="t('settings.account.change')"
+                  class="p-button-text p-button-sm"
+                  @click="openAccountDialog('username')"
+                />
+              </dd>
+            </div>
+            <div class="account-row">
+              <dt>{{ t('settings.account.email') }}</dt>
+              <dd>
+                <span class="account-value">
+                  {{ user?.email }}
+                  <span
+                    v-if="!emailVerified"
+                    class="badge-pending"
+                  >{{ t('settings.account.notVerified') }}</span>
+                </span>
+                <Button
+                  :label="t('settings.account.change')"
+                  class="p-button-text p-button-sm"
+                  @click="openAccountDialog('email')"
+                />
+              </dd>
+            </div>
+          </dl>
+        </section>
+
         <!-- Senha -->
         <section
           class="settings-card"
@@ -171,6 +211,86 @@
               :loading="savingPassword"
             />
           </form>
+        </section>
+
+        <!-- Seus dados: exportar e importar -->
+        <section
+          class="settings-card"
+          aria-labelledby="settings-data-title"
+        >
+          <h2 id="settings-data-title">{{ t('settings.data.title') }}</h2>
+          <p class="card-desc">{{ t('settings.data.exportDesc') }}</p>
+          <div class="button-row">
+            <Button
+              :label="t('settings.data.exportJson')"
+              icon="pi pi-download"
+              class="p-button-outlined p-button-sm"
+              :loading="exporting === 'json'"
+              :disabled="Boolean(exporting)"
+              @click="downloadExport('json')"
+            />
+            <Button
+              :label="t('settings.data.exportCsv')"
+              icon="pi pi-file"
+              class="p-button-outlined p-button-sm"
+              :loading="exporting === 'csv'"
+              :disabled="Boolean(exporting)"
+              @click="downloadExport('csv')"
+            />
+          </div>
+
+          <h3 class="sub-title">{{ t('settings.data.importTitle') }}</h3>
+          <p class="card-desc">{{ t('settings.data.importDesc') }}</p>
+          <ol class="import-steps">
+            <li>{{ t('settings.data.step1') }}</li>
+            <li>{{ t('settings.data.step2') }}</li>
+            <li>{{ t('settings.data.step3') }}</li>
+          </ol>
+
+          <label
+            class="file-drop"
+            :class="{ busy: importing }"
+          >
+            <input
+              ref="importInput"
+              type="file"
+              accept=".csv,text/csv"
+              class="sr-only"
+              :disabled="importing"
+              @change="importFile"
+            />
+            <i
+              :class="importing ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
+              aria-hidden="true"
+            ></i>
+            <span>{{ importing ? t('settings.data.importing') : t('settings.data.chooseFile') }}</span>
+          </label>
+
+          <div
+            v-if="importResult"
+            class="import-result"
+            role="status"
+          >
+            <p class="import-summary">
+              <strong>{{ t('settings.data.imported', { n: importResult.imported }, importResult.imported) }}</strong>
+              <span v-if="importResult.duplicates"> · {{ t('settings.data.duplicates', { n: importResult.duplicates }, importResult.duplicates) }}</span>
+              <span v-if="importResult.failed"> · {{ t('settings.data.failed', { n: importResult.failed }, importResult.failed) }}</span>
+            </p>
+            <ul
+              v-if="importResult.errors?.length"
+              class="import-errors"
+            >
+              <li
+                v-for="error in importResult.errors.slice(0, 10)"
+                :key="error.line"
+              >{{ t('settings.data.errorLine', { line: error.line, title: error.title || '—' }) }}: {{ error.reason }}</li>
+            </ul>
+            <router-link
+              v-if="importResult.imported"
+              :to="{ name: 'library' }"
+              class="see-library"
+            >{{ t('settings.data.seeLibrary') }}</router-link>
+          </div>
         </section>
 
         <!-- Excluir conta -->
@@ -245,6 +365,51 @@
         </div>
       </form>
     </Dialog>
+
+    <Dialog
+      v-model:visible="accountDialog.visible"
+      modal
+      :header="accountDialog.field === 'email' ? t('settings.account.emailTitle') : t('settings.account.usernameTitle')"
+      :style="{ width: 'min(28rem, 92vw)' }"
+      :draggable="false"
+    >
+      <form
+        class="stack"
+        novalidate
+        @submit.prevent="saveAccount"
+      >
+        <p class="dialog-hint">{{ accountDialog.field === 'email' ? t('settings.account.emailHint') : t('settings.account.usernameHint') }}</p>
+        <div class="field">
+          <label for="settings-account-value">{{ accountDialog.field === 'email' ? t('settings.account.newEmail') : t('settings.account.newUsername') }}</label>
+          <input
+            id="settings-account-value"
+            v-model="accountDialog.value"
+            class="plain-input"
+            :type="accountDialog.field === 'email' ? 'email' : 'text'"
+            :autocomplete="accountDialog.field === 'email' ? 'email' : 'username'"
+            maxlength="254"
+          />
+        </div>
+        <div class="field">
+          <label for="settings-account-password">{{ t('settings.password.current') }}</label>
+          <Password
+            inputId="settings-account-password"
+            v-model="accountDialog.password"
+            :feedback="false"
+            toggleMask
+            class="w-full"
+            :inputProps="{ autocomplete: 'current-password' }"
+          />
+        </div>
+        <Button
+          type="submit"
+          :label="t('common.save')"
+          class="btn-action-primary"
+          :loading="accountDialog.saving"
+          :disabled="!accountDialog.value.trim() || !accountDialog.password"
+        />
+      </form>
+    </Dialog>
   </div>
 </template>
 
@@ -260,7 +425,7 @@ import Password from 'primevue/password'
 import api from '../services/api.js'
 import { currentUser, updateUser, setUser, clearSession } from '../services/session.js'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const toast = useToast()
 const router = useRouter()
 
@@ -335,6 +500,81 @@ async function changePassword() {
     toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
   } finally {
     savingPassword.value = false
+  }
+}
+
+// --- Conta: nome de usuário e e-mail ---
+const accountDialog = reactive({ visible: false, field: 'username', value: '', password: '', saving: false })
+
+function openAccountDialog(field) {
+  Object.assign(accountDialog, {
+    visible: true,
+    field,
+    value: field === 'email' ? user.value?.email || '' : user.value?.name || '',
+    password: '',
+    saving: false
+  })
+}
+
+async function saveAccount() {
+  accountDialog.saving = true
+  try {
+    const value = accountDialog.value.trim()
+    const result = accountDialog.field === 'email'
+      ? await api.changeEmail(value, accountDialog.password, locale.value)
+      : await api.changeUsername(value, accountDialog.password)
+    setUser(result.user)
+    accountDialog.visible = false
+    toast.add({
+      severity: 'success',
+      summary: t('common.success'),
+      detail: accountDialog.field === 'email' ? t('settings.account.emailChanged') : t('settings.account.usernameChanged', { name: result.user.name }),
+      life: 5000
+    })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    accountDialog.saving = false
+  }
+}
+
+// --- Seus dados ---
+const exporting = ref(null)
+const importing = ref(false)
+const importResult = ref(null)
+const importInput = ref(null)
+
+async function downloadExport(format) {
+  exporting.value = format
+  try {
+    const { blob, filename } = await api.exportData(format)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    exporting.value = null
+  }
+}
+
+async function importFile(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  importing.value = true
+  importResult.value = null
+  try {
+    importResult.value = await api.importBooks(file)
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 5000 })
+  } finally {
+    importing.value = false
+    if (importInput.value) importInput.value.value = ''
   }
 }
 
@@ -537,7 +777,158 @@ async function deleteAccount() {
   color: var(--main-color);
 }
 
+.account-rows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.account-row {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.account-row:last-child {
+  border-bottom: none;
+}
+
+.account-row dt {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.account-row dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.account-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.badge-pending {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.button-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.sub-title {
+  margin: 1.5rem 0 0.25rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.import-steps {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.file-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.1rem;
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.file-drop:hover,
+.file-drop:focus-within {
+  border-color: var(--main-color);
+  color: var(--text-primary);
+}
+
+.file-drop.busy {
+  cursor: progress;
+}
+
+.import-result {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: rgba(var(--main-color-rgb), 0.08);
+  border: 1px solid rgba(var(--main-color-rgb), 0.3);
+}
+
+.import-summary {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.import-errors {
+  margin: 0.6rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.see-library {
+  display: inline-block;
+  margin-top: 0.6rem;
+  color: var(--main-color);
+  font-weight: 600;
+}
+
+.dialog-hint {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.plain-input {
+  width: 100%;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.plain-input:focus {
+  border-color: var(--main-color);
+  outline: none;
+}
+
 @media (max-width: 640px) {
+  .account-row {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
   .settings-container {
     padding: 1.25rem;
   }

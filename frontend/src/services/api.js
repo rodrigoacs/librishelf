@@ -62,6 +62,34 @@ export default {
   },
 
   /** Qualquer combinação de { isPublic, showInCommunity, showActivity }. */
+  changeEmail(email, password, locale) {
+    return client.patch('/auth/me/email', { email, password, locale })
+  },
+
+  changeUsername(username, password) {
+    return client.patch('/auth/me/username', { username, password })
+  },
+
+  /** Baixa a exportação ('json' ou 'csv') como Blob, com o nome de arquivo do servidor. */
+  async exportData(format = 'json') {
+    const response = await fetch(`${API_URL}/auth/me/export?format=${format}`, { credentials: 'include' })
+    if (!response.ok) {
+      let message = 'Não foi possível exportar.'
+      try { message = (await response.json()).error || message } catch { /* corpo vazio */ }
+      throw new Error(message)
+    }
+    const disposition = response.headers.get('Content-Disposition') || ''
+    const filename = disposition.match(/filename="([^"]+)"/)?.[1] || `librishelf.${format}`
+    return { blob: await response.blob(), filename }
+  },
+
+  /** Importa um CSV do Goodreads ou do Librishelf. */
+  importBooks(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return client.post('/library/import', formData)
+  },
+
   setPrivacy(settings) {
     return client.patch('/auth/me/visibility', settings)
   },

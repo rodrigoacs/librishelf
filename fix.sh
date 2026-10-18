@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  Librishelf — pacote 3 do backlog: organização
+#  Librishelf — pacote 4 do backlog: conta
 #
-#  1. Série e volume (ex.: "Duna #2"): no cadastro, na edição, no card, na lista,
-#     filtro por série (o nome no livro vira link) e ordenação "Série e volume"
-#  2. Anotação pessoal em cada livro (até 5.000 caracteres, só o dono vê — nunca
-#     sai na biblioteca pública)
-#  3. Ações em lote na biblioteca: selecionar vários (grade ou lista) e mudar o
-#     status, adicionar/remover categoria ou excluir
-#  4. Autores, Editoras e Categorias: ordenar por A–Z / mais livros / mais lidos,
-#     barra de lidos/total, renomear e mesclar nomes repetidos
+#  1. Exportar todos os dados: JSON completo (conta, metas, livros com
+#     anotações) ou CSV dos livros (abre no Excel e pode ser importado de volta)
+#  2. Importar do Goodreads (ou de um CSV exportado do Librishelf): status,
+#     notas, datas, prateleiras → categorias, série do título "Livro (Série, #2)",
+#     anotações; pula o que já está na estante e aponta a linha com problema
+#  3. Trocar e-mail (pede a senha, o novo precisa ser confirmado e o antigo
+#     recebe um aviso por e-mail) e trocar nome de usuário (pede a senha)
+#  4. Política de privacidade: direito de cópia agora é feito pelo próprio app
 #
-#  Migration 006 (series, notes). Precisa do pacote 2 commitado.
+#  Sem migration. Precisa do pacote 3 commitado.
 #
-#  Uso:   bash librishelf-pacote3-organizacao.sh [caminho/do/repo]
+#  Uso:   bash librishelf-pacote4-conta.sh [caminho/do/repo]
 #
 #  NÃO commita, NÃO faz push e NÃO mexe no banco.
 # =============================================================================
@@ -29,680 +29,401 @@ cd "${1:-$PWD}" || fail "Pasta não encontrada."
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "Não é um repositório git: $PWD"
 cd "$(git rev-parse --show-toplevel)"
 [ -f frontend/src/components/GeneratedCover.vue ] || fail "Faltam as cores v2: rode o librishelf-cores-v2.sh e commite antes deste pacote."
-[ -e backend/db/migrations/005_reading_status_and_goals.sql ] || fail "Falta o pacote anterior (backend/db/migrations/005_reading_status_and_goals.sql não existe): aplique e commite os pacotes em ordem."
+[ -e backend/db/migrations/006_series_and_notes.sql ] || fail "Falta o pacote anterior (backend/db/migrations/006_series_and_notes.sql não existe): aplique e commite os pacotes em ordem."
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 PATCH="$TMP_DIR/pacote.patch"
 
 cat > "$PATCH" <<'LIBRI_PATCH_EOF'
-diff --git a/backend/db/migrations/006_series_and_notes.sql b/backend/db/migrations/006_series_and_notes.sql
-new file mode 100644
-index 0000000..cbd6968
---- /dev/null
-+++ b/backend/db/migrations/006_series_and_notes.sql
-@@ -0,0 +1,27 @@
-+-- 006 — série/volume e anotação pessoal
-+-- Idempotente: pode rodar mais de uma vez.
-+
-+-- Nome da série ("Duna"). O número do volume usa a coluna series_index, que
-+-- já existia (real: aceita 1.5 para contos entre volumes).
-+ALTER TABLE librishelf.books ADD COLUMN IF NOT EXISTS series text;
-+
-+-- Anotação pessoal: só o dono vê (nunca sai na biblioteca pública).
-+ALTER TABLE librishelf.books ADD COLUMN IF NOT EXISTS notes text;
-+
-+DO $$
-+BEGIN
-+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'books_series_length_check' AND conrelid = 'librishelf.books'::regclass) THEN
-+    ALTER TABLE librishelf.books ADD CONSTRAINT books_series_length_check CHECK (char_length(series) <= 200);
-+  END IF;
-+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'books_notes_length_check' AND conrelid = 'librishelf.books'::regclass) THEN
-+    ALTER TABLE librishelf.books ADD CONSTRAINT books_notes_length_check CHECK (char_length(notes) <= 5000);
-+  END IF;
-+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'books_series_index_check' AND conrelid = 'librishelf.books'::regclass) THEN
-+    ALTER TABLE librishelf.books ADD CONSTRAINT books_series_index_check CHECK (series_index IS NULL OR (series_index >= 0 AND series_index <= 9999)) NOT VALID; -- dados antigos não são revalidados
-+  END IF;
-+END $$;
-+
-+-- Filtro e lista de séries do usuário.
-+CREATE INDEX IF NOT EXISTS idx_books_user_series
-+  ON librishelf.books (user_id, lower(series))
-+  WHERE series IS NOT NULL;
-diff --git a/backend/db/schema.sql b/backend/db/schema.sql
-index 169fd4d..03f297b 100644
---- a/backend/db/schema.sql
-+++ b/backend/db/schema.sql
-@@ -1215,3 +1215,35 @@ CREATE TABLE IF NOT EXISTS librishelf.reading_goals (
- INSERT INTO librishelf.schema_migrations (version)
- VALUES ('005_reading_status_and_goals')
- ON CONFLICT (version) DO NOTHING;
-+
-+-- ===========================================================================
-+-- 006 — série/volume e anotação pessoal
-+-- ===========================================================================
-+-- Nome da série ("Duna"). O número do volume usa a coluna series_index, que
-+-- já existia (real: aceita 1.5 para contos entre volumes).
-+ALTER TABLE librishelf.books ADD COLUMN IF NOT EXISTS series text;
-+
-+-- Anotação pessoal: só o dono vê (nunca sai na biblioteca pública).
-+ALTER TABLE librishelf.books ADD COLUMN IF NOT EXISTS notes text;
-+
-+DO $$
-+BEGIN
-+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'books_series_length_check' AND conrelid = 'librishelf.books'::regclass) THEN
-+    ALTER TABLE librishelf.books ADD CONSTRAINT books_series_length_check CHECK (char_length(series) <= 200);
-+  END IF;
-+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'books_notes_length_check' AND conrelid = 'librishelf.books'::regclass) THEN
-+    ALTER TABLE librishelf.books ADD CONSTRAINT books_notes_length_check CHECK (char_length(notes) <= 5000);
-+  END IF;
-+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'books_series_index_check' AND conrelid = 'librishelf.books'::regclass) THEN
-+    ALTER TABLE librishelf.books ADD CONSTRAINT books_series_index_check CHECK (series_index IS NULL OR (series_index >= 0 AND series_index <= 9999)) NOT VALID; -- dados antigos não são revalidados
-+  END IF;
-+END $$;
-+
-+-- Filtro e lista de séries do usuário.
-+CREATE INDEX IF NOT EXISTS idx_books_user_series
-+  ON librishelf.books (user_id, lower(series))
-+  WHERE series IS NOT NULL;
-+
-+INSERT INTO librishelf.schema_migrations (version)
-+VALUES ('006_series_and_notes')
-+ON CONFLICT (version) DO NOTHING;
 diff --git a/backend/src/database/queries.js b/backend/src/database/queries.js
-index b63371e..7669ae9 100644
+index 7669ae9..53f36a4 100644
 --- a/backend/src/database/queries.js
 +++ b/backend/src/database/queries.js
-@@ -36,6 +36,8 @@ export const LIBRARY_QUERIES = {
-       b.read_date,
-       b.reading_status,
-       b.started_at,
-+      b.series,
-+      b.series_index,
-       b.publication_date
-     FROM
-       librishelf.books AS b
-@@ -56,6 +58,9 @@ export const LIBRARY_QUERIES = {
-       b.read_date,
-       b.reading_status,
-       b.started_at,
+@@ -213,6 +213,19 @@ export const AUTH_QUERIES = {
+     FROM librishelf.users
+     WHERE lower(email) = lower($1) AND is_active IS NOT FALSE
+   `,
++  EMAIL_TAKEN: 'SELECT 1 FROM librishelf.users WHERE lower(email) = lower($1) AND id <> $2',
++  NAME_TAKEN: 'SELECT 1 FROM librishelf.users WHERE lower(name) = lower($1) AND id <> $2',
++  // E-mail novo começa sem confirmação.
++  UPDATE_EMAIL: `
++    UPDATE librishelf.users SET email = $2, email_verified_at = NULL, updated_at = now()
++    WHERE id = $1
++    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity
++  `,
++  UPDATE_NAME: `
++    UPDATE librishelf.users SET name = $2, updated_at = now()
++    WHERE id = $1
++    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity
++  `,
+   MARK_EMAIL_VERIFIED: `
+     UPDATE librishelf.users
+     SET email_verified_at = COALESCE(email_verified_at, now()), updated_at = now()
+@@ -467,6 +480,56 @@ export const COMMUNITY_QUERIES = {
+   `
+ }
+ 
++// Exportar / importar dados da conta.
++export const DATA_QUERIES = {
++  EXPORT_USER: `
++    SELECT name, email, to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at,
++           is_public, show_in_community, show_activity,
++           email_verified_at IS NOT NULL AS email_verified
++    FROM librishelf.users WHERE id = $1
++  `,
++  EXPORT_GOALS: 'SELECT year, target FROM librishelf.reading_goals WHERE user_id = $1 ORDER BY year',
++  EXPORT_BOOKS: `
++    SELECT
++      b.id,
++      b.title,
++      COALESCE((SELECT json_agg(a.name ORDER BY bal.position, a.id)
++        FROM librishelf.books_authors_link bal JOIN librishelf.authors a ON a.id = bal.author_id
++        WHERE bal.book_id = b.id), '[]'::json) AS authors,
++      p.name AS publisher,
++      COALESCE((SELECT json_agg(t.name ORDER BY t.name)
++        FROM librishelf.books_tags_link btl JOIN librishelf.tags t ON t.id = btl.tag_id
++        WHERE btl.book_id = b.id), '[]'::json) AS tags,
++      b.isbn,
++      b.rating,
++      CASE
++        WHEN b.reading_status = 'reading' THEN 'reading'
++        WHEN b.read_date IS NOT NULL THEN 'read'
++        WHEN b.reading_status = 'want' THEN 'want'
++        ELSE 'none'
++      END AS status,
++      to_char(b.read_date, 'YYYY-MM-DD') AS read_date,
++      to_char(b.started_at, 'YYYY-MM-DD') AS started_at,
++      to_char(b.publication_date, 'YYYY-MM-DD') AS publication_date,
 +      b.series,
 +      b.series_index,
 +      b.notes,
-       b.publication_date,
-       p.name AS publisher_name, -- O Frontend procura por .publisher_name
-       (SELECT STRING_AGG(a.name, ', ' ORDER BY bal.position, a.id)
-@@ -112,6 +117,59 @@ export const LIBRARY_QUERIES = {
-     WHERE id = $4
-     RETURNING reading_status, to_char(started_at, 'YYYY-MM-DD') AS started_at, to_char(read_date, 'YYYY-MM-DD') AS read_date
-   `,
-+  UPDATE_EXTRAS: 'UPDATE librishelf.books SET series = $1, series_index = $2, notes = $3 WHERE id = $4',
-+  GET_EXTRAS: 'SELECT series, series_index, notes FROM librishelf.books WHERE id = $1',
-+  SERIES_BY_USER: `
-+    SELECT min(series) AS name, COUNT(*)::int AS count,
-+           COUNT(*) FILTER (WHERE read_date IS NOT NULL)::int AS read
-+    FROM librishelf.books
-+    WHERE user_id = $1 AND series IS NOT NULL
-+    GROUP BY lower(series)
-+    ORDER BY lower(min(series))
++      to_char(b.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS added_at
++    FROM librishelf.books b
++    LEFT JOIN librishelf.publishers p ON p.id = b.publisher_id
++    WHERE b.user_id = $1
++    ORDER BY b.id
 +  `,
-+  OWNED_IDS: 'SELECT id FROM librishelf.books WHERE user_id = $1 AND id = ANY($2::int[])',
-+  // Ações em lote (ids já conferidos como do usuário).
-+  BATCH_STATUS_READ: `
-+    UPDATE librishelf.books SET read_date = COALESCE(read_date, $2::timestamp), reading_status = NULL, last_modified = now()
-+    WHERE id = ANY($1::int[])
-+  `,
-+  BATCH_STATUS_READING: `
-+    UPDATE librishelf.books
-+    SET started_at = CASE WHEN reading_status = 'reading' AND started_at IS NOT NULL THEN started_at ELSE $2::timestamp END,
-+        reading_status = 'reading', last_modified = now()
-+    WHERE id = ANY($1::int[])
-+  `,
-+  BATCH_STATUS_WANT: `
-+    UPDATE librishelf.books SET reading_status = 'want', started_at = NULL, read_date = NULL, last_modified = now()
-+    WHERE id = ANY($1::int[])
-+  `,
-+  BATCH_STATUS_NONE: `
-+    UPDATE librishelf.books SET reading_status = NULL, started_at = NULL, read_date = NULL, last_modified = now()
-+    WHERE id = ANY($1::int[])
-+  `,
-+  ENSURE_TAG: `
-+    WITH ins AS (
-+      INSERT INTO librishelf.tags (name, user_id) VALUES ($1, $2)
-+      ON CONFLICT (user_id, (lower(name))) DO NOTHING
-+      RETURNING id
-+    )
-+    SELECT id FROM ins
-+    UNION ALL
-+    SELECT id FROM librishelf.tags WHERE user_id = $2 AND lower(name) = lower($1)
-+    LIMIT 1
-+  `,
-+  BATCH_ADD_TAG: `
-+    INSERT INTO librishelf.books_tags_link (book_id, tag_id)
-+    SELECT unnest($1::int[]), $2
-+    ON CONFLICT (book_id, tag_id) DO NOTHING
-+  `,
-+  BATCH_REMOVE_TAG: `
-+    DELETE FROM librishelf.books_tags_link btl
-+    USING librishelf.tags t
-+    WHERE btl.tag_id = t.id AND t.user_id = $2 AND lower(t.name) = lower($3)
-+      AND btl.book_id = ANY($1::int[])
-+  `,
-+  BATCH_DELETE: 'DELETE FROM librishelf.books WHERE id = ANY($1::int[])',
-   // Editar a data de leitura no formulário também tira de "Quero ler".
-   CLEAR_WANT_IF_READ: `
-     UPDATE librishelf.books SET reading_status = NULL
-@@ -200,7 +258,8 @@ export const AUTH_QUERIES = {
- 
- export const AUTHOR_QUERIES = {
-   GET_AUTHORS_BY_USER: `
--    SELECT a.name, COUNT(DISTINCT b.id)::int AS count
-+    SELECT a.name, COUNT(DISTINCT b.id)::int AS count,
-+           COUNT(DISTINCT b.id) FILTER (WHERE b.read_date IS NOT NULL)::int AS read
-     FROM librishelf.authors a
-     JOIN librishelf.books_authors_link bal ON a.id = bal.author_id
-     JOIN librishelf.books b ON b.id = bal.book_id
-@@ -222,7 +281,8 @@ export const AUTHOR_QUERIES = {
- 
- export const PUBLISHER_QUERIES = {
-   GET_PUBLISHERS_BY_USER: `
--    SELECT p.name, COUNT(DISTINCT b.id)::int AS count
-+    SELECT p.name, COUNT(DISTINCT b.id)::int AS count,
-+           COUNT(DISTINCT b.id) FILTER (WHERE b.read_date IS NOT NULL)::int AS read
-     FROM librishelf.publishers p
-     JOIN librishelf.books b ON b.publisher_id = p.id
-     WHERE p.user_id = $1
-@@ -243,7 +303,8 @@ export const PUBLISHER_QUERIES = {
- 
- export const TAG_QUERIES = {
-   GET_TAGS_BY_USER: `
--    SELECT t.name, COUNT(DISTINCT b.id)::int AS count
-+    SELECT t.name, COUNT(DISTINCT b.id)::int AS count,
-+           COUNT(DISTINCT b.id) FILTER (WHERE b.read_date IS NOT NULL)::int AS read
-     FROM librishelf.tags t
-     JOIN librishelf.books_tags_link btl ON t.id = btl.tag_id
-     JOIN librishelf.books b ON b.id = btl.book_id
-diff --git a/backend/src/repositories/libraryRepository.js b/backend/src/repositories/libraryRepository.js
-index c7a6278..551e5f7 100644
---- a/backend/src/repositories/libraryRepository.js
-+++ b/backend/src/repositories/libraryRepository.js
-@@ -25,6 +25,7 @@ async function getAllBooksByUser(userId, filters = {}) {
-     readState,
-     readYear,
-     readMonth,
-+    series,
-     author,
-     publisher,
-     tags,
-@@ -69,6 +70,7 @@ async function getAllBooksByUser(userId, filters = {}) {
-     query += ` AND (
-       b.title ILIKE $${paramIndex}
-       OR b.isbn ILIKE $${paramIndex}
-+      OR b.series ILIKE $${paramIndex}
-       OR EXISTS (
-         SELECT 1 FROM librishelf.books_authors_link bal_s
-         JOIN librishelf.authors a_s ON bal_s.author_id = a_s.id
-@@ -108,6 +110,12 @@ async function getAllBooksByUser(userId, filters = {}) {
-     paramIndex++
-   }
- 
-+  if (series) {
-+    query += ` AND lower(b.series) = lower($${paramIndex})`
-+    params.push(series)
-+    paramIndex++
-+  }
-+
-   // Livros com ISBN preenchido que não passa na validação (para o usuário corrigir).
-   if (isbnStatus === 'invalid') {
-     query += ` AND b.isbn IS NOT NULL AND btrim(b.isbn) <> '' AND b.isbn13 IS NULL`
-@@ -126,7 +134,12 @@ async function getAllBooksByUser(userId, filters = {}) {
-   const dbSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
- 
-   // Sem nota/data vai para o fim nas duas direções; b.id desempata (paginação estável).
--  query += ` ORDER BY ${dbSortField} ${dbSortOrder} NULLS LAST, b.id ${dbSortOrder}`
-+  if (sortField === 'series') {
-+    // Série em ordem e, dentro dela, pelo número do volume.
-+    query += ` ORDER BY lower(b.series) ${dbSortOrder} NULLS LAST, b.series_index ${dbSortOrder} NULLS LAST, b.id ${dbSortOrder}`
-+  } else {
-+    query += ` ORDER BY ${dbSortField} ${dbSortOrder} NULLS LAST, b.id ${dbSortOrder}`
-+  }
- 
-   const { page: pageVal, limit: limitVal, offset } = resolvePagination(page, limit)
- 
-@@ -238,6 +251,55 @@ async function clearWantIfRead(bookId) {
-   await db.query(q.CLEAR_WANT_IF_READ, [bookId])
- }
- 
-+async function updateExtras(bookId, { series, seriesIndex, notes }) {
-+  await db.query(q.UPDATE_EXTRAS, [series, seriesIndex, notes, bookId])
++  // Para não importar o mesmo livro duas vezes.
++  EXISTING_KEYS: `
++    SELECT b.isbn13, lower(b.title) AS title,
++           (SELECT lower(a.name) FROM librishelf.books_authors_link bal
++              JOIN librishelf.authors a ON a.id = bal.author_id
++            WHERE bal.book_id = b.id ORDER BY bal.position, a.id LIMIT 1) AS author
++    FROM librishelf.books b WHERE b.user_id = $1
++  `
 +}
 +
-+async function getExtras(bookId) {
-+  const result = await db.query(q.GET_EXTRAS, [bookId])
+ export const GOAL_QUERIES = {
+   UPSERT: `
+     INSERT INTO librishelf.reading_goals (user_id, year, target)
+diff --git a/backend/src/repositories/authRepository.js b/backend/src/repositories/authRepository.js
+index f54eebf..1d671c6 100644
+--- a/backend/src/repositories/authRepository.js
++++ b/backend/src/repositories/authRepository.js
+@@ -74,7 +74,32 @@ async function deleteUser(id) {
+   }
+ }
+ 
++/** Outro usuário já usa este e-mail ou nome (sem diferenciar maiúsculas)? */
++async function isEmailTaken(email, exceptId) {
++  const result = await db.query(q.EMAIL_TAKEN, [email, exceptId])
++  return result.rowCount > 0
++}
++
++async function isNameTaken(name, exceptId) {
++  const result = await db.query(q.NAME_TAKEN, [name, exceptId])
++  return result.rowCount > 0
++}
++
++async function updateEmail(id, email) {
++  const result = await db.query(q.UPDATE_EMAIL, [id, email])
 +  return result.rows[0] ?? null
 +}
 +
-+async function getSeriesByUser(userId) {
-+  const result = await db.query(q.SERIES_BY_USER, [userId])
-+  return result.rows
-+}
-+
-+async function filterOwnedIds(userId, ids) {
-+  const result = await db.query(q.OWNED_IDS, [userId, ids])
-+  return result.rows.map(row => row.id)
-+}
-+
-+const BATCH_STATUS_QUERY = {
-+  read: q.BATCH_STATUS_READ,
-+  reading: q.BATCH_STATUS_READING,
-+  want: q.BATCH_STATUS_WANT,
-+  none: q.BATCH_STATUS_NONE
-+}
-+
-+async function batchSetStatus(ids, status, date) {
-+  const sql = BATCH_STATUS_QUERY[status]
-+  const params = status === 'read' || status === 'reading' ? [ids, date] : [ids]
-+  const result = await db.query(sql, params)
-+  return result.rowCount
-+}
-+
-+async function batchAddTag(userId, ids, tagName) {
-+  const { rows } = await db.query(q.ENSURE_TAG, [tagName, userId])
-+  const result = await db.query(q.BATCH_ADD_TAG, [ids, rows[0].id])
-+  return result.rowCount
-+}
-+
-+async function batchRemoveTag(userId, ids, tagName) {
-+  const result = await db.query(q.BATCH_REMOVE_TAG, [ids, userId, tagName])
-+  return result.rowCount
-+}
-+
-+async function batchDelete(ids) {
-+  const result = await db.query(q.BATCH_DELETE, [ids])
-+  return result.rowCount
-+}
-+
- async function pruneUserNames(userId) {
-   await db.query(q.PRUNE_USER_NAMES, [userId])
- }
-@@ -261,5 +323,13 @@ export {
-   updateRating,
-   setReadingStatus,
-   clearWantIfRead,
-+  updateExtras,
-+  getExtras,
-+  getSeriesByUser,
-+  filterOwnedIds,
-+  batchSetStatus,
-+  batchAddTag,
-+  batchRemoveTag,
-+  batchDelete,
-   pruneUserNames
- }
-\ No newline at end of file
-diff --git a/backend/src/routes/author.js b/backend/src/routes/author.js
-index af65fd6..1ebd584 100644
---- a/backend/src/routes/author.js
-+++ b/backend/src/routes/author.js
-@@ -2,6 +2,7 @@ import express from 'express'
- import * as authorService from '../services/authorService.js'
- import { authenticateToken } from '../middlewares/auth.js'
- import STATUS from '../utils/statusCodes.js'
-+import { mergeNames } from '../services/namesService.js'
- import sendError from '../utils/sendError.js'
- 
- const router = express.Router()
-@@ -21,4 +22,13 @@ router.get('/', async (req, res) => {
-   }
- })
- 
-+// Renomear (um nome em "from") ou mesclar vários num só: { from: [...], to: '...' }
-+router.post('/merge', async (req, res) => {
-+  try {
-+    res.status(STATUS.OK).json(await mergeNames('author', req.user.id, req.body ?? {}))
-+  } catch (error) {
-+    sendError(res, error, 'Erro ao renomear/mesclar')
-+  }
-+})
-+
- export default router
-\ No newline at end of file
-diff --git a/backend/src/routes/library.js b/backend/src/routes/library.js
-index 787fbb8..64c3d6d 100644
---- a/backend/src/routes/library.js
-+++ b/backend/src/routes/library.js
-@@ -113,6 +113,24 @@ router.get('/', async (req, res) => {
-   }
- })
- 
-+// Séries do usuário (filtro e autocompletar). Antes de '/:id'.
-+router.get('/series', async (req, res) => {
-+  try {
-+    res.status(STATUS.OK).json(await libraryService.getSeries(req.user.id))
-+  } catch (error) {
-+    sendError(res, error, 'Erro ao listar séries')
-+  }
-+})
-+
-+// Ações em lote: { ids: [1, 2], action: 'status' | 'addTag' | 'removeTag' | 'delete', ... }
-+router.post('/batch', async (req, res) => {
-+  try {
-+    res.status(STATUS.OK).json(await libraryService.batchUpdate(req.user.id, req.body ?? {}))
-+  } catch (error) {
-+    sendError(res, error, 'Erro na ação em lote')
-+  }
-+})
-+
- router.get('/:id', validateNumericId(), async (req, res) => {
-   try {
-     const { id } = req.params
-diff --git a/backend/src/routes/publisher.js b/backend/src/routes/publisher.js
-index 42d03ea..b96b3a9 100644
---- a/backend/src/routes/publisher.js
-+++ b/backend/src/routes/publisher.js
-@@ -2,6 +2,7 @@ import * as publisherService from '../services/publisherService.js'
- import { authenticateToken } from '../middlewares/auth.js'
- import express from 'express'
- import STATUS from '../utils/statusCodes.js'
-+import { mergeNames } from '../services/namesService.js'
- import sendError from '../utils/sendError.js'
- 
- const router = express.Router()
-@@ -21,4 +22,13 @@ router.get('/', async (req, res) => {
-   }
- })
- 
-+// Renomear (um nome em "from") ou mesclar vários num só: { from: [...], to: '...' }
-+router.post('/merge', async (req, res) => {
-+  try {
-+    res.status(STATUS.OK).json(await mergeNames('publisher', req.user.id, req.body ?? {}))
-+  } catch (error) {
-+    sendError(res, error, 'Erro ao renomear/mesclar')
-+  }
-+})
-+
- export default router
-\ No newline at end of file
-diff --git a/backend/src/routes/tags.js b/backend/src/routes/tags.js
-index a603641..2a1191f 100644
---- a/backend/src/routes/tags.js
-+++ b/backend/src/routes/tags.js
-@@ -2,6 +2,7 @@ import express from 'express'
- import * as tagService from '../services/tagService.js'
- import { authenticateToken } from '../middlewares/auth.js'
- import STATUS from '../utils/statusCodes.js'
-+import { mergeNames } from '../services/namesService.js'
- import sendError from '../utils/sendError.js'
- 
- const router = express.Router()
-@@ -18,4 +19,13 @@ router.get('/', async (req, res) => {
-   }
- })
- 
-+// Renomear (um nome em "from") ou mesclar vários num só: { from: [...], to: '...' }
-+router.post('/merge', async (req, res) => {
-+  try {
-+    res.status(STATUS.OK).json(await mergeNames('tag', req.user.id, req.body ?? {}))
-+  } catch (error) {
-+    sendError(res, error, 'Erro ao renomear/mesclar')
-+  }
-+})
-+
- export default router
-\ No newline at end of file
-diff --git a/backend/src/scripts/seed.js b/backend/src/scripts/seed.js
-index 47aef98..e1a391a 100644
---- a/backend/src/scripts/seed.js
-+++ b/backend/src/scripts/seed.js
-@@ -454,6 +454,26 @@ async function insertReadingStatusAndGoals() {
-   `)
- }
- 
-+/** Série a partir de títulos como "X: Volume 3" e algumas anotações. */
-+async function insertSeriesAndNotes() {
-+  await db.query(`
-+    UPDATE librishelf.books
-+    SET series = regexp_replace(title, ':\\s*Volume \\d+$', ''),
-+        series_index = substring(title from 'Volume (\\d+)$')::real
-+    WHERE title ~ ':\\s*Volume \\d+$'
-+  `)
-+  await db.query(`
-+    UPDATE librishelf.books
-+    SET notes = (ARRAY[
-+      'Comprei num sebo em Ouro Preto.',
-+      'Emprestado para a Júlia em março.',
-+      E'Parei no capítulo 7.\\nRetomar com calma.',
-+      'Final melhor que o começo.'
-+    ])[1 + (id % 4)]
-+    WHERE id % 11 = 0
-+  `)
-+}
-+
- async function insertFollows(users) {
-   const byName = new Map(users.map(user => [user.name, user]))
-   const pairs = new Map()
-@@ -579,6 +599,7 @@ async function main() {
-   await insertUsers(users)
-   const books = await insertBooks(users, catalog)
-   await insertReadingStatusAndGoals()
-+  await insertSeriesAndNotes()
-   const follows = await insertFollows(users)
-   const covers = CONFIG.covers ? await generateCovers(catalog) : 0
- 
-diff --git a/backend/src/services/libraryService.js b/backend/src/services/libraryService.js
-index 71676b5..9f3e90d 100644
---- a/backend/src/services/libraryService.js
-+++ b/backend/src/services/libraryService.js
-@@ -2,6 +2,7 @@ import * as libraryRepository from '../repositories/libraryRepository.js'
- import * as authRepository from '../repositories/authRepository.js'
- import STATUS from '../utils/statusCodes.js'
- import { deleteBookCover } from '../utils/imageProcessor.js'
-+import logger from '../utils/logger.js'
- import { parseNameList, parseTagList, validateNameList } from '../utils/nameList.js'
- 
- const READ_YEAR_PATTERN = /^\d{4}$/
-@@ -68,6 +69,39 @@ function normalizeReadMonth(value) {
-   return month
- }
- 
-+const MAX_SERIES_LENGTH = 200
-+const MAX_NOTES_LENGTH = 5000
-+
-+function normalizeSeries(value) {
-+  if (value === undefined || value === null) return null
-+  if (typeof value !== 'string') throw httpError("'series' precisa ser texto.", STATUS.BAD_REQUEST)
-+  const series = value.trim().replace(/\s+/g, ' ')
-+  if (series.length > MAX_SERIES_LENGTH) {
-+    throw httpError(`O nome da série pode ter até ${MAX_SERIES_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
-+  }
-+  return series || null
-+}
-+
-+// Volume: 1, 2, 3… e também 1.5 (conto entre volumes). Vírgula decimal vale.
-+function normalizeSeriesIndex(value) {
-+  if (value === undefined || value === null || value === '') return null
-+  const number = Number(String(value).replace(',', '.'))
-+  if (!Number.isFinite(number) || number < 0 || number > 9999) {
-+    throw httpError('O volume precisa ser um número de 0 a 9999.', STATUS.BAD_REQUEST)
-+  }
-+  return Math.round(number * 100) / 100
-+}
-+
-+function normalizeNotes(value) {
-+  if (value === undefined || value === null) return null
-+  if (typeof value !== 'string') throw httpError("'notes' precisa ser texto.", STATUS.BAD_REQUEST)
-+  const notes = value.replace(/\r\n/g, '\n').trim()
-+  if (notes.length > MAX_NOTES_LENGTH) {
-+    throw httpError(`A anotação pode ter até ${MAX_NOTES_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
-+  }
-+  return notes || null
-+}
-+
- function normalizeReadYear(readYear) {
-   if (readYear === undefined || readYear === null || readYear === '' || readYear === 'all') return 'all'
- 
-@@ -103,7 +137,11 @@ async function getPublicBook(username, bookId) {
-   const user = await authRepository.getUserByName(username)
-   if (!user || !user.is_public) return null
- 
--  return await libraryRepository.getBookByIdForUser(bookId, user.id)
-+  const book = await libraryRepository.getBookByIdForUser(bookId, user.id)
-+  if (!book) return null
-+  // A anotação é só do dono.
-+  const { notes, ...publicBook } = book
-+  return publicBook
- }
- 
- async function getAllBooksByUser(userId, query) {
-@@ -112,6 +150,7 @@ async function getAllBooksByUser(userId, query) {
-     readState: normalizeReadState(query.readState),
-     readYear: normalizeReadYear(query.readYear),
-     readMonth: normalizeReadMonth(query.readMonth),
-+    series: typeof query.series === 'string' && query.series.trim() ? query.series.trim() : undefined,
-     author: query.author || undefined,
-     publisher: query.publisher || undefined,
-     tags: query.tags || undefined,
-@@ -185,7 +224,10 @@ function normalizeBookInput(raw = {}) {
-     readDate: normalizeReadDate(raw.readDate),
-     rating: normalizeRating(raw.rating),
-     olWorkKey: normalizeOlKey(raw.olWorkKey, OL_WORK_KEY, 'olWorkKey'),
--    olEditionKey: normalizeOlKey(raw.olEditionKey, OL_EDITION_KEY, 'olEditionKey')
-+    olEditionKey: normalizeOlKey(raw.olEditionKey, OL_EDITION_KEY, 'olEditionKey'),
-+    series: normalizeSeries(raw.series),
-+    seriesIndex: normalizeSeriesIndex(raw.seriesIndex),
-+    notes: normalizeNotes(raw.notes)
-   }
- }
- 
-@@ -202,7 +244,11 @@ async function addNewBook(bookData) {
-     }
-   }
- 
--  return await libraryRepository.createBook(bookData)
-+  const bookId = await libraryRepository.createBook(bookData)
-+  if (bookData.series || bookData.seriesIndex !== null || bookData.notes) {
-+    await libraryRepository.updateExtras(bookId, bookData)
-+  }
-+  return bookId
- }
- 
- async function updateBookDetails(bookId, userId, rawBook) {
-@@ -219,6 +265,15 @@ async function updateBookDetails(bookId, userId, rawBook) {
- 
-   await libraryRepository.updateBook(bookId, input)
-   if (input.readDate) await libraryRepository.clearWantIfRead(bookId)
-+
-+  // Série, volume e anotação: campo que não veio (cliente antigo) fica como estava.
-+  const body = rawBook ?? {}
-+  const current = await libraryRepository.getExtras(bookId)
-+  await libraryRepository.updateExtras(bookId, {
-+    series: Object.hasOwn(body, 'series') ? input.series : current?.series ?? null,
-+    seriesIndex: Object.hasOwn(body, 'seriesIndex') ? input.seriesIndex : current?.series_index ?? null,
-+    notes: Object.hasOwn(body, 'notes') ? input.notes : current?.notes ?? null
-+  })
-   return true
- }
- 
-@@ -313,6 +368,66 @@ async function setReadingStatus(bookId, userId, rawStatus, rawDate) {
-   }
- }
- 
-+async function getSeries(userId) {
-+  return await libraryRepository.getSeriesByUser(userId)
-+}
-+
-+const MAX_BATCH = 500
-+const BATCH_ACTIONS = ['status', 'addTag', 'removeTag', 'delete']
-+
-+/**
-+ * Ações em vários livros de uma vez: { ids, action, status?, date?, tag? }.
-+ * Todos os ids precisam ser do usuário; se algum não for, nada é feito (403).
-+ */
-+async function batchUpdate(userId, body = {}) {
-+  const { action } = body
-+  if (!BATCH_ACTIONS.includes(action)) {
-+    throw httpError("Ação inválida: use 'status', 'addTag', 'removeTag' ou 'delete'.", STATUS.BAD_REQUEST)
-+  }
-+
-+  const ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(Number))]
-+  if (ids.length === 0 || ids.length > MAX_BATCH || !ids.every(id => Number.isInteger(id) && id > 0 && id <= 2147483647)) {
-+    throw httpError(`Envie de 1 a ${MAX_BATCH} ids de livros válidos.`, STATUS.BAD_REQUEST)
-+  }
-+
-+  const owned = await libraryRepository.filterOwnedIds(userId, ids)
-+  if (owned.length !== ids.length) {
-+    throw httpError('Alguns livros não foram encontrados na sua biblioteca.', STATUS.FORBIDDEN)
-+  }
-+
-+  if (action === 'status') {
-+    const status = String(body.status ?? '')
-+    if (!READING_STATUSES.includes(status)) {
-+      throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST)
-+    }
-+    const date = normalizeReadDate(body.date) ?? new Date().toISOString().slice(0, 10)
-+    return { updated: await libraryRepository.batchSetStatus(ids, status, date) }
-+  }
-+
-+  if (action === 'addTag' || action === 'removeTag') {
-+    const [tag] = parseTagList(body.tag)
-+    const tagError = tag ? validateNameList([tag], 'tags') : 'Informe a categoria.'
-+    if (tagError) throw httpError(tagError, STATUS.BAD_REQUEST)
-+
-+    if (action === 'addTag') {
-+      return { updated: await libraryRepository.batchAddTag(userId, ids, tag) }
-+    }
-+    const updated = await libraryRepository.batchRemoveTag(userId, ids, tag)
-+    await libraryRepository.pruneUserNames(userId)
-+    return { updated }
-+  }
-+
-+  // delete
-+  const deleted = await libraryRepository.batchDelete(ids)
-+  await libraryRepository.pruneUserNames(userId)
-+  const failed = []
-+  for (const id of ids) {
-+    try { await deleteBookCover(id) } catch { failed.push(id) }
-+  }
-+  if (failed.length) logger.warn('Capas não removidas na exclusão em lote', { userId, failed })
-+  return { updated: deleted }
++async function updateName(id, name) {
++  const result = await db.query(q.UPDATE_NAME, [id, name])
++  return result.rows[0] ?? null
 +}
 +
  export {
-   getAllBooksByUser,
-   getBookById,
-@@ -326,6 +441,8 @@ export {
-   markBookAsRead,
-   markBookAsUnread,
-   setReadingStatus,
-+  getSeries,
-+  batchUpdate,
-   setRating,
-   getPublicLibraryByUsername,
-   normalizeDate,
-diff --git a/backend/src/services/namesService.js b/backend/src/services/namesService.js
-new file mode 100644
-index 0000000..90ae8e2
---- /dev/null
-+++ b/backend/src/services/namesService.js
-@@ -0,0 +1,99 @@
-+import { db } from '../database/connection.js'
-+import STATUS from '../utils/statusCodes.js'
-+import { parseNameList, parseTagList, validateNameList } from '../utils/nameList.js'
++  isEmailTaken,
++  isNameTaken,
++  updateEmail,
++  updateName,
+   getUserByUsername,
+   getUserByName,
+   getUserById,
+diff --git a/backend/src/routes/auth.js b/backend/src/routes/auth.js
+index 985b849..e178328 100644
+--- a/backend/src/routes/auth.js
++++ b/backend/src/routes/auth.js
+@@ -1,5 +1,6 @@
+ import express from 'express'
+ import * as authService from '../services/authService.js'
++import * as dataService from '../services/dataService.js'
+ import STATUS from '../utils/statusCodes.js'
+ import sendError from '../utils/sendError.js'
+ import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimiter } from '../middlewares/rateLimiter.js'
+@@ -120,6 +121,47 @@ router.post('/email/verify/resend', authenticateToken, mailLimiter, async (req,
+   }
+ })
+ 
++// Trocar e-mail: { email, password, locale } → o novo precisa ser confirmado.
++router.patch('/me/email', authenticateToken, sensitiveLimiter, async (req, res) => {
++  try {
++    const { email, password, locale } = req.body ?? {}
++    const user = await authService.changeEmail(req.user.id, password, email, locale)
++    res.status(STATUS.OK).json({ user })
++  } catch (error) {
++    sendError(res, error, 'Erro ao trocar e-mail')
++  }
++})
++
++// Trocar nome de usuário: { username, password }. Devolve sessão nova (o token leva o nome).
++router.patch('/me/username', authenticateToken, sensitiveLimiter, async (req, res) => {
++  try {
++    const { username, password } = req.body ?? {}
++    const result = await authService.changeUsername(req.user.id, password, username)
++    res.cookie(AUTH_COOKIE_NAME, result.token, authCookieOptions)
++    res.status(STATUS.OK).json({ user: result.user })
++  } catch (error) {
++    sendError(res, error, 'Erro ao trocar nome de usuário')
++  }
++})
++
++// Exportar todos os dados: ?format=json (padrão) ou csv (só os livros).
++router.get('/me/export', authenticateToken, sensitiveLimiter, async (req, res) => {
++  try {
++    const stamp = new Date().toISOString().slice(0, 10)
++    if (req.query.format === 'csv') {
++      const csv = await dataService.exportCsv(req.user.id)
++      res.setHeader('Content-Type', 'text/csv; charset=utf-8')
++      res.setHeader('Content-Disposition', `attachment; filename="librishelf-${stamp}.csv"`)
++      return res.status(STATUS.OK).send(csv)
++    }
++    const data = await dataService.exportJson(req.user.id)
++    res.setHeader('Content-Disposition', `attachment; filename="librishelf-${stamp}.json"`)
++    res.status(STATUS.OK).json(data)
++  } catch (error) {
++    sendError(res, error, 'Erro ao exportar dados')
++  }
++})
++
+ router.patch('/me/visibility', authenticateToken, async (req, res) => {
+   try {
+     const result = await authService.setPrivacy(req.user.id, req.body ?? {})
+diff --git a/backend/src/routes/library.js b/backend/src/routes/library.js
+index 64c3d6d..4d8feb7 100644
+--- a/backend/src/routes/library.js
++++ b/backend/src/routes/library.js
+@@ -3,6 +3,7 @@ import fs from 'fs/promises'
+ import path from 'path'
+ import multer from 'multer'
+ import * as libraryService from '../services/libraryService.js'
++import * as dataService from '../services/dataService.js'
+ import { authenticateToken, optionalAuth } from '../middlewares/auth.js'
+ import * as communityService from '../services/communityService.js'
+ import { fetchCover } from '../services/openLibraryService.js'
+@@ -27,12 +28,25 @@ const upload = multer({
+   }
+ })
+ 
++const MAX_CSV_MB = 5
++
++// Importação: um CSV (Goodreads ou Librishelf), em memória.
++const csvUpload = multer({
++  storage: multer.memoryStorage(),
++  limits: { fileSize: 1024 * 1024 * MAX_CSV_MB, files: 1 },
++  fileFilter: (req, file, cb) => {
++    const isCsv = /\.csv$/i.test(file.originalname) || /csv|excel|text\/plain/.test(file.mimetype)
++    if (!isCsv) return cb(new Error('Envie um arquivo .csv.'))
++    cb(null, true)
++  }
++})
++
+ function handleUpload(uploadMiddleware) {
+   return (req, res, next) => {
+     uploadMiddleware(req, res, (err) => {
+       if (err) {
+         const message = err.code === 'LIMIT_FILE_SIZE'
+-          ? `A imagem pode ter no máximo ${MAX_UPLOAD_MB} MB.`
++          ? (req.path.endsWith('/import') ? `O arquivo pode ter no máximo ${MAX_CSV_MB} MB.` : `A imagem pode ter no máximo ${MAX_UPLOAD_MB} MB.`)
+           : err.message
+         return res.status(STATUS.BAD_REQUEST).json({ error: message })
+       }
+@@ -122,6 +136,16 @@ router.get('/series', async (req, res) => {
+   }
+ })
+ 
++// Importar livros de um CSV (campo "file"): Goodreads ou o CSV exportado do Librishelf.
++router.post('/import', uploadLimiter, handleUpload(csvUpload.single('file')), async (req, res) => {
++  try {
++    const summary = await dataService.importCsv(req.user.id, req.file?.buffer)
++    res.status(STATUS.OK).json(summary)
++  } catch (error) {
++    sendError(res, error, 'Erro ao importar')
++  }
++})
++
+ // Ações em lote: { ids: [1, 2], action: 'status' | 'addTag' | 'removeTag' | 'delete', ... }
+ router.post('/batch', async (req, res) => {
+   try {
+diff --git a/backend/src/scripts/previewEmails.js b/backend/src/scripts/previewEmails.js
+index a97d575..a62522d 100644
+--- a/backend/src/scripts/previewEmails.js
++++ b/backend/src/scripts/previewEmails.js
+@@ -7,7 +7,7 @@
+ import fs from 'node:fs'
+ import os from 'node:os'
+ import path from 'node:path'
+-import { resetPasswordEmail, verifyEmailEmail } from '../services/emailTemplates.js'
++import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail } from '../services/emailTemplates.js'
+ 
+ const outDir = path.resolve(process.argv[2] || path.join(os.tmpdir(), 'librishelf-emails'))
+ fs.mkdirSync(outDir, { recursive: true })
+@@ -19,7 +19,8 @@ const emails = {
+   'verificar-pt': verifyEmailEmail({ name: 'Rodrigo', link: `${base}/verify-email?token=${token}`, locale: 'pt' }),
+   'verificar-en': verifyEmailEmail({ name: 'Rodrigo', link: `${base}/verify-email?token=${token}`, locale: 'en' }),
+   'senha-pt': resetPasswordEmail({ name: 'Rodrigo', link: `${base}/reset-password?token=${token}`, locale: 'pt' }),
+-  'senha-en': resetPasswordEmail({ name: 'Rodrigo', link: `${base}/reset-password?token=${token}`, locale: 'en' })
++  'senha-en': resetPasswordEmail({ name: 'Rodrigo', link: `${base}/reset-password?token=${token}`, locale: 'en' }),
++  'email-trocado-pt': emailChangedEmail({ name: 'Rodrigo', link: `${base}/forgot-password`, locale: 'pt', newEmail: 'ro•••@gmail.com' })
+ }
+ 
+ for (const [file, mail] of Object.entries(emails)) {
+diff --git a/backend/src/services/authService.js b/backend/src/services/authService.js
+index 33b9d5e..4583ca8 100644
+--- a/backend/src/services/authService.js
++++ b/backend/src/services/authService.js
+@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken'
+ import crypto from 'node:crypto'
+ import * as tokenRepository from '../repositories/tokenRepository.js'
+ import { sendMail } from './mailService.js'
+-import { resetPasswordEmail, verifyEmailEmail } from './emailTemplates.js'
++import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail } from './emailTemplates.js'
+ 
+ const SECRET_KEY = process.env.SECRET_KEY
+ const TOKEN_TTL = '7d'
+@@ -313,6 +313,90 @@ async function setPrivacy(userId, body = {}) {
+   }
+ }
+ 
++/** ro•••@gmail.com: o aviso ao e-mail antigo não entrega o endereço novo inteiro. */
++function maskEmail(email) {
++  const [local, domain] = String(email).split('@')
++  return `${local.slice(0, 2)}•••@${domain}`
++}
 +
 +/**
-+ * Renomear e mesclar autores, editoras e categorias (sempre do próprio usuário).
-+ *
-+ * POST /author/merge { from: ['Asimov', 'Isaac Asimov'], to: 'Isaac Asimov' }
-+ *
-+ * Um nome só em `from` = renomear. Se `to` já existe (sem diferenciar
-+ * maiúsculas), os livros passam para ele e os nomes de `from` somem: é a mesma
-+ * operação que mesclar. Tudo numa transação.
++ * Trocar o e-mail: pede a senha, o novo começa sem confirmação (recebe o link)
++ * e o endereço antigo recebe um aviso. Opções públicas já ligadas continuam;
++ * ligar de novo exige confirmar o e-mail novo.
 + */
-+const KINDS = {
-+  author: { table: 'authors', link: 'books_authors_link', column: 'author_id', label: 'autores', parse: parseNameList },
-+  tag: { table: 'tags', link: 'books_tags_link', column: 'tag_id', label: 'tags', parse: parseTagList },
-+  publisher: { table: 'publishers', label: 'editoras', parse: parseNameList }
++async function changeEmail(userId, password, newEmail, locale) {
++  await verifyCurrentPassword(userId, password)
++
++  const email = typeof newEmail === 'string' ? newEmail.trim() : ''
++  if (!EMAIL_PATTERN.test(email) || email.length > 254) {
++    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST)
++  }
++
++  const current = await authRepository.getUserById(userId)
++  if (!current) throw httpError('User not found.', STATUS.NOT_FOUND)
++  if (current.email.toLowerCase() === email.toLowerCase()) {
++    throw httpError('Este já é o seu e-mail.', STATUS.BAD_REQUEST)
++  }
++  if (await authRepository.isEmailTaken(email, userId)) {
++    throw httpError('Este e-mail já está em uso em outra conta.', STATUS.CONFLICT)
++  }
++
++  let updated
++  try {
++    updated = await authRepository.updateEmail(userId, email)
++  } catch (err) {
++    if (err.code === UNIQUE_VIOLATION) throw httpError('Este e-mail já está em uso em outra conta.', STATUS.CONFLICT)
++    throw err
++  }
++
++  try {
++    await deliverVerification(updated, locale)
++  } catch (err) {
++    logger.error('Falha ao enviar confirmação do e-mail novo', { userId, message: err.message })
++  }
++  try {
++    const notice = emailChangedEmail({ name: updated.name, link: `${appUrl()}/forgot-password`, locale, newEmail: maskEmail(email) })
++    await sendMail({ to: current.email, ...notice })
++  } catch (err) {
++    logger.error('Falha ao avisar o e-mail antigo', { userId, message: err.message })
++  }
++
++  logger.info('E-mail da conta trocado', { userId })
++  return toProfile(updated)
 +}
++
++/**
++ * Trocar o nome de usuário (também muda o link /u/<nome>). Mesmas regras do
++ * cadastro; não pode repetir o de outra pessoa nem com outras maiúsculas.
++ */
++async function changeUsername(userId, password, newName) {
++  await verifyCurrentPassword(userId, password)
++
++  const name = typeof newName === 'string' ? newName.trim() : ''
++  if (!name) throw httpError('Informe o novo nome de usuário.', STATUS.BAD_REQUEST)
++  if (name.length > MAX_USERNAME_LENGTH) {
++    throw httpError(`O usuário pode ter no máximo ${MAX_USERNAME_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
++  }
++  if (!USERNAME_PATTERN.test(name)) {
++    throw httpError('O usuário só pode ter letras, números, ponto, hífen e sublinhado.', STATUS.BAD_REQUEST)
++  }
++  if (await authRepository.isNameTaken(name, userId)) {
++    throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT)
++  }
++
++  let updated
++  try {
++    updated = await authRepository.updateName(userId, name)
++  } catch (err) {
++    if (err.code === UNIQUE_VIOLATION) throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT)
++    throw err
++  }
++  if (!updated) throw httpError('User not found.', STATUS.NOT_FOUND)
++
++  logger.info('Nome de usuário trocado', { userId })
++  return { token: issueToken(updated), user: toProfile(updated) }
++}
++
+ async function deleteAccount(userId, password) {
+   await verifyCurrentPassword(userId, password)
+ 
+@@ -338,6 +422,8 @@ export {
+   resetPassword,
+   getUserProfile,
+   changePassword,
++  changeEmail,
++  changeUsername,
+   setPrivacy,
+   deleteAccount,
+   USERNAME_PATTERN
+diff --git a/backend/src/services/dataService.js b/backend/src/services/dataService.js
+new file mode 100644
+index 0000000..8cd35e4
+--- /dev/null
++++ b/backend/src/services/dataService.js
+@@ -0,0 +1,290 @@
++import { db } from '../database/connection.js'
++import { DATA_QUERIES as q } from '../database/queries.js'
++import * as libraryRepository from '../repositories/libraryRepository.js'
++import { normalizeBookInput } from './libraryService.js'
++import { csvToObjects, toCsv } from '../utils/csv.js'
++import { normalizeIsbn13 } from '../utils/isbn.js'
++import STATUS from '../utils/statusCodes.js'
++import logger from '../utils/logger.js'
++
++/**
++ * Seus dados: exportar tudo (JSON ou CSV) e importar livros de um CSV — do
++ * Goodreads ou o próprio CSV exportado pelo Librishelf.
++ */
 +
 +function httpError(message, status) {
 +  const error = new Error(message)
@@ -710,1785 +431,1222 @@ index 0000000..90ae8e2
 +  return error
 +}
 +
-+async function moveBooks(client, kind, fromId, toId, userId) {
-+  const { table, link, column } = KINDS[kind]
++// ---------------------------------------------------------------------------
++// Exportar
++// ---------------------------------------------------------------------------
 +
-+  if (kind === 'publisher') {
-+    await client.query(
-+      'UPDATE librishelf.books SET publisher_id = $1, last_modified = now() WHERE publisher_id = $2 AND user_id = $3',
-+      [toId, fromId, userId]
-+    )
-+  } else {
-+    // Livro que já tem o nome de destino: só tira o vínculo antigo (sem duplicar).
-+    await client.query(
-+      `DELETE FROM librishelf.${link} WHERE ${column} = $1
-+         AND book_id IN (SELECT book_id FROM librishelf.${link} WHERE ${column} = $2)`,
-+      [fromId, toId]
-+    )
-+    await client.query(`UPDATE librishelf.${link} SET ${column} = $1 WHERE ${column} = $2`, [toId, fromId])
-+  }
++/** Colunas do CSV do Librishelf (também aceitas na importação). */
++export const CSV_COLUMNS = [
++  'title', 'authors', 'publisher', 'isbn', 'tags', 'rating', 'status', 'read_date',
++  'started_at', 'publication_date', 'series', 'volume', 'notes', 'added_at'
++]
 +
-+  await client.query(`DELETE FROM librishelf.${table} WHERE id = $1 AND user_id = $2`, [fromId, userId])
++// Vários nomes numa célula: separados por "; " (nome de autor pode ter vírgula).
++const LIST_SEPARATOR = '; '
++
++async function loadExport(userId) {
++  const [user, goals, books] = await Promise.all([
++    db.query(q.EXPORT_USER, [userId]),
++    db.query(q.EXPORT_GOALS, [userId]),
++    db.query(q.EXPORT_BOOKS, [userId])
++  ])
++  if (!user.rows[0]) throw httpError('User not found.', STATUS.NOT_FOUND)
++  return { user: user.rows[0], goals: goals.rows, books: books.rows }
 +}
 +
-+export async function mergeNames(kind, userId, body = {}) {
-+  const config = KINDS[kind]
-+  const from = config.parse(body.from)
-+  const [to] = config.parse(body.to)
-+
-+  if (from.length === 0 || !to) {
-+    throw httpError('Informe os nomes de origem (from) e o nome final (to).', STATUS.BAD_REQUEST)
-+  }
-+  const listError = validateNameList(from, config.label) || validateNameList([to], config.label)
-+  if (listError) throw httpError(listError, STATUS.BAD_REQUEST)
-+
-+  const client = await db.connect()
-+  try {
-+    await client.query('BEGIN')
-+
-+    const { rows: sources } = await client.query(
-+      `SELECT id, name FROM librishelf.${config.table}
-+       WHERE user_id = $1 AND lower(name) = ANY($2::text[]) FOR UPDATE`,
-+      [userId, from.map(name => name.toLocaleLowerCase())]
-+    )
-+    if (sources.length !== from.length) {
-+      throw httpError('Algum dos nomes não existe na sua biblioteca.', STATUS.NOT_FOUND)
-+    }
-+
-+    const { rows: [existing] } = await client.query(
-+      `SELECT id FROM librishelf.${config.table} WHERE user_id = $1 AND lower(name) = lower($2) FOR UPDATE`,
-+      [userId, to]
-+    )
-+
-+    let targetId
-+    if (existing) {
-+      targetId = existing.id
-+      // Só mudou maiúscula/minúscula: grava a grafia nova.
-+      await client.query(`UPDATE librishelf.${config.table} SET name = $1 WHERE id = $2`, [to, targetId])
-+    } else {
-+      // O primeiro de `from` vira o nome final; os outros são mesclados nele.
-+      targetId = sources[0].id
-+      await client.query(`UPDATE librishelf.${config.table} SET name = $1 WHERE id = $2`, [to, targetId])
-+    }
-+
-+    for (const source of sources) {
-+      if (source.id !== targetId) await moveBooks(client, kind, source.id, targetId, userId)
-+    }
-+
-+    await client.query('COMMIT')
-+    return { name: to, merged: sources.filter(source => source.id !== targetId).length }
-+  } catch (error) {
-+    await client.query('ROLLBACK')
-+    throw error
-+  } finally {
-+    client.release()
++export async function exportJson(userId) {
++  const { user, goals, books } = await loadExport(userId)
++  return {
++    app: 'Librishelf',
++    version: 1,
++    exportedAt: new Date().toISOString(),
++    account: {
++      username: user.name,
++      email: user.email,
++      emailVerified: user.email_verified,
++      createdAt: user.created_at,
++      isPublic: user.is_public,
++      showInCommunity: user.show_in_community,
++      showActivity: user.show_activity
++    },
++    readingGoals: goals,
++    books: books.map(book => ({
++      title: book.title,
++      authors: book.authors,
++      publisher: book.publisher,
++      isbn: book.isbn,
++      tags: book.tags,
++      rating: book.rating,
++      status: book.status,
++      readDate: book.read_date,
++      startedAt: book.started_at,
++      publicationDate: book.publication_date,
++      series: book.series,
++      volume: book.series_index,
++      notes: book.notes,
++      addedAt: book.added_at
++    }))
 +  }
 +}
-diff --git a/backend/src/tests/integration/authors.test.js b/backend/src/tests/integration/authors.test.js
-index b635ab7..94b97d9 100644
---- a/backend/src/tests/integration/authors.test.js
-+++ b/backend/src/tests/integration/authors.test.js
-@@ -136,6 +136,6 @@ describe('Tags e conflitos', () => {
-     expect(results.map(r => r.statusCode)).toEqual([201, 201, 201, 201, 201])
++
++export async function exportCsv(userId) {
++  const { books } = await loadExport(userId)
++  const rows = books.map(book => [
++    book.title,
++    book.authors.join(LIST_SEPARATOR),
++    book.publisher,
++    book.isbn,
++    book.tags.join(LIST_SEPARATOR),
++    book.rating,
++    book.status,
++    book.read_date,
++    book.started_at,
++    book.publication_date,
++    book.series,
++    book.series_index,
++    book.notes,
++    book.added_at
++  ])
++  return toCsv([CSV_COLUMNS, ...rows])
++}
++
++// ---------------------------------------------------------------------------
++// Importar
++// ---------------------------------------------------------------------------
++
++export const MAX_IMPORT_ROWS = 5000
++const MAX_NOTES = 5000
++const GOODREADS_SHELVES = new Set(['read', 'currently-reading', 'to-read'])
++
++/** ="0441013597" (como o Goodreads exporta) → 0441013597. */
++function cleanIsbn(value) {
++  const text = String(value ?? '').replace(/^="?|"$/g, '').replace(/[^0-9Xx]/g, '')
++  return text || null
++}
++
++/** 2019/05/14, 2019-05-14 → '2019-05-14'; vazio ou inválido → null. */
++function cleanDate(value) {
++  const match = String(value ?? '').trim().match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/)
++  if (!match) return null
++  const [, y, m, d] = match
++  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
++}
++
++function cleanYear(value) {
++  const year = String(value ?? '').trim()
++  return /^\d{4}$/.test(year) ? `${year}-01-01` : null
++}
++
++/** Data no futuro (relógio errado, ano digitado errado) vira hoje. */
++function notFuture(date) {
++  if (!date) return null
++  const today = new Date().toISOString().slice(0, 10)
++  return date > today ? today : date
++}
++
++/** "Duna (Crônicas de Duna, #1)" → título "Duna", série "Crônicas de Duna", volume 1. */
++export function splitSeries(rawTitle) {
++  const title = String(rawTitle ?? '').trim()
++  const match = title.match(/^(.+?)\s*\(([^()]+?),?\s*#(\d+(?:\.\d+)?)\)\s*$/)
++  if (!match) return { title, series: null, seriesIndex: null }
++  return { title: match[1].trim(), series: match[2].trim(), seriesIndex: match[3] }
++}
++
++function splitList(value, separator) {
++  return String(value ?? '').split(separator).map(item => item.trim()).filter(Boolean)
++}
++
++function fromGoodreads(record) {
++  const { title, series, seriesIndex } = splitSeries(record.Title)
++  const shelf = String(record['Exclusive Shelf'] ?? '').trim()
++  const added = cleanDate(record['Date Added'])
++
++  // Prateleiras do Goodreads viram categorias (menos as três de status).
++  const tags = splitList(record.Bookshelves, ',')
++    .filter(name => !GOODREADS_SHELVES.has(name))
++    .map(name => name.replace(/-/g, ' '))
++
++  const notes = [record['Private Notes'], record['My Review']]
++    .map(text => String(text ?? '').replace(/<br\s*\/?>/gi, '\n').trim())
++    .filter(Boolean)
++    .join('\n\n')
++    .slice(0, MAX_NOTES)
++
++  let status = 'none'
++  if (shelf === 'read') status = 'read'
++  else if (shelf === 'currently-reading') status = 'reading'
++  else if (shelf === 'to-read') status = 'want'
++
++  const rating = Number(record['My Rating'])
++
++  return {
++    title,
++    authors: [record.Author, ...splitList(record['Additional Authors'], ',')].map(name => String(name ?? '').trim()).filter(Boolean),
++    publisher: String(record.Publisher ?? '').trim(),
++    isbn: cleanIsbn(record.ISBN13) || cleanIsbn(record.ISBN),
++    tags,
++    rating: rating >= 1 && rating <= 5 ? rating : null,
++    status,
++    // Lido sem data no Goodreads: usa o dia em que foi adicionado.
++    readDate: status === 'read' ? notFuture(cleanDate(record['Date Read']) || added) : null,
++    startedAt: status === 'reading' ? notFuture(added) : null,
++    pubDate: cleanYear(record['Year Published']) || cleanYear(record['Original Publication Year']),
++    series,
++    seriesIndex,
++    notes
++  }
++}
++
++function fromLibrishelf(record) {
++  const status = ['read', 'reading', 'want'].includes(record.status) ? record.status : 'none'
++  const rating = Number(record.rating)
++  return {
++    title: String(record.title ?? '').trim(),
++    authors: splitList(record.authors, ';'),
++    publisher: String(record.publisher ?? '').trim(),
++    isbn: cleanIsbn(record.isbn),
++    tags: splitList(record.tags, ';'),
++    rating: rating >= 1 && rating <= 5 ? rating : null,
++    status,
++    readDate: status === 'read' || record.read_date ? notFuture(cleanDate(record.read_date)) : null,
++    startedAt: status === 'reading' ? notFuture(cleanDate(record.started_at)) : null,
++    pubDate: cleanDate(record.publication_date),
++    series: String(record.series ?? '').trim() || null,
++    seriesIndex: String(record.volume ?? '').trim() || null,
++    notes: String(record.notes ?? '').slice(0, MAX_NOTES)
++  }
++}
++
++function detectFormat(headers) {
++  if (headers.includes('Exclusive Shelf') || headers.includes('Author l-f')) return 'goodreads'
++  if (headers.includes('title') && headers.includes('authors')) return 'librishelf'
++  return null
++}
++
++const keyOf = (title, author) => `${String(title).toLocaleLowerCase()}\u0000${String(author ?? '').toLocaleLowerCase()}`
++
++/**
++ * Importa os livros do CSV. Pula o que já está na estante (mesmo ISBN, ou mesmo
++ * título + primeiro autor) e devolve o resumo com o motivo de cada linha pulada.
++ */
++export async function importCsv(userId, buffer) {
++  if (!buffer?.length) throw httpError('Envie o arquivo CSV.', STATUS.BAD_REQUEST)
++
++  const { headers, records } = csvToObjects(buffer.toString('utf8'))
++  const format = detectFormat(headers)
++  if (!format) {
++    throw httpError('Formato não reconhecido: envie o CSV exportado do Goodreads ou do Librishelf.', STATUS.BAD_REQUEST)
++  }
++  if (records.length === 0) throw httpError('O arquivo não tem nenhum livro.', STATUS.BAD_REQUEST)
++  if (records.length > MAX_IMPORT_ROWS) {
++    throw httpError(`O arquivo tem ${records.length} livros; o limite por importação é ${MAX_IMPORT_ROWS}.`, STATUS.BAD_REQUEST)
++  }
++
++  const { rows: existing } = await db.query(q.EXISTING_KEYS, [userId])
++  const isbns = new Set(existing.map(row => row.isbn13).filter(Boolean))
++  const keys = new Set(existing.map(row => keyOf(row.title, row.author)))
++
++  const summary = { format, total: records.length, imported: 0, duplicates: 0, errors: [] }
++
++  for (const [index, record] of records.entries()) {
++    const line = index + 2 // linha 1 é o cabeçalho
++    const book = format === 'goodreads' ? fromGoodreads(record) : fromLibrishelf(record)
++
++    try {
++      const input = normalizeBookInput({
++        title: book.title,
++        authors: book.authors,
++        publisher: book.publisher,
++        isbn: book.isbn,
++        tags: book.tags.join(', '),
++        rating: book.rating,
++        pubDate: book.pubDate,
++        readDate: book.status === 'read' ? book.readDate : null,
++        series: book.series,
++        seriesIndex: book.seriesIndex,
++        notes: book.notes
++      })
++
++      const isbn13 = input.isbn ? normalizeIsbn13(input.isbn) : null
++      const key = keyOf(input.title, input.authors[0])
++      if ((isbn13 && isbns.has(isbn13)) || keys.has(key)) {
++        summary.duplicates++
++        continue
++      }
++
++      const bookId = await libraryRepository.createBook({ ...input, user_id: userId })
++      if (input.series || input.seriesIndex !== null || input.notes) {
++        await libraryRepository.updateExtras(bookId, input)
++      }
++      if (book.status === 'reading' || book.status === 'want') {
++        await libraryRepository.setReadingStatus(bookId, {
++          status: book.status,
++          startedAt: book.status === 'reading' ? book.startedAt : null,
++          clearRead: book.status === 'want'
++        })
++      }
++
++      if (isbn13) isbns.add(isbn13)
++      keys.add(key)
++      summary.imported++
++    } catch (error) {
++      if (summary.errors.length < 100) {
++        summary.errors.push({ line, title: book.title || null, reason: error.status ? error.message : 'Erro ao gravar.' })
++      }
++      if (!error.status) logger.warn('Linha não importada', { userId, line, message: error.message })
++    }
++  }
++
++  summary.failed = summary.total - summary.imported - summary.duplicates
++  logger.info('Importação concluída', { userId, format, imported: summary.imported, duplicates: summary.duplicates, failed: summary.failed })
++  return summary
++}
+diff --git a/backend/src/services/emailTemplates.js b/backend/src/services/emailTemplates.js
+index 8b25cc0..c20f316 100644
+--- a/backend/src/services/emailTemplates.js
++++ b/backend/src/services/emailTemplates.js
+@@ -55,6 +55,16 @@ const TEXTS = {
+       note: 'O link vale por 3 dias.',
+       ignore: 'Se você não criou uma conta no Librishelf, pode ignorar este e-mail.'
+     },
++    changed: {
++      subject: 'O e-mail da sua conta no Librishelf mudou',
++      preheader: 'Se foi você, não precisa fazer nada.',
++      title: 'Seu e-mail foi trocado',
++      greeting: name => `Olá, ${name}!`,
++      body: ({ newEmail }) => `O e-mail da sua conta agora é ${newEmail}. Avisos e links de senha passam a ir para lá.`,
++      button: 'Não fui eu: redefinir senha',
++      note: 'Redefinir a senha derruba todas as sessões abertas.',
++      ignore: 'Se foi você quem trocou, pode ignorar este aviso.'
++    },
+     fallback: 'Se o botão não funcionar, copie e cole este endereço no navegador:',
+     tagline: 'Sua biblioteca pessoal, organizada.',
+     footer: 'Você recebeu este e-mail porque ele está cadastrado no Librishelf. Este é um endereço automático: respostas não são lidas.'
+@@ -80,6 +90,16 @@ const TEXTS = {
+       note: 'The link is valid for 3 days.',
+       ignore: "If you didn't create a Librishelf account, you can ignore this email."
+     },
++    changed: {
++      subject: 'Your Librishelf email has changed',
++      preheader: "If it was you, there's nothing to do.",
++      title: 'Your email was changed',
++      greeting: name => `Hi, ${name}!`,
++      body: ({ newEmail }) => `Your account email is now ${newEmail}. Notices and password links will go there from now on.`,
++      button: "It wasn't me: reset password",
++      note: 'Resetting your password signs out every open session.',
++      ignore: 'If you made this change, you can ignore this notice.'
++    },
+     fallback: "If the button doesn't work, copy and paste this address into your browser:",
+     tagline: 'Your personal library, organized.',
+     footer: "You're receiving this email because it is registered on Librishelf. This is an automated address: replies are not read."
+@@ -181,10 +201,11 @@ function layout({ locale, lang, t, name, link }) {
+ </html>`
+ }
  
-     const authors = await request(app).get('/author').set(auth())
--    expect(authors.body.filter(a => a.name === 'Autor Novíssimo')).toEqual([{ name: 'Autor Novíssimo', count: 5 }])
-+    expect(authors.body.filter(a => a.name === 'Autor Novíssimo')).toEqual([{ name: 'Autor Novíssimo', count: 5, read: 0 }])
-   })
- })
-diff --git a/backend/src/tests/integration/community.test.js b/backend/src/tests/integration/community.test.js
-index 1e6a67d..a01bd1a 100644
---- a/backend/src/tests/integration/community.test.js
-+++ b/backend/src/tests/integration/community.test.js
-@@ -63,7 +63,7 @@ describe('Nomes por usuário', () => {
-   it('maiúsculas diferentes viram o mesmo autor (mantém a 1ª grafia)', async () => {
-     await addBook('ana', { title: 'O Senhor dos Anéis' }, ['TOLKIEN'])
-     const res = await request(app).get('/author').set(auth('ana'))
--    expect(res.body.filter(a => a.name.toLowerCase() === 'tolkien')).toEqual([{ name: 'Tolkien', count: 2 }])
-+    expect(res.body.filter(a => a.name.toLowerCase() === 'tolkien')).toEqual([{ name: 'Tolkien', count: 2, read: 0 }])
-   })
+-function build(kind, { name, link, locale }) {
++function build(kind, { name, link, locale, ...extra }) {
+   const code = normalizeLocale(locale)
+   const lang = TEXTS[code]
+-  const t = lang[kind]
++  const base = lang[kind]
++  const t = { ...base, body: typeof base.body === 'function' ? base.body(extra) : base.body }
  
-   it('excluir o último livro de um autor tira o autor da lista', async () => {
-diff --git a/backend/src/tests/integration/organize.test.js b/backend/src/tests/integration/organize.test.js
+   const text = [
+     t.title,
+@@ -208,4 +229,6 @@ function build(kind, { name, link, locale }) {
+ }
+ 
+ export const resetPasswordEmail = params => build('reset', params)
+-export const verifyEmailEmail = params => build('verify', params)
+\ No newline at end of file
++export const verifyEmailEmail = params => build('verify', params)
++/** Aviso ao endereço antigo: { name, link, locale, newEmail } (newEmail já mascarado). */
++export const emailChangedEmail = params => build('changed', params)
+\ No newline at end of file
+diff --git a/backend/src/tests/integration/account-data.test.js b/backend/src/tests/integration/account-data.test.js
 new file mode 100644
-index 0000000..6b65c5d
+index 0000000..9dae872
 --- /dev/null
-+++ b/backend/src/tests/integration/organize.test.js
-@@ -0,0 +1,215 @@
++++ b/backend/src/tests/integration/account-data.test.js
+@@ -0,0 +1,182 @@
 +import request from 'supertest'
 +import app from '../../app.js'
 +import { tokenFrom } from '../helpers/authToken.js'
 +import { confirmEmail } from '../helpers/confirmEmail.js'
 +import { clearDatabase, closeDatabase } from '../../utils/db.js'
++import { testOutbox } from '../../services/mailService.js'
++import { parseCsv } from '../../utils/csv.js'
++import { splitSeries } from '../../services/dataService.js'
 +
++const PASSWORD = 'senha12345'
 +let auth
-+let otherAuth
 +
 +async function signUp(name) {
-+  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
-+  return { Authorization: `Bearer ${tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))}` }
++  await request(app).post('/auth/register').send({ username: name, password: PASSWORD, email: `${name}@example.com` })
++  const res = await request(app).post('/auth/login').send({ username: name, password: PASSWORD })
++  return { Authorization: `Bearer ${tokenFrom(res)}` }
 +}
 +
-+async function addBook(fields, who = auth) {
-+  const res = await request(app).post('/library').set(who).field(fields)
-+  expect(res.statusCode).toBe(201)
-+  return res.body.bookId
-+}
++const books = async (query = {}) => (await request(app).get('/library').set(auth).query({ limit: 100, sort: 'title', order: 'asc', ...query })).body.result
 +
-+const getBook = async id => (await request(app).get(`/library/${id}`).set(auth)).body
-+const list = async query => (await request(app).get('/library').set(auth).query(query)).body.result
++const GOODREADS_HEADER = 'Book Id,Title,Author,Author l-f,Additional Authors,ISBN,ISBN13,My Rating,Average Rating,Publisher,Binding,Number of Pages,Year Published,Original Publication Year,Date Read,Date Added,Bookshelves,Bookshelves with positions,Exclusive Shelf,My Review,Spoiler,Private Notes,Read Count,Owned Copies'
++
++const GOODREADS_CSV = [
++  GOODREADS_HEADER,
++  '234225,"Dune (Dune, #1)",Frank Herbert,"Herbert, Frank",,"=""0441013597""","=""9780441013593""",5,4.27,Ace Books,Paperback,688,2005,1965,2019/05/14,2019/01/02,"favoritos, sci-fi","favoritos (#1), sci-fi (#3)",read,Incrível.<br/>Reler.,,Emprestei pro João,1,0',
++  '11,"O Guia do Mochileiro",Douglas Adams,"Adams, Douglas",,"=""""","=""""",0,4.2,Arqueiro,Paperback,200,2009,1979,,2024/03/10,currently-reading,currently-reading (#1),currently-reading,,,,0,0',
++  '12,"Bons Presságios",Neil Gaiman,"Gaiman, Neil",Terry Pratchett,"=""""","=""""",0,4.2,Bertrand,Paperback,400,2019,1990,,2024/03/11,to-read,to-read (#1),to-read,,,,0,0',
++  '13,,Sem Título,"Título, Sem",,"=""""","=""""",0,0,,,,,,,2024/03/11,,,read,,,,0,0'
++].join('\n')
 +
 +beforeAll(async () => {
 +  await clearDatabase()
-+  auth = await signUp('organiza')
-+  otherAuth = await signUp('outra')
++  testOutbox().length = 0
++  auth = await signUp('leitor')
 +})
 +
 +afterAll(async () => {
 +  await closeDatabase()
 +})
 +
-+describe('Série, volume e anotação', () => {
-+  let duna1, duna2
-+
-+  it('grava série, volume e anotação no cadastro', async () => {
-+    duna2 = await addBook({ title: 'O Messias de Duna', authors: 'Frank Herbert', series: ' Duna ', seriesIndex: '2', notes: 'Melhor que o primeiro?' })
-+    duna1 = await addBook({ title: 'Duna', authors: 'Frank Herbert', series: 'duna', seriesIndex: '1' })
-+    await addBook({ title: 'Conto', authors: 'Frank Herbert', series: 'Duna', seriesIndex: '1,5' })
-+    await addBook({ title: 'Avulso', authors: 'Outro' })
-+
-+    const book = await getBook(duna2)
-+    expect(book.series).toBe('Duna')
-+    expect(book.series_index).toBe(2)
-+    expect(book.notes).toBe('Melhor que o primeiro?')
++describe('Importar do Goodreads', () => {
++  it('separa a série do título', () => {
++    expect(splitSeries('Dune (Dune, #1)')).toEqual({ title: 'Dune', series: 'Dune', seriesIndex: '1' })
++    expect(splitSeries('O Hobbit (A Terra-média #0.5)')).toEqual({ title: 'O Hobbit', series: 'A Terra-média', seriesIndex: '0.5' })
++    expect(splitSeries('Livro (edição especial)')).toEqual({ title: 'Livro (edição especial)', series: null, seriesIndex: null })
 +  })
 +
-+  it('ordena pela série e pelo volume; filtra e busca pela série', async () => {
-+    const sorted = await list({ sort: 'series', order: 'asc' })
-+    expect(sorted.map(b => b.title)).toEqual(['Duna', 'Conto', 'O Messias de Duna', 'Avulso'])
++  it('importa livros, status, nota, prateleiras, série e anotação; aponta a linha com erro', async () => {
++    const res = await request(app).post('/library/import').set(auth)
++      .attach('file', Buffer.from(GOODREADS_CSV), { filename: 'goodreads_library_export.csv', contentType: 'text/csv' })
 +
-+    expect((await list({ series: 'DUNA' })).length).toBe(3)
-+    expect((await list({ search: 'duna' })).length).toBe(3)
-+  })
-+
-+  it('lista as séries do usuário com contagem', async () => {
-+    const res = await request(app).get('/library/series').set(auth)
 +    expect(res.statusCode).toBe(200)
-+    expect(res.body).toEqual([{ name: 'Duna', count: 3, read: 0 }].map(s => ({ ...s, name: expect.stringMatching(/^duna$/i) })))
++    expect(res.body).toMatchObject({ format: 'goodreads', total: 4, imported: 3, duplicates: 0, failed: 1 })
++    expect(res.body.errors).toEqual([expect.objectContaining({ line: 5 })])
++
++    const list = await books()
++    expect(list.map(b => b.title)).toEqual(['Bons Presságios', 'Dune', 'O Guia do Mochileiro'])
++
++    const dune = list.find(b => b.title === 'Dune')
++    expect(dune.isbn).toBe('9780441013593')
++    expect(dune.rating).toBe(5)
++    expect(dune.series).toBe('Dune')
++    expect(dune.series_index).toBe(1)
++    expect(dune.tag_names).toEqual(['favoritos', 'sci fi'])
++    expect(new Date(dune.read_date).getUTCFullYear()).toBe(2019)
++
++    const full = (await request(app).get(`/library/${dune.book_id}`).set(auth)).body
++    expect(full.notes).toBe('Emprestei pro João\n\nIncrível.\nReler.')
++
++    expect(list.find(b => b.title === 'O Guia do Mochileiro').reading_status).toBe('reading')
++    const omens = list.find(b => b.title === 'Bons Presságios')
++    expect(omens.reading_status).toBe('want')
++    expect(omens.author_names).toEqual(['Neil Gaiman', 'Terry Pratchett'])
 +  })
 +
-+  it('a lista não traz a anotação; editar sem mandar os campos novos não apaga nada', async () => {
-+    const row = (await list({ search: 'Messias' }))[0]
-+    expect(row).not.toHaveProperty('notes')
-+    expect(row.series_index).toBe(2)
-+
-+    await request(app).put(`/library/${duna2}`).set(auth).send({ title: 'O Messias de Duna', authors: ['Frank Herbert'] })
-+    const book = await getBook(duna2)
-+    expect(book.notes).toBe('Melhor que o primeiro?')
-+    expect(book.series).toBe('Duna')
++  it('importar de novo não duplica', async () => {
++    const res = await request(app).post('/library/import').set(auth)
++      .attach('file', Buffer.from(GOODREADS_CSV), { filename: 'export.csv', contentType: 'text/csv' })
++    expect(res.body).toMatchObject({ imported: 0, duplicates: 3 })
 +  })
 +
-+  it('editar troca e apaga os campos', async () => {
-+    await request(app).put(`/library/${duna1}`).set(auth).send({ title: 'Duna', authors: ['Frank Herbert'], series: '', seriesIndex: null, notes: '  Reler  ' })
-+    const book = await getBook(duna1)
-+    expect(book.series).toBeNull()
-+    expect(book.series_index).toBeNull()
-+    expect(book.notes).toBe('Reler')
++  it('recusa formato desconhecido, arquivo vazio e não-CSV', async () => {
++    const unknown = await request(app).post('/library/import').set(auth).attach('file', Buffer.from('a,b\n1,2\n'), { filename: 'x.csv', contentType: 'text/csv' })
++    expect(unknown.statusCode).toBe(400)
++    expect((await request(app).post('/library/import').set(auth)).statusCode).toBe(400)
++    const image = await request(app).post('/library/import').set(auth).attach('file', Buffer.from('xx'), { filename: 'x.png', contentType: 'image/png' })
++    expect(image.statusCode).toBe(400)
 +  })
++})
 +
-+  it('valida tamanhos e volume', async () => {
-+    expect((await request(app).post('/library').set(auth).field({ title: 'X', authors: 'Y', seriesIndex: 'dois' })).statusCode).toBe(400)
-+    expect((await request(app).post('/library').set(auth).field({ title: 'X', authors: 'Y', seriesIndex: '-1' })).statusCode).toBe(400)
-+    expect((await request(app).post('/library').set(auth).field({ title: 'X', authors: 'Y', series: 'a'.repeat(201) })).statusCode).toBe(400)
-+    expect((await request(app).post('/library').set(auth).send({ title: 'X', authors: ['Y'], notes: 'a'.repeat(5001) })).statusCode).toBe(400)
-+  })
-+
-+  it('a biblioteca pública nunca mostra a anotação', async () => {
-+    await confirmEmail('organiza')
-+    await request(app).patch('/auth/me/visibility').set(auth).send({ isPublic: true })
-+    const res = await request(app).get(`/library/public/u/organiza/book/${duna2}`)
++describe('Exportar', () => {
++  it('JSON com conta, metas e livros (inclusive anotação)', async () => {
++    await request(app).put('/dashboard/goal').set(auth).send({ year: 2026, target: 10 })
++    const res = await request(app).get('/auth/me/export').set(auth)
 +    expect(res.statusCode).toBe(200)
-+    expect(res.body.series).toBe('Duna')
-+    expect(res.body).not.toHaveProperty('notes')
++    expect(res.headers['content-disposition']).toMatch(/attachment; filename="librishelf-\d{4}-\d{2}-\d{2}\.json"/)
++    expect(res.body.account).toMatchObject({ username: 'leitor', email: 'leitor@example.com' })
++    expect(res.body.account).not.toHaveProperty('password_hash')
++    expect(res.body.readingGoals).toEqual([{ year: 2026, target: 10 }])
++    const dune = res.body.books.find(b => b.title === 'Dune')
++    expect(dune).toMatchObject({ authors: ['Frank Herbert'], status: 'read', series: 'Dune', volume: 1, rating: 5 })
++    expect(dune.notes).toContain('Emprestei')
++  })
++
++  it('CSV com cabeçalho e que volta igual na importação', async () => {
++    const res = await request(app).get('/auth/me/export').set(auth).query({ format: 'csv' }).buffer(true).parse((r, cb) => {
++      let data = ''
++      r.setEncoding('utf8')
++      r.on('data', chunk => { data += chunk })
++      r.on('end', () => cb(null, data))
++    })
++    expect(res.headers['content-type']).toMatch(/text\/csv/)
++    const rows = parseCsv(res.body)
++    expect(rows[0]).toEqual(['title', 'authors', 'publisher', 'isbn', 'tags', 'rating', 'status', 'read_date', 'started_at', 'publication_date', 'series', 'volume', 'notes', 'added_at'])
++    expect(rows).toHaveLength(4)
++
++    // A outra conta importa o CSV exportado e fica com os mesmos livros.
++    const other = await signUp('copia')
++    const imported = await request(app).post('/library/import').set(other)
++      .attach('file', Buffer.from(res.body), { filename: 'librishelf.csv', contentType: 'text/csv' })
++    expect(imported.body).toMatchObject({ format: 'librishelf', imported: 3, failed: 0 })
++    const copy = (await request(app).get('/library').set(other).query({ sort: 'title', order: 'asc' })).body.result
++    expect(copy.map(b => [b.title, b.reading_status, Boolean(b.read_date)])).toEqual([
++      ['Bons Presságios', 'want', false],
++      ['Dune', null, true],
++      ['O Guia do Mochileiro', 'reading', false]
++    ])
++    expect(copy.find(b => b.title === 'Bons Presságios').author_names).toEqual(['Neil Gaiman', 'Terry Pratchett'])
++  })
++
++  it('exige login', async () => {
++    expect((await request(app).get('/auth/me/export')).statusCode).toBe(401)
 +  })
 +})
 +
-+describe('Ações em lote', () => {
-+  let ids
++describe('Trocar e-mail', () => {
++  it('pede a senha, o e-mail novo começa sem confirmação e o antigo recebe aviso', async () => {
++    await confirmEmail('leitor')
++    expect((await request(app).patch('/auth/me/email').set(auth).send({ email: 'novo@example.com', password: 'errada' })).statusCode).toBe(401)
 +
-+  beforeAll(async () => {
-+    ids = [
-+      await addBook({ title: 'Lote A', authors: 'L' }),
-+      await addBook({ title: 'Lote B', authors: 'L', tags: 'velha' }),
-+      await addBook({ title: 'Lote C', authors: 'L', readDate: '2024-05-05' })
-+    ]
++    const before = testOutbox().length
++    const res = await request(app).patch('/auth/me/email').set(auth).send({ email: 'novo@example.com', password: PASSWORD, locale: 'pt' })
++    expect(res.statusCode).toBe(200)
++    expect(res.body.user).toMatchObject({ email: 'novo@example.com', emailVerified: false })
++
++    const sent = testOutbox().slice(before)
++    expect(sent.map(m => m.to).sort()).toEqual(['leitor@example.com', 'novo@example.com'])
++    const notice = sent.find(m => m.to === 'leitor@example.com')
++    expect(notice.subject).toBe('O e-mail da sua conta no Librishelf mudou')
++    expect(notice.text).toContain('no•••@example.com')
++    expect(notice.text).not.toContain('novo@example.com')
 +  })
 +
-+  const batch = body => request(app).post('/library/batch').set(auth).send(body)
-+
-+  it('marca vários como lidos sem mudar a data de quem já tinha', async () => {
-+    const res = await batch({ ids, action: 'status', status: 'read', date: '2026-01-02' })
-+    expect(res.body.updated).toBe(3)
-+    expect((await getBook(ids[0])).read_date).toBeTruthy()
-+    const c = await getBook(ids[2])
-+    expect(new Date(c.read_date).getUTCFullYear()).toBe(2024)
-+  })
-+
-+  it('Quero ler / Lendo / nenhum em lote', async () => {
-+    await batch({ ids, action: 'status', status: 'want' })
-+    expect((await list({ readState: 'want', search: 'Lote' })).length).toBe(3)
-+    await batch({ ids: [ids[0]], action: 'status', status: 'reading' })
-+    expect((await getBook(ids[0])).reading_status).toBe('reading')
-+    await batch({ ids, action: 'status', status: 'none' })
-+    expect((await list({ readState: 'want', search: 'Lote' })).length).toBe(0)
-+  })
-+
-+  it('adiciona e remove categoria', async () => {
-+    expect((await batch({ ids, action: 'addTag', tag: 'Emprestados' })).body.updated).toBe(3)
-+    expect((await list({ tags: 'Emprestados' })).length).toBe(3)
-+    // repetir não duplica
-+    expect((await batch({ ids, action: 'addTag', tag: 'emprestados' })).body.updated).toBe(0)
-+
-+    expect((await batch({ ids: [ids[1]], action: 'removeTag', tag: 'velha' })).body.updated).toBe(1)
-+    const tags = (await request(app).get('/tags').set(auth)).body.map(t => t.name)
-+    expect(tags).not.toContain('velha') // categoria sem livros some
-+  })
-+
-+  it('não mexe em livro de outra pessoa (nem nos próprios, na mesma chamada)', async () => {
-+    const alien = await addBook({ title: 'Alheio', authors: 'Z' }, otherAuth)
-+    const res = await batch({ ids: [ids[0], alien], action: 'delete' })
-+    expect(res.statusCode).toBe(403)
-+    expect((await getBook(ids[0])).title).toBe('Lote A')
-+  })
-+
-+  it('valida ação, ids e status', async () => {
-+    expect((await batch({ ids, action: 'explodir' })).statusCode).toBe(400)
-+    expect((await batch({ ids: [], action: 'delete' })).statusCode).toBe(400)
-+    expect((await batch({ ids: ['x'], action: 'delete' })).statusCode).toBe(400)
-+    expect((await batch({ ids: Array.from({ length: 501 }, (_, i) => i + 1), action: 'delete' })).statusCode).toBe(400)
-+    expect((await batch({ ids, action: 'status', status: 'talvez' })).statusCode).toBe(400)
-+    expect((await batch({ ids, action: 'addTag', tag: '' })).statusCode).toBe(400)
-+  })
-+
-+  it('exclui em lote', async () => {
-+    expect((await batch({ ids, action: 'delete' })).body.updated).toBe(3)
-+    expect((await request(app).get(`/library/${ids[0]}`).set(auth)).statusCode).toBe(404)
++  it('valida formato, igual ao atual e em uso por outra conta', async () => {
++    expect((await request(app).patch('/auth/me/email').set(auth).send({ email: 'sem-arroba', password: PASSWORD })).statusCode).toBe(400)
++    expect((await request(app).patch('/auth/me/email').set(auth).send({ email: 'NOVO@example.com', password: PASSWORD })).statusCode).toBe(400)
++    expect((await request(app).patch('/auth/me/email').set(auth).send({ email: 'Copia@Example.com', password: PASSWORD })).statusCode).toBe(409)
 +  })
 +})
 +
-+describe('Autores, editoras e categorias: contagem, renomear e mesclar', () => {
-+  beforeAll(async () => {
-+    await addBook({ title: 'Fundação', authors: 'Asimov', publisher: 'Aleph', tags: 'ficção' })
-+    await addBook({ title: 'Eu, Robô', authors: 'Isaac Asimov', publisher: 'aleph ', tags: 'Ficcao' })
-+    await addBook({ title: 'O Fim da Eternidade', authors: ['Asimov', 'Isaac Asimov'], publisher: 'Editora Aleph', readDate: '2025-01-01', tags: 'ficção, Ficcao' })
++describe('Trocar nome de usuário', () => {
++  it('troca, devolve sessão nova e o login passa a ser pelo nome novo', async () => {
++    const res = await request(app).patch('/auth/me/username').set(auth).send({ username: 'leitor.novo', password: PASSWORD })
++    expect(res.statusCode).toBe(200)
++    expect(res.body.user.name).toBe('leitor.novo')
++    expect(res.headers['set-cookie'].join(';')).toMatch(/HttpOnly/i)
++
++    expect((await request(app).post('/auth/login').send({ username: 'leitor', password: PASSWORD })).statusCode).toBe(401)
++    expect((await request(app).post('/auth/login').send({ username: 'leitor.novo', password: PASSWORD })).statusCode).toBe(200)
 +  })
 +
-+  const authors = async () => (await request(app).get('/author').set(auth)).body
-+
-+  it('a lista traz lidos/total', async () => {
-+    const asimov = (await authors()).find(a => a.name === 'Asimov')
-+    expect(asimov).toEqual({ name: 'Asimov', count: 2, read: 1 })
-+  })
-+
-+  it('renomear um autor', async () => {
-+    const res = await request(app).post('/author/merge').set(auth).send({ from: ['Frank Herbert'], to: 'Frank P. Herbert' })
-+    expect(res.body).toEqual({ name: 'Frank P. Herbert', merged: 0 })
-+    expect((await authors()).map(a => a.name)).toContain('Frank P. Herbert')
-+  })
-+
-+  it('mesclar dois autores junta os livros sem duplicar no livro que tinha os dois', async () => {
-+    const res = await request(app).post('/author/merge').set(auth).send({ from: ['Asimov', 'Isaac Asimov'], to: 'Isaac Asimov' })
-+    expect(res.body).toEqual({ name: 'Isaac Asimov', merged: 1 })
-+
-+    const list = await authors()
-+    expect(list.find(a => a.name === 'Asimov')).toBeUndefined()
-+    expect(list.find(a => a.name === 'Isaac Asimov')).toEqual({ name: 'Isaac Asimov', count: 3, read: 1 })
-+
-+    const eternidade = (await request(app).get('/library').set(auth).query({ search: 'Eternidade' })).body.result[0]
-+    expect(eternidade.author_names).toEqual(['Isaac Asimov'])
-+  })
-+
-+  it('renomear para um nome que já existe = mesclar (editoras)', async () => {
-+    const res = await request(app).post('/publisher/merge').set(auth).send({ from: ['Editora Aleph'], to: 'ALEPH' })
-+    expect(res.body.merged).toBe(1)
-+    const publishers = (await request(app).get('/publisher').set(auth)).body
-+    expect(publishers.filter(p => /aleph/i.test(p.name))).toEqual([{ name: 'ALEPH', count: 3, read: 1 }])
-+  })
-+
-+  it('mesclar categorias', async () => {
-+    await request(app).post('/tags/merge').set(auth).send({ from: ['Ficcao', 'ficção'], to: 'Ficção científica' })
-+    const tags = (await request(app).get('/tags').set(auth)).body
-+    expect(tags.find(t => t.name === 'Ficção científica')).toEqual({ name: 'Ficção científica', count: 3, read: 1 })
-+    expect(tags.find(t => t.name === 'ficção')).toBeUndefined()
-+  })
-+
-+  it('nome inexistente → 404; de outra pessoa não conta; vazio → 400', async () => {
-+    expect((await request(app).post('/author/merge').set(auth).send({ from: ['Ninguém'], to: 'X' })).statusCode).toBe(404)
-+    await addBook({ title: 'Dela', authors: 'Autora Dela' }, otherAuth)
-+    expect((await request(app).post('/author/merge').set(auth).send({ from: ['Autora Dela'], to: 'Minha' })).statusCode).toBe(404)
-+    expect((await request(app).post('/author/merge').set(auth).send({ from: [], to: 'X' })).statusCode).toBe(400)
-+    expect((await request(app).post('/tags/merge').set(auth).send({ from: ['Ficção científica'], to: '' })).statusCode).toBe(400)
++  it('valida regras do cadastro, senha e nome em uso (sem diferenciar maiúsculas)', async () => {
++    const send = body => request(app).patch('/auth/me/username').set(auth).send({ password: PASSWORD, ...body })
++    expect((await send({ username: 'com espaço' })).statusCode).toBe(400)
++    expect((await send({ username: 'a'.repeat(51) })).statusCode).toBe(400)
++    expect((await send({ username: '' })).statusCode).toBe(400)
++    expect((await send({ username: 'COPIA' })).statusCode).toBe(409)
++    expect((await send({ username: 'outro', password: 'errada' })).statusCode).toBe(401)
++    // Só mudar maiúsculas do próprio nome pode.
++    expect((await send({ username: 'Leitor.Novo' })).statusCode).toBe(200)
 +  })
 +})
-diff --git a/frontend/src/components/AddBookDialog.vue b/frontend/src/components/AddBookDialog.vue
-index 9659be7..a9d3b84 100644
---- a/frontend/src/components/AddBookDialog.vue
-+++ b/frontend/src/components/AddBookDialog.vue
-@@ -180,6 +180,41 @@
-             />
-           </div>
- 
-+          <div class="series-grid">
-+            <div class="input-group">
-+              <label for="new-book-series">{{ t('series.name') }}</label>
-+              <input
-+                id="new-book-series"
-+                v-model="book.series"
-+                class="modern-input meta-input"
-+                list="new-book-series-options"
-+                maxlength="200"
-+                autocomplete="off"
-+                :placeholder="t('series.namePlaceholder')"
-+                @focus="loadSeriesOptions"
-+              />
-+              <datalist id="new-book-series-options">
-+                <option
-+                  v-for="item in seriesOptions"
-+                  :key="item.name"
-+                  :value="item.name"
-+                ></option>
-+              </datalist>
-+            </div>
-+            <div class="input-group">
-+              <label for="new-book-series-index">{{ t('series.volume') }}</label>
-+              <input
-+                id="new-book-series-index"
-+                v-model="book.seriesIndex"
-+                class="modern-input meta-input"
-+                inputmode="decimal"
-+                maxlength="7"
-+                autocomplete="off"
-+                placeholder="-"
-+              />
-+            </div>
-+          </div>
-+
-           <div class="dates-grid">
-             <div class="input-group">
-               <label for="new-book-read-date">{{ t('book.read_status') }}</label>
-@@ -307,7 +342,20 @@ const initialBookState = {
-   isbn: '',
-   readDate: null,
-   pubDate: null,
--  rating: null
-+  rating: null,
-+  series: '',
-+  seriesIndex: ''
-+}
-+
-+// Séries já usadas, para autocompletar (carrega na primeira vez que o campo recebe foco).
-+const seriesOptions = ref([])
-+async function loadSeriesOptions() {
-+  if (seriesOptions.value.length) return
-+  try {
-+    seriesOptions.value = await api.getSeries()
-+  } catch {
-+    seriesOptions.value = []
-+  }
- }
- 
- // Resultado da busca por ISBN: as chaves do Open Library só valem para o ISBN
-@@ -448,6 +496,8 @@ async function saveBook() {
-     if (book.pubDate) formData.append('pubDate', toApiDate(book.pubDate))
-     if (book.readDate) formData.append('readDate', toApiDate(book.readDate))
-     if (book.rating) formData.append('rating', String(book.rating))
-+    if (book.series?.trim()) formData.append('series', book.series.trim())
-+    if (String(book.seriesIndex ?? '').trim()) formData.append('seriesIndex', String(book.seriesIndex).trim())
- 
-     if (lookup.isbn && lookup.isbn === book.isbn.trim()) {
-       if (lookup.olWorkKey) formData.append('olWorkKey', lookup.olWorkKey)
-@@ -844,6 +894,12 @@ button.upload-container {
-   gap: 1.5rem;
- }
- 
-+.series-grid {
-+  display: grid;
-+  grid-template-columns: minmax(0, 1fr) 6.5rem;
-+  gap: 1rem;
-+}
-+
- .date-wrapper {
-   display: flex;
-   align-items: center;
-diff --git a/frontend/src/components/BatchBar.vue b/frontend/src/components/BatchBar.vue
+diff --git a/backend/src/tests/unit/csv.test.js b/backend/src/tests/unit/csv.test.js
 new file mode 100644
-index 0000000..fcf596c
+index 0000000..5e29c8f
 --- /dev/null
-+++ b/frontend/src/components/BatchBar.vue
-@@ -0,0 +1,296 @@
-+<template>
-+  <div
-+    class="batch-bar"
-+    role="toolbar"
-+    :aria-label="t('batch.toolbar')"
-+  >
-+    <span
-+      class="batch-count"
-+      aria-live="polite"
-+    >{{ t('batch.selected', { n: count }, count) }}</span>
++++ b/backend/src/tests/unit/csv.test.js
+@@ -0,0 +1,26 @@
++import { parseCsv, csvToObjects, toCsv } from '../../utils/csv.js'
 +
-+    <button
-+      type="button"
-+      class="batch-link"
-+      @click="emit('select-all')"
-+    >{{ allSelected ? t('batch.selectNone') : t('batch.selectAll') }}</button>
-+
-+    <div class="batch-actions">
-+      <Button
-+        :label="t('batch.status')"
-+        :aria-label="t('batch.status')"
-+        icon="pi pi-check-circle"
-+        class="p-button-sm p-button-outlined batch-btn"
-+        :disabled="!count || busy"
-+        aria-haspopup="true"
-+        aria-controls="batch-status-menu"
-+        @click="event => statusMenu.toggle(event)"
-+      />
-+      <Menu
-+        id="batch-status-menu"
-+        ref="statusMenu"
-+        :model="statusItems"
-+        popup
-+      />
-+
-+      <Button
-+        :label="t('batch.category')"
-+        :aria-label="t('batch.category')"
-+        icon="pi pi-tags"
-+        class="p-button-sm p-button-outlined batch-btn"
-+        :disabled="!count || busy"
-+        @click="openTagDialog"
-+      />
-+
-+      <Button
-+        :label="t('batch.delete')"
-+        :aria-label="t('batch.delete')"
-+        icon="pi pi-trash"
-+        class="p-button-sm p-button-outlined p-button-danger batch-btn"
-+        :disabled="!count || busy"
-+        @click="confirmDelete"
-+      />
-+
-+      <Button
-+        icon="pi pi-times"
-+        class="p-button-sm p-button-text p-button-rounded close-btn"
-+        :aria-label="t('batch.cancel')"
-+        v-tooltip.top="t('batch.cancel')"
-+        @click="emit('cancel')"
-+      />
-+    </div>
-+
-+    <Dialog
-+      v-model:visible="tagDialog"
-+      modal
-+      :header="t('batch.categoryTitle', { n: count }, count)"
-+      :style="{ width: 'min(26rem, 92vw)' }"
-+      :draggable="false"
-+    >
-+      <form
-+        class="tag-form"
-+        @submit.prevent="applyTag('addTag')"
-+      >
-+        <label for="batch-tag">{{ t('batch.categoryName') }}</label>
-+        <input
-+          id="batch-tag"
-+          v-model="tagName"
-+          class="modern-input"
-+          list="batch-tag-options"
-+          maxlength="200"
-+          autocomplete="off"
-+          :placeholder="t('batch.categoryPlaceholder')"
-+        />
-+        <datalist id="batch-tag-options">
-+          <option
-+            v-for="tag in tags"
-+            :key="tag.name"
-+            :value="tag.name"
-+          ></option>
-+        </datalist>
-+        <div class="tag-form-actions">
-+          <Button
-+            type="button"
-+            :label="t('batch.removeCategory')"
-+            icon="pi pi-minus"
-+            class="p-button-sm p-button-text p-button-danger"
-+            :disabled="!tagName.trim() || busy"
-+            @click="applyTag('removeTag')"
-+          />
-+          <Button
-+            type="submit"
-+            :label="t('batch.addCategory')"
-+            icon="pi pi-plus"
-+            class="p-button-sm btn-action-primary"
-+            :disabled="!tagName.trim() || busy"
-+            :loading="busy"
-+          />
-+        </div>
-+      </form>
-+    </Dialog>
-+  </div>
-+</template>
-+
-+<script setup>
-+import { ref, computed } from 'vue'
-+import { useI18n } from 'vue-i18n'
-+import { useConfirm } from 'primevue/useconfirm'
-+import { useToast } from 'primevue/usetoast'
-+import Button from 'primevue/button'
-+import Menu from 'primevue/menu'
-+import Dialog from 'primevue/dialog'
-+import api from '../services/api.js'
-+import { toApiDate } from '../utils/dates.js'
-+
-+/**
-+ * Barra de ações em lote da biblioteca: status, categoria e excluir para os
-+ * livros selecionados. Avisa o pai com `done` para recarregar a lista.
-+ */
-+const props = defineProps({
-+  ids: { type: Array, required: true },
-+  allSelected: { type: Boolean, default: false }
-+})
-+
-+const emit = defineEmits(['select-all', 'cancel', 'done'])
-+const { t } = useI18n()
-+const confirm = useConfirm()
-+const toast = useToast()
-+
-+const count = computed(() => props.ids.length)
-+const busy = ref(false)
-+const statusMenu = ref(null)
-+const tagDialog = ref(false)
-+const tagName = ref('')
-+const tags = ref([])
-+
-+async function run(body, successKey) {
-+  busy.value = true
-+  try {
-+    const { updated } = await api.batchBooks({ ids: props.ids, ...body })
-+    toast.add({ severity: 'success', summary: t('common.success'), detail: t(successKey, { n: updated }, updated), life: 3000 })
-+    emit('done')
-+  } catch (error) {
-+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
-+  } finally {
-+    busy.value = false
-+  }
-+}
-+
-+const statusItems = computed(() => [
-+  { label: t('status.want'), icon: 'pi pi-bookmark', command: () => setStatus('want') },
-+  { label: t('status.reading'), icon: 'pi pi-book', command: () => setStatus('reading') },
-+  { label: t('status.read'), icon: 'pi pi-check', command: () => setStatus('read') },
-+  { separator: true },
-+  { label: t('status.clear'), icon: 'pi pi-times', command: () => setStatus('none') }
-+])
-+
-+function setStatus(status) {
-+  run({ action: 'status', status, date: toApiDate(new Date()) }, 'batch.doneStatus')
-+}
-+
-+async function openTagDialog() {
-+  tagName.value = ''
-+  tagDialog.value = true
-+  try {
-+    tags.value = await api.getTags()
-+  } catch {
-+    tags.value = []
-+  }
-+}
-+
-+async function applyTag(action) {
-+  const tag = tagName.value.trim()
-+  if (!tag) return
-+  await run({ action, tag }, action === 'addTag' ? 'batch.doneAddTag' : 'batch.doneRemoveTag')
-+  tagDialog.value = false
-+}
-+
-+function confirmDelete() {
-+  confirm.require({
-+    message: t('batch.confirmDelete', { n: count.value }, count.value),
-+    header: t('bookDialog.confirm'),
-+    icon: 'pi pi-exclamation-triangle',
-+    acceptClass: 'p-button-rounded p-button-danger',
-+    rejectClass: 'p-button-text p-button-secondary',
-+    acceptLabel: t('batch.delete'),
-+    rejectLabel: t('common.cancel'),
-+    accept: () => run({ action: 'delete' }, 'batch.doneDelete')
++describe('CSV', () => {
++  it('lê aspas, vírgulas, aspas duplicadas, quebras de linha, CRLF e BOM', () => {
++    const text = '﻿Title,Author\r\n"Duna, edição especial","Herbert ""Frank"""\r\n"Linha 1\nLinha 2",X\r\n\r\n'
++    expect(parseCsv(text)).toEqual([
++      ['Title', 'Author'],
++      ['Duna, edição especial', 'Herbert "Frank"'],
++      ['Linha 1\nLinha 2', 'X']
++    ])
 +  })
-+}
-+</script>
 +
-+<style scoped>
-+.batch-bar {
-+  position: sticky;
-+  bottom: 1rem;
-+  z-index: 120;
-+  margin: 1.5rem auto 0;
-+  width: fit-content;
-+  max-width: calc(100% - 2rem);
-+  display: flex;
-+  align-items: center;
-+  gap: 0.75rem 1rem;
-+  flex-wrap: wrap;
-+  padding: 0.6rem 0.75rem 0.6rem 1.1rem;
-+  border-radius: 16px;
-+  background: var(--bg-panel);
-+  border: 1px solid rgba(var(--main-color-rgb), 0.45);
-+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-+}
++  it('vira objetos pelo cabeçalho; campo faltando vira vazio', () => {
++    const { headers, records } = csvToObjects('a,b,c\n1,2\n')
++    expect(headers).toEqual(['a', 'b', 'c'])
++    expect(records).toEqual([{ a: '1', b: '2', c: '' }])
++  })
 +
-+.batch-count {
-+  font-weight: 700;
-+  color: var(--text-primary);
-+  white-space: nowrap;
-+}
++  it('escreve e lê de volta igual', () => {
++    const rows = [['título', 'notas'], ['Duna, 1', 'disse "oi"\nfim'], ['=SOMA(A1)', null]]
++    const back = parseCsv(toCsv(rows))
++    expect(back[1]).toEqual(['Duna, 1', 'disse "oi"\nfim'])
++    // fórmula vira texto
++    expect(back[2]).toEqual(["'=SOMA(A1)", ''])
++  })
++})
+diff --git a/backend/src/utils/csv.js b/backend/src/utils/csv.js
+new file mode 100644
+index 0000000..01fea0a
+--- /dev/null
++++ b/backend/src/utils/csv.js
+@@ -0,0 +1,76 @@
++/**
++ * CSV (RFC 4180) sem dependência: aspas, aspas duplicadas, quebras de linha
++ * dentro de campos, CRLF e BOM do Excel.
++ */
 +
-+.batch-link {
-+  background: none;
-+  border: none;
-+  padding: 0.25rem;
-+  font: inherit;
-+  font-size: 0.88rem;
-+  color: var(--main-color);
-+  cursor: pointer;
-+  text-decoration: underline;
-+  text-underline-offset: 3px;
-+}
++/** Texto CSV → lista de linhas (cada linha é uma lista de campos). */
++export function parseCsv(text) {
++  const input = String(text).replace(/^﻿/, '')
++  const rows = []
++  let row = []
++  let field = ''
++  let inQuotes = false
 +
-+.batch-actions {
-+  display: flex;
-+  align-items: center;
-+  gap: 0.5rem;
-+  flex-wrap: wrap;
-+}
++  for (let i = 0; i < input.length; i++) {
++    const char = input[i]
 +
-+.batch-btn.p-button {
-+  border-radius: 999px;
-+}
++    if (inQuotes) {
++      if (char === '"') {
++        if (input[i + 1] === '"') {
++          field += '"'
++          i++
++        } else {
++          inQuotes = false
++        }
++      } else {
++        field += char
++      }
++      continue
++    }
 +
-+.tag-form {
-+  display: flex;
-+  flex-direction: column;
-+  gap: 0.6rem;
-+}
-+
-+.tag-form label {
-+  font-size: 0.9rem;
-+  color: var(--text-secondary);
-+}
-+
-+.tag-form-actions {
-+  display: flex;
-+  justify-content: space-between;
-+  gap: 0.5rem;
-+  margin-top: 0.5rem;
-+}
-+
-+/* No celular a lista rola dentro de uma área mais alta que a tela: a barra
-+   fica presa à janela para não sumir embaixo. */
-+@media (max-width: 768px) {
-+  .batch-bar {
-+    position: fixed;
-+    left: 50%;
-+    transform: translateX(-50%);
-+    bottom: 0.75rem;
-+    margin: 0;
-+    width: max-content;
-+    max-width: calc(100vw - 1.5rem);
-+  }
-+}
-+
-+@media (max-width: 600px) {
-+  .batch-bar {
-+    padding: 0.6rem 0.75rem;
-+    gap: 0.5rem;
++    if (char === '"') {
++      inQuotes = true
++    } else if (char === ',') {
++      row.push(field)
++      field = ''
++    } else if (char === '\n' || char === '\r') {
++      if (char === '\r' && input[i + 1] === '\n') i++
++      row.push(field)
++      rows.push(row)
++      row = []
++      field = ''
++    } else {
++      field += char
++    }
 +  }
 +
-+  .batch-btn.p-button :deep(.p-button-label) {
-+    display: none;
++  if (field !== '' || row.length > 0) {
++    row.push(field)
++    rows.push(row)
 +  }
 +
-+  .batch-btn.p-button :deep(.p-button-icon) {
-+    margin: 0;
-+  }
++  // Linhas totalmente vazias (fim do arquivo, linhas em branco) não contam.
++  return rows.filter(cells => cells.some(cell => cell.trim() !== ''))
 +}
-+</style>
-diff --git a/frontend/src/components/BookDialog.vue b/frontend/src/components/BookDialog.vue
-index 292b60f..844b04d 100644
---- a/frontend/src/components/BookDialog.vue
-+++ b/frontend/src/components/BookDialog.vue
-@@ -115,6 +115,31 @@
-               <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}
-               </h1>
-               <h2 class="book-author">{{ book.authors || (loading ? '' : t('bookDialog.unknownAuthor')) }}</h2>
-+              <template v-if="book.series && !loading">
-+                <router-link
-+                  v-if="!isReadOnly"
-+                  :to="{ name: 'library', query: { series: book.series, sort: 'series', order: 'asc' } }"
-+                  class="series-line"
-+                  :title="t('series.seeAll', { series: book.series })"
-+                  @click="visible = false"
-+                >
-+                  <i
-+                    class="pi pi-clone"
-+                    aria-hidden="true"
-+                  ></i>
-+                  {{ seriesLabel }}
-+                </router-link>
-+                <span
-+                  v-else
-+                  class="series-line"
-+                >
-+                  <i
-+                    class="pi pi-clone"
-+                    aria-hidden="true"
-+                  ></i>
-+                  {{ seriesLabel }}
++
++/** Linhas → objetos usando a primeira linha como cabeçalho. */
++export function csvToObjects(text) {
++  const [header, ...rows] = parseCsv(text)
++  if (!header) return { headers: [], records: [] }
++  const headers = header.map(name => name.trim())
++  const records = rows.map(cells => Object.fromEntries(headers.map((name, i) => [name, cells[i] ?? ''])))
++  return { headers, records }
++}
++
++function escapeCell(value) {
++  if (value === null || value === undefined) return ''
++  let text = String(value)
++  // Fórmula em planilha (=, +, -, @ no começo) vira texto: evita "CSV injection".
++  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`
++  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
++}
++
++/** Lista de linhas → texto CSV (com BOM para o Excel abrir acentos certo). */
++export function toCsv(rows) {
++  return '﻿' + rows.map(cells => cells.map(escapeCell).join(',')).join('\r\n') + '\r\n'
++}
+diff --git a/frontend/src/locales/en.json b/frontend/src/locales/en.json
+index 3dae467..314724f 100644
+--- a/frontend/src/locales/en.json
++++ b/frontend/src/locales/en.json
+@@ -374,7 +374,41 @@
+       "on": "You now accept follow requests.",
+       "off": "Your followers can't see your activity anymore."
+     },
+-    "verifyFirst": "Confirm your email to turn these on. Use the link we sent or the \"Resend link\" button at the top of the page."
++    "verifyFirst": "Confirm your email to turn these on. Use the link we sent or the \"Resend link\" button at the top of the page.",
++    "account": {
++      "title": "Username and email",
++      "desc": "Your username (also your public library address) and contact email.",
++      "username": "Username",
++      "email": "Email",
++      "change": "Change",
++      "notVerified": "not confirmed",
++      "usernameTitle": "Change username",
++      "emailTitle": "Change email",
++      "usernameHint": "Letters, numbers, dot, hyphen and underscore. Your public library link changes too: the old address stops working.",
++      "emailHint": "We'll send a confirmation link to the new email and a notice to the current one.",
++      "newUsername": "New username",
++      "newEmail": "New email",
++      "usernameChanged": "You are now {name}.",
++      "emailChanged": "Email changed. Check the new inbox to confirm it."
++    },
++    "data": {
++      "title": "Your data",
++      "exportDesc": "Download a copy of everything: books, ratings, notes, status, goals and account data. The CSV opens in spreadsheets and can be imported back.",
++      "exportJson": "Download everything (JSON)",
++      "exportCsv": "Download books (CSV)",
++      "importTitle": "Import books",
++      "importDesc": "Bring your Goodreads shelf (or a CSV exported from Librishelf). Books already here are skipped.",
++      "step1": "On Goodreads, from a computer: My Books → Import and export → Export Library.",
++      "step2": "Download the .csv file when the link appears.",
++      "step3": "Choose the file below. Shelves become categories; \"read\", \"currently-reading\" and \"to-read\" become Read, Reading and Want to read.",
++      "chooseFile": "Choose a .csv file",
++      "importing": "Importing... this may take a few seconds.",
++      "imported": "No books imported | {n} book imported | {n} books imported",
++      "duplicates": "{n} was already on your shelf | {n} were already on your shelf",
++      "failed": "{n} with problems | {n} with problems",
++      "errorLine": "Line {line} ({title})",
++      "seeLibrary": "See in library"
++    }
+   },
+   "privacy": {
+     "title": "Privacy Policy",
+@@ -385,7 +419,7 @@
+         "title": "What we collect",
+         "paragraphs": [
+           "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
+-          "Content you add: your books and their details (title, authors, publisher, ISBN, tags, dates and ratings) and the covers you upload.",
++          "Content you add: your books and their details (title, authors, publisher, ISBN, series, tags, dates, ratings, reading status and goals), personal notes and the covers you upload. Personal notes are yours only: they never appear in your public library.",
+           "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts."
+         ]
+       },
+@@ -440,7 +474,7 @@
+       {
+         "title": "Your rights (LGPD)",
+         "paragraphs": [
+-          "You can view, correct, request a copy of or delete your data at any time. You can make corrections and delete your account in the app itself; for other requests, reach us at the contact below."
++          "You can view, correct, download a copy of or delete your data at any time, all from the app: in Account → Your data you download everything as JSON or CSV, and deleting your account erases everything right away. For any other request, contact us below."
+         ]
+       },
+       {
+diff --git a/frontend/src/locales/pt.json b/frontend/src/locales/pt.json
+index 867d058..46ca9ae 100644
+--- a/frontend/src/locales/pt.json
++++ b/frontend/src/locales/pt.json
+@@ -374,7 +374,41 @@
+       "on": "Agora você aceita pedidos para seguir.",
+       "off": "Seus seguidores não veem mais sua atividade."
+     },
+-    "verifyFirst": "Confirme seu e-mail para ligar estas opções. Use o link que enviamos ou o botão \"Reenviar link\" no topo da página."
++    "verifyFirst": "Confirme seu e-mail para ligar estas opções. Use o link que enviamos ou o botão \"Reenviar link\" no topo da página.",
++    "account": {
++      "title": "Usuário e e-mail",
++      "desc": "Seu nome de usuário (também o endereço da biblioteca pública) e o e-mail de contato.",
++      "username": "Nome de usuário",
++      "email": "E-mail",
++      "change": "Alterar",
++      "notVerified": "não confirmado",
++      "usernameTitle": "Trocar nome de usuário",
++      "emailTitle": "Trocar e-mail",
++      "usernameHint": "Letras, números, ponto, hífen e sublinhado. O link da sua biblioteca pública muda junto: o endereço antigo deixa de funcionar.",
++      "emailHint": "Vamos mandar um link de confirmação para o e-mail novo, e um aviso para o atual.",
++      "newUsername": "Novo nome de usuário",
++      "newEmail": "Novo e-mail",
++      "usernameChanged": "Agora você é {name}.",
++      "emailChanged": "E-mail trocado. Confira a caixa de entrada do novo endereço para confirmar."
++    },
++    "data": {
++      "title": "Seus dados",
++      "exportDesc": "Baixe uma cópia de tudo: livros, notas, anotações, status, metas e dados da conta. O CSV abre em planilhas e pode ser importado de volta.",
++      "exportJson": "Baixar tudo (JSON)",
++      "exportCsv": "Baixar livros (CSV)",
++      "importTitle": "Importar livros",
++      "importDesc": "Traga sua estante do Goodreads (ou um CSV exportado do Librishelf). Livros que já estão aqui são pulados.",
++      "step1": "No Goodreads, pelo computador: My Books → Import and export → Export Library.",
++      "step2": "Baixe o arquivo .csv quando o link aparecer.",
++      "step3": "Escolha o arquivo abaixo. Prateleiras viram categorias; \"read\", \"currently-reading\" e \"to-read\" viram Lido, Lendo e Quero ler.",
++      "chooseFile": "Escolher arquivo .csv",
++      "importing": "Importando... isso pode levar alguns segundos.",
++      "imported": "Nenhum livro importado | {n} livro importado | {n} livros importados",
++      "duplicates": "{n} já estava na estante | {n} já estavam na estante",
++      "failed": "{n} com problema | {n} com problema",
++      "errorLine": "Linha {line} ({title})",
++      "seeLibrary": "Ver na biblioteca"
++    }
+   },
+   "privacy": {
+     "title": "Política de Privacidade",
+@@ -385,7 +419,7 @@
+         "title": "Quais dados coletamos",
+         "paragraphs": [
+           "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
+-          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, tags, datas e notas) e as capas que você enviar.",
++          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, série, tags, datas, notas, status de leitura e metas), anotações pessoais e as capas que você enviar. As anotações pessoais são só suas: nunca aparecem na biblioteca pública.",
+           "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login."
+         ]
+       },
+@@ -440,7 +474,7 @@
+       {
+         "title": "Seus direitos (LGPD)",
+         "paragraphs": [
+-          "Você pode consultar, corrigir, pedir uma cópia ou excluir seus dados a qualquer momento. Correções e a exclusão da conta você faz pelo próprio app; para os outros pedidos, fale com a gente pelo contato abaixo."
++          "Você pode consultar, corrigir, baixar uma cópia ou excluir seus dados a qualquer momento, tudo pelo próprio app: em Conta → Seus dados você baixa tudo em JSON ou CSV, e a exclusão da conta apaga tudo na hora. Para qualquer outro pedido, fale com a gente pelo contato abaixo."
+         ]
+       },
+       {
+diff --git a/frontend/src/services/api.js b/frontend/src/services/api.js
+index 9ef3143..2b2dd56 100644
+--- a/frontend/src/services/api.js
++++ b/frontend/src/services/api.js
+@@ -62,6 +62,34 @@ export default {
+   },
+ 
+   /** Qualquer combinação de { isPublic, showInCommunity, showActivity }. */
++  changeEmail(email, password, locale) {
++    return client.patch('/auth/me/email', { email, password, locale })
++  },
++
++  changeUsername(username, password) {
++    return client.patch('/auth/me/username', { username, password })
++  },
++
++  /** Baixa a exportação ('json' ou 'csv') como Blob, com o nome de arquivo do servidor. */
++  async exportData(format = 'json') {
++    const response = await fetch(`${API_URL}/auth/me/export?format=${format}`, { credentials: 'include' })
++    if (!response.ok) {
++      let message = 'Não foi possível exportar.'
++      try { message = (await response.json()).error || message } catch { /* corpo vazio */ }
++      throw new Error(message)
++    }
++    const disposition = response.headers.get('Content-Disposition') || ''
++    const filename = disposition.match(/filename="([^"]+)"/)?.[1] || `librishelf.${format}`
++    return { blob: await response.blob(), filename }
++  },
++
++  /** Importa um CSV do Goodreads ou do Librishelf. */
++  importBooks(file) {
++    const formData = new FormData()
++    formData.append('file', file)
++    return client.post('/library/import', formData)
++  },
++
+   setPrivacy(settings) {
+     return client.patch('/auth/me/visibility', settings)
+   },
+diff --git a/frontend/src/views/Settings.vue b/frontend/src/views/Settings.vue
+index e5286f3..492dba9 100644
+--- a/frontend/src/views/Settings.vue
++++ b/frontend/src/views/Settings.vue
+@@ -103,6 +103,46 @@
+           </div>
+         </section>
+ 
++        <!-- Conta: nome de usuário e e-mail -->
++        <section
++          class="settings-card"
++          aria-labelledby="settings-account-title"
++        >
++          <h2 id="settings-account-title">{{ t('settings.account.title') }}</h2>
++          <p class="card-desc">{{ t('settings.account.desc') }}</p>
++
++          <dl class="account-rows">
++            <div class="account-row">
++              <dt>{{ t('settings.account.username') }}</dt>
++              <dd>
++                <span class="account-value">{{ user?.name }}</span>
++                <Button
++                  :label="t('settings.account.change')"
++                  class="p-button-text p-button-sm"
++                  @click="openAccountDialog('username')"
++                />
++              </dd>
++            </div>
++            <div class="account-row">
++              <dt>{{ t('settings.account.email') }}</dt>
++              <dd>
++                <span class="account-value">
++                  {{ user?.email }}
++                  <span
++                    v-if="!emailVerified"
++                    class="badge-pending"
++                  >{{ t('settings.account.notVerified') }}</span>
 +                </span>
-+              </template>
-               <template v-if="!loading && !loadFailed">
-                 <StarRating
-                   v-if="!isReadOnly"
-@@ -151,6 +176,53 @@
-             />
-           </div>
++                <Button
++                  :label="t('settings.account.change')"
++                  class="p-button-text p-button-sm"
++                  @click="openAccountDialog('email')"
++                />
++              </dd>
++            </div>
++          </dl>
++        </section>
++
+         <!-- Senha -->
+         <section
+           class="settings-card"
+@@ -173,6 +213,86 @@
+           </form>
+         </section>
  
-+          <div class="series-grid">
-+            <div class="info-group">
-+              <label for="book-series">{{ t('series.name') }}</label>
-+              <input
-+                id="book-series"
-+                v-model="book.series"
-+                class="modern-input"
-+                list="book-series-options"
-+                maxlength="200"
-+                autocomplete="off"
-+                :placeholder="t('series.namePlaceholder')"
-+              />
-+              <datalist id="book-series-options">
-+                <option
-+                  v-for="item in seriesOptions"
-+                  :key="item.name"
-+                  :value="item.name"
-+                ></option>
-+              </datalist>
-+            </div>
-+            <div class="info-group">
-+              <label for="book-series-index">{{ t('series.volume') }}</label>
-+              <input
-+                id="book-series-index"
-+                v-model="book.series_index"
-+                class="modern-input"
-+                inputmode="decimal"
-+                maxlength="7"
-+                autocomplete="off"
-+                placeholder="-"
-+              />
-+            </div>
++        <!-- Seus dados: exportar e importar -->
++        <section
++          class="settings-card"
++          aria-labelledby="settings-data-title"
++        >
++          <h2 id="settings-data-title">{{ t('settings.data.title') }}</h2>
++          <p class="card-desc">{{ t('settings.data.exportDesc') }}</p>
++          <div class="button-row">
++            <Button
++              :label="t('settings.data.exportJson')"
++              icon="pi pi-download"
++              class="p-button-outlined p-button-sm"
++              :loading="exporting === 'json'"
++              :disabled="Boolean(exporting)"
++              @click="downloadExport('json')"
++            />
++            <Button
++              :label="t('settings.data.exportCsv')"
++              icon="pi pi-file"
++              class="p-button-outlined p-button-sm"
++              :loading="exporting === 'csv'"
++              :disabled="Boolean(exporting)"
++              @click="downloadExport('csv')"
++            />
 +          </div>
 +
-+          <div class="info-group">
-+            <label for="book-notes">{{ t('notes.label') }}</label>
-+            <textarea
-+              id="book-notes"
-+              v-model="book.notes"
-+              class="modern-input notes-input"
-+              rows="4"
-+              maxlength="5000"
-+              :placeholder="t('notes.placeholder')"
-+            ></textarea>
-+            <span class="field-hint">{{ t('notes.privateHint') }} · {{ (book.notes || '').length }}/5000</span>
-+          </div>
++          <h3 class="sub-title">{{ t('settings.data.importTitle') }}</h3>
++          <p class="card-desc">{{ t('settings.data.importDesc') }}</p>
++          <ol class="import-steps">
++            <li>{{ t('settings.data.step1') }}</li>
++            <li>{{ t('settings.data.step2') }}</li>
++            <li>{{ t('settings.data.step3') }}</li>
++          </ol>
 +
-           <div class="dates-grid">
-             <div class="info-group">
-               <label for="book-read-date">{{ t('bookDialog.readDateLabel') }}</label>
-@@ -308,6 +380,21 @@
-             >{{ tag }}</span>
-           </div>
- 
-+          <section
-+            v-if="!isReadOnly && book.notes"
-+            class="notes-section"
-+            aria-labelledby="book-notes-title"
++          <label
++            class="file-drop"
++            :class="{ busy: importing }"
 +          >
-+            <h3 id="book-notes-title">
-+              <i
-+                class="pi pi-pencil"
-+                aria-hidden="true"
-+              ></i>
-+              {{ t('notes.title') }}
-+            </h3>
-+            <p class="notes-text">{{ book.notes }}</p>
-+          </section>
-+
-           <section
-             v-if="showCommunity"
-             class="community-section"
-@@ -499,6 +586,7 @@ import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
- import GeneratedCover from './GeneratedCover.vue'
- import { fromApiDate, toApiDate } from '../utils/dates.js'
- import { statusOf, STATUS_OPTIONS, STATUS_ICONS } from '../utils/readingStatus.js'
-+import { seriesText } from '../utils/series.js'
- import { validateImageFile, createPreviewHandle } from '../utils/files.js'
- 
- const { t, locale } = useI18n()
-@@ -532,7 +620,7 @@ const preview = createPreviewHandle()
- 
- function emptyBook() {
-   // authors: texto para exibir; authorNames: a lista que é editada e salva.
--  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, pubdate: null }
-+  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, series: '', series_index: null, notes: '', pubdate: null }
- }
- 
- const book = ref(emptyBook())
-@@ -577,6 +665,19 @@ const metaItems = computed(() => {
- 
- const currentStatus = computed(() => statusOf(book.value))
- 
-+const seriesLabel = computed(() => seriesText(book.value, t, locale.value))
-+
-+// Séries já usadas, para autocompletar ao editar.
-+const seriesOptions = ref([])
-+async function loadSeriesOptions() {
-+  if (props.isReadOnly || seriesOptions.value.length) return
-+  try {
-+    seriesOptions.value = await api.getSeries()
-+  } catch {
-+    seriesOptions.value = []
-+  }
-+}
-+
- const statusCaption = computed(() => {
-   const status = currentStatus.value
-   if (status === 'read') return t('bookDialog.readOn', { date: formatDate(book.value.read_date) })
-@@ -720,6 +821,7 @@ function editMode() {
-   originalBook = cloneBook(book.value)
-   submitted.value = false
-   isEditing.value = true
-+  loadSeriesOptions()
- }
- 
- function cancelEdit() {
-@@ -778,7 +880,10 @@ async function saveBookDetails() {
-       isbn: book.value.isbn,
-       rating: book.value.rating,
-       pubDate: toApiDate(book.value.pubdate),
--      readDate: toApiDate(book.value.read_date)
-+      readDate: toApiDate(book.value.read_date),
-+      series: (book.value.series || '').trim(),
-+      seriesIndex: String(book.value.series_index ?? '').trim() || null,
-+      notes: book.value.notes || ''
-     })
- 
-     if (selectedFile.value) {
-@@ -816,6 +921,9 @@ function applyResponse(data) {
-     tags: data.tags || '',
-     read_date: fromApiDate(data.read_date),
-     reading_status: data.reading_status ?? null,
-+    series: data.series || '',
-+    series_index: data.series_index ?? null,
-+    notes: data.notes || '',
-     started_at: fromApiDate(data.started_at),
-     pubdate: fromApiDate(data.publication_date)
-   }
-@@ -1222,6 +1330,72 @@ button.cover-wrapper {
- }
- 
- /* Editora · ano · ISBN */
-+.series-line {
-+  display: inline-flex;
-+  align-items: center;
-+  gap: 0.4rem;
-+  margin-top: 0.35rem;
-+  color: var(--main-color);
-+  font-size: 0.92rem;
-+  font-weight: 600;
-+  text-decoration: none;
-+}
-+
-+.series-line .pi {
-+  font-size: 0.8rem;
-+}
-+
-+a.series-line:hover {
-+  text-decoration: underline;
-+}
-+
-+.series-grid {
-+  display: grid;
-+  grid-template-columns: minmax(0, 1fr) 6.5rem;
-+  gap: 1rem;
-+}
-+
-+.notes-input {
-+  resize: vertical;
-+  min-height: 5.5rem;
-+  font: inherit;
-+  line-height: 1.5;
-+}
-+
-+.field-hint {
-+  font-size: 0.78rem;
-+  color: var(--text-secondary);
-+}
-+
-+.notes-section {
-+  border: 1px solid var(--border-color);
-+  border-radius: 12px;
-+  padding: 0.85rem 1rem;
-+  background: rgba(var(--main-color-rgb), 0.05);
-+}
-+
-+.notes-section h3 {
-+  margin: 0 0 0.4rem;
-+  font-size: 0.82rem;
-+  font-weight: 700;
-+  text-transform: uppercase;
-+  letter-spacing: 0.4px;
-+  color: var(--text-secondary);
-+  display: flex;
-+  align-items: center;
-+  gap: 0.4rem;
-+}
-+
-+.notes-text {
-+  margin: 0;
-+  white-space: pre-wrap;
-+  overflow-wrap: anywhere;
-+  color: var(--text-primary);
-+  line-height: 1.55;
-+  max-height: 12rem;
-+  overflow-y: auto;
-+}
-+
- .meta-line {
-   list-style: none;
-   margin: 0;
-diff --git a/frontend/src/components/BookItem.vue b/frontend/src/components/BookItem.vue
-index 4345665..d6e71cf 100644
---- a/frontend/src/components/BookItem.vue
-+++ b/frontend/src/components/BookItem.vue
-@@ -3,8 +3,10 @@
-     <button
-       type="button"
-       class="book-card"
-+      :class="{ 'is-selected': selectable && selected }"
-       :aria-label="ariaLabel"
--      @click="displayDialog = true"
-+      :aria-pressed="selectable ? selected : undefined"
-+      @click="onCardClick"
-     >
-       <span class="cover-wrapper">
-         <img
-@@ -26,6 +28,13 @@
-           aria-hidden="true"
-         ></span>
- 
-+        <span
-+          v-if="selectable"
-+          class="select-check"
-+          :class="{ checked: selected }"
-+          aria-hidden="true"
-+        ><i class="pi pi-check"></i></span>
-+
-         <span
-           v-if="status === 'reading' || status === 'want'"
-           class="status-badge"
-@@ -49,11 +58,15 @@
-           class="book-author"
-           :title="book.authors"
-         >{{ book.authors }}</span>
-+        <span
-+          v-if="book.series"
-+          class="book-series"
-+        >{{ seriesText(book, t, locale) }}</span>
-       </span>
-     </button>
- 
-     <button
--      v-if="quickActions && !readOnly"
-+      v-if="quickActions && !readOnly && !selectable"
-       type="button"
-       class="quick-read"
-       :class="{ 'is-read': isRead, busy: saving }"
-@@ -88,10 +101,11 @@ import { useI18n } from 'vue-i18n'
- import BookDialog from './BookDialog.vue'
- import { useReadToggle } from '../composables/useReadToggle.js'
- import { statusOf } from '../utils/readingStatus.js'
-+import { seriesText } from '../utils/series.js'
- import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
- import GeneratedCover from './GeneratedCover.vue'
- 
--const { t } = useI18n()
-+const { t, locale } = useI18n()
- 
- const props = defineProps({
-   book: { type: Object, required: true },
-@@ -99,10 +113,18 @@ const props = defineProps({
-   readOnly: { type: Boolean, default: false },
-   ownerUsername: { type: String, default: '' },
-   /** Botão de marcar como lido sobre a capa (só na biblioteca do dono). */
--  quickActions: { type: Boolean, default: false }
-+  quickActions: { type: Boolean, default: false },
-+  /** Modo seleção (ações em lote): clicar marca/desmarca em vez de abrir. */
-+  selectable: { type: Boolean, default: false },
-+  selected: { type: Boolean, default: false }
- })
- 
--const emit = defineEmits(['updated', 'deleted'])
-+const emit = defineEmits(['updated', 'deleted', 'toggle-select'])
-+
-+function onCardClick() {
-+  if (props.selectable) emit('toggle-select', bookId.value)
-+  else displayDialog.value = true
-+}
- const displayDialog = ref(false)
- 
- const bookId = computed(() => props.book.book_id ?? props.book.id)
-@@ -293,6 +315,39 @@ button.book-card {
-   font-weight: bold;
- }
- 
-+.select-check {
-+  position: absolute;
-+  top: 8px;
-+  left: 8px;
-+  z-index: 4;
-+  width: 28px;
-+  height: 28px;
-+  border-radius: 8px;
-+  border: 2px solid #ffffff;
-+  background: rgba(0, 0, 0, 0.45);
-+  display: flex;
-+  align-items: center;
-+  justify-content: center;
-+  color: transparent;
-+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-+}
-+
-+.select-check.checked {
-+  background: var(--main-color);
-+  border-color: var(--main-color);
-+  color: var(--text-inverse);
-+}
-+
-+.select-check .pi {
-+  font-size: 0.8rem;
-+  font-weight: 700;
-+}
-+
-+.book-card.is-selected {
-+  outline: 3px solid var(--main-color);
-+  outline-offset: 2px;
-+}
-+
- .status-badge {
-   position: absolute;
-   left: 8px;
-@@ -351,4 +406,13 @@ button.book-card {
-   overflow: hidden;
-   text-overflow: ellipsis;
- }
-+.book-series {
-+  display: block;
-+  font-size: 0.78rem;
-+  font-weight: 600;
-+  color: var(--main-color);
-+  white-space: nowrap;
-+  overflow: hidden;
-+  text-overflow: ellipsis;
-+}
- </style>
-diff --git a/frontend/src/components/BookRow.vue b/frontend/src/components/BookRow.vue
-index 7e3b556..ef8a94e 100644
---- a/frontend/src/components/BookRow.vue
-+++ b/frontend/src/components/BookRow.vue
-@@ -1,11 +1,21 @@
- <template>
--  <li class="book-row">
-+  <li
-+    class="book-row"
-+    :class="{ 'is-selected': selectable && selected }"
-+  >
-     <button
-       type="button"
-       class="row-main"
-       :aria-label="ariaLabel"
--      @click="displayDialog = true"
-+      :aria-pressed="selectable ? selected : undefined"
-+      @click="onRowClick"
-     >
-+      <span
-+        v-if="selectable"
-+        class="row-check"
-+        :class="{ checked: selected }"
-+        aria-hidden="true"
-+      ><i class="pi pi-check"></i></span>
-       <span class="thumb">
-         <img
-           v-if="!coverMissing"
-@@ -24,7 +34,9 @@
- 
-       <span class="main-text">
-         <span class="title">{{ book.title }}</span>
--        <span class="authors">{{ book.authors }}</span>
-+        <span class="authors">
-+          {{ book.authors }}<template v-if="book.series"><span class="series"> · {{ seriesText(book, t, locale) }}</span></template>
-+        </span>
-       </span>
- 
-       <span class="col publisher">{{ book.publisher_name || '—' }}</span>
-@@ -55,6 +67,7 @@
-     </button>
- 
-     <button
-+      v-if="!selectable"
-       type="button"
-       class="row-read"
-       :class="{ 'is-read': isRead }"
-@@ -90,14 +103,22 @@ import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
- import { fromApiDate } from '../utils/dates.js'
- import { useReadToggle } from '../composables/useReadToggle.js'
- import { statusOf } from '../utils/readingStatus.js'
-+import { seriesText } from '../utils/series.js'
- 
- /** Linha da biblioteca no modo lista: mais livros por tela, com os dados principais. */
- const props = defineProps({
-   book: { type: Object, required: true },
--  coverVersion: { type: Number, default: 0 }
-+  coverVersion: { type: Number, default: 0 },
-+  selectable: { type: Boolean, default: false },
-+  selected: { type: Boolean, default: false }
- })
- 
--const emit = defineEmits(['updated', 'deleted'])
-+const emit = defineEmits(['updated', 'deleted', 'toggle-select'])
-+
-+function onRowClick() {
-+  if (props.selectable) emit('toggle-select', bookId.value)
-+  else displayDialog.value = true
-+}
- const { t, locale } = useI18n()
- const displayDialog = ref(false)
- 
-@@ -150,6 +171,38 @@ const ariaLabel = computed(() => {
-   transition: border-color 0.15s ease, background-color 0.15s ease;
- }
- 
-+.book-row.is-selected {
-+  border-color: var(--main-color);
-+  background: rgba(var(--main-color-rgb), 0.08);
-+}
-+
-+/* No modo seleção a caixinha entra antes da capa. */
-+.row-main:has(.row-check) {
-+  grid-template-columns: 22px 40px minmax(0, 2.6fr) minmax(0, 1.3fr) 3.5rem 6rem 6rem;
-+}
-+
-+.row-check {
-+  width: 22px;
-+  height: 22px;
-+  border-radius: 6px;
-+  border: 2px solid var(--border-color);
-+  display: flex;
-+  align-items: center;
-+  justify-content: center;
-+  color: transparent;
-+}
-+
-+.row-check.checked {
-+  background: var(--main-color);
-+  border-color: var(--main-color);
-+  color: var(--text-inverse);
-+}
-+
-+.row-check .pi {
-+  font-size: 0.7rem;
-+  font-weight: 700;
-+}
-+
- .book-row:hover {
-   border-color: rgba(var(--main-color-rgb), 0.45);
- }
-@@ -222,6 +275,10 @@ const ariaLabel = computed(() => {
-   text-overflow: ellipsis;
- }
- 
-+.authors .series {
-+  color: var(--main-color);
-+}
-+
- .year {
-   font-variant-numeric: tabular-nums;
- }
-@@ -295,6 +352,10 @@ const ariaLabel = computed(() => {
-     grid-template-columns: 40px minmax(0, 2.4fr) minmax(0, 1.2fr) 6rem 6rem;
-   }
- 
-+  .row-main:has(.row-check) {
-+    grid-template-columns: 22px 40px minmax(0, 2.4fr) minmax(0, 1.2fr) 6rem 6rem;
-+  }
-+
-   .year {
-     display: none;
-   }
-@@ -306,6 +367,10 @@ const ariaLabel = computed(() => {
-     gap: 0.75rem;
-   }
- 
-+  .row-main:has(.row-check) {
-+    grid-template-columns: 22px 40px minmax(0, 1fr) 5.75rem;
-+  }
-+
-   .publisher,
-   .rating {
-     display: none;
-@@ -321,6 +386,10 @@ const ariaLabel = computed(() => {
-     grid-template-columns: 36px minmax(0, 1fr);
-   }
- 
-+  .row-main:has(.row-check) {
-+    grid-template-columns: 22px 36px minmax(0, 1fr);
-+  }
-+
-   .thumb {
-     width: 36px;
-   }
-diff --git a/frontend/src/components/EntityListView.vue b/frontend/src/components/EntityListView.vue
-index 2db2874..358853d 100644
---- a/frontend/src/components/EntityListView.vue
-+++ b/frontend/src/components/EntityListView.vue
-@@ -29,6 +29,48 @@
-       </div>
-     </div>
- 
-+    <div
-+      v-if="!loading && !loadError && items.length"
-+      class="toolbar"
-+    >
-+      <span class="total">{{ t(`${i18nKey}.total`, { n: items.length }, items.length) }}</span>
-+
-+      <div
-+        class="sort-group"
-+        role="group"
-+        :aria-label="t('entities.sortLabel')"
-+      >
-+        <button
-+          v-for="option in sortOptions"
-+          :key="option.value"
-+          type="button"
-+          class="pill"
-+          :class="{ active: sortBy === option.value }"
-+          :aria-pressed="sortBy === option.value"
-+          @click="sortBy = option.value"
-+        >{{ option.label }}</button>
-+      </div>
-+
-+      <button
-+        type="button"
-+        class="pill merge-toggle"
-+        :class="{ active: merging }"
-+        :aria-pressed="merging"
-+        @click="toggleMerging"
-+      >
-+        <i
-+          class="pi pi-sitemap"
-+          aria-hidden="true"
-+        ></i>
-+        {{ merging ? t('entities.mergeCancel') : t('entities.mergeMode') }}
-+      </button>
-+    </div>
-+
-+    <p
-+      v-if="merging"
-+      class="merge-help"
-+    >{{ t('entities.mergeHelp') }}</p>
-+
-     <div class="content-body">
-       <div
-         v-if="loading"
-@@ -76,14 +118,26 @@
-         class="entity-grid"
-       >
-         <li
--          v-for="(item, index) in filteredItems"
-+          v-for="item in filteredItems"
-           :key="item.name"
-+          class="entity-item"
-         >
--          <router-link
--            :to="{ path: '/books', query: { [queryParam]: item.name } }"
-+          <component
-+            :is="merging ? 'button' : 'router-link'"
-+            v-bind="merging
-+              ? { type: 'button', 'aria-pressed': selected.has(item.name) }
-+              : { to: { path: '/books', query: { [queryParam]: item.name } } }"
-             class="entity-card"
-+            :class="{ 'is-selected': merging && selected.has(item.name) }"
-             :style="{ '--accent-color': tagColor(item.name) }"
-+            @click="merging && toggleSelected(item.name)"
-           >
-+            <span
-+              v-if="merging"
-+              class="select-check"
-+              :class="{ checked: selected.has(item.name) }"
-+              aria-hidden="true"
-+            ><i class="pi pi-check"></i></span>
-             <span
-               class="avatar-wrapper"
-               aria-hidden="true"
-@@ -106,25 +160,132 @@
-               <span class="entity-name">{{ item.name }}</span>
-               <span class="entity-meta">
-                 {{ item.count ? t(`${i18nKey}.bookCount`, { count: item.count }, item.count) : t(viewKey) }}
-+                <template v-if="item.count && item.read !== undefined"> · {{ t('entities.readCount', { n: item.read }, item.read) }}</template>
-               </span>
-+              <span
-+                v-if="item.count && item.read !== undefined"
-+                class="read-bar"
-+                aria-hidden="true"
-+              ><span :style="{ width: `${Math.round((item.read / item.count) * 100)}%` }"></span></span>
-             </span>
- 
-             <i
-+              v-if="!merging"
-               class="pi pi-chevron-right arrow-icon"
-               aria-hidden="true"
-             ></i>
--          </router-link>
-+          </component>
-+
-+          <button
-+            v-if="!merging"
-+            type="button"
-+            class="rename-btn"
-+            :aria-label="t('entities.renameOf', { name: item.name })"
-+            v-tooltip.top="t('entities.rename')"
-+            @click="openRename(item)"
-+          >
++            <input
++              ref="importInput"
++              type="file"
++              accept=".csv,text/csv"
++              class="sr-only"
++              :disabled="importing"
++              @change="importFile"
++            />
 +            <i
-+              class="pi pi-pencil"
++              :class="importing ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
 +              aria-hidden="true"
 +            ></i>
-+          </button>
-         </li>
-       </ul>
-     </div>
++            <span>{{ importing ? t('settings.data.importing') : t('settings.data.chooseFile') }}</span>
++          </label>
 +
-+    <div
-+      v-if="merging"
-+      class="merge-bar"
-+      role="toolbar"
-+      :aria-label="t('entities.mergeMode')"
-+    >
-+      <span aria-live="polite">{{ t('entities.selected', { n: selected.size }, selected.size) }}</span>
-+      <Button
-+        :label="t('entities.mergeAction')"
-+        icon="pi pi-sitemap"
-+        class="p-button-sm btn-action-primary"
-+        :disabled="selected.size < 2"
-+        @click="openMerge"
-+      />
-+    </div>
++          <div
++            v-if="importResult"
++            class="import-result"
++            role="status"
++          >
++            <p class="import-summary">
++              <strong>{{ t('settings.data.imported', { n: importResult.imported }, importResult.imported) }}</strong>
++              <span v-if="importResult.duplicates"> · {{ t('settings.data.duplicates', { n: importResult.duplicates }, importResult.duplicates) }}</span>
++              <span v-if="importResult.failed"> · {{ t('settings.data.failed', { n: importResult.failed }, importResult.failed) }}</span>
++            </p>
++            <ul
++              v-if="importResult.errors?.length"
++              class="import-errors"
++            >
++              <li
++                v-for="error in importResult.errors.slice(0, 10)"
++                :key="error.line"
++              >{{ t('settings.data.errorLine', { line: error.line, title: error.title || '—' }) }}: {{ error.reason }}</li>
++            </ul>
++            <router-link
++              v-if="importResult.imported"
++              :to="{ name: 'library' }"
++              class="see-library"
++            >{{ t('settings.data.seeLibrary') }}</router-link>
++          </div>
++        </section>
++
+         <!-- Excluir conta -->
+         <section
+           class="settings-card danger"
+@@ -245,6 +365,51 @@
+         </div>
+       </form>
+     </Dialog>
 +
 +    <Dialog
-+      v-model:visible="nameDialog.visible"
++      v-model:visible="accountDialog.visible"
 +      modal
-+      :header="nameDialog.mode === 'merge' ? t('entities.mergeTitle', { n: nameDialog.from.length }) : t('entities.renameTitle')"
++      :header="accountDialog.field === 'email' ? t('settings.account.emailTitle') : t('settings.account.usernameTitle')"
 +      :style="{ width: 'min(28rem, 92vw)' }"
 +      :draggable="false"
 +    >
 +      <form
-+        class="name-form"
-+        @submit.prevent="submitName"
++        class="stack"
++        novalidate
++        @submit.prevent="saveAccount"
 +      >
-+        <p
-+          v-if="nameDialog.mode === 'merge'"
-+          class="name-hint"
-+        >{{ t('entities.mergeExplain') }}</p>
-+        <ul
-+          v-if="nameDialog.mode === 'merge'"
-+          class="merge-list"
-+        >
-+          <li
-+            v-for="name in nameDialog.from"
-+            :key="name"
-+          >
-+            <button
-+              type="button"
-+              class="pill"
-+              :class="{ active: nameDialog.to === name }"
-+              @click="nameDialog.to = name"
-+            >{{ name }}</button>
-+          </li>
-+        </ul>
-+        <label for="entity-new-name">{{ t('entities.finalName') }}</label>
-+        <input
-+          id="entity-new-name"
-+          v-model="nameDialog.to"
-+          class="plain-input"
-+          maxlength="200"
-+          autocomplete="off"
-+        />
-+        <p
-+          v-if="mergeTarget"
-+          class="name-warning"
-+        >
-+          <i
-+            class="pi pi-info-circle"
-+            aria-hidden="true"
-+          ></i>
-+          {{ t('entities.willMerge', { name: mergeTarget }) }}
-+        </p>
-+        <div class="name-actions">
-+          <Button
-+            type="button"
-+            :label="t('common.cancel')"
-+            class="p-button-text p-button-sm"
-+            @click="nameDialog.visible = false"
-+          />
-+          <Button
-+            type="submit"
-+            :label="nameDialog.mode === 'merge' || mergeTarget ? t('entities.mergeAction') : t('common.save')"
-+            class="p-button-sm btn-action-primary"
-+            :loading="saving"
-+            :disabled="!nameDialog.to.trim()"
++        <p class="dialog-hint">{{ accountDialog.field === 'email' ? t('settings.account.emailHint') : t('settings.account.usernameHint') }}</p>
++        <div class="field">
++          <label for="settings-account-value">{{ accountDialog.field === 'email' ? t('settings.account.newEmail') : t('settings.account.newUsername') }}</label>
++          <input
++            id="settings-account-value"
++            v-model="accountDialog.value"
++            class="plain-input"
++            :type="accountDialog.field === 'email' ? 'email' : 'text'"
++            :autocomplete="accountDialog.field === 'email' ? 'email' : 'username'"
++            maxlength="254"
 +          />
 +        </div>
++        <div class="field">
++          <label for="settings-account-password">{{ t('settings.password.current') }}</label>
++          <Password
++            inputId="settings-account-password"
++            v-model="accountDialog.password"
++            :feedback="false"
++            toggleMask
++            class="w-full"
++            :inputProps="{ autocomplete: 'current-password' }"
++          />
++        </div>
++        <Button
++          type="submit"
++          :label="t('common.save')"
++          class="btn-action-primary"
++          :loading="accountDialog.saving"
++          :disabled="!accountDialog.value.trim() || !accountDialog.password"
++        />
 +      </form>
 +    </Dialog>
    </div>
  </template>
  
- <script setup>
- import { tagColor } from '../utils/tagColors.js'
--import { ref, computed, onMounted } from 'vue'
-+import { ref, reactive, computed, onMounted } from 'vue'
- import { useI18n } from 'vue-i18n'
-+import { useToast } from 'primevue/usetoast'
- import Button from 'primevue/button'
-+import Dialog from 'primevue/dialog'
-+import api from '../services/api.js'
+@@ -260,7 +425,7 @@ import Password from 'primevue/password'
+ import api from '../services/api.js'
+ import { currentUser, updateUser, setUser, clearSession } from '../services/session.js'
  
- /**
-  * Tela de lista usada por Autores, Editoras e Tags (antes eram três arquivos
-@@ -142,6 +303,7 @@ const props = defineProps({
- })
+-const { t } = useI18n()
++const { t, locale } = useI18n()
+ const toast = useToast()
+ const router = useRouter()
  
- const { t } = useI18n()
-+const toast = useToast()
+@@ -338,6 +503,81 @@ async function changePassword() {
+   }
+ }
  
- 
- const items = ref([])
-@@ -149,12 +311,95 @@ const loading = ref(true)
- const loadError = ref(false)
- const search = ref('')
- 
-+// Ordem: nome (A–Z), mais livros ou mais lidos. Lembrada neste navegador.
-+const SORT_KEY = `entities-sort-${props.queryParam}`
-+const sortBy = ref((() => {
-+  try { return localStorage.getItem(SORT_KEY) || 'name' } catch { return 'name' }
-+})())
++// --- Conta: nome de usuário e e-mail ---
++const accountDialog = reactive({ visible: false, field: 'username', value: '', password: '', saving: false })
 +
-+const sortOptions = computed(() => [
-+  { value: 'name', label: t('entities.sortName') },
-+  { value: 'count', label: t('entities.sortCount') },
-+  { value: 'read', label: t('entities.sortRead') }
-+])
-+
- const filteredItems = computed(() => {
-+  try { localStorage.setItem(SORT_KEY, sortBy.value) } catch { /* modo privado */ }
-   const term = search.value.trim().toLocaleLowerCase()
--  if (!term) return items.value
--  return items.value.filter(item => item.name.toLocaleLowerCase().includes(term))
-+  const list = term ? items.value.filter(item => item.name.toLocaleLowerCase().includes(term)) : [...items.value]
-+  const byName = (a, b) => a.name.localeCompare(b.name)
-+  if (sortBy.value === 'count') return list.sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || byName(a, b))
-+  if (sortBy.value === 'read') return list.sort((a, b) => (b.read ?? 0) - (a.read ?? 0) || byName(a, b))
-+  return list.sort(byName)
- })
- 
-+// ---------------------------------------------------------------------------
-+// Renomear e mesclar
-+// ---------------------------------------------------------------------------
-+const merging = ref(false)
-+const selected = ref(new Set())
-+const saving = ref(false)
-+const nameDialog = reactive({ visible: false, mode: 'rename', from: [], to: '' })
-+
-+function toggleMerging() {
-+  merging.value = !merging.value
-+  selected.value = new Set()
++function openAccountDialog(field) {
++  Object.assign(accountDialog, {
++    visible: true,
++    field,
++    value: field === 'email' ? user.value?.email || '' : user.value?.name || '',
++    password: '',
++    saving: false
++  })
 +}
 +
-+function toggleSelected(name) {
-+  const next = new Set(selected.value)
-+  if (next.has(name)) next.delete(name)
-+  else next.add(name)
-+  selected.value = next
-+}
-+
-+function openRename(item) {
-+  Object.assign(nameDialog, { visible: true, mode: 'rename', from: [item.name], to: item.name })
-+}
-+
-+function openMerge() {
-+  const chosen = items.value.filter(item => selected.value.has(item.name))
-+  // Sugere o nome com mais livros como nome final.
-+  const best = [...chosen].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))[0]
-+  Object.assign(nameDialog, { visible: true, mode: 'merge', from: chosen.map(item => item.name), to: best?.name ?? '' })
-+}
-+
-+// Renomear para um nome que já existe (e não está na lista de origem) junta os dois.
-+const mergeTarget = computed(() => {
-+  const to = nameDialog.to.trim().toLocaleLowerCase()
-+  if (!to) return null
-+  const fromKeys = nameDialog.from.map(name => name.toLocaleLowerCase())
-+  const existing = items.value.find(item => item.name.toLocaleLowerCase() === to)
-+  return existing && !fromKeys.includes(to) ? existing.name : null
-+})
-+
-+async function submitName() {
-+  const to = nameDialog.to.trim()
-+  if (!to) return
-+  if (nameDialog.mode === 'rename' && to === nameDialog.from[0]) {
-+    nameDialog.visible = false
-+    return
-+  }
-+  saving.value = true
++async function saveAccount() {
++  accountDialog.saving = true
 +  try {
-+    await api.mergeNames(props.queryParam, nameDialog.from, to)
++    const value = accountDialog.value.trim()
++    const result = accountDialog.field === 'email'
++      ? await api.changeEmail(value, accountDialog.password, locale.value)
++      : await api.changeUsername(value, accountDialog.password)
++    setUser(result.user)
++    accountDialog.visible = false
 +    toast.add({
 +      severity: 'success',
 +      summary: t('common.success'),
-+      detail: nameDialog.mode === 'merge' || mergeTarget.value ? t('entities.mergedToast', { name: to }) : t('entities.renamedToast', { name: to }),
-+      life: 3000
++      detail: accountDialog.field === 'email' ? t('settings.account.emailChanged') : t('settings.account.usernameChanged', { name: result.user.name }),
++      life: 5000
 +    })
-+    nameDialog.visible = false
-+    merging.value = false
-+    selected.value = new Set()
-+    await load()
 +  } catch (error) {
 +    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
 +  } finally {
-+    saving.value = false
++    accountDialog.saving = false
 +  }
 +}
 +
- function initials(name) {
-   if (!name) return '?'
-   // "Sobrenome, Nome" vira "Nome Sobrenome" antes de pegar as letras.
-@@ -175,7 +420,6 @@ async function load() {
-     const response = await props.fetcher()
-     items.value = response
-       .map(item => (typeof item === 'string' ? { name: item, count: null } : item))
--      .sort((a, b) => a.name.localeCompare(b.name))
-   } catch (error) {
-     loadError.value = true
-   } finally {
-@@ -247,6 +491,231 @@ onMounted(load)
-   background-color: var(--bg-panel);
++// --- Seus dados ---
++const exporting = ref(null)
++const importing = ref(false)
++const importResult = ref(null)
++const importInput = ref(null)
++
++async function downloadExport(format) {
++  exporting.value = format
++  try {
++    const { blob, filename } = await api.exportData(format)
++    const url = URL.createObjectURL(blob)
++    const link = document.createElement('a')
++    link.href = url
++    link.download = filename
++    document.body.appendChild(link)
++    link.click()
++    link.remove()
++    setTimeout(() => URL.revokeObjectURL(url), 1000)
++  } catch (error) {
++    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
++  } finally {
++    exporting.value = null
++  }
++}
++
++async function importFile(event) {
++  const file = event.target.files?.[0]
++  if (!file) return
++  importing.value = true
++  importResult.value = null
++  try {
++    importResult.value = await api.importBooks(file)
++  } catch (error) {
++    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 5000 })
++  } finally {
++    importing.value = false
++    if (importInput.value) importInput.value.value = ''
++  }
++}
++
+ // --- Exclusão ---
+ const deleteDialogVisible = ref(false)
+ const deletePassword = ref('')
+@@ -537,7 +777,158 @@ async function deleteAccount() {
+   color: var(--main-color);
  }
  
-+.toolbar {
-+  display: flex;
-+  align-items: center;
-+  gap: 0.75rem 1rem;
-+  flex-wrap: wrap;
-+  margin: -1.5rem 0 1.5rem;
-+}
-+
-+.total {
-+  color: var(--text-secondary);
-+  font-size: 0.9rem;
-+  margin-right: auto;
-+}
-+
-+.sort-group {
-+  display: inline-flex;
-+  gap: 0.35rem;
-+  flex-wrap: wrap;
-+}
-+
-+.pill {
-+  display: inline-flex;
-+  align-items: center;
-+  gap: 0.4rem;
-+  padding: 0.4rem 0.85rem;
-+  border-radius: 999px;
-+  border: 1px solid var(--border-color);
-+  background: transparent;
-+  color: var(--text-secondary);
-+  font: inherit;
-+  font-size: 0.85rem;
-+  font-weight: 600;
-+  cursor: pointer;
-+}
-+
-+.pill:hover {
-+  color: var(--text-primary);
-+  border-color: var(--main-color);
-+}
-+
-+.pill.active {
-+  background: var(--main-color);
-+  border-color: var(--main-color);
-+  color: var(--text-inverse);
-+}
-+
-+.pill:focus-visible,
-+.rename-btn:focus-visible {
-+  outline: 2px solid var(--main-color);
-+  outline-offset: 2px;
-+}
-+
-+.merge-help {
-+  margin: -0.75rem 0 1.25rem;
-+  color: var(--text-secondary);
-+  font-size: 0.9rem;
-+}
-+
-+.entity-item {
-+  position: relative;
-+}
-+
-+button.entity-card {
-+  width: 100%;
-+  font: inherit;
-+  text-align: left;
-+}
-+
-+.entity-card.is-selected {
-+  border-color: var(--main-color);
-+  background: rgba(var(--main-color-rgb), 0.08);
-+}
-+
-+.select-check {
-+  width: 24px;
-+  height: 24px;
-+  flex-shrink: 0;
-+  border-radius: 7px;
-+  border: 2px solid var(--border-color);
-+  display: flex;
-+  align-items: center;
-+  justify-content: center;
-+  color: transparent;
-+}
-+
-+.select-check.checked {
-+  background: var(--main-color);
-+  border-color: var(--main-color);
-+  color: var(--text-inverse);
-+}
-+
-+.select-check .pi {
-+  font-size: 0.75rem;
-+  font-weight: 700;
-+}
-+
-+.read-bar {
-+  display: block;
-+  height: 4px;
-+  margin-top: 0.45rem;
-+  border-radius: 999px;
-+  background: var(--bg-hover);
-+  overflow: hidden;
-+  max-width: 10rem;
-+}
-+
-+.read-bar span {
-+  display: block;
-+  height: 100%;
-+  border-radius: 999px;
-+  background: var(--accent-color);
-+}
-+
-+/* Lápis de renomear: canto superior direito do card. */
-+.rename-btn {
-+  position: absolute;
-+  top: 0.5rem;
-+  right: 0.5rem;
-+  width: 30px;
-+  height: 30px;
-+  border-radius: 50%;
-+  border: 1px solid var(--border-color);
-+  background: var(--bg-panel);
-+  color: var(--text-secondary);
-+  display: flex;
-+  align-items: center;
-+  justify-content: center;
-+  cursor: pointer;
-+}
-+
-+.rename-btn .pi {
-+  font-size: 0.75rem;
-+}
-+
-+.rename-btn:hover {
-+  color: var(--text-primary);
-+  border-color: var(--main-color);
-+}
-+
-+@media (hover: hover) {
-+  .rename-btn {
-+    opacity: 0;
-+    transition: opacity 0.15s ease;
-+  }
-+
-+  .entity-item:hover .rename-btn,
-+  .rename-btn:focus-visible {
-+    opacity: 1;
-+  }
-+}
-+
-+.merge-bar {
-+  position: sticky;
-+  bottom: 1rem;
-+  z-index: 50;
-+  margin: 1.5rem auto 0;
-+  width: fit-content;
-+  display: flex;
-+  align-items: center;
-+  gap: 1rem;
-+  padding: 0.6rem 0.75rem 0.6rem 1.1rem;
-+  border-radius: 16px;
-+  background: var(--bg-panel);
-+  border: 1px solid rgba(var(--main-color-rgb), 0.45);
-+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-+  font-weight: 700;
-+  color: var(--text-primary);
-+}
-+
-+.name-form {
++.account-rows {
++  margin: 0;
 +  display: flex;
 +  flex-direction: column;
-+  gap: 0.6rem;
++  gap: 0.25rem;
 +}
 +
-+.name-form label,
-+.name-hint {
-+  margin: 0;
-+  font-size: 0.9rem;
++.account-row {
++  display: grid;
++  grid-template-columns: 9rem minmax(0, 1fr);
++  align-items: center;
++  gap: 0.75rem;
++  padding: 0.35rem 0;
++  border-bottom: 1px solid var(--border-color);
++}
++
++.account-row:last-child {
++  border-bottom: none;
++}
++
++.account-row dt {
 +  color: var(--text-secondary);
++  font-size: 0.9rem;
 +}
 +
-+.merge-list {
-+  list-style: none;
++.account-row dd {
 +  margin: 0;
-+  padding: 0;
 +  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  gap: 0.5rem;
++  min-width: 0;
++}
++
++.account-value {
++  color: var(--text-primary);
++  font-weight: 600;
++  overflow-wrap: anywhere;
++}
++
++.badge-pending {
++  display: inline-block;
++  margin-left: 0.4rem;
++  padding: 0.1rem 0.5rem;
++  border-radius: 999px;
++  font-size: 0.72rem;
++  font-weight: 700;
++  color: #b45309;
++  background: rgba(245, 158, 11, 0.15);
++}
++
++.button-row {
++  display: flex;
++  gap: 0.6rem;
 +  flex-wrap: wrap;
-+  gap: 0.4rem;
++}
++
++.sub-title {
++  margin: 1.5rem 0 0.25rem;
++  font-size: 1rem;
++  color: var(--text-primary);
++}
++
++.import-steps {
++  margin: 0 0 1rem;
++  padding-left: 1.2rem;
++  color: var(--text-secondary);
++  font-size: 0.9rem;
++  line-height: 1.6;
++}
++
++.file-drop {
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  gap: 0.6rem;
++  padding: 1.1rem;
++  border: 2px dashed var(--border-color);
++  border-radius: 12px;
++  color: var(--text-secondary);
++  font-weight: 600;
++  cursor: pointer;
++  transition: border-color 0.15s ease, color 0.15s ease;
++}
++
++.file-drop:hover,
++.file-drop:focus-within {
++  border-color: var(--main-color);
++  color: var(--text-primary);
++}
++
++.file-drop.busy {
++  cursor: progress;
++}
++
++.import-result {
++  margin-top: 1rem;
++  padding: 0.9rem 1rem;
++  border-radius: 10px;
++  background: rgba(var(--main-color-rgb), 0.08);
++  border: 1px solid rgba(var(--main-color-rgb), 0.3);
++}
++
++.import-summary {
++  margin: 0;
++  color: var(--text-primary);
++}
++
++.import-errors {
++  margin: 0.6rem 0 0;
++  padding-left: 1.1rem;
++  color: var(--text-secondary);
++  font-size: 0.85rem;
++  line-height: 1.5;
++}
++
++.see-library {
++  display: inline-block;
++  margin-top: 0.6rem;
++  color: var(--main-color);
++  font-weight: 600;
++}
++
++.dialog-hint {
++  margin: 0;
++  color: var(--text-secondary);
++  font-size: 0.9rem;
++  line-height: 1.5;
 +}
 +
 +.plain-input {
@@ -2499,6 +1657,7 @@ index 2db2874..358853d 100644
 +  border-radius: 8px;
 +  color: var(--text-primary);
 +  font: inherit;
++  box-sizing: border-box;
 +}
 +
 +.plain-input:focus {
@@ -2506,508 +1665,15 @@ index 2db2874..358853d 100644
 +  outline: none;
 +}
 +
-+.name-warning {
-+  margin: 0;
-+  display: flex;
-+  gap: 0.4rem;
-+  align-items: flex-start;
-+  font-size: 0.85rem;
-+  color: var(--text-primary);
-+  background: rgba(var(--main-color-rgb), 0.1);
-+  border-radius: 8px;
-+  padding: 0.6rem 0.75rem;
-+}
+ @media (max-width: 640px) {
++  .account-row {
++    grid-template-columns: 1fr;
++    gap: 0.1rem;
++  }
 +
-+.name-actions {
-+  display: flex;
-+  justify-content: flex-end;
-+  gap: 0.5rem;
-+  margin-top: 0.5rem;
-+}
-+
- .entity-grid {
-   list-style: none;
-   margin: 0;
-diff --git a/frontend/src/components/LibraryHeader.vue b/frontend/src/components/LibraryHeader.vue
-index 88f3eef..7448410 100644
---- a/frontend/src/components/LibraryHeader.vue
-+++ b/frontend/src/components/LibraryHeader.vue
-@@ -71,6 +71,16 @@
-           </button>
-         </div>
- 
-+        <Button
-+          icon="pi pi-check-square"
-+          class="p-button-rounded p-button-text action-btn"
-+          :class="{ 'active-filter': selecting }"
-+          :aria-pressed="selecting"
-+          :aria-label="t('batch.selectMode')"
-+          v-tooltip.bottom="t('batch.selectMode')"
-+          @click="emit('toggle-select')"
-+        />
-+
-         <Button
-           icon="pi pi-filter"
-           class="p-button-rounded p-button-text action-btn"
-@@ -110,6 +120,13 @@
-           @remove="clearReadPeriod"
-           class="custom-chip theme-border"
-         />
-+        <Chip
-+          v-if="filters.series"
-+          :label="t('series.chip', { series: filters.series })"
-+          removable
-+          @remove="emitFilter('series', '')"
-+          class="custom-chip theme-border"
-+        />
-         <Chip
-           v-if="filters.isbnStatus === 'invalid'"
-           :label="t('library.invalid_isbn_chip')"
-@@ -307,10 +324,11 @@ const { t, locale } = useI18n()
- const props = defineProps({
-   booksQuantity: Number,
-   filters: { type: Object, required: true },
--  view: { type: String, default: 'grid' }
-+  view: { type: String, default: 'grid' },
-+  selecting: { type: Boolean, default: false }
- })
- 
--const emit = defineEmits(['filter-change', 'reset', 'book-created', 'view-change'])
-+const emit = defineEmits(['filter-change', 'reset', 'book-created', 'view-change', 'toggle-select'])
- 
- const viewModes = computed(() => [
-   { value: 'grid', icon: 'pi pi-th-large', label: t('library.view_grid') },
-@@ -337,7 +355,8 @@ const sortOptions = computed(() => [
-   { label: t('library.sort.author'), value: 'authors' },
-   { label: t('library.sort.read_date'), value: 'readDate' },
-   { label: t('library.sort.pub_date'), value: 'pubDate' },
--  { label: t('library.sort.rating'), value: 'rating' }
-+  { label: t('library.sort.rating'), value: 'rating' },
-+  { label: t('library.sort.series'), value: 'series' }
- ])
- 
- const yearOptions = computed(() => {
-@@ -392,6 +411,7 @@ const hasActiveFilters = computed(() => {
-   return f.readState !== 'all' ||
-     hasReadYear.value ||
-     f.isbnStatus === 'invalid' ||
-+    Boolean(f.series) ||
-     f.author.length > 0 ||
-     f.publisher.length > 0 ||
-     f.tags.length > 0
-diff --git a/frontend/src/composables/useLibrary.js b/frontend/src/composables/useLibrary.js
-index 38d8cda..a996c58 100644
---- a/frontend/src/composables/useLibrary.js
-+++ b/frontend/src/composables/useLibrary.js
-@@ -12,6 +12,7 @@ function defaultFilters() {
-     author: [],
-     publisher: [],
-     tags: [],
-+    series: '',
-     isbnStatus: 'all',
-     sortField: 'recent',
-     sortOrder: 'desc',
-@@ -47,6 +48,7 @@ function buildParams(filters) {
-     params.tags = filters.tags.map(t => t.name || t)
+   .settings-container {
+     padding: 1.25rem;
    }
- 
-+  if (filters.series) params.series = filters.series
-   if (filters.isbnStatus === 'invalid') params.isbn = 'invalid'
- 
-   if (filters.readYear && filters.readYear !== 'all') {
-diff --git a/frontend/src/locales/en.json b/frontend/src/locales/en.json
-index f19d373..3dae467 100644
---- a/frontend/src/locales/en.json
-+++ b/frontend/src/locales/en.json
-@@ -126,7 +126,8 @@
-       "read_date": "Date Read",
-       "pub_date": "Publication Date",
-       "all_years": "All years",
--      "rating": "Rating"
-+      "rating": "Rating",
-+      "series": "Series and volume"
-     },
-     "empty_title": "No books found",
-     "empty_msg": "We couldn't find anything with the current filters.",
-@@ -200,7 +201,8 @@
-     "notFound": "No authors found.",
-     "bookCount": "{count} book | {count} books",
-     "viewBooks": "View Books",
--    "loadError": "Could not load authors."
-+    "loadError": "Could not load authors.",
-+    "total": "{n} author | {n} authors"
-   },
-   "publishers": {
-     "title": "Publishers",
-@@ -209,7 +211,8 @@
-     "notFound": "No publishers found.",
-     "viewCollection": "View Collection",
-     "loadError": "Could not load publishers.",
--    "bookCount": "{count} book | {count} books"
-+    "bookCount": "{count} book | {count} books",
-+    "total": "{n} publisher | {n} publishers"
-   },
-   "tags": {
-     "title": "Categories",
-@@ -218,7 +221,8 @@
-     "empty": "No categories found.",
-     "error": "Could not load categories.",
-     "bookCount": "{count} book | {count} books",
--    "viewBooks": "View books"
-+    "viewBooks": "View books",
-+    "total": "{n} category | {n} categories"
-   },
-   "dashboard": {
-     "title": "Dashboard",
-@@ -589,5 +593,61 @@
-     "future": "This year has not started yet",
-     "empty": "No goal for this year. You have read no books so far. | No goal for this year. You have read {n} book so far. | No goal for this year. You have read {n} books so far.",
-     "paceMarker": "Where you need to be today"
-+  },
-+  "series": {
-+    "name": "Series",
-+    "namePlaceholder": "E.g. Dune",
-+    "volume": "Volume",
-+    "label": "{series} #{n}",
-+    "seeAll": "See all of {series}",
-+    "chip": "Series: {series}"
-+  },
-+  "notes": {
-+    "label": "Personal note",
-+    "title": "My note",
-+    "placeholder": "Thoughts, quotes, where you stopped, who borrowed it...",
-+    "privateHint": "Only you can see it"
-+  },
-+  "batch": {
-+    "toolbar": "Actions on selected books",
-+    "selectMode": "Select several",
-+    "selected": "none selected | {n} selected | {n} selected",
-+    "selectAll": "Select all",
-+    "selectNone": "Deselect all",
-+    "status": "Status",
-+    "category": "Category",
-+    "delete": "Delete",
-+    "cancel": "Leave selection",
-+    "categoryTitle": "Category on {n} book | Category on {n} books",
-+    "categoryName": "Category name",
-+    "categoryPlaceholder": "E.g. Lent",
-+    "addCategory": "Add",
-+    "removeCategory": "Remove",
-+    "confirmDelete": "Delete {n} book? This cannot be undone. | Delete {n} books? This cannot be undone.",
-+    "doneStatus": "No book changed | Status updated on {n} book | Status updated on {n} books",
-+    "doneAddTag": "No book changed (they already had it) | Category added to {n} book | Category added to {n} books",
-+    "doneRemoveTag": "No book had this category | Category removed from {n} book | Category removed from {n} books",
-+    "doneDelete": "No book deleted | {n} book deleted | {n} books deleted"
-+  },
-+  "entities": {
-+    "sortLabel": "Sort",
-+    "sortName": "A–Z",
-+    "sortCount": "Most books",
-+    "sortRead": "Most read",
-+    "readCount": "none read | {n} read | {n} read",
-+    "rename": "Rename",
-+    "renameOf": "Rename {name}",
-+    "renameTitle": "Rename",
-+    "mergeMode": "Merge",
-+    "mergeCancel": "Cancel",
-+    "mergeHelp": "Pick the names that are the same thing (e.g. \"Asimov\" and \"Isaac Asimov\") and click Merge.",
-+    "selected": "none selected | {n} selected | {n} selected",
-+    "mergeAction": "Merge",
-+    "mergeTitle": "Merge {n} names",
-+    "mergeExplain": "All their books move to a single name. Choose which one stays:",
-+    "finalName": "Final name",
-+    "willMerge": "\"{name}\" already exists: the books will be merged into it.",
-+    "mergedToast": "Everything is now under \"{name}\".",
-+    "renamedToast": "Renamed to \"{name}\"."
-   }
- }
-diff --git a/frontend/src/locales/pt.json b/frontend/src/locales/pt.json
-index 710f0fb..867d058 100644
---- a/frontend/src/locales/pt.json
-+++ b/frontend/src/locales/pt.json
-@@ -126,7 +126,8 @@
-       "read_date": "Data de Leitura",
-       "pub_date": "Data de Publicação",
-       "all_years": "Todos os anos",
--      "rating": "Nota"
-+      "rating": "Nota",
-+      "series": "Série e volume"
-     },
-     "empty_title": "Nenhum livro encontrado",
-     "empty_msg": "Não encontramos nada com os filtros atuais.",
-@@ -200,7 +201,8 @@
-     "notFound": "Nenhum autor encontrado.",
-     "bookCount": "{count} livro | {count} livros",
-     "viewBooks": "Ver Livros",
--    "loadError": "Não foi possível carregar os autores."
-+    "loadError": "Não foi possível carregar os autores.",
-+    "total": "{n} autor | {n} autores"
-   },
-   "publishers": {
-     "title": "Editoras",
-@@ -209,7 +211,8 @@
-     "notFound": "Nenhuma editora encontrada.",
-     "viewCollection": "Ver Coleção",
-     "loadError": "Não foi possível carregar as editoras.",
--    "bookCount": "{count} livro | {count} livros"
-+    "bookCount": "{count} livro | {count} livros",
-+    "total": "{n} editora | {n} editoras"
-   },
-   "tags": {
-     "title": "Categorias",
-@@ -218,7 +221,8 @@
-     "empty": "Nenhuma categoria encontrada.",
-     "error": "Não foi possível carregar as categorias.",
-     "bookCount": "{count} livro | {count} livros",
--    "viewBooks": "Ver livros"
-+    "viewBooks": "Ver livros",
-+    "total": "{n} categoria | {n} categorias"
-   },
-   "dashboard": {
-     "title": "Painel",
-@@ -589,5 +593,61 @@
-     "future": "O ano ainda não começou",
-     "empty": "Sem meta para este ano. Você leu nenhum livro até agora. | Sem meta para este ano. Você leu {n} livro até agora. | Sem meta para este ano. Você leu {n} livros até agora.",
-     "paceMarker": "Onde você precisa estar hoje"
-+  },
-+  "series": {
-+    "name": "Série",
-+    "namePlaceholder": "Ex.: Duna",
-+    "volume": "Volume",
-+    "label": "{series} #{n}",
-+    "seeAll": "Ver todos de {series}",
-+    "chip": "Série: {series}"
-+  },
-+  "notes": {
-+    "label": "Anotação pessoal",
-+    "title": "Minha anotação",
-+    "placeholder": "Impressões, citações, onde parou, para quem emprestou...",
-+    "privateHint": "Só você vê"
-+  },
-+  "batch": {
-+    "toolbar": "Ações nos livros selecionados",
-+    "selectMode": "Selecionar vários",
-+    "selected": "nenhum selecionado | {n} selecionado | {n} selecionados",
-+    "selectAll": "Selecionar todos",
-+    "selectNone": "Desmarcar todos",
-+    "status": "Status",
-+    "category": "Categoria",
-+    "delete": "Excluir",
-+    "cancel": "Sair da seleção",
-+    "categoryTitle": "Categoria em {n} livro | Categoria em {n} livros",
-+    "categoryName": "Nome da categoria",
-+    "categoryPlaceholder": "Ex.: Emprestados",
-+    "addCategory": "Adicionar",
-+    "removeCategory": "Remover",
-+    "confirmDelete": "Excluir {n} livro? Isso não pode ser desfeito. | Excluir {n} livros? Isso não pode ser desfeito.",
-+    "doneStatus": "Nenhum livro mudou | Status de {n} livro atualizado | Status de {n} livros atualizado",
-+    "doneAddTag": "Nenhum livro mudou (já tinham a categoria) | Categoria adicionada a {n} livro | Categoria adicionada a {n} livros",
-+    "doneRemoveTag": "Nenhum livro tinha essa categoria | Categoria removida de {n} livro | Categoria removida de {n} livros",
-+    "doneDelete": "Nenhum livro excluído | {n} livro excluído | {n} livros excluídos"
-+  },
-+  "entities": {
-+    "sortLabel": "Ordenar",
-+    "sortName": "A–Z",
-+    "sortCount": "Mais livros",
-+    "sortRead": "Mais lidos",
-+    "readCount": "nenhum lido | {n} lido | {n} lidos",
-+    "rename": "Renomear",
-+    "renameOf": "Renomear {name}",
-+    "renameTitle": "Renomear",
-+    "mergeMode": "Mesclar",
-+    "mergeCancel": "Cancelar",
-+    "mergeHelp": "Escolha os nomes que são a mesma coisa (ex.: \"Asimov\" e \"Isaac Asimov\") e clique em Mesclar.",
-+    "selected": "nenhum selecionado | {n} selecionado | {n} selecionados",
-+    "mergeAction": "Mesclar",
-+    "mergeTitle": "Mesclar {n} nomes",
-+    "mergeExplain": "Os livros de todos passam para um nome só. Escolha qual fica:",
-+    "finalName": "Nome final",
-+    "willMerge": "\"{name}\" já existe: os livros serão juntados nele.",
-+    "mergedToast": "Agora tudo está em \"{name}\".",
-+    "renamedToast": "Renomeado para \"{name}\"."
-   }
- }
-diff --git a/frontend/src/services/api.js b/frontend/src/services/api.js
-index b845ef4..9ef3143 100644
---- a/frontend/src/services/api.js
-+++ b/frontend/src/services/api.js
-@@ -109,6 +109,20 @@ export default {
-     return client.patch(`/library/${id}/status`, date ? { status, date } : { status })
-   },
- 
-+  getSeries() {
-+    return client.get('/library/series')
-+  },
-+
-+  /** Ações em vários livros: { ids, action: 'status' | 'addTag' | 'removeTag' | 'delete', status?, date?, tag? } */
-+  batchBooks(body) {
-+    return client.post('/library/batch', body)
-+  },
-+
-+  /** kind: 'author' | 'publisher' | 'tags'. Renomeia (um nome em from) ou mescla vários em `to`. */
-+  mergeNames(kind, from, to) {
-+    return client.post(`/${kind}/merge`, { from, to })
-+  },
-+
-   setRating(id, rating) {
-     return client.patch(`/library/${id}/rating`, { rating })
-   },
-diff --git a/frontend/src/utils/libraryQuery.js b/frontend/src/utils/libraryQuery.js
-index ce82640..76908a3 100644
---- a/frontend/src/utils/libraryQuery.js
-+++ b/frontend/src/utils/libraryQuery.js
-@@ -8,7 +8,7 @@
-  *   /books?q=asimov&status=read&year=2025&month=3&tags=Fantasia&sort=title&order=asc&view=list
-  */
- 
--const SORT_FIELDS = ['recent', 'title', 'authors', 'readDate', 'pubDate', 'rating']
-+const SORT_FIELDS = ['recent', 'title', 'authors', 'readDate', 'pubDate', 'rating', 'series']
- const READ_STATES = ['read', 'unread', 'reading', 'want']
- export const VIEW_MODES = ['grid', 'list']
- 
-@@ -37,6 +37,7 @@ export function queryToFilters(query = {}) {
-     author: asList(query.author),
-     publisher: asList(query.publisher),
-     tags: asList(query.tags),
-+    series: String(asSingle(query.series) ?? '').trim(),
-     isbnStatus: asSingle(query.isbn) === 'invalid' ? 'invalid' : 'all',
-     sortField: SORT_FIELDS.includes(sort) ? sort : 'recent',
-     sortOrder: order === 'asc' ? 'asc' : 'desc'
-@@ -60,6 +61,7 @@ export function filtersToQuery(filters, view = 'grid') {
-   if (filters.author?.length) query.author = [...filters.author]
-   if (filters.publisher?.length) query.publisher = [...filters.publisher]
-   if (filters.tags?.length) query.tags = [...filters.tags]
-+  if (filters.series) query.series = filters.series
-   if (filters.isbnStatus === 'invalid') query.isbn = 'invalid'
-   if (filters.sortField && filters.sortField !== 'recent') query.sort = filters.sortField
-   if (filters.sortOrder === 'asc') query.order = 'asc'
-diff --git a/frontend/src/utils/series.js b/frontend/src/utils/series.js
-new file mode 100644
-index 0000000..d346af6
---- /dev/null
-+++ b/frontend/src/utils/series.js
-@@ -0,0 +1,9 @@
-+/** "Duna #2", "Duna #1,5" (pt) ou só "Duna" quando não há volume. */
-+export function seriesText(book, t, locale) {
-+  if (!book?.series) return ''
-+  const index = book.series_index
-+  if (index === null || index === undefined || index === '') return book.series
-+  const number = Number(String(index).replace(',', '.'))
-+  const n = Number.isFinite(number) ? number.toLocaleString(locale) : String(index)
-+  return t('series.label', { series: book.series, n })
-+}
-diff --git a/frontend/src/views/Library.vue b/frontend/src/views/Library.vue
-index 778731a..09601ba 100644
---- a/frontend/src/views/Library.vue
-+++ b/frontend/src/views/Library.vue
-@@ -10,6 +10,8 @@
-         :books-quantity="totalRecords"
-         :filters="filters"
-         :view="viewMode"
-+        :selecting="selecting"
-+        @toggle-select="toggleSelecting"
-         @filter-change="handleFilterChange"
-         @view-change="setViewMode"
-         @reset="clearFilters"
-@@ -83,6 +85,9 @@
-             :book="item"
-             :cover-version="coverVersions[item.book_id || item.id]"
-             quick-actions
-+            :selectable="selecting"
-+            :selected="selectedIds.has(item.book_id || item.id)"
-+            @toggle-select="toggleSelected"
-             @updated="onBookUpdated"
-             @deleted="onBookDeleted"
-           />
-@@ -98,11 +103,23 @@
-             :key="item.book_id || item.id"
-             :book="item"
-             :cover-version="coverVersions[item.book_id || item.id]"
-+            :selectable="selecting"
-+            :selected="selectedIds.has(item.book_id || item.id)"
-+            @toggle-select="toggleSelected"
-             @updated="onBookUpdated"
-             @deleted="onBookDeleted"
-           />
-         </ul>
- 
-+        <BatchBar
-+          v-if="selecting"
-+          :ids="[...selectedIds]"
-+          :all-selected="books.length > 0 && selectedIds.size === books.length"
-+          @select-all="toggleSelectAll"
-+          @cancel="toggleSelecting"
-+          @done="afterBatch"
-+        />
-+
-         <div
-           v-if="books.length < totalRecords"
-           ref="sentinel"
-@@ -148,6 +165,7 @@ import { useI18n } from 'vue-i18n'
- import LibraryHeader from '../components/LibraryHeader.vue'
- import BookItem from '../components/BookItem.vue'
- import BookRow from '../components/BookRow.vue'
-+import BatchBar from '../components/BatchBar.vue'
- import { queryToFilters, queryToView, filtersToQuery, sameQuery, VIEW_MODES } from '../utils/libraryQuery.js'
- import Skeleton from 'primevue/skeleton'
- import Button from 'primevue/button'
-@@ -231,6 +249,41 @@ watchEffect(() => {
-   }
- })
- 
-+// ---------------------------------------------------------------------------
-+// Seleção para ações em lote
-+// ---------------------------------------------------------------------------
-+const selecting = ref(false)
-+const selectedIds = ref(new Set())
-+
-+function toggleSelecting() {
-+  selecting.value = !selecting.value
-+  selectedIds.value = new Set()
-+}
-+
-+function toggleSelected(id) {
-+  const next = new Set(selectedIds.value)
-+  if (next.has(id)) next.delete(id)
-+  else next.add(id)
-+  selectedIds.value = next
-+}
-+
-+// "Selecionar todos" vale para os livros já carregados na tela.
-+function toggleSelectAll() {
-+  const all = books.value.map(book => book.book_id ?? book.id)
-+  selectedIds.value = selectedIds.value.size === all.length ? new Set() : new Set(all)
-+}
-+
-+function afterBatch() {
-+  selecting.value = false
-+  selectedIds.value = new Set()
-+  refreshData()
-+  header.value?.reloadOptions()
-+}
-+
-+function onKeydown(event) {
-+  if (event.key === 'Escape' && selecting.value && !document.querySelector('.p-dialog-mask')) toggleSelecting()
-+}
-+
- // Grade ou lista: vem da URL (?view=list); sem ela, a última escolha neste navegador.
- const VIEW_STORAGE_KEY = 'library-view'
- 
-@@ -268,12 +321,14 @@ watch(() => route.query, (query) => {
- })
- 
- onMounted(() => {
-+  window.addEventListener('keydown', onKeydown)
-   // Filtros da URL (inclusive os que vêm de Autores/Editoras/Categorias) entram
-   // no estado compartilhado: aparecem como chips e podem ser removidos.
-   setFilters(queryToFilters(route.query))
- })
- 
- onUnmounted(() => {
-+  window.removeEventListener('keydown', onKeydown)
-   if (observer) observer.disconnect()
- })
- </script>
 LIBRI_PATCH_EOF
 
 step "1/3 Aplicando"
@@ -3044,23 +1710,22 @@ cat <<'MSG'
 
 Próximos passos
 ---------------
-1. Migration nova (006).  Local: npm run db:migrate:local
-   Produção (no deploy, depois do backup): docker compose run --rm backend npm run db:migrate:docker
-2. Suíte completa no backend:  npm test
-   (teste novo: src/tests/integration/organize.test.js; authors/community
-   ganharam o campo "read" nas listas)
-3. npm run db:seed recria o banco de teste com séries e anotações de exemplo.
-4. Teste: edite um livro (Série, Volume, Anotação); na Biblioteca, clique no
-   ícone ☑ ao lado do filtro e selecione vários; em Autores, use "Mesclar".
-5. Commite e rode o pacote 4.
+1. Suíte completa no backend:  npm test
+   (testes novos: src/tests/integration/account-data.test.js e unit/csv.test.js)
+2. Prévia do e-mail novo (aviso de troca de e-mail):  npm run email:preview
+3. Teste em Conta: "Usuário e e-mail" → Alterar; "Seus dados" → baixar JSON/CSV
+   e importar o CSV do Goodreads (My Books → Import and export → Export Library).
+4. Commite e rode o pacote 5.
 
 Sugestão de commit
 ------------------
-feat(organização): série/volume, anotação, ações em lote e mesclar nomes
+feat(conta): exportar/importar dados e trocar e-mail e usuário
 
-- migration 006: books.series e books.notes (anotação nunca sai no público)
-- série e volume no cadastro/edição, card, lista, filtro ?series= e ordenação
-- POST /library/batch: status, adicionar/remover categoria e excluir em lote
-- POST /author|/publisher|/tags/merge: renomear e mesclar nomes do usuário
-- Autores/Editoras/Categorias: ordenar por quantidade/lidos e barra lidos/total
+- GET /auth/me/export?format=json|csv: cópia completa dos dados (LGPD)
+- POST /library/import: CSV do Goodreads ou do Librishelf (sem duplicar,
+  status, notas, prateleiras, série do título, anotações; erros por linha)
+- PATCH /auth/me/email: pede a senha, e-mail novo sem confirmação + aviso ao antigo
+- PATCH /auth/me/username: pede a senha, mesmas regras do cadastro, sessão nova
+- utils/csv.js sem dependências (com proteção contra fórmula em planilha)
+- Conta: seções "Usuário e e-mail" e "Seus dados"; privacidade atualizada
 MSG

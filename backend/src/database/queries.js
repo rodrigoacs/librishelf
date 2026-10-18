@@ -213,6 +213,19 @@ export const AUTH_QUERIES = {
     FROM librishelf.users
     WHERE lower(email) = lower($1) AND is_active IS NOT FALSE
   `,
+  EMAIL_TAKEN: 'SELECT 1 FROM librishelf.users WHERE lower(email) = lower($1) AND id <> $2',
+  NAME_TAKEN: 'SELECT 1 FROM librishelf.users WHERE lower(name) = lower($1) AND id <> $2',
+  // E-mail novo começa sem confirmação.
+  UPDATE_EMAIL: `
+    UPDATE librishelf.users SET email = $2, email_verified_at = NULL, updated_at = now()
+    WHERE id = $1
+    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity
+  `,
+  UPDATE_NAME: `
+    UPDATE librishelf.users SET name = $2, updated_at = now()
+    WHERE id = $1
+    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity
+  `,
   MARK_EMAIL_VERIFIED: `
     UPDATE librishelf.users
     SET email_verified_at = COALESCE(email_verified_at, now()), updated_at = now()
@@ -464,6 +477,56 @@ export const COMMUNITY_QUERIES = {
       AND EXISTS (SELECT 1 FROM librishelf.books m WHERE m.user_id = $1 AND ${SAME_BOOK('m', 'b')})
     ORDER BY b.title
     LIMIT $3
+  `
+}
+
+// Exportar / importar dados da conta.
+export const DATA_QUERIES = {
+  EXPORT_USER: `
+    SELECT name, email, to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at,
+           is_public, show_in_community, show_activity,
+           email_verified_at IS NOT NULL AS email_verified
+    FROM librishelf.users WHERE id = $1
+  `,
+  EXPORT_GOALS: 'SELECT year, target FROM librishelf.reading_goals WHERE user_id = $1 ORDER BY year',
+  EXPORT_BOOKS: `
+    SELECT
+      b.id,
+      b.title,
+      COALESCE((SELECT json_agg(a.name ORDER BY bal.position, a.id)
+        FROM librishelf.books_authors_link bal JOIN librishelf.authors a ON a.id = bal.author_id
+        WHERE bal.book_id = b.id), '[]'::json) AS authors,
+      p.name AS publisher,
+      COALESCE((SELECT json_agg(t.name ORDER BY t.name)
+        FROM librishelf.books_tags_link btl JOIN librishelf.tags t ON t.id = btl.tag_id
+        WHERE btl.book_id = b.id), '[]'::json) AS tags,
+      b.isbn,
+      b.rating,
+      CASE
+        WHEN b.reading_status = 'reading' THEN 'reading'
+        WHEN b.read_date IS NOT NULL THEN 'read'
+        WHEN b.reading_status = 'want' THEN 'want'
+        ELSE 'none'
+      END AS status,
+      to_char(b.read_date, 'YYYY-MM-DD') AS read_date,
+      to_char(b.started_at, 'YYYY-MM-DD') AS started_at,
+      to_char(b.publication_date, 'YYYY-MM-DD') AS publication_date,
+      b.series,
+      b.series_index,
+      b.notes,
+      to_char(b.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS added_at
+    FROM librishelf.books b
+    LEFT JOIN librishelf.publishers p ON p.id = b.publisher_id
+    WHERE b.user_id = $1
+    ORDER BY b.id
+  `,
+  // Para não importar o mesmo livro duas vezes.
+  EXISTING_KEYS: `
+    SELECT b.isbn13, lower(b.title) AS title,
+           (SELECT lower(a.name) FROM librishelf.books_authors_link bal
+              JOIN librishelf.authors a ON a.id = bal.author_id
+            WHERE bal.book_id = b.id ORDER BY bal.position, a.id LIMIT 1) AS author
+    FROM librishelf.books b WHERE b.user_id = $1
   `
 }
 

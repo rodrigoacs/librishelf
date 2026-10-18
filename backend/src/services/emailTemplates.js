@@ -55,6 +55,16 @@ const TEXTS = {
       note: 'O link vale por 3 dias.',
       ignore: 'Se você não criou uma conta no Librishelf, pode ignorar este e-mail.'
     },
+    changed: {
+      subject: 'O e-mail da sua conta no Librishelf mudou',
+      preheader: 'Se foi você, não precisa fazer nada.',
+      title: 'Seu e-mail foi trocado',
+      greeting: name => `Olá, ${name}!`,
+      body: ({ newEmail }) => `O e-mail da sua conta agora é ${newEmail}. Avisos e links de senha passam a ir para lá.`,
+      button: 'Não fui eu: redefinir senha',
+      note: 'Redefinir a senha derruba todas as sessões abertas.',
+      ignore: 'Se foi você quem trocou, pode ignorar este aviso.'
+    },
     fallback: 'Se o botão não funcionar, copie e cole este endereço no navegador:',
     tagline: 'Sua biblioteca pessoal, organizada.',
     footer: 'Você recebeu este e-mail porque ele está cadastrado no Librishelf. Este é um endereço automático: respostas não são lidas.'
@@ -79,6 +89,16 @@ const TEXTS = {
       button: 'Confirm email',
       note: 'The link is valid for 3 days.',
       ignore: "If you didn't create a Librishelf account, you can ignore this email."
+    },
+    changed: {
+      subject: 'Your Librishelf email has changed',
+      preheader: "If it was you, there's nothing to do.",
+      title: 'Your email was changed',
+      greeting: name => `Hi, ${name}!`,
+      body: ({ newEmail }) => `Your account email is now ${newEmail}. Notices and password links will go there from now on.`,
+      button: "It wasn't me: reset password",
+      note: 'Resetting your password signs out every open session.',
+      ignore: 'If you made this change, you can ignore this notice.'
     },
     fallback: "If the button doesn't work, copy and paste this address into your browser:",
     tagline: 'Your personal library, organized.',
@@ -181,10 +201,11 @@ function layout({ locale, lang, t, name, link }) {
 </html>`
 }
 
-function build(kind, { name, link, locale }) {
+function build(kind, { name, link, locale, ...extra }) {
   const code = normalizeLocale(locale)
   const lang = TEXTS[code]
-  const t = lang[kind]
+  const base = lang[kind]
+  const t = { ...base, body: typeof base.body === 'function' ? base.body(extra) : base.body }
 
   const text = [
     t.title,
@@ -209,3 +230,5 @@ function build(kind, { name, link, locale }) {
 
 export const resetPasswordEmail = params => build('reset', params)
 export const verifyEmailEmail = params => build('verify', params)
+/** Aviso ao endereço antigo: { name, link, locale, newEmail } (newEmail já mascarado). */
+export const emailChangedEmail = params => build('changed', params)

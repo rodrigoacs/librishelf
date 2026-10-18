@@ -374,7 +374,41 @@
       "on": "Agora você aceita pedidos para seguir.",
       "off": "Seus seguidores não veem mais sua atividade."
     },
-    "verifyFirst": "Confirme seu e-mail para ligar estas opções. Use o link que enviamos ou o botão \"Reenviar link\" no topo da página."
+    "verifyFirst": "Confirme seu e-mail para ligar estas opções. Use o link que enviamos ou o botão \"Reenviar link\" no topo da página.",
+    "account": {
+      "title": "Usuário e e-mail",
+      "desc": "Seu nome de usuário (também o endereço da biblioteca pública) e o e-mail de contato.",
+      "username": "Nome de usuário",
+      "email": "E-mail",
+      "change": "Alterar",
+      "notVerified": "não confirmado",
+      "usernameTitle": "Trocar nome de usuário",
+      "emailTitle": "Trocar e-mail",
+      "usernameHint": "Letras, números, ponto, hífen e sublinhado. O link da sua biblioteca pública muda junto: o endereço antigo deixa de funcionar.",
+      "emailHint": "Vamos mandar um link de confirmação para o e-mail novo, e um aviso para o atual.",
+      "newUsername": "Novo nome de usuário",
+      "newEmail": "Novo e-mail",
+      "usernameChanged": "Agora você é {name}.",
+      "emailChanged": "E-mail trocado. Confira a caixa de entrada do novo endereço para confirmar."
+    },
+    "data": {
+      "title": "Seus dados",
+      "exportDesc": "Baixe uma cópia de tudo: livros, notas, anotações, status, metas e dados da conta. O CSV abre em planilhas e pode ser importado de volta.",
+      "exportJson": "Baixar tudo (JSON)",
+      "exportCsv": "Baixar livros (CSV)",
+      "importTitle": "Importar livros",
+      "importDesc": "Traga sua estante do Goodreads (ou um CSV exportado do Librishelf). Livros que já estão aqui são pulados.",
+      "step1": "No Goodreads, pelo computador: My Books → Import and export → Export Library.",
+      "step2": "Baixe o arquivo .csv quando o link aparecer.",
+      "step3": "Escolha o arquivo abaixo. Prateleiras viram categorias; \"read\", \"currently-reading\" e \"to-read\" viram Lido, Lendo e Quero ler.",
+      "chooseFile": "Escolher arquivo .csv",
+      "importing": "Importando... isso pode levar alguns segundos.",
+      "imported": "Nenhum livro importado | {n} livro importado | {n} livros importados",
+      "duplicates": "{n} já estava na estante | {n} já estavam na estante",
+      "failed": "{n} com problema | {n} com problema",
+      "errorLine": "Linha {line} ({title})",
+      "seeLibrary": "Ver na biblioteca"
+    }
   },
   "privacy": {
     "title": "Política de Privacidade",
@@ -385,7 +419,7 @@
         "title": "Quais dados coletamos",
         "paragraphs": [
           "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
-          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, tags, datas e notas) e as capas que você enviar.",
+          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, série, tags, datas, notas, status de leitura e metas), anotações pessoais e as capas que você enviar. As anotações pessoais são só suas: nunca aparecem na biblioteca pública.",
           "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login."
         ]
       },
@@ -440,7 +474,7 @@
       {
         "title": "Seus direitos (LGPD)",
         "paragraphs": [
-          "Você pode consultar, corrigir, pedir uma cópia ou excluir seus dados a qualquer momento. Correções e a exclusão da conta você faz pelo próprio app; para os outros pedidos, fale com a gente pelo contato abaixo."
+          "Você pode consultar, corrigir, baixar uma cópia ou excluir seus dados a qualquer momento, tudo pelo próprio app: em Conta → Seus dados você baixa tudo em JSON ou CSV, e a exclusão da conta apaga tudo na hora. Para qualquer outro pedido, fale com a gente pelo contato abaixo."
         ]
       },
       {
