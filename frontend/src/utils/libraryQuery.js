@@ -8,7 +8,7 @@
  *   /books?q=asimov&status=read&year=2025&month=3&tags=Fantasia&sort=title&order=asc&view=list
  */
 
-const SORT_FIELDS = ['recent', 'title', 'authors', 'readDate', 'pubDate', 'rating']
+const SORT_FIELDS = ['recent', 'title', 'authors', 'readDate', 'pubDate', 'rating', 'series']
 const READ_STATES = ['read', 'unread', 'reading', 'want']
 export const VIEW_MODES = ['grid', 'list']
 
@@ -37,6 +37,7 @@ export function queryToFilters(query = {}) {
     author: asList(query.author),
     publisher: asList(query.publisher),
     tags: asList(query.tags),
+    series: String(asSingle(query.series) ?? '').trim(),
     isbnStatus: asSingle(query.isbn) === 'invalid' ? 'invalid' : 'all',
     sortField: SORT_FIELDS.includes(sort) ? sort : 'recent',
     sortOrder: order === 'asc' ? 'asc' : 'desc'
@@ -60,6 +61,7 @@ export function filtersToQuery(filters, view = 'grid') {
   if (filters.author?.length) query.author = [...filters.author]
   if (filters.publisher?.length) query.publisher = [...filters.publisher]
   if (filters.tags?.length) query.tags = [...filters.tags]
+  if (filters.series) query.series = filters.series
   if (filters.isbnStatus === 'invalid') query.isbn = 'invalid'
   if (filters.sortField && filters.sortField !== 'recent') query.sort = filters.sortField
   if (filters.sortOrder === 'asc') query.order = 'asc'

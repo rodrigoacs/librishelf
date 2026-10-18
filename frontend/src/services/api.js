@@ -109,6 +109,20 @@ export default {
     return client.patch(`/library/${id}/status`, date ? { status, date } : { status })
   },
 
+  getSeries() {
+    return client.get('/library/series')
+  },
+
+  /** Ações em vários livros: { ids, action: 'status' | 'addTag' | 'removeTag' | 'delete', status?, date?, tag? } */
+  batchBooks(body) {
+    return client.post('/library/batch', body)
+  },
+
+  /** kind: 'author' | 'publisher' | 'tags'. Renomeia (um nome em from) ou mescla vários em `to`. */
+  mergeNames(kind, from, to) {
+    return client.post(`/${kind}/merge`, { from, to })
+  },
+
   setRating(id, rating) {
     return client.patch(`/library/${id}/rating`, { rating })
   },

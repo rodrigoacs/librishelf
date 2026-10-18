@@ -12,6 +12,7 @@ function defaultFilters() {
     author: [],
     publisher: [],
     tags: [],
+    series: '',
     isbnStatus: 'all',
     sortField: 'recent',
     sortOrder: 'desc',
@@ -47,6 +48,7 @@ function buildParams(filters) {
     params.tags = filters.tags.map(t => t.name || t)
   }
 
+  if (filters.series) params.series = filters.series
   if (filters.isbnStatus === 'invalid') params.isbn = 'invalid'
 
   if (filters.readYear && filters.readYear !== 'all') {

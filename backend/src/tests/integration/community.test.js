@@ -63,7 +63,7 @@ describe('Nomes por usuário', () => {
   it('maiúsculas diferentes viram o mesmo autor (mantém a 1ª grafia)', async () => {
     await addBook('ana', { title: 'O Senhor dos Anéis' }, ['TOLKIEN'])
     const res = await request(app).get('/author').set(auth('ana'))
-    expect(res.body.filter(a => a.name.toLowerCase() === 'tolkien')).toEqual([{ name: 'Tolkien', count: 2 }])
+    expect(res.body.filter(a => a.name.toLowerCase() === 'tolkien')).toEqual([{ name: 'Tolkien', count: 2, read: 0 }])
   })
 
   it('excluir o último livro de um autor tira o autor da lista', async () => {

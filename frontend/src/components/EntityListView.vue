@@ -29,6 +29,48 @@
       </div>
     </div>
 
+    <div
+      v-if="!loading && !loadError && items.length"
+      class="toolbar"
+    >
+      <span class="total">{{ t(`${i18nKey}.total`, { n: items.length }, items.length) }}</span>
+
+      <div
+        class="sort-group"
+        role="group"
+        :aria-label="t('entities.sortLabel')"
+      >
+        <button
+          v-for="option in sortOptions"
+          :key="option.value"
+          type="button"
+          class="pill"
+          :class="{ active: sortBy === option.value }"
+          :aria-pressed="sortBy === option.value"
+          @click="sortBy = option.value"
+        >{{ option.label }}</button>
+      </div>
+
+      <button
+        type="button"
+        class="pill merge-toggle"
+        :class="{ active: merging }"
+        :aria-pressed="merging"
+        @click="toggleMerging"
+      >
+        <i
+          class="pi pi-sitemap"
+          aria-hidden="true"
+        ></i>
+        {{ merging ? t('entities.mergeCancel') : t('entities.mergeMode') }}
+      </button>
+    </div>
+
+    <p
+      v-if="merging"
+      class="merge-help"
+    >{{ t('entities.mergeHelp') }}</p>
+
     <div class="content-body">
       <div
         v-if="loading"
@@ -76,14 +118,26 @@
         class="entity-grid"
       >
         <li
-          v-for="(item, index) in filteredItems"
+          v-for="item in filteredItems"
           :key="item.name"
+          class="entity-item"
         >
-          <router-link
-            :to="{ path: '/books', query: { [queryParam]: item.name } }"
+          <component
+            :is="merging ? 'button' : 'router-link'"
+            v-bind="merging
+              ? { type: 'button', 'aria-pressed': selected.has(item.name) }
+              : { to: { path: '/books', query: { [queryParam]: item.name } } }"
             class="entity-card"
+            :class="{ 'is-selected': merging && selected.has(item.name) }"
             :style="{ '--accent-color': tagColor(item.name) }"
+            @click="merging && toggleSelected(item.name)"
           >
+            <span
+              v-if="merging"
+              class="select-check"
+              :class="{ checked: selected.has(item.name) }"
+              aria-hidden="true"
+            ><i class="pi pi-check"></i></span>
             <span
               class="avatar-wrapper"
               aria-hidden="true"
@@ -106,25 +160,132 @@
               <span class="entity-name">{{ item.name }}</span>
               <span class="entity-meta">
                 {{ item.count ? t(`${i18nKey}.bookCount`, { count: item.count }, item.count) : t(viewKey) }}
+                <template v-if="item.count && item.read !== undefined"> · {{ t('entities.readCount', { n: item.read }, item.read) }}</template>
               </span>
+              <span
+                v-if="item.count && item.read !== undefined"
+                class="read-bar"
+                aria-hidden="true"
+              ><span :style="{ width: `${Math.round((item.read / item.count) * 100)}%` }"></span></span>
             </span>
 
             <i
+              v-if="!merging"
               class="pi pi-chevron-right arrow-icon"
               aria-hidden="true"
             ></i>
-          </router-link>
+          </component>
+
+          <button
+            v-if="!merging"
+            type="button"
+            class="rename-btn"
+            :aria-label="t('entities.renameOf', { name: item.name })"
+            v-tooltip.top="t('entities.rename')"
+            @click="openRename(item)"
+          >
+            <i
+              class="pi pi-pencil"
+              aria-hidden="true"
+            ></i>
+          </button>
         </li>
       </ul>
     </div>
+
+    <div
+      v-if="merging"
+      class="merge-bar"
+      role="toolbar"
+      :aria-label="t('entities.mergeMode')"
+    >
+      <span aria-live="polite">{{ t('entities.selected', { n: selected.size }, selected.size) }}</span>
+      <Button
+        :label="t('entities.mergeAction')"
+        icon="pi pi-sitemap"
+        class="p-button-sm btn-action-primary"
+        :disabled="selected.size < 2"
+        @click="openMerge"
+      />
+    </div>
+
+    <Dialog
+      v-model:visible="nameDialog.visible"
+      modal
+      :header="nameDialog.mode === 'merge' ? t('entities.mergeTitle', { n: nameDialog.from.length }) : t('entities.renameTitle')"
+      :style="{ width: 'min(28rem, 92vw)' }"
+      :draggable="false"
+    >
+      <form
+        class="name-form"
+        @submit.prevent="submitName"
+      >
+        <p
+          v-if="nameDialog.mode === 'merge'"
+          class="name-hint"
+        >{{ t('entities.mergeExplain') }}</p>
+        <ul
+          v-if="nameDialog.mode === 'merge'"
+          class="merge-list"
+        >
+          <li
+            v-for="name in nameDialog.from"
+            :key="name"
+          >
+            <button
+              type="button"
+              class="pill"
+              :class="{ active: nameDialog.to === name }"
+              @click="nameDialog.to = name"
+            >{{ name }}</button>
+          </li>
+        </ul>
+        <label for="entity-new-name">{{ t('entities.finalName') }}</label>
+        <input
+          id="entity-new-name"
+          v-model="nameDialog.to"
+          class="plain-input"
+          maxlength="200"
+          autocomplete="off"
+        />
+        <p
+          v-if="mergeTarget"
+          class="name-warning"
+        >
+          <i
+            class="pi pi-info-circle"
+            aria-hidden="true"
+          ></i>
+          {{ t('entities.willMerge', { name: mergeTarget }) }}
+        </p>
+        <div class="name-actions">
+          <Button
+            type="button"
+            :label="t('common.cancel')"
+            class="p-button-text p-button-sm"
+            @click="nameDialog.visible = false"
+          />
+          <Button
+            type="submit"
+            :label="nameDialog.mode === 'merge' || mergeTarget ? t('entities.mergeAction') : t('common.save')"
+            class="p-button-sm btn-action-primary"
+            :loading="saving"
+            :disabled="!nameDialog.to.trim()"
+          />
+        </div>
+      </form>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
 import { tagColor } from '../utils/tagColors.js'
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import api from '../services/api.js'
 
 /**
  * Tela de lista usada por Autores, Editoras e Tags (antes eram três arquivos
@@ -142,6 +303,7 @@ const props = defineProps({
 })
 
 const { t } = useI18n()
+const toast = useToast()
 
 
 const items = ref([])
@@ -149,11 +311,94 @@ const loading = ref(true)
 const loadError = ref(false)
 const search = ref('')
 
+// Ordem: nome (A–Z), mais livros ou mais lidos. Lembrada neste navegador.
+const SORT_KEY = `entities-sort-${props.queryParam}`
+const sortBy = ref((() => {
+  try { return localStorage.getItem(SORT_KEY) || 'name' } catch { return 'name' }
+})())
+
+const sortOptions = computed(() => [
+  { value: 'name', label: t('entities.sortName') },
+  { value: 'count', label: t('entities.sortCount') },
+  { value: 'read', label: t('entities.sortRead') }
+])
+
 const filteredItems = computed(() => {
+  try { localStorage.setItem(SORT_KEY, sortBy.value) } catch { /* modo privado */ }
   const term = search.value.trim().toLocaleLowerCase()
-  if (!term) return items.value
-  return items.value.filter(item => item.name.toLocaleLowerCase().includes(term))
+  const list = term ? items.value.filter(item => item.name.toLocaleLowerCase().includes(term)) : [...items.value]
+  const byName = (a, b) => a.name.localeCompare(b.name)
+  if (sortBy.value === 'count') return list.sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || byName(a, b))
+  if (sortBy.value === 'read') return list.sort((a, b) => (b.read ?? 0) - (a.read ?? 0) || byName(a, b))
+  return list.sort(byName)
 })
+
+// ---------------------------------------------------------------------------
+// Renomear e mesclar
+// ---------------------------------------------------------------------------
+const merging = ref(false)
+const selected = ref(new Set())
+const saving = ref(false)
+const nameDialog = reactive({ visible: false, mode: 'rename', from: [], to: '' })
+
+function toggleMerging() {
+  merging.value = !merging.value
+  selected.value = new Set()
+}
+
+function toggleSelected(name) {
+  const next = new Set(selected.value)
+  if (next.has(name)) next.delete(name)
+  else next.add(name)
+  selected.value = next
+}
+
+function openRename(item) {
+  Object.assign(nameDialog, { visible: true, mode: 'rename', from: [item.name], to: item.name })
+}
+
+function openMerge() {
+  const chosen = items.value.filter(item => selected.value.has(item.name))
+  // Sugere o nome com mais livros como nome final.
+  const best = [...chosen].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))[0]
+  Object.assign(nameDialog, { visible: true, mode: 'merge', from: chosen.map(item => item.name), to: best?.name ?? '' })
+}
+
+// Renomear para um nome que já existe (e não está na lista de origem) junta os dois.
+const mergeTarget = computed(() => {
+  const to = nameDialog.to.trim().toLocaleLowerCase()
+  if (!to) return null
+  const fromKeys = nameDialog.from.map(name => name.toLocaleLowerCase())
+  const existing = items.value.find(item => item.name.toLocaleLowerCase() === to)
+  return existing && !fromKeys.includes(to) ? existing.name : null
+})
+
+async function submitName() {
+  const to = nameDialog.to.trim()
+  if (!to) return
+  if (nameDialog.mode === 'rename' && to === nameDialog.from[0]) {
+    nameDialog.visible = false
+    return
+  }
+  saving.value = true
+  try {
+    await api.mergeNames(props.queryParam, nameDialog.from, to)
+    toast.add({
+      severity: 'success',
+      summary: t('common.success'),
+      detail: nameDialog.mode === 'merge' || mergeTarget.value ? t('entities.mergedToast', { name: to }) : t('entities.renamedToast', { name: to }),
+      life: 3000
+    })
+    nameDialog.visible = false
+    merging.value = false
+    selected.value = new Set()
+    await load()
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    saving.value = false
+  }
+}
 
 function initials(name) {
   if (!name) return '?'
@@ -175,7 +420,6 @@ async function load() {
     const response = await props.fetcher()
     items.value = response
       .map(item => (typeof item === 'string' ? { name: item, count: null } : item))
-      .sort((a, b) => a.name.localeCompare(b.name))
   } catch (error) {
     loadError.value = true
   } finally {
@@ -245,6 +489,231 @@ onMounted(load)
   border-color: var(--main-color);
   outline: none;
   background-color: var(--bg-panel);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+  margin: -1.5rem 0 1.5rem;
+}
+
+.total {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-right: auto;
+}
+
+.sort-group {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pill:hover {
+  color: var(--text-primary);
+  border-color: var(--main-color);
+}
+
+.pill.active {
+  background: var(--main-color);
+  border-color: var(--main-color);
+  color: var(--text-inverse);
+}
+
+.pill:focus-visible,
+.rename-btn:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+}
+
+.merge-help {
+  margin: -0.75rem 0 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.entity-item {
+  position: relative;
+}
+
+button.entity-card {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+}
+
+.entity-card.is-selected {
+  border-color: var(--main-color);
+  background: rgba(var(--main-color-rgb), 0.08);
+}
+
+.select-check {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+}
+
+.select-check.checked {
+  background: var(--main-color);
+  border-color: var(--main-color);
+  color: var(--text-inverse);
+}
+
+.select-check .pi {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.read-bar {
+  display: block;
+  height: 4px;
+  margin-top: 0.45rem;
+  border-radius: 999px;
+  background: var(--bg-hover);
+  overflow: hidden;
+  max-width: 10rem;
+}
+
+.read-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent-color);
+}
+
+/* Lápis de renomear: canto superior direito do card. */
+.rename-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.rename-btn .pi {
+  font-size: 0.75rem;
+}
+
+.rename-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--main-color);
+}
+
+@media (hover: hover) {
+  .rename-btn {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .entity-item:hover .rename-btn,
+  .rename-btn:focus-visible {
+    opacity: 1;
+  }
+}
+
+.merge-bar {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 50;
+  margin: 1.5rem auto 0;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0.75rem 0.6rem 1.1rem;
+  border-radius: 16px;
+  background: var(--bg-panel);
+  border: 1px solid rgba(var(--main-color-rgb), 0.45);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.name-form label,
+.name-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.merge-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.plain-input {
+  width: 100%;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.plain-input:focus {
+  border-color: var(--main-color);
+  outline: none;
+}
+
+.name-warning {
+  margin: 0;
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  background: rgba(var(--main-color-rgb), 0.1);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.name-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .entity-grid {

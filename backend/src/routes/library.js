@@ -113,6 +113,24 @@ router.get('/', async (req, res) => {
   }
 })
 
+// Séries do usuário (filtro e autocompletar). Antes de '/:id'.
+router.get('/series', async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await libraryService.getSeries(req.user.id))
+  } catch (error) {
+    sendError(res, error, 'Erro ao listar séries')
+  }
+})
+
+// Ações em lote: { ids: [1, 2], action: 'status' | 'addTag' | 'removeTag' | 'delete', ... }
+router.post('/batch', async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await libraryService.batchUpdate(req.user.id, req.body ?? {}))
+  } catch (error) {
+    sendError(res, error, 'Erro na ação em lote')
+  }
+})
+
 router.get('/:id', validateNumericId(), async (req, res) => {
   try {
     const { id } = req.params

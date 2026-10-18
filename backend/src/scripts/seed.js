@@ -454,6 +454,26 @@ async function insertReadingStatusAndGoals() {
   `)
 }
 
+/** Série a partir de títulos como "X: Volume 3" e algumas anotações. */
+async function insertSeriesAndNotes() {
+  await db.query(`
+    UPDATE librishelf.books
+    SET series = regexp_replace(title, ':\\s*Volume \\d+$', ''),
+        series_index = substring(title from 'Volume (\\d+)$')::real
+    WHERE title ~ ':\\s*Volume \\d+$'
+  `)
+  await db.query(`
+    UPDATE librishelf.books
+    SET notes = (ARRAY[
+      'Comprei num sebo em Ouro Preto.',
+      'Emprestado para a Júlia em março.',
+      E'Parei no capítulo 7.\\nRetomar com calma.',
+      'Final melhor que o começo.'
+    ])[1 + (id % 4)]
+    WHERE id % 11 = 0
+  `)
+}
+
 async function insertFollows(users) {
   const byName = new Map(users.map(user => [user.name, user]))
   const pairs = new Map()
@@ -579,6 +599,7 @@ async function main() {
   await insertUsers(users)
   const books = await insertBooks(users, catalog)
   await insertReadingStatusAndGoals()
+  await insertSeriesAndNotes()
   const follows = await insertFollows(users)
   const covers = CONFIG.covers ? await generateCovers(catalog) : 0
 

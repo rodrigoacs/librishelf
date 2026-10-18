@@ -2,6 +2,7 @@ import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { deleteBookCover } from '../utils/imageProcessor.js'
+import logger from '../utils/logger.js'
 import { parseNameList, parseTagList, validateNameList } from '../utils/nameList.js'
 
 const READ_YEAR_PATTERN = /^\d{4}$/
@@ -68,6 +69,39 @@ function normalizeReadMonth(value) {
   return month
 }
 
+const MAX_SERIES_LENGTH = 200
+const MAX_NOTES_LENGTH = 5000
+
+function normalizeSeries(value) {
+  if (value === undefined || value === null) return null
+  if (typeof value !== 'string') throw httpError("'series' precisa ser texto.", STATUS.BAD_REQUEST)
+  const series = value.trim().replace(/\s+/g, ' ')
+  if (series.length > MAX_SERIES_LENGTH) {
+    throw httpError(`O nome da série pode ter até ${MAX_SERIES_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
+  }
+  return series || null
+}
+
+// Volume: 1, 2, 3… e também 1.5 (conto entre volumes). Vírgula decimal vale.
+function normalizeSeriesIndex(value) {
+  if (value === undefined || value === null || value === '') return null
+  const number = Number(String(value).replace(',', '.'))
+  if (!Number.isFinite(number) || number < 0 || number > 9999) {
+    throw httpError('O volume precisa ser um número de 0 a 9999.', STATUS.BAD_REQUEST)
+  }
+  return Math.round(number * 100) / 100
+}
+
+function normalizeNotes(value) {
+  if (value === undefined || value === null) return null
+  if (typeof value !== 'string') throw httpError("'notes' precisa ser texto.", STATUS.BAD_REQUEST)
+  const notes = value.replace(/\r\n/g, '\n').trim()
+  if (notes.length > MAX_NOTES_LENGTH) {
+    throw httpError(`A anotação pode ter até ${MAX_NOTES_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
+  }
+  return notes || null
+}
+
 function normalizeReadYear(readYear) {
   if (readYear === undefined || readYear === null || readYear === '' || readYear === 'all') return 'all'
 
@@ -103,7 +137,11 @@ async function getPublicBook(username, bookId) {
   const user = await authRepository.getUserByName(username)
   if (!user || !user.is_public) return null
 
-  return await libraryRepository.getBookByIdForUser(bookId, user.id)
+  const book = await libraryRepository.getBookByIdForUser(bookId, user.id)
+  if (!book) return null
+  // A anotação é só do dono.
+  const { notes, ...publicBook } = book
+  return publicBook
 }
 
 async function getAllBooksByUser(userId, query) {
@@ -112,6 +150,7 @@ async function getAllBooksByUser(userId, query) {
     readState: normalizeReadState(query.readState),
     readYear: normalizeReadYear(query.readYear),
     readMonth: normalizeReadMonth(query.readMonth),
+    series: typeof query.series === 'string' && query.series.trim() ? query.series.trim() : undefined,
     author: query.author || undefined,
     publisher: query.publisher || undefined,
     tags: query.tags || undefined,
@@ -185,7 +224,10 @@ function normalizeBookInput(raw = {}) {
     readDate: normalizeReadDate(raw.readDate),
     rating: normalizeRating(raw.rating),
     olWorkKey: normalizeOlKey(raw.olWorkKey, OL_WORK_KEY, 'olWorkKey'),
-    olEditionKey: normalizeOlKey(raw.olEditionKey, OL_EDITION_KEY, 'olEditionKey')
+    olEditionKey: normalizeOlKey(raw.olEditionKey, OL_EDITION_KEY, 'olEditionKey'),
+    series: normalizeSeries(raw.series),
+    seriesIndex: normalizeSeriesIndex(raw.seriesIndex),
+    notes: normalizeNotes(raw.notes)
   }
 }
 
@@ -202,7 +244,11 @@ async function addNewBook(bookData) {
     }
   }
 
-  return await libraryRepository.createBook(bookData)
+  const bookId = await libraryRepository.createBook(bookData)
+  if (bookData.series || bookData.seriesIndex !== null || bookData.notes) {
+    await libraryRepository.updateExtras(bookId, bookData)
+  }
+  return bookId
 }
 
 async function updateBookDetails(bookId, userId, rawBook) {
@@ -219,6 +265,15 @@ async function updateBookDetails(bookId, userId, rawBook) {
 
   await libraryRepository.updateBook(bookId, input)
   if (input.readDate) await libraryRepository.clearWantIfRead(bookId)
+
+  // Série, volume e anotação: campo que não veio (cliente antigo) fica como estava.
+  const body = rawBook ?? {}
+  const current = await libraryRepository.getExtras(bookId)
+  await libraryRepository.updateExtras(bookId, {
+    series: Object.hasOwn(body, 'series') ? input.series : current?.series ?? null,
+    seriesIndex: Object.hasOwn(body, 'seriesIndex') ? input.seriesIndex : current?.series_index ?? null,
+    notes: Object.hasOwn(body, 'notes') ? input.notes : current?.notes ?? null
+  })
   return true
 }
 
@@ -313,6 +368,66 @@ async function setReadingStatus(bookId, userId, rawStatus, rawDate) {
   }
 }
 
+async function getSeries(userId) {
+  return await libraryRepository.getSeriesByUser(userId)
+}
+
+const MAX_BATCH = 500
+const BATCH_ACTIONS = ['status', 'addTag', 'removeTag', 'delete']
+
+/**
+ * Ações em vários livros de uma vez: { ids, action, status?, date?, tag? }.
+ * Todos os ids precisam ser do usuário; se algum não for, nada é feito (403).
+ */
+async function batchUpdate(userId, body = {}) {
+  const { action } = body
+  if (!BATCH_ACTIONS.includes(action)) {
+    throw httpError("Ação inválida: use 'status', 'addTag', 'removeTag' ou 'delete'.", STATUS.BAD_REQUEST)
+  }
+
+  const ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(Number))]
+  if (ids.length === 0 || ids.length > MAX_BATCH || !ids.every(id => Number.isInteger(id) && id > 0 && id <= 2147483647)) {
+    throw httpError(`Envie de 1 a ${MAX_BATCH} ids de livros válidos.`, STATUS.BAD_REQUEST)
+  }
+
+  const owned = await libraryRepository.filterOwnedIds(userId, ids)
+  if (owned.length !== ids.length) {
+    throw httpError('Alguns livros não foram encontrados na sua biblioteca.', STATUS.FORBIDDEN)
+  }
+
+  if (action === 'status') {
+    const status = String(body.status ?? '')
+    if (!READING_STATUSES.includes(status)) {
+      throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST)
+    }
+    const date = normalizeReadDate(body.date) ?? new Date().toISOString().slice(0, 10)
+    return { updated: await libraryRepository.batchSetStatus(ids, status, date) }
+  }
+
+  if (action === 'addTag' || action === 'removeTag') {
+    const [tag] = parseTagList(body.tag)
+    const tagError = tag ? validateNameList([tag], 'tags') : 'Informe a categoria.'
+    if (tagError) throw httpError(tagError, STATUS.BAD_REQUEST)
+
+    if (action === 'addTag') {
+      return { updated: await libraryRepository.batchAddTag(userId, ids, tag) }
+    }
+    const updated = await libraryRepository.batchRemoveTag(userId, ids, tag)
+    await libraryRepository.pruneUserNames(userId)
+    return { updated }
+  }
+
+  // delete
+  const deleted = await libraryRepository.batchDelete(ids)
+  await libraryRepository.pruneUserNames(userId)
+  const failed = []
+  for (const id of ids) {
+    try { await deleteBookCover(id) } catch { failed.push(id) }
+  }
+  if (failed.length) logger.warn('Capas não removidas na exclusão em lote', { userId, failed })
+  return { updated: deleted }
+}
+
 export {
   getAllBooksByUser,
   getBookById,
@@ -326,6 +441,8 @@ export {
   markBookAsRead,
   markBookAsUnread,
   setReadingStatus,
+  getSeries,
+  batchUpdate,
   setRating,
   getPublicLibraryByUsername,
   normalizeDate,

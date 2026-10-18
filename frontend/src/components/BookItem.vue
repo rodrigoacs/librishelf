@@ -3,8 +3,10 @@
     <button
       type="button"
       class="book-card"
+      :class="{ 'is-selected': selectable && selected }"
       :aria-label="ariaLabel"
-      @click="displayDialog = true"
+      :aria-pressed="selectable ? selected : undefined"
+      @click="onCardClick"
     >
       <span class="cover-wrapper">
         <img
@@ -25,6 +27,13 @@
           class="cover-overlay"
           aria-hidden="true"
         ></span>
+
+        <span
+          v-if="selectable"
+          class="select-check"
+          :class="{ checked: selected }"
+          aria-hidden="true"
+        ><i class="pi pi-check"></i></span>
 
         <span
           v-if="status === 'reading' || status === 'want'"
@@ -49,11 +58,15 @@
           class="book-author"
           :title="book.authors"
         >{{ book.authors }}</span>
+        <span
+          v-if="book.series"
+          class="book-series"
+        >{{ seriesText(book, t, locale) }}</span>
       </span>
     </button>
 
     <button
-      v-if="quickActions && !readOnly"
+      v-if="quickActions && !readOnly && !selectable"
       type="button"
       class="quick-read"
       :class="{ 'is-read': isRead, busy: saving }"
@@ -88,10 +101,11 @@ import { useI18n } from 'vue-i18n'
 import BookDialog from './BookDialog.vue'
 import { useReadToggle } from '../composables/useReadToggle.js'
 import { statusOf } from '../utils/readingStatus.js'
+import { seriesText } from '../utils/series.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import GeneratedCover from './GeneratedCover.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const props = defineProps({
   book: { type: Object, required: true },
@@ -99,10 +113,18 @@ const props = defineProps({
   readOnly: { type: Boolean, default: false },
   ownerUsername: { type: String, default: '' },
   /** Botão de marcar como lido sobre a capa (só na biblioteca do dono). */
-  quickActions: { type: Boolean, default: false }
+  quickActions: { type: Boolean, default: false },
+  /** Modo seleção (ações em lote): clicar marca/desmarca em vez de abrir. */
+  selectable: { type: Boolean, default: false },
+  selected: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['updated', 'deleted'])
+const emit = defineEmits(['updated', 'deleted', 'toggle-select'])
+
+function onCardClick() {
+  if (props.selectable) emit('toggle-select', bookId.value)
+  else displayDialog.value = true
+}
 const displayDialog = ref(false)
 
 const bookId = computed(() => props.book.book_id ?? props.book.id)
@@ -293,6 +315,39 @@ button.book-card {
   font-weight: bold;
 }
 
+.select-check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 4;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid #ffffff;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.select-check.checked {
+  background: var(--main-color);
+  border-color: var(--main-color);
+  color: var(--text-inverse);
+}
+
+.select-check .pi {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.book-card.is-selected {
+  outline: 3px solid var(--main-color);
+  outline-offset: 2px;
+}
+
 .status-badge {
   position: absolute;
   left: 8px;
@@ -347,6 +402,15 @@ button.book-card {
   font-size: 0.85rem;
   color: var(--text-secondary);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.book-series {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--main-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

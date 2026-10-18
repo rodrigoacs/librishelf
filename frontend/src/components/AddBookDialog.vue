@@ -180,6 +180,41 @@
             />
           </div>
 
+          <div class="series-grid">
+            <div class="input-group">
+              <label for="new-book-series">{{ t('series.name') }}</label>
+              <input
+                id="new-book-series"
+                v-model="book.series"
+                class="modern-input meta-input"
+                list="new-book-series-options"
+                maxlength="200"
+                autocomplete="off"
+                :placeholder="t('series.namePlaceholder')"
+                @focus="loadSeriesOptions"
+              />
+              <datalist id="new-book-series-options">
+                <option
+                  v-for="item in seriesOptions"
+                  :key="item.name"
+                  :value="item.name"
+                ></option>
+              </datalist>
+            </div>
+            <div class="input-group">
+              <label for="new-book-series-index">{{ t('series.volume') }}</label>
+              <input
+                id="new-book-series-index"
+                v-model="book.seriesIndex"
+                class="modern-input meta-input"
+                inputmode="decimal"
+                maxlength="7"
+                autocomplete="off"
+                placeholder="-"
+              />
+            </div>
+          </div>
+
           <div class="dates-grid">
             <div class="input-group">
               <label for="new-book-read-date">{{ t('book.read_status') }}</label>
@@ -307,7 +342,20 @@ const initialBookState = {
   isbn: '',
   readDate: null,
   pubDate: null,
-  rating: null
+  rating: null,
+  series: '',
+  seriesIndex: ''
+}
+
+// Séries já usadas, para autocompletar (carrega na primeira vez que o campo recebe foco).
+const seriesOptions = ref([])
+async function loadSeriesOptions() {
+  if (seriesOptions.value.length) return
+  try {
+    seriesOptions.value = await api.getSeries()
+  } catch {
+    seriesOptions.value = []
+  }
 }
 
 // Resultado da busca por ISBN: as chaves do Open Library só valem para o ISBN
@@ -448,6 +496,8 @@ async function saveBook() {
     if (book.pubDate) formData.append('pubDate', toApiDate(book.pubDate))
     if (book.readDate) formData.append('readDate', toApiDate(book.readDate))
     if (book.rating) formData.append('rating', String(book.rating))
+    if (book.series?.trim()) formData.append('series', book.series.trim())
+    if (String(book.seriesIndex ?? '').trim()) formData.append('seriesIndex', String(book.seriesIndex).trim())
 
     if (lookup.isbn && lookup.isbn === book.isbn.trim()) {
       if (lookup.olWorkKey) formData.append('olWorkKey', lookup.olWorkKey)
@@ -842,6 +892,12 @@ button.upload-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
+}
+
+.series-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.5rem;
+  gap: 1rem;
 }
 
 .date-wrapper {

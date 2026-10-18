@@ -115,6 +115,31 @@
               <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}
               </h1>
               <h2 class="book-author">{{ book.authors || (loading ? '' : t('bookDialog.unknownAuthor')) }}</h2>
+              <template v-if="book.series && !loading">
+                <router-link
+                  v-if="!isReadOnly"
+                  :to="{ name: 'library', query: { series: book.series, sort: 'series', order: 'asc' } }"
+                  class="series-line"
+                  :title="t('series.seeAll', { series: book.series })"
+                  @click="visible = false"
+                >
+                  <i
+                    class="pi pi-clone"
+                    aria-hidden="true"
+                  ></i>
+                  {{ seriesLabel }}
+                </router-link>
+                <span
+                  v-else
+                  class="series-line"
+                >
+                  <i
+                    class="pi pi-clone"
+                    aria-hidden="true"
+                  ></i>
+                  {{ seriesLabel }}
+                </span>
+              </template>
               <template v-if="!loading && !loadFailed">
                 <StarRating
                   v-if="!isReadOnly"
@@ -149,6 +174,53 @@
               class="modern-input"
               :placeholder="t('bookDialog.tagsPlaceholder')"
             />
+          </div>
+
+          <div class="series-grid">
+            <div class="info-group">
+              <label for="book-series">{{ t('series.name') }}</label>
+              <input
+                id="book-series"
+                v-model="book.series"
+                class="modern-input"
+                list="book-series-options"
+                maxlength="200"
+                autocomplete="off"
+                :placeholder="t('series.namePlaceholder')"
+              />
+              <datalist id="book-series-options">
+                <option
+                  v-for="item in seriesOptions"
+                  :key="item.name"
+                  :value="item.name"
+                ></option>
+              </datalist>
+            </div>
+            <div class="info-group">
+              <label for="book-series-index">{{ t('series.volume') }}</label>
+              <input
+                id="book-series-index"
+                v-model="book.series_index"
+                class="modern-input"
+                inputmode="decimal"
+                maxlength="7"
+                autocomplete="off"
+                placeholder="-"
+              />
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label for="book-notes">{{ t('notes.label') }}</label>
+            <textarea
+              id="book-notes"
+              v-model="book.notes"
+              class="modern-input notes-input"
+              rows="4"
+              maxlength="5000"
+              :placeholder="t('notes.placeholder')"
+            ></textarea>
+            <span class="field-hint">{{ t('notes.privateHint') }} · {{ (book.notes || '').length }}/5000</span>
           </div>
 
           <div class="dates-grid">
@@ -307,6 +379,21 @@
               :style="{ '--tag-color': tagColor(tag) }"
             >{{ tag }}</span>
           </div>
+
+          <section
+            v-if="!isReadOnly && book.notes"
+            class="notes-section"
+            aria-labelledby="book-notes-title"
+          >
+            <h3 id="book-notes-title">
+              <i
+                class="pi pi-pencil"
+                aria-hidden="true"
+              ></i>
+              {{ t('notes.title') }}
+            </h3>
+            <p class="notes-text">{{ book.notes }}</p>
+          </section>
 
           <section
             v-if="showCommunity"
@@ -499,6 +586,7 @@ import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import GeneratedCover from './GeneratedCover.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { statusOf, STATUS_OPTIONS, STATUS_ICONS } from '../utils/readingStatus.js'
+import { seriesText } from '../utils/series.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
 
 const { t, locale } = useI18n()
@@ -532,7 +620,7 @@ const preview = createPreviewHandle()
 
 function emptyBook() {
   // authors: texto para exibir; authorNames: a lista que é editada e salva.
-  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, pubdate: null }
+  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, series: '', series_index: null, notes: '', pubdate: null }
 }
 
 const book = ref(emptyBook())
@@ -576,6 +664,19 @@ const metaItems = computed(() => {
 })
 
 const currentStatus = computed(() => statusOf(book.value))
+
+const seriesLabel = computed(() => seriesText(book.value, t, locale.value))
+
+// Séries já usadas, para autocompletar ao editar.
+const seriesOptions = ref([])
+async function loadSeriesOptions() {
+  if (props.isReadOnly || seriesOptions.value.length) return
+  try {
+    seriesOptions.value = await api.getSeries()
+  } catch {
+    seriesOptions.value = []
+  }
+}
 
 const statusCaption = computed(() => {
   const status = currentStatus.value
@@ -720,6 +821,7 @@ function editMode() {
   originalBook = cloneBook(book.value)
   submitted.value = false
   isEditing.value = true
+  loadSeriesOptions()
 }
 
 function cancelEdit() {
@@ -778,7 +880,10 @@ async function saveBookDetails() {
       isbn: book.value.isbn,
       rating: book.value.rating,
       pubDate: toApiDate(book.value.pubdate),
-      readDate: toApiDate(book.value.read_date)
+      readDate: toApiDate(book.value.read_date),
+      series: (book.value.series || '').trim(),
+      seriesIndex: String(book.value.series_index ?? '').trim() || null,
+      notes: book.value.notes || ''
     })
 
     if (selectedFile.value) {
@@ -816,6 +921,9 @@ function applyResponse(data) {
     tags: data.tags || '',
     read_date: fromApiDate(data.read_date),
     reading_status: data.reading_status ?? null,
+    series: data.series || '',
+    series_index: data.series_index ?? null,
+    notes: data.notes || '',
     started_at: fromApiDate(data.started_at),
     pubdate: fromApiDate(data.publication_date)
   }
@@ -1222,6 +1330,72 @@ button.cover-wrapper {
 }
 
 /* Editora · ano · ISBN */
+.series-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  color: var(--main-color);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.series-line .pi {
+  font-size: 0.8rem;
+}
+
+a.series-line:hover {
+  text-decoration: underline;
+}
+
+.series-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.5rem;
+  gap: 1rem;
+}
+
+.notes-input {
+  resize: vertical;
+  min-height: 5.5rem;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.notes-section {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: rgba(var(--main-color-rgb), 0.05);
+}
+
+.notes-section h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.notes-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  line-height: 1.55;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
 .meta-line {
   list-style: none;
   margin: 0;

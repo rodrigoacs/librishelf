@@ -72,6 +72,16 @@
         </div>
 
         <Button
+          icon="pi pi-check-square"
+          class="p-button-rounded p-button-text action-btn"
+          :class="{ 'active-filter': selecting }"
+          :aria-pressed="selecting"
+          :aria-label="t('batch.selectMode')"
+          v-tooltip.bottom="t('batch.selectMode')"
+          @click="emit('toggle-select')"
+        />
+
+        <Button
           icon="pi pi-filter"
           class="p-button-rounded p-button-text action-btn"
           :class="{ 'active-filter': hasActiveFilters }"
@@ -108,6 +118,13 @@
           :label="readPeriodLabel"
           removable
           @remove="clearReadPeriod"
+          class="custom-chip theme-border"
+        />
+        <Chip
+          v-if="filters.series"
+          :label="t('series.chip', { series: filters.series })"
+          removable
+          @remove="emitFilter('series', '')"
           class="custom-chip theme-border"
         />
         <Chip
@@ -307,10 +324,11 @@ const { t, locale } = useI18n()
 const props = defineProps({
   booksQuantity: Number,
   filters: { type: Object, required: true },
-  view: { type: String, default: 'grid' }
+  view: { type: String, default: 'grid' },
+  selecting: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['filter-change', 'reset', 'book-created', 'view-change'])
+const emit = defineEmits(['filter-change', 'reset', 'book-created', 'view-change', 'toggle-select'])
 
 const viewModes = computed(() => [
   { value: 'grid', icon: 'pi pi-th-large', label: t('library.view_grid') },
@@ -337,7 +355,8 @@ const sortOptions = computed(() => [
   { label: t('library.sort.author'), value: 'authors' },
   { label: t('library.sort.read_date'), value: 'readDate' },
   { label: t('library.sort.pub_date'), value: 'pubDate' },
-  { label: t('library.sort.rating'), value: 'rating' }
+  { label: t('library.sort.rating'), value: 'rating' },
+  { label: t('library.sort.series'), value: 'series' }
 ])
 
 const yearOptions = computed(() => {
@@ -392,6 +411,7 @@ const hasActiveFilters = computed(() => {
   return f.readState !== 'all' ||
     hasReadYear.value ||
     f.isbnStatus === 'invalid' ||
+    Boolean(f.series) ||
     f.author.length > 0 ||
     f.publisher.length > 0 ||
     f.tags.length > 0

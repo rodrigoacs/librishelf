@@ -1,11 +1,21 @@
 <template>
-  <li class="book-row">
+  <li
+    class="book-row"
+    :class="{ 'is-selected': selectable && selected }"
+  >
     <button
       type="button"
       class="row-main"
       :aria-label="ariaLabel"
-      @click="displayDialog = true"
+      :aria-pressed="selectable ? selected : undefined"
+      @click="onRowClick"
     >
+      <span
+        v-if="selectable"
+        class="row-check"
+        :class="{ checked: selected }"
+        aria-hidden="true"
+      ><i class="pi pi-check"></i></span>
       <span class="thumb">
         <img
           v-if="!coverMissing"
@@ -24,7 +34,9 @@
 
       <span class="main-text">
         <span class="title">{{ book.title }}</span>
-        <span class="authors">{{ book.authors }}</span>
+        <span class="authors">
+          {{ book.authors }}<template v-if="book.series"><span class="series"> · {{ seriesText(book, t, locale) }}</span></template>
+        </span>
       </span>
 
       <span class="col publisher">{{ book.publisher_name || '—' }}</span>
@@ -55,6 +67,7 @@
     </button>
 
     <button
+      v-if="!selectable"
       type="button"
       class="row-read"
       :class="{ 'is-read': isRead }"
@@ -90,14 +103,22 @@ import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import { fromApiDate } from '../utils/dates.js'
 import { useReadToggle } from '../composables/useReadToggle.js'
 import { statusOf } from '../utils/readingStatus.js'
+import { seriesText } from '../utils/series.js'
 
 /** Linha da biblioteca no modo lista: mais livros por tela, com os dados principais. */
 const props = defineProps({
   book: { type: Object, required: true },
-  coverVersion: { type: Number, default: 0 }
+  coverVersion: { type: Number, default: 0 },
+  selectable: { type: Boolean, default: false },
+  selected: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['updated', 'deleted'])
+const emit = defineEmits(['updated', 'deleted', 'toggle-select'])
+
+function onRowClick() {
+  if (props.selectable) emit('toggle-select', bookId.value)
+  else displayDialog.value = true
+}
 const { t, locale } = useI18n()
 const displayDialog = ref(false)
 
@@ -148,6 +169,38 @@ const ariaLabel = computed(() => {
   border-radius: 12px;
   padding-right: 0.75rem;
   transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.book-row.is-selected {
+  border-color: var(--main-color);
+  background: rgba(var(--main-color-rgb), 0.08);
+}
+
+/* No modo seleção a caixinha entra antes da capa. */
+.row-main:has(.row-check) {
+  grid-template-columns: 22px 40px minmax(0, 2.6fr) minmax(0, 1.3fr) 3.5rem 6rem 6rem;
+}
+
+.row-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+}
+
+.row-check.checked {
+  background: var(--main-color);
+  border-color: var(--main-color);
+  color: var(--text-inverse);
+}
+
+.row-check .pi {
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 .book-row:hover {
@@ -220,6 +273,10 @@ const ariaLabel = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.authors .series {
+  color: var(--main-color);
 }
 
 .year {
@@ -295,6 +352,10 @@ const ariaLabel = computed(() => {
     grid-template-columns: 40px minmax(0, 2.4fr) minmax(0, 1.2fr) 6rem 6rem;
   }
 
+  .row-main:has(.row-check) {
+    grid-template-columns: 22px 40px minmax(0, 2.4fr) minmax(0, 1.2fr) 6rem 6rem;
+  }
+
   .year {
     display: none;
   }
@@ -304,6 +365,10 @@ const ariaLabel = computed(() => {
   .row-main {
     grid-template-columns: 40px minmax(0, 1fr) 5.75rem;
     gap: 0.75rem;
+  }
+
+  .row-main:has(.row-check) {
+    grid-template-columns: 22px 40px minmax(0, 1fr) 5.75rem;
   }
 
   .publisher,
@@ -319,6 +384,10 @@ const ariaLabel = computed(() => {
 @media (max-width: 420px) {
   .row-main {
     grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .row-main:has(.row-check) {
+    grid-template-columns: 22px 36px minmax(0, 1fr);
   }
 
   .thumb {

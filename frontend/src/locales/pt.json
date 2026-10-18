@@ -126,7 +126,8 @@
       "read_date": "Data de Leitura",
       "pub_date": "Data de Publicação",
       "all_years": "Todos os anos",
-      "rating": "Nota"
+      "rating": "Nota",
+      "series": "Série e volume"
     },
     "empty_title": "Nenhum livro encontrado",
     "empty_msg": "Não encontramos nada com os filtros atuais.",
@@ -200,7 +201,8 @@
     "notFound": "Nenhum autor encontrado.",
     "bookCount": "{count} livro | {count} livros",
     "viewBooks": "Ver Livros",
-    "loadError": "Não foi possível carregar os autores."
+    "loadError": "Não foi possível carregar os autores.",
+    "total": "{n} autor | {n} autores"
   },
   "publishers": {
     "title": "Editoras",
@@ -209,7 +211,8 @@
     "notFound": "Nenhuma editora encontrada.",
     "viewCollection": "Ver Coleção",
     "loadError": "Não foi possível carregar as editoras.",
-    "bookCount": "{count} livro | {count} livros"
+    "bookCount": "{count} livro | {count} livros",
+    "total": "{n} editora | {n} editoras"
   },
   "tags": {
     "title": "Categorias",
@@ -218,7 +221,8 @@
     "empty": "Nenhuma categoria encontrada.",
     "error": "Não foi possível carregar as categorias.",
     "bookCount": "{count} livro | {count} livros",
-    "viewBooks": "Ver livros"
+    "viewBooks": "Ver livros",
+    "total": "{n} categoria | {n} categorias"
   },
   "dashboard": {
     "title": "Painel",
@@ -589,5 +593,61 @@
     "future": "O ano ainda não começou",
     "empty": "Sem meta para este ano. Você leu nenhum livro até agora. | Sem meta para este ano. Você leu {n} livro até agora. | Sem meta para este ano. Você leu {n} livros até agora.",
     "paceMarker": "Onde você precisa estar hoje"
+  },
+  "series": {
+    "name": "Série",
+    "namePlaceholder": "Ex.: Duna",
+    "volume": "Volume",
+    "label": "{series} #{n}",
+    "seeAll": "Ver todos de {series}",
+    "chip": "Série: {series}"
+  },
+  "notes": {
+    "label": "Anotação pessoal",
+    "title": "Minha anotação",
+    "placeholder": "Impressões, citações, onde parou, para quem emprestou...",
+    "privateHint": "Só você vê"
+  },
+  "batch": {
+    "toolbar": "Ações nos livros selecionados",
+    "selectMode": "Selecionar vários",
+    "selected": "nenhum selecionado | {n} selecionado | {n} selecionados",
+    "selectAll": "Selecionar todos",
+    "selectNone": "Desmarcar todos",
+    "status": "Status",
+    "category": "Categoria",
+    "delete": "Excluir",
+    "cancel": "Sair da seleção",
+    "categoryTitle": "Categoria em {n} livro | Categoria em {n} livros",
+    "categoryName": "Nome da categoria",
+    "categoryPlaceholder": "Ex.: Emprestados",
+    "addCategory": "Adicionar",
+    "removeCategory": "Remover",
+    "confirmDelete": "Excluir {n} livro? Isso não pode ser desfeito. | Excluir {n} livros? Isso não pode ser desfeito.",
+    "doneStatus": "Nenhum livro mudou | Status de {n} livro atualizado | Status de {n} livros atualizado",
+    "doneAddTag": "Nenhum livro mudou (já tinham a categoria) | Categoria adicionada a {n} livro | Categoria adicionada a {n} livros",
+    "doneRemoveTag": "Nenhum livro tinha essa categoria | Categoria removida de {n} livro | Categoria removida de {n} livros",
+    "doneDelete": "Nenhum livro excluído | {n} livro excluído | {n} livros excluídos"
+  },
+  "entities": {
+    "sortLabel": "Ordenar",
+    "sortName": "A–Z",
+    "sortCount": "Mais livros",
+    "sortRead": "Mais lidos",
+    "readCount": "nenhum lido | {n} lido | {n} lidos",
+    "rename": "Renomear",
+    "renameOf": "Renomear {name}",
+    "renameTitle": "Renomear",
+    "mergeMode": "Mesclar",
+    "mergeCancel": "Cancelar",
+    "mergeHelp": "Escolha os nomes que são a mesma coisa (ex.: \"Asimov\" e \"Isaac Asimov\") e clique em Mesclar.",
+    "selected": "nenhum selecionado | {n} selecionado | {n} selecionados",
+    "mergeAction": "Mesclar",
+    "mergeTitle": "Mesclar {n} nomes",
+    "mergeExplain": "Os livros de todos passam para um nome só. Escolha qual fica:",
+    "finalName": "Nome final",
+    "willMerge": "\"{name}\" já existe: os livros serão juntados nele.",
+    "mergedToast": "Agora tudo está em \"{name}\".",
+    "renamedToast": "Renomeado para \"{name}\"."
   }
 }

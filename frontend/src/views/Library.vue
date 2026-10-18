@@ -10,6 +10,8 @@
         :books-quantity="totalRecords"
         :filters="filters"
         :view="viewMode"
+        :selecting="selecting"
+        @toggle-select="toggleSelecting"
         @filter-change="handleFilterChange"
         @view-change="setViewMode"
         @reset="clearFilters"
@@ -83,6 +85,9 @@
             :book="item"
             :cover-version="coverVersions[item.book_id || item.id]"
             quick-actions
+            :selectable="selecting"
+            :selected="selectedIds.has(item.book_id || item.id)"
+            @toggle-select="toggleSelected"
             @updated="onBookUpdated"
             @deleted="onBookDeleted"
           />
@@ -98,10 +103,22 @@
             :key="item.book_id || item.id"
             :book="item"
             :cover-version="coverVersions[item.book_id || item.id]"
+            :selectable="selecting"
+            :selected="selectedIds.has(item.book_id || item.id)"
+            @toggle-select="toggleSelected"
             @updated="onBookUpdated"
             @deleted="onBookDeleted"
           />
         </ul>
+
+        <BatchBar
+          v-if="selecting"
+          :ids="[...selectedIds]"
+          :all-selected="books.length > 0 && selectedIds.size === books.length"
+          @select-all="toggleSelectAll"
+          @cancel="toggleSelecting"
+          @done="afterBatch"
+        />
 
         <div
           v-if="books.length < totalRecords"
@@ -148,6 +165,7 @@ import { useI18n } from 'vue-i18n'
 import LibraryHeader from '../components/LibraryHeader.vue'
 import BookItem from '../components/BookItem.vue'
 import BookRow from '../components/BookRow.vue'
+import BatchBar from '../components/BatchBar.vue'
 import { queryToFilters, queryToView, filtersToQuery, sameQuery, VIEW_MODES } from '../utils/libraryQuery.js'
 import Skeleton from 'primevue/skeleton'
 import Button from 'primevue/button'
@@ -231,6 +249,41 @@ watchEffect(() => {
   }
 })
 
+// ---------------------------------------------------------------------------
+// Seleção para ações em lote
+// ---------------------------------------------------------------------------
+const selecting = ref(false)
+const selectedIds = ref(new Set())
+
+function toggleSelecting() {
+  selecting.value = !selecting.value
+  selectedIds.value = new Set()
+}
+
+function toggleSelected(id) {
+  const next = new Set(selectedIds.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  selectedIds.value = next
+}
+
+// "Selecionar todos" vale para os livros já carregados na tela.
+function toggleSelectAll() {
+  const all = books.value.map(book => book.book_id ?? book.id)
+  selectedIds.value = selectedIds.value.size === all.length ? new Set() : new Set(all)
+}
+
+function afterBatch() {
+  selecting.value = false
+  selectedIds.value = new Set()
+  refreshData()
+  header.value?.reloadOptions()
+}
+
+function onKeydown(event) {
+  if (event.key === 'Escape' && selecting.value && !document.querySelector('.p-dialog-mask')) toggleSelecting()
+}
+
 // Grade ou lista: vem da URL (?view=list); sem ela, a última escolha neste navegador.
 const VIEW_STORAGE_KEY = 'library-view'
 
@@ -268,12 +321,14 @@ watch(() => route.query, (query) => {
 })
 
 onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
   // Filtros da URL (inclusive os que vêm de Autores/Editoras/Categorias) entram
   // no estado compartilhado: aparecem como chips e podem ser removidos.
   setFilters(queryToFilters(route.query))
 })
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
   if (observer) observer.disconnect()
 })
 </script>

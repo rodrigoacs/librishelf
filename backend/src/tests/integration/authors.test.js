@@ -136,6 +136,6 @@ describe('Tags e conflitos', () => {
     expect(results.map(r => r.statusCode)).toEqual([201, 201, 201, 201, 201])
 
     const authors = await request(app).get('/author').set(auth())
-    expect(authors.body.filter(a => a.name === 'Autor Novíssimo')).toEqual([{ name: 'Autor Novíssimo', count: 5 }])
+    expect(authors.body.filter(a => a.name === 'Autor Novíssimo')).toEqual([{ name: 'Autor Novíssimo', count: 5, read: 0 }])
   })
 })

@@ -36,6 +36,8 @@ export const LIBRARY_QUERIES = {
       b.read_date,
       b.reading_status,
       b.started_at,
+      b.series,
+      b.series_index,
       b.publication_date
     FROM
       librishelf.books AS b
@@ -56,6 +58,9 @@ export const LIBRARY_QUERIES = {
       b.read_date,
       b.reading_status,
       b.started_at,
+      b.series,
+      b.series_index,
+      b.notes,
       b.publication_date,
       p.name AS publisher_name, -- O Frontend procura por .publisher_name
       (SELECT STRING_AGG(a.name, ', ' ORDER BY bal.position, a.id)
@@ -112,6 +117,59 @@ export const LIBRARY_QUERIES = {
     WHERE id = $4
     RETURNING reading_status, to_char(started_at, 'YYYY-MM-DD') AS started_at, to_char(read_date, 'YYYY-MM-DD') AS read_date
   `,
+  UPDATE_EXTRAS: 'UPDATE librishelf.books SET series = $1, series_index = $2, notes = $3 WHERE id = $4',
+  GET_EXTRAS: 'SELECT series, series_index, notes FROM librishelf.books WHERE id = $1',
+  SERIES_BY_USER: `
+    SELECT min(series) AS name, COUNT(*)::int AS count,
+           COUNT(*) FILTER (WHERE read_date IS NOT NULL)::int AS read
+    FROM librishelf.books
+    WHERE user_id = $1 AND series IS NOT NULL
+    GROUP BY lower(series)
+    ORDER BY lower(min(series))
+  `,
+  OWNED_IDS: 'SELECT id FROM librishelf.books WHERE user_id = $1 AND id = ANY($2::int[])',
+  // Ações em lote (ids já conferidos como do usuário).
+  BATCH_STATUS_READ: `
+    UPDATE librishelf.books SET read_date = COALESCE(read_date, $2::timestamp), reading_status = NULL, last_modified = now()
+    WHERE id = ANY($1::int[])
+  `,
+  BATCH_STATUS_READING: `
+    UPDATE librishelf.books
+    SET started_at = CASE WHEN reading_status = 'reading' AND started_at IS NOT NULL THEN started_at ELSE $2::timestamp END,
+        reading_status = 'reading', last_modified = now()
+    WHERE id = ANY($1::int[])
+  `,
+  BATCH_STATUS_WANT: `
+    UPDATE librishelf.books SET reading_status = 'want', started_at = NULL, read_date = NULL, last_modified = now()
+    WHERE id = ANY($1::int[])
+  `,
+  BATCH_STATUS_NONE: `
+    UPDATE librishelf.books SET reading_status = NULL, started_at = NULL, read_date = NULL, last_modified = now()
+    WHERE id = ANY($1::int[])
+  `,
+  ENSURE_TAG: `
+    WITH ins AS (
+      INSERT INTO librishelf.tags (name, user_id) VALUES ($1, $2)
+      ON CONFLICT (user_id, (lower(name))) DO NOTHING
+      RETURNING id
+    )
+    SELECT id FROM ins
+    UNION ALL
+    SELECT id FROM librishelf.tags WHERE user_id = $2 AND lower(name) = lower($1)
+    LIMIT 1
+  `,
+  BATCH_ADD_TAG: `
+    INSERT INTO librishelf.books_tags_link (book_id, tag_id)
+    SELECT unnest($1::int[]), $2
+    ON CONFLICT (book_id, tag_id) DO NOTHING
+  `,
+  BATCH_REMOVE_TAG: `
+    DELETE FROM librishelf.books_tags_link btl
+    USING librishelf.tags t
+    WHERE btl.tag_id = t.id AND t.user_id = $2 AND lower(t.name) = lower($3)
+      AND btl.book_id = ANY($1::int[])
+  `,
+  BATCH_DELETE: 'DELETE FROM librishelf.books WHERE id = ANY($1::int[])',
   // Editar a data de leitura no formulário também tira de "Quero ler".
   CLEAR_WANT_IF_READ: `
     UPDATE librishelf.books SET reading_status = NULL
@@ -200,7 +258,8 @@ export const AUTH_QUERIES = {
 
 export const AUTHOR_QUERIES = {
   GET_AUTHORS_BY_USER: `
-    SELECT a.name, COUNT(DISTINCT b.id)::int AS count
+    SELECT a.name, COUNT(DISTINCT b.id)::int AS count,
+           COUNT(DISTINCT b.id) FILTER (WHERE b.read_date IS NOT NULL)::int AS read
     FROM librishelf.authors a
     JOIN librishelf.books_authors_link bal ON a.id = bal.author_id
     JOIN librishelf.books b ON b.id = bal.book_id
@@ -222,7 +281,8 @@ export const AUTHOR_QUERIES = {
 
 export const PUBLISHER_QUERIES = {
   GET_PUBLISHERS_BY_USER: `
-    SELECT p.name, COUNT(DISTINCT b.id)::int AS count
+    SELECT p.name, COUNT(DISTINCT b.id)::int AS count,
+           COUNT(DISTINCT b.id) FILTER (WHERE b.read_date IS NOT NULL)::int AS read
     FROM librishelf.publishers p
     JOIN librishelf.books b ON b.publisher_id = p.id
     WHERE p.user_id = $1
@@ -243,7 +303,8 @@ export const PUBLISHER_QUERIES = {
 
 export const TAG_QUERIES = {
   GET_TAGS_BY_USER: `
-    SELECT t.name, COUNT(DISTINCT b.id)::int AS count
+    SELECT t.name, COUNT(DISTINCT b.id)::int AS count,
+           COUNT(DISTINCT b.id) FILTER (WHERE b.read_date IS NOT NULL)::int AS read
     FROM librishelf.tags t
     JOIN librishelf.books_tags_link btl ON t.id = btl.tag_id
     JOIN librishelf.books b ON b.id = btl.book_id

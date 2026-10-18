@@ -2,6 +2,7 @@ import * as publisherService from '../services/publisherService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import express from 'express'
 import STATUS from '../utils/statusCodes.js'
+import { mergeNames } from '../services/namesService.js'
 import sendError from '../utils/sendError.js'
 
 const router = express.Router()
@@ -18,6 +19,15 @@ router.get('/', async (req, res) => {
     res.status(STATUS.OK).json(publishers)
   } catch (error) {
     sendError(res, error, 'Erro ao buscar editoras')
+  }
+})
+
+// Renomear (um nome em "from") ou mesclar vários num só: { from: [...], to: '...' }
+router.post('/merge', async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await mergeNames('publisher', req.user.id, req.body ?? {}))
+  } catch (error) {
+    sendError(res, error, 'Erro ao renomear/mesclar')
   }
 })
 

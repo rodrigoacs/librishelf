@@ -25,6 +25,7 @@ async function getAllBooksByUser(userId, filters = {}) {
     readState,
     readYear,
     readMonth,
+    series,
     author,
     publisher,
     tags,
@@ -69,6 +70,7 @@ async function getAllBooksByUser(userId, filters = {}) {
     query += ` AND (
       b.title ILIKE $${paramIndex}
       OR b.isbn ILIKE $${paramIndex}
+      OR b.series ILIKE $${paramIndex}
       OR EXISTS (
         SELECT 1 FROM librishelf.books_authors_link bal_s
         JOIN librishelf.authors a_s ON bal_s.author_id = a_s.id
@@ -108,6 +110,12 @@ async function getAllBooksByUser(userId, filters = {}) {
     paramIndex++
   }
 
+  if (series) {
+    query += ` AND lower(b.series) = lower($${paramIndex})`
+    params.push(series)
+    paramIndex++
+  }
+
   // Livros com ISBN preenchido que não passa na validação (para o usuário corrigir).
   if (isbnStatus === 'invalid') {
     query += ` AND b.isbn IS NOT NULL AND btrim(b.isbn) <> '' AND b.isbn13 IS NULL`
@@ -126,7 +134,12 @@ async function getAllBooksByUser(userId, filters = {}) {
   const dbSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
 
   // Sem nota/data vai para o fim nas duas direções; b.id desempata (paginação estável).
-  query += ` ORDER BY ${dbSortField} ${dbSortOrder} NULLS LAST, b.id ${dbSortOrder}`
+  if (sortField === 'series') {
+    // Série em ordem e, dentro dela, pelo número do volume.
+    query += ` ORDER BY lower(b.series) ${dbSortOrder} NULLS LAST, b.series_index ${dbSortOrder} NULLS LAST, b.id ${dbSortOrder}`
+  } else {
+    query += ` ORDER BY ${dbSortField} ${dbSortOrder} NULLS LAST, b.id ${dbSortOrder}`
+  }
 
   const { page: pageVal, limit: limitVal, offset } = resolvePagination(page, limit)
 
@@ -238,6 +251,55 @@ async function clearWantIfRead(bookId) {
   await db.query(q.CLEAR_WANT_IF_READ, [bookId])
 }
 
+async function updateExtras(bookId, { series, seriesIndex, notes }) {
+  await db.query(q.UPDATE_EXTRAS, [series, seriesIndex, notes, bookId])
+}
+
+async function getExtras(bookId) {
+  const result = await db.query(q.GET_EXTRAS, [bookId])
+  return result.rows[0] ?? null
+}
+
+async function getSeriesByUser(userId) {
+  const result = await db.query(q.SERIES_BY_USER, [userId])
+  return result.rows
+}
+
+async function filterOwnedIds(userId, ids) {
+  const result = await db.query(q.OWNED_IDS, [userId, ids])
+  return result.rows.map(row => row.id)
+}
+
+const BATCH_STATUS_QUERY = {
+  read: q.BATCH_STATUS_READ,
+  reading: q.BATCH_STATUS_READING,
+  want: q.BATCH_STATUS_WANT,
+  none: q.BATCH_STATUS_NONE
+}
+
+async function batchSetStatus(ids, status, date) {
+  const sql = BATCH_STATUS_QUERY[status]
+  const params = status === 'read' || status === 'reading' ? [ids, date] : [ids]
+  const result = await db.query(sql, params)
+  return result.rowCount
+}
+
+async function batchAddTag(userId, ids, tagName) {
+  const { rows } = await db.query(q.ENSURE_TAG, [tagName, userId])
+  const result = await db.query(q.BATCH_ADD_TAG, [ids, rows[0].id])
+  return result.rowCount
+}
+
+async function batchRemoveTag(userId, ids, tagName) {
+  const result = await db.query(q.BATCH_REMOVE_TAG, [ids, userId, tagName])
+  return result.rowCount
+}
+
+async function batchDelete(ids) {
+  const result = await db.query(q.BATCH_DELETE, [ids])
+  return result.rowCount
+}
+
 async function pruneUserNames(userId) {
   await db.query(q.PRUNE_USER_NAMES, [userId])
 }
@@ -261,5 +323,13 @@ export {
   updateRating,
   setReadingStatus,
   clearWantIfRead,
+  updateExtras,
+  getExtras,
+  getSeriesByUser,
+  filterOwnedIds,
+  batchSetStatus,
+  batchAddTag,
+  batchRemoveTag,
+  batchDelete,
   pruneUserNames
 }

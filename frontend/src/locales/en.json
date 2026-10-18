@@ -126,7 +126,8 @@
       "read_date": "Date Read",
       "pub_date": "Publication Date",
       "all_years": "All years",
-      "rating": "Rating"
+      "rating": "Rating",
+      "series": "Series and volume"
     },
     "empty_title": "No books found",
     "empty_msg": "We couldn't find anything with the current filters.",
@@ -200,7 +201,8 @@
     "notFound": "No authors found.",
     "bookCount": "{count} book | {count} books",
     "viewBooks": "View Books",
-    "loadError": "Could not load authors."
+    "loadError": "Could not load authors.",
+    "total": "{n} author | {n} authors"
   },
   "publishers": {
     "title": "Publishers",
@@ -209,7 +211,8 @@
     "notFound": "No publishers found.",
     "viewCollection": "View Collection",
     "loadError": "Could not load publishers.",
-    "bookCount": "{count} book | {count} books"
+    "bookCount": "{count} book | {count} books",
+    "total": "{n} publisher | {n} publishers"
   },
   "tags": {
     "title": "Categories",
@@ -218,7 +221,8 @@
     "empty": "No categories found.",
     "error": "Could not load categories.",
     "bookCount": "{count} book | {count} books",
-    "viewBooks": "View books"
+    "viewBooks": "View books",
+    "total": "{n} category | {n} categories"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -589,5 +593,61 @@
     "future": "This year has not started yet",
     "empty": "No goal for this year. You have read no books so far. | No goal for this year. You have read {n} book so far. | No goal for this year. You have read {n} books so far.",
     "paceMarker": "Where you need to be today"
+  },
+  "series": {
+    "name": "Series",
+    "namePlaceholder": "E.g. Dune",
+    "volume": "Volume",
+    "label": "{series} #{n}",
+    "seeAll": "See all of {series}",
+    "chip": "Series: {series}"
+  },
+  "notes": {
+    "label": "Personal note",
+    "title": "My note",
+    "placeholder": "Thoughts, quotes, where you stopped, who borrowed it...",
+    "privateHint": "Only you can see it"
+  },
+  "batch": {
+    "toolbar": "Actions on selected books",
+    "selectMode": "Select several",
+    "selected": "none selected | {n} selected | {n} selected",
+    "selectAll": "Select all",
+    "selectNone": "Deselect all",
+    "status": "Status",
+    "category": "Category",
+    "delete": "Delete",
+    "cancel": "Leave selection",
+    "categoryTitle": "Category on {n} book | Category on {n} books",
+    "categoryName": "Category name",
+    "categoryPlaceholder": "E.g. Lent",
+    "addCategory": "Add",
+    "removeCategory": "Remove",
+    "confirmDelete": "Delete {n} book? This cannot be undone. | Delete {n} books? This cannot be undone.",
+    "doneStatus": "No book changed | Status updated on {n} book | Status updated on {n} books",
+    "doneAddTag": "No book changed (they already had it) | Category added to {n} book | Category added to {n} books",
+    "doneRemoveTag": "No book had this category | Category removed from {n} book | Category removed from {n} books",
+    "doneDelete": "No book deleted | {n} book deleted | {n} books deleted"
+  },
+  "entities": {
+    "sortLabel": "Sort",
+    "sortName": "A–Z",
+    "sortCount": "Most books",
+    "sortRead": "Most read",
+    "readCount": "none read | {n} read | {n} read",
+    "rename": "Rename",
+    "renameOf": "Rename {name}",
+    "renameTitle": "Rename",
+    "mergeMode": "Merge",
+    "mergeCancel": "Cancel",
+    "mergeHelp": "Pick the names that are the same thing (e.g. \"Asimov\" and \"Isaac Asimov\") and click Merge.",
+    "selected": "none selected | {n} selected | {n} selected",
+    "mergeAction": "Merge",
+    "mergeTitle": "Merge {n} names",
+    "mergeExplain": "All their books move to a single name. Choose which one stays:",
+    "finalName": "Final name",
+    "willMerge": "\"{name}\" already exists: the books will be merged into it.",
+    "mergedToast": "Everything is now under \"{name}\".",
+    "renamedToast": "Renamed to \"{name}\"."
   }
 }
