@@ -46,6 +46,23 @@
       </span>
     </button>
 
+    <button
+      v-if="quickActions && !readOnly"
+      type="button"
+      class="quick-read"
+      :class="{ 'is-read': isRead, busy: saving }"
+      :aria-pressed="isRead"
+      :aria-label="isRead ? t('book.quick_unread', { title: book.title }) : t('book.quick_read', { title: book.title })"
+      v-tooltip.top="isRead ? t('book.quick_unread_short') : t('book.quick_read_short')"
+      :disabled="saving"
+      @click="toggleRead"
+    >
+      <i
+        :class="saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        aria-hidden="true"
+      ></i>
+    </button>
+
     <BookDialog
       v-if="displayDialog"
       :bookId="bookId"
@@ -63,6 +80,7 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BookDialog from './BookDialog.vue'
+import { useReadToggle } from '../composables/useReadToggle.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import GeneratedCover from './GeneratedCover.vue'
 
@@ -72,7 +90,9 @@ const props = defineProps({
   book: { type: Object, required: true },
   coverVersion: { type: Number, default: 0 },
   readOnly: { type: Boolean, default: false },
-  ownerUsername: { type: String, default: '' }
+  ownerUsername: { type: String, default: '' },
+  /** Botão de marcar como lido sobre a capa (só na biblioteca do dono). */
+  quickActions: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['updated', 'deleted'])
@@ -80,6 +100,7 @@ const displayDialog = ref(false)
 
 const bookId = computed(() => props.book.book_id ?? props.book.id)
 const isRead = computed(() => Boolean(props.book.read_date))
+const { saving, toggleRead } = useReadToggle(() => props.book, payload => emit('updated', payload))
 const bookCoverUrl = computed(() => coverUrl(bookId.value, props.coverVersion))
 
 // Sem imagem (ou falhou): capa desenhada com título e autor, colorida pelo título.
@@ -101,6 +122,69 @@ const ariaLabel = computed(() => {
 .book-card-wrapper {
   display: flex;
   min-width: 0;
+  position: relative;
+}
+
+/* Marcar como lido sem abrir o livro: canto superior esquerdo da capa
+   (a fita de "lido" fica no direito). No mouse aparece ao passar por cima;
+   no toque fica sempre visível. */
+.quick-read {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 4;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.quick-read .pi {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.quick-read.is-read {
+  background: var(--main-color);
+  border-color: transparent;
+  color: var(--text-inverse);
+}
+
+.quick-read:active {
+  transform: scale(0.92);
+}
+
+.quick-read:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .quick-read {
+    opacity: 0;
+  }
+
+  .book-card-wrapper:hover .quick-read,
+  .quick-read.busy {
+    opacity: 1;
+  }
+
+  .quick-read:hover {
+    background: rgba(0, 0, 0, 0.75);
+  }
+
+  .quick-read.is-read:hover {
+    background: var(--main-color);
+    filter: brightness(1.1);
+  }
 }
 
 button.book-card {

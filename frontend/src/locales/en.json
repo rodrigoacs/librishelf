@@ -87,10 +87,14 @@
     "select_cover": "Select cover image",
     "read_ribbon": "Read",
     "dialog_label": "Add book",
-    "authors_hint": "Type an author and press Enter to add the next one."
+    "authors_hint": "Type an author and press Enter to add the next one.",
+    "quick_read": "Mark \"{title}\" as read today",
+    "quick_unread": "Mark \"{title}\" as unread",
+    "quick_read_short": "Mark as read",
+    "quick_unread_short": "Mark as unread"
   },
   "library": {
-    "search_ph": "Search by title, ISBN...",
+    "search_ph": "Search by title, author or ISBN...",
     "filters_adv": "Advanced Filters",
     "filtering_by": "Filtering by:",
     "clear_all": "Clear all",
@@ -129,7 +133,12 @@
     "read_year_chip": "Read in {year}",
     "search_label": "Search books",
     "load_error": "Could not load your books.",
-    "invalid_isbn_chip": "Invalid ISBN"
+    "invalid_isbn_chip": "Invalid ISBN",
+    "results": "Your books",
+    "view_label": "View mode",
+    "view_grid": "Grid",
+    "view_list": "List",
+    "row_rating": "Rated {n} out of 5"
   },
   "bookDialog": {
     "bookCover": "Book Cover",

@@ -48,6 +48,29 @@
       </div>
 
       <div class="actions">
+        <div
+          class="view-toggle"
+          role="group"
+          :aria-label="t('library.view_label')"
+        >
+          <button
+            v-for="mode in viewModes"
+            :key="mode.value"
+            type="button"
+            class="view-btn"
+            :class="{ active: view === mode.value }"
+            :aria-pressed="view === mode.value"
+            :aria-label="mode.label"
+            v-tooltip.bottom="mode.label"
+            @click="emit('view-change', mode.value)"
+          >
+            <i
+              :class="mode.icon"
+              aria-hidden="true"
+            ></i>
+          </button>
+        </div>
+
         <Button
           icon="pi pi-filter"
           class="p-button-rounded p-button-text action-btn"
@@ -283,10 +306,16 @@ const { t } = useI18n()
 // aparecem aqui como chips.
 const props = defineProps({
   booksQuantity: Number,
-  filters: { type: Object, required: true }
+  filters: { type: Object, required: true },
+  view: { type: String, default: 'grid' }
 })
 
-const emit = defineEmits(['filter-change', 'reset', 'book-created'])
+const emit = defineEmits(['filter-change', 'reset', 'book-created', 'view-change'])
+
+const viewModes = computed(() => [
+  { value: 'grid', icon: 'pi pi-th-large', label: t('library.view_grid') },
+  { value: 'list', icon: 'pi pi-list', label: t('library.view_list') }
+])
 
 const visibleFilters = ref(false)
 const addBookDialogVisible = ref(false)
@@ -412,6 +441,43 @@ defineExpose({ reloadOptions: loadOptions })
   font-size: 0.75rem;
   padding: 0.15rem 0.6rem;
   border-radius: 20px;
+}
+
+.view-toggle {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-app);
+}
+
+.view-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.view-btn:hover {
+  color: var(--text-primary);
+}
+
+.view-btn.active {
+  background: var(--main-color);
+  color: var(--text-inverse);
+}
+
+.view-btn:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
 }
 
 .search-area {

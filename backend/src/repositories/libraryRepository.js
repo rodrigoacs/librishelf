@@ -51,9 +51,19 @@ async function getAllBooksByUser(userId, filters = {}) {
     paramIndex++
   }
 
+  // Busca por título, ISBN ou nome de qualquer autor do livro. % e _ digitados
+  // valem como texto, não como curinga do ILIKE.
   if (search) {
-    query += ` AND (b.title ILIKE $${paramIndex} OR b.isbn ILIKE $${paramIndex})`
-    params.push(`%${search}%`)
+    query += ` AND (
+      b.title ILIKE $${paramIndex}
+      OR b.isbn ILIKE $${paramIndex}
+      OR EXISTS (
+        SELECT 1 FROM librishelf.books_authors_link bal_s
+        JOIN librishelf.authors a_s ON bal_s.author_id = a_s.id
+        WHERE bal_s.book_id = b.id AND a_s.name ILIKE $${paramIndex}
+      )
+    )`
+    params.push(`%${String(search).replace(/[\\%_]/g, '\\$&')}%`)
     paramIndex++
   }
 

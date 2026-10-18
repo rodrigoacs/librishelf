@@ -87,10 +87,14 @@
     "select_cover": "Selecionar imagem de capa",
     "read_ribbon": "Lido",
     "dialog_label": "Adicionar livro",
-    "authors_hint": "Digite um autor e tecle Enter para adicionar o próximo."
+    "authors_hint": "Digite um autor e tecle Enter para adicionar o próximo.",
+    "quick_read": "Marcar \"{title}\" como lido hoje",
+    "quick_unread": "Desmarcar \"{title}\" como lido",
+    "quick_read_short": "Marcar como lido",
+    "quick_unread_short": "Desmarcar como lido"
   },
   "library": {
-    "search_ph": "Pesquisar por título, ISBN...",
+    "search_ph": "Pesquisar por título, autor ou ISBN...",
     "filters_adv": "Filtros Avançados",
     "filtering_by": "Filtrando por:",
     "clear_all": "Limpar tudo",
@@ -129,7 +133,12 @@
     "read_year_chip": "Lidos em {year}",
     "search_label": "Pesquisar livros",
     "load_error": "Não foi possível carregar seus livros.",
-    "invalid_isbn_chip": "ISBN inválido"
+    "invalid_isbn_chip": "ISBN inválido",
+    "results": "Seus livros",
+    "view_label": "Modo de exibição",
+    "view_grid": "Grade",
+    "view_list": "Lista",
+    "row_rating": "Nota {n} de 5"
   },
   "bookDialog": {
     "bookCover": "Capa do Livro",

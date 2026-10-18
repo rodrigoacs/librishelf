@@ -9,7 +9,9 @@
         ref="header"
         :books-quantity="totalRecords"
         :filters="filters"
+        :view="viewMode"
         @filter-change="handleFilterChange"
+        @view-change="setViewMode"
         @reset="clearFilters"
         @book-created="refreshData"
       />
@@ -70,6 +72,7 @@
         class="books-grid-wrapper"
       >
         <TransitionGroup
+          v-if="viewMode === 'grid'"
           name="book-list"
           tag="div"
           class="books-grid"
@@ -79,10 +82,26 @@
             :key="item.book_id || item.id"
             :book="item"
             :cover-version="coverVersions[item.book_id || item.id]"
+            quick-actions
             @updated="onBookUpdated"
             @deleted="onBookDeleted"
           />
         </TransitionGroup>
+
+        <ul
+          v-else
+          class="books-list"
+          :aria-label="t('library.results')"
+        >
+          <BookRow
+            v-for="item in books"
+            :key="item.book_id || item.id"
+            :book="item"
+            :cover-version="coverVersions[item.book_id || item.id]"
+            @updated="onBookUpdated"
+            @deleted="onBookDeleted"
+          />
+        </ul>
 
         <div
           v-if="books.length < totalRecords"
@@ -123,17 +142,20 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, watchEffect } from 'vue'
-import { useRoute } from 'vue-router'
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LibraryHeader from '../components/LibraryHeader.vue'
 import BookItem from '../components/BookItem.vue'
+import BookRow from '../components/BookRow.vue'
+import { queryToFilters, queryToView, filtersToQuery, sameQuery, VIEW_MODES } from '../utils/libraryQuery.js'
 import Skeleton from 'primevue/skeleton'
 import Button from 'primevue/button'
 import { useLibrary } from '../composables/useLibrary.js'
 
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const {
   books,
   totalRecords,
@@ -208,20 +230,46 @@ watchEffect(() => {
   }
 })
 
-function queryList(value) {
-  if (!value) return []
-  return (Array.isArray(value) ? value : [value]).filter(Boolean)
+// Grade ou lista: vem da URL (?view=list); sem ela, a última escolha neste navegador.
+const VIEW_STORAGE_KEY = 'library-view'
+
+function storedView() {
+  try {
+    const value = localStorage.getItem(VIEW_STORAGE_KEY)
+    return VIEW_MODES.includes(value) ? value : 'grid'
+  } catch {
+    return 'grid'
+  }
 }
 
+const viewMode = ref(queryToView(route.query) || storedView())
+
+function setViewMode(mode) {
+  if (!VIEW_MODES.includes(mode)) return
+  viewMode.value = mode
+  try { localStorage.setItem(VIEW_STORAGE_KEY, mode) } catch { /* modo privado */ }
+}
+
+// Filtros ⇄ URL. A URL é atualizada com replace (não enche o histórico a cada
+// tecla) e, se ela mudar por fora (link de Autores, voltar do navegador),
+// os filtros acompanham.
+watch([filters, viewMode], () => {
+  const next = filtersToQuery(filters.value, viewMode.value)
+  if (!sameQuery(route.query, next)) router.replace({ query: next })
+}, { deep: true })
+
+watch(() => route.query, (query) => {
+  if (route.name !== 'library') return
+  if (sameQuery(query, filtersToQuery(filters.value, viewMode.value))) return
+  const view = queryToView(query)
+  if (view) viewMode.value = view
+  setFilters(queryToFilters(query))
+})
+
 onMounted(() => {
-  // Filtros vindos de Autores/Editoras/Tags (?author=X) entram no estado
-  // compartilhado, então aparecem como chips no cabeçalho e podem ser removidos.
-  setFilters({
-    author: queryList(route.query.author),
-    publisher: queryList(route.query.publisher),
-    tags: queryList(route.query.tags),
-    isbnStatus: route.query.isbn === 'invalid' ? 'invalid' : 'all'
-  })
+  // Filtros da URL (inclusive os que vêm de Autores/Editoras/Categorias) entram
+  // no estado compartilhado: aparecem como chips e podem ser removidos.
+  setFilters(queryToFilters(route.query))
 })
 
 onUnmounted(() => {
@@ -259,6 +307,15 @@ onUnmounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 2rem;
   width: 100%;
+}
+
+.books-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .book-skeleton {
