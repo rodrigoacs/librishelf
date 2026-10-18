@@ -23,13 +23,17 @@
         ></i>
       </button>
 
-      <div class="cover-section">
+      <div
+        class="cover-section"
+        :style="coverMissing ? { '--cover-color': colorFor(book.title || book.authors) } : undefined"
+        :class="{ 'no-cover': coverMissing }"
+      >
         <img
+          v-if="!coverMissing"
           :src="displayCoverUrl"
           class="blur-bg"
           alt=""
           aria-hidden="true"
-          @error="handleCoverError"
         />
         <div class="image-container">
           <component
@@ -41,10 +45,18 @@
             @click="triggerFileInput"
           >
             <img
+              v-if="!coverMissing"
+              :key="displayCoverUrl"
               :src="displayCoverUrl"
-              @error="handleCoverError"
               :alt="t('bookDialog.bookCover')"
               class="main-cover"
+              @error="onCoverError"
+            />
+            <GeneratedCover
+              v-else
+              class="main-cover"
+              :title="book.title"
+              :author="book.authors"
             />
             <span
               v-if="isEditing"
@@ -459,9 +471,10 @@ import { useConfirm } from 'primevue/useconfirm'
 import api from '../services/api.js'
 import AuthorsInput from './AuthorsInput.vue'
 import StarRating from './StarRating.vue'
-import { tagColor } from '../utils/tagColors.js'
+import { tagColor, colorFor } from '../utils/tagColors.js'
 import { currentUser } from '../services/session.js'
-import { coverUrl, handleCoverError } from '../utils/covers.js'
+import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
+import GeneratedCover from './GeneratedCover.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
 
@@ -602,6 +615,14 @@ async function quickRate(value) {
 }
 
 const displayCoverUrl = computed(() => previewUrl.value || coverUrl(props.bookId, coverVersion.value))
+
+// Sem imagem: capa desenhada e fundo na cor do livro, em vez do quadro cinza.
+const coverMissing = ref(false)
+watch(displayCoverUrl, () => { coverMissing.value = false })
+
+function onCoverError(event) {
+  if (coverFallbackExhausted(event)) coverMissing.value = true
+}
 
 
 function triggerFileInput() {
@@ -867,6 +888,10 @@ onBeforeUnmount(() => preview.clear())
   overflow: hidden;
   padding: 0;
   background-color: #09090b;
+}
+
+.cover-section.no-cover {
+  background: color-mix(in srgb, var(--cover-color) 30%, #09090b);
 }
 
 .blur-bg {

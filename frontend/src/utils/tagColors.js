@@ -1,9 +1,9 @@
 /**
- * Cor de cada categoria (tag), a mesma em todo o app.
+ * Cores do app derivadas de um nome, sempre a mesma para o mesmo nome.
  *
- * A cor vem do nome, não da posição na lista: "Fantasia" é sempre da mesma
- * cor na lista de Categorias, no livro, no filtro e na página pública,
- * em qualquer ordem e com qualquer filtro.
+ * Usado em categorias, autores, editoras, leitores, capas geradas e anos:
+ * "Fantasia" é sempre da mesma cor na lista, no livro, no filtro e na página
+ * pública, em qualquer ordem e com qualquer filtro.
  */
 export const TAG_COLOR_NAMES = ['red', 'green', 'blue', 'purple', 'yellow', 'orange']
 
@@ -17,3 +17,6 @@ export function tagColorName(name = '') {
 export function tagColor(name) {
   return `var(--${tagColorName(name)})`
 }
+
+/** Mesmo que tagColor, para qualquer nome (autor, leitor, título, ano). */
+export const colorFor = tagColor

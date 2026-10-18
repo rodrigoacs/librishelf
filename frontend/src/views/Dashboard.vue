@@ -150,6 +150,7 @@
               v-for="(author, index) in stats.topAuthors"
               :key="author.name"
               class="author-row"
+              :style="{ '--author-color': colorFor(author.name) }"
             >
               <div class="rank">{{ index + 1 }}</div>
               <div class="name">{{ author.name }}</div>
@@ -170,6 +171,7 @@ import Skeleton from 'primevue/skeleton'
 import Button from 'primevue/button'
 import api from '../services/api.js'
 import { useTheme, cssVar } from '../composables/useTheme.js'
+import { colorFor, tagColorName } from '../utils/tagColors.js'
 
 const { t, locale } = useI18n()
 const { themeVersion } = useTheme()
@@ -219,7 +221,8 @@ const yearChartData = computed(() => {
     datasets: [{
       label: t('dashboard.readBooks'),
       data: sorted.map(item => item.count),
-      backgroundColor: palette.value.main,
+      // Cada ano com a sua cor — a mesma das barras do perfil público.
+      backgroundColor: sorted.map(item => cssVar(`--${tagColorName(String(item.year))}`) || palette.value.main),
       borderRadius: 6
     }]
   }
@@ -363,25 +366,36 @@ onMounted(loadStats)
   flex-shrink: 0;
 }
 
-.kpi-card.total .kpi-icon {
-  background: rgba(59, 246, 68, 0.1);
-  color: #a9ff54;
+.kpi-card {
+  --kpi-color: var(--main-color);
 }
 
-.kpi-card.read .kpi-icon {
-  background: rgba(175, 76, 76, 0.1);
-  color: #ff4b78;
+.kpi-card.total {
+  --kpi-color: var(--green);
 }
 
-.kpi-card.unread .kpi-icon {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8d78fa;
+.kpi-card.read {
+  --kpi-color: var(--red);
 }
 
-.kpi-card.rate .kpi-icon {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+.kpi-card.unread {
+  --kpi-color: var(--purple);
 }
+
+.kpi-card.rate {
+  --kpi-color: var(--orange);
+}
+
+.kpi-icon {
+  background: color-mix(in srgb, var(--kpi-color) 14%, transparent);
+  color: var(--kpi-color);
+}
+
+
+
+
+
+
 
 .kpi-info {
   display: flex;
@@ -462,6 +476,7 @@ onMounted(loadStats)
 }
 
 .author-row .rank {
+  color: var(--author-color) !important;
   font-weight: bold;
   color: var(--text-secondary);
   width: 20px;

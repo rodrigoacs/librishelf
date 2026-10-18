@@ -154,12 +154,19 @@
             v-for="event in events"
             :key="`${event.type}-${event.bookId}-${event.at}`"
           >
-            <ReaderName
+            <ReaderAvatar
               :username="event.username"
-              :is-public="event.isPublic"
+              size="sm"
+              :badge="event.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"
             />
+            <span class="activity-text">
+              <ReaderName
+                :username="event.username"
+                :is-public="event.isPublic"
+              />
             {{ event.type === 'read' ? t('communityView.event_read') : t('communityView.event_added') }}
-            <strong>{{ event.title }}</strong>
+              <strong>{{ event.title }}</strong>
+            </span>
           </li>
         </ul>
       </section>
@@ -181,6 +188,7 @@ import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import AddBookDialog from '../components/AddBookDialog.vue'
 import ReaderName from '../components/ReaderName.vue'
+import ReaderAvatar from '../components/ReaderAvatar.vue'
 import { currentUser } from '../services/session.js'
 import { pendingRequests } from '../services/social.js'
 
@@ -349,6 +357,9 @@ onMounted(() => {
 }
 
 .activity-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   padding: 0.85rem 1.1rem;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-secondary);

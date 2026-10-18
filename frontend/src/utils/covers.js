@@ -31,3 +31,17 @@ export function handleCoverError(event) {
   img.dataset.coverFallback = 'placeholder'
   img.src = PLACEHOLDER_SVG
 }
+
+/**
+ * @error de <img> para quem desenha a capa quando não há imagem: tenta o JPG
+ * uma vez e devolve true quando não há mais o que tentar.
+ */
+export function coverFallbackExhausted(event) {
+  const img = event.target
+  if (img.src.includes('.avif') && img.dataset.coverFallback !== 'jpg') {
+    img.dataset.coverFallback = 'jpg'
+    img.src = img.src.replace('.avif', '.jpg')
+    return false
+  }
+  return true
+}

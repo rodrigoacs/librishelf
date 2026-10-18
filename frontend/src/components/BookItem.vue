@@ -8,11 +8,18 @@
     >
       <span class="cover-wrapper">
         <img
+          v-if="!coverMissing"
+          :key="bookCoverUrl"
           :src="bookCoverUrl"
-          @error="handleCoverError"
           :alt="''"
           loading="lazy"
           decoding="async"
+          @error="onCoverError"
+        />
+        <GeneratedCover
+          v-else
+          :title="book.title"
+          :author="book.authors"
         />
         <span
           class="cover-overlay"
@@ -53,10 +60,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BookDialog from './BookDialog.vue'
-import { coverUrl, handleCoverError } from '../utils/covers.js'
+import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
+import GeneratedCover from './GeneratedCover.vue'
 
 const { t } = useI18n()
 
@@ -73,6 +81,14 @@ const displayDialog = ref(false)
 const bookId = computed(() => props.book.book_id ?? props.book.id)
 const isRead = computed(() => Boolean(props.book.read_date))
 const bookCoverUrl = computed(() => coverUrl(bookId.value, props.coverVersion))
+
+// Sem imagem (ou falhou): capa desenhada com título e autor, colorida pelo título.
+const coverMissing = ref(false)
+watch(bookCoverUrl, () => { coverMissing.value = false })
+
+function onCoverError(event) {
+  if (coverFallbackExhausted(event)) coverMissing.value = true
+}
 
 const ariaLabel = computed(() => {
   const parts = [props.book.title, props.book.authors].filter(Boolean)

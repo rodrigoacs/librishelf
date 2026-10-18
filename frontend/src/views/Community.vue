@@ -90,13 +90,10 @@
             :key="`${event.type}-${event.bookId}-${event.at}`"
             class="feed-item"
           >
-            <span
-              class="feed-icon"
-              :class="event.type"
-              aria-hidden="true"
-            >
-              <i :class="event.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"></i>
-            </span>
+            <ReaderAvatar
+              :username="event.username"
+              :badge="event.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"
+            />
             <div class="feed-body">
               <p class="feed-text">
                 <ReaderName
@@ -160,10 +157,13 @@
             v-for="person in connections.requests"
             :key="person.username"
           >
-            <ReaderName
-              :username="person.username"
-              :is-public="person.isPublic"
-            />
+            <span class="person">
+              <ReaderAvatar :username="person.username" />
+              <ReaderName
+                :username="person.username"
+                :is-public="person.isPublic"
+              />
+            </span>
             <div class="actions">
               <Button
                 :label="t('communityView.accept')"
@@ -203,10 +203,13 @@
             v-for="person in connections.following"
             :key="person.username"
           >
-            <ReaderName
-              :username="person.username"
-              :is-public="person.isPublic"
-            />
+            <span class="person">
+              <ReaderAvatar :username="person.username" />
+              <ReaderName
+                :username="person.username"
+                :is-public="person.isPublic"
+              />
+            </span>
             <div class="actions">
               <span
                 v-if="person.status === 'pending'"
@@ -243,10 +246,13 @@
             v-for="person in connections.followers"
             :key="person.username"
           >
-            <ReaderName
-              :username="person.username"
-              :is-public="person.isPublic"
-            />
+            <span class="person">
+              <ReaderAvatar :username="person.username" />
+              <ReaderName
+                :username="person.username"
+                :is-public="person.isPublic"
+              />
+            </span>
             <div class="actions">
               <Button
                 :label="t('communityView.remove')"
@@ -271,6 +277,7 @@ import Button from 'primevue/button'
 import api from '../services/api.js'
 import StarRating from '../components/StarRating.vue'
 import ReaderName from '../components/ReaderName.vue'
+import ReaderAvatar from '../components/ReaderAvatar.vue'
 import { currentUser } from '../services/session.js'
 import { refreshPendingRequests } from '../services/social.js'
 
@@ -491,25 +498,11 @@ onMounted(async () => {
   border-bottom: 1px solid var(--border-color);
 }
 
-.feed-icon {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
+.person {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: var(--bg-input);
-  color: var(--text-secondary);
-}
-
-.feed-icon.read {
-  background: rgba(var(--main-color-rgb), 0.15);
-  color: var(--main-color);
-}
-
-.feed-icon .pi {
-  font-size: 0.8rem;
+  gap: 0.7rem;
+  min-width: 0;
 }
 
 .feed-body {

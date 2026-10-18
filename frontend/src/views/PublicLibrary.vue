@@ -80,17 +80,24 @@
       :aria-label="t('profile.title')"
     >
       <div class="stat-row">
-        <div class="stat">
+        <div
+          class="stat"
+          style="--stat-color: var(--green)"
+        >
           <span class="stat-value">{{ stats.totalBooks }}</span>
           <span class="stat-label">{{ t('profile.books') }}</span>
         </div>
-        <div class="stat">
+        <div
+          class="stat"
+          style="--stat-color: var(--red)"
+        >
           <span class="stat-value">{{ stats.readBooks }}</span>
           <span class="stat-label">{{ t('profile.read') }}</span>
         </div>
         <div
           v-if="stats.averageRating"
           class="stat"
+          style="--stat-color: var(--yellow)"
         >
           <span class="stat-value">
             <i
@@ -104,6 +111,7 @@
         <div
           v-if="viewer && !viewer.isOwner && viewer.commonCount !== null"
           class="stat"
+          style="--stat-color: var(--purple)"
         >
           <span class="stat-value">{{ viewer.commonCount }}</span>
           <span class="stat-label">{{ t('profile.in_common', viewer.commonCount) }}</span>
@@ -127,7 +135,7 @@
                 aria-hidden="true"
               ><span
                   class="bar-fill"
-                  :style="{ width: `${bar.percent}%` }"
+                  :style="{ width: `${bar.percent}%`, '--bar-color': colorFor(String(bar.year)) }"
                 ></span></span>
               <span class="bar-count">{{ bar.count }}</span>
             </li>
@@ -144,7 +152,14 @@
               v-for="author in stats.topAuthors"
               :key="author.name"
             >
-              <span>{{ author.name }}</span>
+              <span class="ranked-name">
+                <span
+                  class="dot"
+                  :style="{ '--dot-color': colorFor(author.name) }"
+                  aria-hidden="true"
+                ></span>
+                {{ author.name }}
+              </span>
               <span class="muted">{{ author.count }}</span>
             </li>
           </ol>
@@ -328,7 +343,7 @@ import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import BookDialog from '../components/BookDialog.vue'
 import StarRating from '../components/StarRating.vue'
-import { tagColor } from '../utils/tagColors.js'
+import { tagColor, colorFor } from '../utils/tagColors.js'
 import { fromApiDate } from '../utils/dates.js'
 
 const PAGE_SIZE = 40
@@ -549,6 +564,7 @@ watch(username, () => {
   display: flex;
   flex-direction: column;
   min-width: 120px;
+  border-top: 3px solid var(--stat-color, var(--border-color));
 }
 
 .stat-value {
@@ -632,6 +648,7 @@ watch(username, () => {
   height: 100%;
   background: var(--main-color);
   border-radius: 999px;
+  background: var(--bar-color, var(--main-color));
 }
 
 .rank-list li {
@@ -641,6 +658,21 @@ watch(username, () => {
   padding: 0.3rem 0;
   color: var(--text-primary);
   font-size: 0.9rem;
+}
+
+.ranked-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--dot-color);
+  flex-shrink: 0;
 }
 
 .tag-row {

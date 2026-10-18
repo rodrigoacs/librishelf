@@ -82,7 +82,7 @@
           <router-link
             :to="{ path: '/books', query: { [queryParam]: item.name } }"
             class="entity-card"
-            :style="variant === 'tag' ? { '--accent-color': tagColor(item.name) } : undefined"
+            :style="{ '--accent-color': tagColor(item.name) }"
           >
             <span
               class="avatar-wrapper"
@@ -285,11 +285,11 @@ onMounted(load)
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--bg-input) 0%, var(--bg-panel) 100%);
+  background: color-mix(in srgb, var(--accent-color) 14%, var(--bg-panel));
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-color);
+  border: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent);
   flex-shrink: 0;
   color: var(--accent-color);
   font-size: 1.2rem;
