@@ -24,6 +24,7 @@ async function getAllBooksByUser(userId, filters = {}) {
     search,
     readState,
     readYear,
+    readMonth,
     author,
     publisher,
     tags,
@@ -43,12 +44,23 @@ async function getAllBooksByUser(userId, filters = {}) {
     query += ` AND b.read_date IS NOT NULL`
   } else if (readState === 'unread' || readState === 'false') {
     query += ` AND b.read_date IS NULL`
+  } else if (readState === 'reading' || readState === 'want') {
+    query += ` AND b.reading_status = $${paramIndex}`
+    params.push(readState)
+    paramIndex++
   }
 
   if (readYear && readYear !== 'all') {
     query += ` AND EXTRACT(YEAR FROM b.read_date) = $${paramIndex}`
     params.push(readYear)
     paramIndex++
+
+    // Mês só vale junto com o ano (gráfico mensal do painel → biblioteca).
+    if (readMonth) {
+      query += ` AND EXTRACT(MONTH FROM b.read_date) = $${paramIndex}`
+      params.push(readMonth)
+      paramIndex++
+    }
   }
 
   // Busca por título, ISBN ou nome de qualquer autor do livro. % e _ digitados
@@ -217,6 +229,15 @@ async function updateRating(bookId, rating) {
   return result.rows[0]?.rating ?? null
 }
 
+async function setReadingStatus(bookId, { status, startedAt, clearRead }) {
+  const result = await db.query(q.SET_READING_STATUS, [status, startedAt, clearRead, bookId])
+  return result.rows[0] ?? null
+}
+
+async function clearWantIfRead(bookId) {
+  await db.query(q.CLEAR_WANT_IF_READ, [bookId])
+}
+
 async function pruneUserNames(userId) {
   await db.query(q.PRUNE_USER_NAMES, [userId])
 }
@@ -238,5 +259,7 @@ export {
   deleteBookById,
   updateReadDate,
   updateRating,
+  setReadingStatus,
+  clearWantIfRead,
   pruneUserNames
 }

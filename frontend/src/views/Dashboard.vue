@@ -5,13 +5,31 @@
         <h1>{{ $t('dashboard.title') }}</h1>
         <p>{{ $t('dashboard.subtitle') }}</p>
       </div>
-      <div class="date-display">{{ currentDate }}</div>
+      <div class="header-side">
+        <label
+          class="sr-only"
+          for="dashboard-year"
+        >{{ t('dashboard.yearLabel') }}</label>
+        <Dropdown
+          inputId="dashboard-year"
+          :modelValue="year"
+          :options="yearOptions"
+          class="year-dropdown"
+          panelClass="custom-panel"
+          @update:modelValue="changeYear"
+        />
+        <div class="date-display">{{ currentDate }}</div>
+      </div>
     </div>
 
     <div
       v-if="loading"
       class="loading-layout"
     >
+      <Skeleton
+        height="150px"
+        class="chart-skeleton"
+      />
       <div class="kpi-grid">
         <Skeleton
           height="120px"
@@ -70,41 +88,175 @@
         ></i>
       </router-link>
 
+      <!-- Meta do ano -->
+      <section
+        class="goal-card"
+        aria-labelledby="goal-title"
+      >
+        <div class="goal-head">
+          <h2 id="goal-title">{{ t('goal.title', { year }) }}</h2>
+          <div
+            v-if="!editingGoal"
+            class="goal-actions"
+          >
+            <Button
+              v-if="stats.goal"
+              :label="t('goal.edit')"
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              @click="startEditGoal"
+            />
+            <Button
+              v-else
+              :label="t('goal.set')"
+              icon="pi pi-flag"
+              class="p-button-sm btn-action-primary"
+              @click="startEditGoal"
+            />
+          </div>
+        </div>
+
+        <form
+          v-if="editingGoal"
+          class="goal-form"
+          @submit.prevent="saveGoal"
+        >
+          <label for="goal-target">{{ t('goal.question', { year }) }}</label>
+          <div class="goal-form-row">
+            <InputNumber
+              v-model="goalDraft"
+              inputId="goal-target"
+              :min="1"
+              :max="1000"
+              showButtons
+              :useGrouping="false"
+              class="goal-input"
+            />
+            <Button
+              type="submit"
+              :label="t('goal.save')"
+              :loading="goalSaving"
+              class="p-button-sm btn-action-primary"
+            />
+            <Button
+              type="button"
+              :label="t('common.cancel')"
+              class="p-button-text p-button-sm"
+              @click="editingGoal = false"
+            />
+            <Button
+              v-if="stats.goal"
+              type="button"
+              :label="t('goal.remove')"
+              class="p-button-text p-button-sm p-button-danger"
+              :disabled="goalSaving"
+              @click="removeGoal"
+            />
+          </div>
+        </form>
+
+        <template v-else-if="stats.goal">
+          <p class="goal-numbers">
+            <strong>{{ readInYear }}</strong>
+            <span>{{ t('goal.ofTarget', { goal: stats.goal }, stats.goal) }}</span>
+          </p>
+          <div
+            class="goal-bar"
+            role="progressbar"
+            :aria-valuenow="readInYear"
+            aria-valuemin="0"
+            :aria-valuemax="stats.goal"
+            :aria-label="t('goal.title', { year })"
+          >
+            <span
+              class="goal-fill"
+              :style="{ width: `${goalPercent}%` }"
+            ></span>
+            <span
+              v-if="paceMarker !== null"
+              class="goal-pace"
+              :style="{ left: `${paceMarker}%` }"
+              :title="t('goal.paceMarker')"
+            ></span>
+          </div>
+          <p
+            class="goal-status"
+            :class="goalStatus.tone"
+          >{{ goalStatus.text }}</p>
+        </template>
+
+        <p
+          v-else
+          class="goal-empty"
+        >{{ t('goal.empty', { n: readInYear }, readInYear) }}</p>
+      </section>
+
       <div class="kpi-grid">
-        <div class="kpi-card total">
+        <router-link
+          :to="{ name: 'library' }"
+          class="kpi-card total"
+        >
           <div class="kpi-icon"><i class="pi pi-book" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ $t('dashboard.totalBooks') }}</span>
             <span class="value">{{ stats.totalBooks }}</span>
           </div>
-        </div>
+        </router-link>
 
-        <div class="kpi-card read">
+        <router-link
+          :to="{ name: 'library', query: { status: 'read' } }"
+          class="kpi-card read"
+        >
           <div class="kpi-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ $t('dashboard.readBooks') }}</span>
             <span class="value">{{ stats.readBooks }}</span>
+            <span class="sub">{{ t('dashboard.ofShelf', { n: readingRate }) }}</span>
           </div>
-        </div>
+        </router-link>
 
-        <div class="kpi-card unread">
+        <router-link
+          :to="{ name: 'library', query: { status: 'reading' } }"
+          class="kpi-card reading"
+        >
+          <div class="kpi-icon"><i class="pi pi-eye" aria-hidden="true"></i></div>
+          <div class="kpi-info">
+            <span class="label">{{ t('dashboard.readingNow') }}</span>
+            <span class="value">{{ stats.readingBooks }}</span>
+          </div>
+        </router-link>
+
+        <router-link
+          :to="{ name: 'library', query: { status: 'want' } }"
+          class="kpi-card want"
+        >
           <div class="kpi-icon"><i class="pi pi-bookmark" aria-hidden="true"></i></div>
           <div class="kpi-info">
-            <span class="label">{{ $t('dashboard.unreadBooks') }}</span>
-            <span class="value">{{ unreadBooks }}</span>
+            <span class="label">{{ t('dashboard.wantToRead') }}</span>
+            <span class="value">{{ stats.wantBooks }}</span>
           </div>
-        </div>
-
-        <div class="kpi-card rate">
-          <div class="kpi-icon"><i class="pi pi-percentage" aria-hidden="true"></i></div>
-          <div class="kpi-info">
-            <span class="label">{{ $t('dashboard.readingRate') }}</span>
-            <span class="value">{{ readingRate }}%</span>
-          </div>
-        </div>
+        </router-link>
       </div>
 
       <div class="charts-grid">
+        <div class="chart-card main-chart">
+          <h3>{{ t('dashboard.readingByMonth', { year }) }}</h3>
+          <p class="chart-hint">{{ t('dashboard.clickHint') }}</p>
+          <div class="chart-wrapper flex-center">
+            <div
+              v-if="readInYear === 0"
+              class="no-data"
+            >{{ t('dashboard.noMonthData', { year }) }}</div>
+            <Chart
+              v-else
+              type="bar"
+              :data="monthChartData"
+              :options="monthChartOptions"
+              class="h-full"
+            />
+          </div>
+        </div>
+
         <div class="chart-card main-chart">
           <h3>{{ $t('dashboard.readingByYear') }}</h3>
           <div class="chart-wrapper flex-center">
@@ -122,6 +274,9 @@
           </div>
         </div>
 
+      </div>
+
+      <div class="charts-grid lower">
         <div class="chart-card">
           <h3>{{ $t('dashboard.favoriteGenres') }}</h3>
           <div class="chart-wrapper flex-center">
@@ -146,16 +301,38 @@
               v-if="stats.topAuthors.length === 0"
               class="no-data"
             >{{ $t('dashboard.noAuthorsData') }}</div>
-            <div
+            <router-link
               v-for="(author, index) in stats.topAuthors"
               :key="author.name"
+              :to="{ name: 'library', query: { author: author.name } }"
               class="author-row"
               :style="{ '--author-color': colorFor(author.name) }"
             >
               <div class="rank">{{ index + 1 }}</div>
               <div class="name">{{ author.name }}</div>
-              <div class="count">{{ author.count }} {{ $t('dashboard.books') }}</div>
-            </div>
+              <div class="count">{{ t('dashboard.booksCount', { n: author.count }, author.count) }}</div>
+            </router-link>
+          </div>
+        </div>
+
+        <div class="chart-card authors-list">
+          <h3>{{ t('dashboard.topPublishers') }}</h3>
+          <div class="authors-wrapper">
+            <div
+              v-if="stats.topPublishers.length === 0"
+              class="no-data"
+            >{{ t('dashboard.noPublishersData') }}</div>
+            <router-link
+              v-for="(publisher, index) in stats.topPublishers"
+              :key="publisher.name"
+              :to="{ name: 'library', query: { publisher: publisher.name } }"
+              class="author-row"
+              :style="{ '--author-color': colorFor(publisher.name) }"
+            >
+              <div class="rank">{{ index + 1 }}</div>
+              <div class="name">{{ publisher.name }}</div>
+              <div class="count">{{ t('dashboard.booksCount', { n: publisher.count }, publisher.count) }}</div>
+            </router-link>
           </div>
         </div>
       </div>
@@ -165,34 +342,55 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useToast } from 'primevue/usetoast'
 import Chart from 'primevue/chart'
 import Skeleton from 'primevue/skeleton'
 import Button from 'primevue/button'
+import Dropdown from 'primevue/dropdown'
+import InputNumber from 'primevue/inputnumber'
 import api from '../services/api.js'
 import { useTheme, cssVar } from '../composables/useTheme.js'
 import { colorFor, tagColorName } from '../utils/tagColors.js'
 
 const { t, locale } = useI18n()
+const router = useRouter()
+const toast = useToast()
 const { themeVersion } = useTheme()
+
+const CURRENT_YEAR = new Date().getFullYear()
 
 const loading = ref(true)
 const loadError = ref(false)
+const year = ref(CURRENT_YEAR)
 const stats = ref({
   totalBooks: 0,
   readBooks: 0,
+  readingBooks: 0,
+  wantBooks: 0,
+  goal: null,
   readingByYear: [],
+  readingByMonth: [],
   topAuthors: [],
-  topTags: []
+  topTags: [],
+  topPublishers: []
 })
 
+const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
+
 const currentDate = computed(() => {
-  const dateLocale = locale.value === 'pt' ? 'pt-BR' : 'en-US'
-  const text = new Date().toLocaleDateString(dateLocale, {
+  const text = new Date().toLocaleDateString(dateLocale.value, {
     weekday: 'long', day: 'numeric', month: 'long'
   })
   // Só a primeira letra: "Sábado, 10 de outubro" (o CSS capitalize fazia "De Outubro").
   return text.charAt(0).toUpperCase() + text.slice(1)
+})
+
+// Anos com leitura + o ano atual, do mais novo para o mais antigo.
+const yearOptions = computed(() => {
+  const years = new Set([CURRENT_YEAR, year.value, ...stats.value.readingByYear.map(item => item.year)])
+  return [...years].sort((a, b) => b - a)
 })
 
 const readingRate = computed(() => {
@@ -200,7 +398,87 @@ const readingRate = computed(() => {
   return Math.round((stats.value.readBooks / stats.value.totalBooks) * 100)
 })
 
-const unreadBooks = computed(() => stats.value.totalBooks - stats.value.readBooks)
+const readInYear = computed(() =>
+  stats.value.readingByMonth.reduce((sum, item) => sum + item.count, 0)
+)
+
+// ---------------------------------------------------------------------------
+// Meta anual
+// ---------------------------------------------------------------------------
+const editingGoal = ref(false)
+const goalDraft = ref(12)
+const goalSaving = ref(false)
+
+const goalPercent = computed(() => {
+  if (!stats.value.goal) return 0
+  return Math.min(100, Math.round((readInYear.value / stats.value.goal) * 100))
+})
+
+// Fração do ano que já passou (só no ano atual): onde o leitor "deveria" estar.
+const yearFraction = computed(() => {
+  if (year.value !== CURRENT_YEAR) return null
+  const now = new Date()
+  const start = new Date(CURRENT_YEAR, 0, 1)
+  const end = new Date(CURRENT_YEAR + 1, 0, 1)
+  return (now - start) / (end - start)
+})
+
+const paceMarker = computed(() => (yearFraction.value === null ? null : Math.round(yearFraction.value * 100)))
+
+const goalStatus = computed(() => {
+  const goal = stats.value.goal
+  const read = readInYear.value
+  if (!goal) return { text: '', tone: '' }
+  if (read >= goal) return { text: t('goal.done'), tone: 'good' }
+
+  if (yearFraction.value === null) {
+    return year.value < CURRENT_YEAR
+      ? { text: t('goal.missed', { n: goal - read }, goal - read), tone: 'muted' }
+      : { text: t('goal.future'), tone: 'muted' }
+  }
+
+  const expected = Math.floor(goal * yearFraction.value)
+  const diff = read - expected
+  if (diff > 0) return { text: t('goal.ahead', { n: diff }, diff), tone: 'good' }
+  if (diff < 0) return { text: t('goal.behind', { n: -diff }, -diff), tone: 'warn' }
+  return { text: t('goal.onTrack'), tone: 'good' }
+})
+
+function startEditGoal() {
+  goalDraft.value = stats.value.goal || Math.max(12, readInYear.value)
+  editingGoal.value = true
+}
+
+async function saveGoal() {
+  if (!goalDraft.value) return
+  goalSaving.value = true
+  try {
+    const saved = await api.setReadingGoal(year.value, goalDraft.value)
+    stats.value.goal = saved.target
+    editingGoal.value = false
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message, life: 4000 })
+  } finally {
+    goalSaving.value = false
+  }
+}
+
+async function removeGoal() {
+  goalSaving.value = true
+  try {
+    await api.deleteReadingGoal(year.value)
+    stats.value.goal = null
+    editingGoal.value = false
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message, life: 4000 })
+  } finally {
+    goalSaving.value = false
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Gráficos (clicar leva para a biblioteca já filtrada)
+// ---------------------------------------------------------------------------
 
 // O chart.js não entende var(--x): lê os valores resolvidos e recalcula quando
 // o tema ou a cor de destaque mudam.
@@ -214,27 +492,77 @@ const palette = computed(() => {
   }
 })
 
-const yearChartData = computed(() => {
-  const sorted = [...stats.value.readingByYear].sort((a, b) => a.year - b.year)
-  return {
-    labels: sorted.map(item => item.year),
-    datasets: [{
-      label: t('dashboard.readBooks'),
-      data: sorted.map(item => item.count),
-      // Cada ano com a sua cor — a mesma das barras do perfil público.
-      backgroundColor: sorted.map(item => cssVar(`--${tagColorName(String(item.year))}`) || palette.value.main),
-      borderRadius: 6
-    }]
+function openLibrary(query) {
+  router.push({ name: 'library', query })
+}
+
+// Mãozinha sobre barras/fatias clicáveis.
+function pointerOnHover(event, elements) {
+  const canvas = event?.native?.target
+  if (canvas) canvas.style.cursor = elements.length ? 'pointer' : 'default'
+}
+
+const monthLabels = computed(() =>
+  Array.from({ length: 12 }, (_, i) =>
+    new Date(2000, i, 1).toLocaleDateString(dateLocale.value, { month: 'short' }).replace('.', ''))
+)
+
+const monthChartData = computed(() => ({
+  labels: monthLabels.value,
+  datasets: [{
+    label: t('dashboard.readBooks'),
+    data: stats.value.readingByMonth.map(item => item.count),
+    backgroundColor: cssVar(`--${tagColorName(String(year.value))}`) || palette.value.main,
+    borderRadius: 6
+  }]
+}))
+
+const barScales = computed(() => ({
+  y: { grid: { color: palette.value.grid }, ticks: { color: palette.value.text, precision: 0 } },
+  x: { grid: { display: false }, ticks: { color: palette.value.text } }
+}))
+
+const monthChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: barScales.value,
+  // A coluna inteira é clicável (barras baixas são difíceis de acertar).
+  interaction: { mode: 'index', intersect: false },
+  onHover: pointerOnHover,
+  onClick: (_, elements) => {
+    if (!elements.length) return
+    const month = elements[0].index + 1
+    if (!stats.value.readingByMonth[month - 1]?.count) return
+    openLibrary({ status: 'read', year: String(year.value), month: String(month) })
   }
-})
+}))
+
+const sortedYears = computed(() => [...stats.value.readingByYear].sort((a, b) => a.year - b.year))
+
+const yearChartData = computed(() => ({
+  labels: sortedYears.value.map(item => item.year),
+  datasets: [{
+    label: t('dashboard.readBooks'),
+    data: sortedYears.value.map(item => item.count),
+    // Cada ano com a sua cor — a mesma das barras do perfil público.
+    backgroundColor: sortedYears.value.map(item => cssVar(`--${tagColorName(String(item.year))}`) || palette.value.main),
+    borderRadius: 6
+  }]
+}))
 
 const yearChartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: { legend: { display: false } },
-  scales: {
-    y: { grid: { color: palette.value.grid }, ticks: { color: palette.value.text, precision: 0 } },
-    x: { grid: { display: false }, ticks: { color: palette.value.text } }
+  scales: barScales.value,
+  // A coluna inteira é clicável (barras baixas são difíceis de acertar).
+  interaction: { mode: 'index', intersect: false },
+  onHover: pointerOnHover,
+  onClick: (_, elements) => {
+    if (!elements.length) return
+    const item = sortedYears.value[elements[0].index]
+    if (item) openLibrary({ status: 'read', year: String(item.year) })
   }
 }))
 
@@ -242,7 +570,8 @@ const tagsChartData = computed(() => ({
   labels: stats.value.topTags.map(tag => tag.name),
   datasets: [{
     data: stats.value.topTags.map(tag => tag.count),
-    backgroundColor: palette.value.series,
+    // Mesma cor da categoria no resto do app.
+    backgroundColor: stats.value.topTags.map(tag => cssVar(`--${tagColorName(tag.name)}`) || palette.value.main),
     borderWidth: 0,
     hoverOffset: 10
   }]
@@ -252,7 +581,13 @@ const doughnutOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { position: 'right', labels: { color: palette.value.text, usePointStyle: true } }
+    legend: { position: 'bottom', labels: { color: palette.value.text, usePointStyle: true, boxWidth: 8 } }
+  },
+  onHover: pointerOnHover,
+  onClick: (_, elements) => {
+    if (!elements.length) return
+    const tag = stats.value.topTags[elements[0].index]
+    if (tag) openLibrary({ tags: tag.name })
   }
 }))
 
@@ -260,11 +595,21 @@ async function loadStats() {
   loading.value = true
   loadError.value = false
   try {
-    stats.value = await api.getDashboardStats()
+    stats.value = await api.getDashboardStats(year.value)
   } catch (error) {
     loadError.value = true
   } finally {
     loading.value = false
+  }
+}
+
+async function changeYear(value) {
+  year.value = value
+  editingGoal.value = false
+  try {
+    stats.value = await api.getDashboardStats(value)
+  } catch {
+    loadError.value = true
   }
 }
 
@@ -378,12 +723,23 @@ onMounted(loadStats)
   --kpi-color: var(--red);
 }
 
-.kpi-card.unread {
+.kpi-card.reading {
+  --kpi-color: var(--blue);
+}
+
+.kpi-card.want {
   --kpi-color: var(--purple);
 }
 
-.kpi-card.rate {
-  --kpi-color: var(--orange);
+a.kpi-card {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.kpi-card:focus-visible,
+a.author-row:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
 }
 
 .kpi-icon {
@@ -415,6 +771,136 @@ onMounted(loadStats)
   font-weight: 700;
 }
 
+.kpi-info .sub {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+/* Ano + data no cabeçalho */
+.header-side {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.year-dropdown {
+  min-width: 7.5rem;
+}
+
+/* Meta anual */
+.goal-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.goal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.goal-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.goal-numbers {
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.goal-numbers strong {
+  font-family: 'Georgia', serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.goal-bar {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--bg-hover);
+  overflow: visible;
+}
+
+.goal-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--main-color);
+  transition: width 0.4s ease;
+}
+
+/* Onde deveria estar hoje para bater a meta no fim do ano. */
+.goal-pace {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 20px;
+  margin-left: -1px;
+  background: var(--text-primary);
+  opacity: 0.55;
+  border-radius: 1px;
+}
+
+.goal-status {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.goal-status.good {
+  color: var(--green);
+}
+
+.goal-status.warn {
+  color: var(--orange);
+}
+
+.goal-empty {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.goal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.goal-form label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.goal-form-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.goal-input :deep(.p-inputnumber-input) {
+  width: 6rem;
+}
+
+.chart-hint {
+  margin: -1rem 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -443,9 +929,25 @@ onMounted(loadStats)
 }
 
 .chart-wrapper {
-  flex: 1;
+  flex: 0 0 auto;
   position: relative;
+  height: 280px;
   min-height: 0;
+}
+
+.chart-wrapper > :deep(.p-chart) {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.charts-grid.lower {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1.5rem;
+}
+
+.charts-grid.lower .chart-wrapper {
+  height: 300px;
 }
 
 .flex-center {
@@ -462,9 +964,7 @@ onMounted(loadStats)
 .authors-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  height: 100%;
-  justify-content: center;
+  gap: 0.25rem;
 }
 
 .author-row {
@@ -472,7 +972,15 @@ onMounted(loadStats)
   align-items: center;
   gap: 1rem;
   position: relative;
-  padding: 0.5rem 0;
+  padding: 0.5rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+a.author-row:hover {
+  background: var(--bg-hover);
 }
 
 .author-row .rank {
@@ -526,9 +1034,24 @@ onMounted(loadStats)
   }
 }
 
+@media (max-width: 1100px) {
+  .charts-grid.lower {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .charts-grid.lower > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 900px) {
-  .charts-grid {
+  .charts-grid,
+  .charts-grid.lower {
     grid-template-columns: 1fr;
+  }
+
+  .chart-wrapper {
+    height: 240px;
   }
 
   .main-chart {
@@ -582,6 +1105,16 @@ onMounted(loadStats)
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+
+  .header-side {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .goal-card {
+    padding: 1.1rem;
+    margin-bottom: 1rem;
   }
 }
 .error-state {

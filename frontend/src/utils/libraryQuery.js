@@ -5,11 +5,11 @@
  * exibição: dá para recarregar, voltar, salvar nos favoritos ou mandar o link.
  * Valores padrão não aparecem na URL, para ela ficar curta.
  *
- *   /books?q=asimov&status=read&year=2025&tags=Fantasia&sort=title&order=asc&view=list
+ *   /books?q=asimov&status=read&year=2025&month=3&tags=Fantasia&sort=title&order=asc&view=list
  */
 
 const SORT_FIELDS = ['recent', 'title', 'authors', 'readDate', 'pubDate', 'rating']
-const READ_STATES = ['read', 'unread']
+const READ_STATES = ['read', 'unread', 'reading', 'want']
 export const VIEW_MODES = ['grid', 'list']
 
 function asList(value) {
@@ -25,6 +25,7 @@ function asSingle(value) {
 export function queryToFilters(query = {}) {
   const status = asSingle(query.status)
   const year = asSingle(query.year)
+  const month = Number(asSingle(query.month))
   const sort = asSingle(query.sort)
   const order = asSingle(query.order)
 
@@ -32,6 +33,7 @@ export function queryToFilters(query = {}) {
     search: String(asSingle(query.q) ?? ''),
     readState: READ_STATES.includes(status) ? status : 'all',
     readYear: /^\d{4}$/.test(year ?? '') ? year : 'all',
+    readMonth: /^\d{4}$/.test(year ?? '') && Number.isInteger(month) && month >= 1 && month <= 12 ? month : null,
     author: asList(query.author),
     publisher: asList(query.publisher),
     tags: asList(query.tags),
@@ -51,7 +53,10 @@ export function filtersToQuery(filters, view = 'grid') {
   const query = {}
   if (filters.search?.trim()) query.q = filters.search.trim()
   if (READ_STATES.includes(filters.readState)) query.status = filters.readState
-  if (filters.readYear && filters.readYear !== 'all') query.year = String(filters.readYear)
+  if (filters.readYear && filters.readYear !== 'all') {
+    query.year = String(filters.readYear)
+    if (filters.readMonth) query.month = String(filters.readMonth)
+  }
   if (filters.author?.length) query.author = [...filters.author]
   if (filters.publisher?.length) query.publisher = [...filters.publisher]
   if (filters.tags?.length) query.tags = [...filters.tags]

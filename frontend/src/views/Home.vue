@@ -93,6 +93,30 @@
 
     <template v-else>
       <section
+        v-if="readingBooks.length"
+        class="shelf reading-shelf"
+        aria-labelledby="home-reading-title"
+      >
+        <div class="shelf-head">
+          <h2 id="home-reading-title">{{ t('home.readingNow') }}</h2>
+          <router-link
+            :to="{ name: 'library', query: { status: 'reading' } }"
+            class="see-all"
+          >{{ t('home.seeReading') }}</router-link>
+        </div>
+        <div class="shelf-row">
+          <BookItem
+            v-for="book in readingBooks"
+            :key="book.book_id"
+            :book="book"
+            quick-actions
+            @updated="reload"
+            @deleted="reload"
+          />
+        </div>
+      </section>
+
+      <section
         class="shelf"
         aria-labelledby="home-recent-title"
       >
@@ -200,6 +224,8 @@ const { t } = useI18n()
 const loading = ref(true)
 const recentBooks = ref([])
 const readBooks = ref([])
+const readingBooks = ref([])
+const goal = ref(null)
 const total = ref(0)
 const readThisYear = ref(0)
 const events = ref([])
@@ -215,16 +241,22 @@ const greeting = computed(() => {
 
 const summary = computed(() => {
   if (loading.value || total.value === 0) return ''
-  return `${t('home.totalBooks', { n: total.value }, total.value)} · ${t('home.readThisYear', { n: readThisYear.value }, readThisYear.value)}`
+  const read = goal.value
+    ? t('home.readOfGoal', { n: readThisYear.value, goal: goal.value })
+    : t('home.readThisYear', { n: readThisYear.value }, readThisYear.value)
+  return `${t('home.totalBooks', { n: total.value }, total.value)} · ${read}`
 })
 
 async function reload() {
   try {
-    const [recent, read, stats] = await Promise.all([
+    const [recent, read, reading, stats] = await Promise.all([
       api.getBooks({ page: 1, limit: SHELF_SIZE, sort: 'recent', order: 'desc' }),
       api.getBooks({ page: 1, limit: SHELF_SIZE, sort: 'readDate', order: 'desc', readState: 'true' }),
+      api.getBooks({ page: 1, limit: SHELF_SIZE, sort: 'recent', order: 'desc', readState: 'reading' }),
       api.getDashboardStats()
     ])
+    readingBooks.value = reading.result || []
+    goal.value = stats.goal ?? null
     recentBooks.value = recent.result || []
     total.value = recent.total || 0
     readBooks.value = read.result || []
@@ -233,6 +265,7 @@ async function reload() {
   } catch {
     recentBooks.value = []
     readBooks.value = []
+    readingBooks.value = []
   } finally {
     loading.value = false
   }

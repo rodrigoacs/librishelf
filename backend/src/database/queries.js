@@ -34,6 +34,8 @@ export const LIBRARY_QUERIES = {
       b.ol_work_key,
       b.created_at,
       b.read_date,
+      b.reading_status,
+      b.started_at,
       b.publication_date
     FROM
       librishelf.books AS b
@@ -52,6 +54,8 @@ export const LIBRARY_QUERIES = {
       b.ol_work_key,
       b.ol_edition_key,
       b.read_date,
+      b.reading_status,
+      b.started_at,
       b.publication_date,
       p.name AS publisher_name, -- O Frontend procura por .publisher_name
       (SELECT STRING_AGG(a.name, ', ' ORDER BY bal.position, a.id)
@@ -91,7 +95,28 @@ export const LIBRARY_QUERIES = {
   GET_OWNER: 'SELECT user_id FROM librishelf.books WHERE id = $1',
   FIND_BY_ISBN: 'SELECT * FROM librishelf.books WHERE isbn = $1 AND user_id = $2',
   DELETE_BOOK: 'DELETE FROM librishelf.books WHERE id = $1',
-  UPDATE_READ_DATE: 'UPDATE librishelf.books SET read_date = $1 WHERE id = $2',
+  // Marcar como lido tira o livro de "Quero ler"/"Lendo"; desmarcar não mexe no status.
+  UPDATE_READ_DATE: `
+    UPDATE librishelf.books
+    SET read_date = $1::timestamp,
+        reading_status = CASE WHEN $1::timestamp IS NOT NULL THEN NULL ELSE reading_status END,
+        last_modified = now()
+    WHERE id = $2
+  `,
+  SET_READING_STATUS: `
+    UPDATE librishelf.books
+    SET reading_status = $1,
+        started_at = $2::timestamp,
+        read_date = CASE WHEN $3 THEN NULL ELSE read_date END,
+        last_modified = now()
+    WHERE id = $4
+    RETURNING reading_status, to_char(started_at, 'YYYY-MM-DD') AS started_at, to_char(read_date, 'YYYY-MM-DD') AS read_date
+  `,
+  // Editar a data de leitura no formulário também tira de "Quero ler".
+  CLEAR_WANT_IF_READ: `
+    UPDATE librishelf.books SET reading_status = NULL
+    WHERE id = $1 AND read_date IS NOT NULL AND reading_status = 'want'
+  `,
   ADD_BOOK_FUNC: 'SELECT librishelf.add_book($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) AS book_id',
   UPDATE_BOOK_FUNC: 'SELECT librishelf.update_book($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
   UPDATE_RATING: 'UPDATE librishelf.books SET rating = $1, last_modified = now() WHERE id = $2 RETURNING rating',
@@ -234,17 +259,34 @@ export const DASHBOARD_QUERIES = {
   // COUNT/EXTRACT puros do pg), e COALESCE garante [] quando não há dados.
   STATS: `
     WITH user_books AS (
-      SELECT id, read_date
+      SELECT id, read_date, reading_status, publisher_id
       FROM librishelf.books
       WHERE user_id = $1
     ),
+    -- Histórico completo (todos os anos com leitura).
     reading_by_year AS (
       SELECT EXTRACT(YEAR FROM read_date::date)::int AS year, COUNT(*)::int AS count
       FROM user_books
       WHERE read_date IS NOT NULL
       GROUP BY 1
-      ORDER BY 1 DESC
-      LIMIT 5
+    ),
+    -- Mês a mês no ano $2 (os 12 meses, inclusive os zerados).
+    reading_by_month AS (
+      SELECT m.month, COUNT(ub.id)::int AS count
+      FROM generate_series(1, 12) AS m(month)
+      LEFT JOIN user_books ub
+        ON ub.read_date IS NOT NULL
+       AND EXTRACT(YEAR FROM ub.read_date::date) = $2
+       AND EXTRACT(MONTH FROM ub.read_date::date) = m.month
+      GROUP BY m.month
+    ),
+    top_publishers AS (
+      SELECT p.name, COUNT(ub.id)::int AS count
+      FROM user_books ub
+      JOIN librishelf.publishers p ON p.id = ub.publisher_id
+      GROUP BY p.name
+      ORDER BY count DESC, p.name ASC
+      LIMIT 6
     ),
     top_authors AS (
       SELECT a.name, COUNT(ub.id)::int AS count
@@ -269,7 +311,12 @@ export const DASHBOARD_QUERIES = {
         WHERE user_id = $1 AND isbn IS NOT NULL AND btrim(isbn) <> '' AND isbn13 IS NULL) AS invalid_isbn,
       (SELECT COUNT(*)::int FROM user_books) AS total_books,
       (SELECT COUNT(*)::int FROM user_books WHERE read_date IS NOT NULL) AS read_books,
+      (SELECT COUNT(*)::int FROM user_books WHERE reading_status = 'reading') AS reading_books,
+      (SELECT COUNT(*)::int FROM user_books WHERE reading_status = 'want') AS want_books,
+      (SELECT target FROM librishelf.reading_goals WHERE user_id = $1 AND year = $2) AS goal_target,
       COALESCE((SELECT json_agg(r ORDER BY r.year DESC) FROM reading_by_year r), '[]'::json) AS reading_by_year,
+      COALESCE((SELECT json_agg(m ORDER BY m.month) FROM reading_by_month m), '[]'::json) AS reading_by_month,
+      COALESCE((SELECT json_agg(p ORDER BY p.count DESC, p.name ASC) FROM top_publishers p), '[]'::json) AS top_publishers,
       COALESCE((SELECT json_agg(a ORDER BY a.count DESC, a.name ASC) FROM top_authors a), '[]'::json) AS top_authors,
       COALESCE((SELECT json_agg(t ORDER BY t.count DESC, t.name ASC) FROM top_tags t), '[]'::json) AS top_tags
   `
@@ -357,6 +404,16 @@ export const COMMUNITY_QUERIES = {
     ORDER BY b.title
     LIMIT $3
   `
+}
+
+export const GOAL_QUERIES = {
+  UPSERT: `
+    INSERT INTO librishelf.reading_goals (user_id, year, target)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (user_id, year) DO UPDATE SET target = EXCLUDED.target, updated_at = now()
+    RETURNING year, target
+  `,
+  DELETE: 'DELETE FROM librishelf.reading_goals WHERE user_id = $1 AND year = $2'
 }
 
 export const PROFILE_QUERIES = {

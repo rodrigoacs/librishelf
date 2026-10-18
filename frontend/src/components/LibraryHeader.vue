@@ -98,16 +98,16 @@
       <div class="chips-container">
         <Chip
           v-if="filters.readState !== 'all'"
-          :label="filters.readState === 'read' ? t('library.read') : t('library.unread')"
+          :label="readStateLabel(filters.readState)"
           removable
           @remove="emitFilter('readState', 'all')"
           class="custom-chip theme-border"
         />
         <Chip
           v-if="hasReadYear"
-          :label="t('library.read_year_chip', { year: filters.readYear })"
+          :label="readPeriodLabel"
           removable
-          @remove="emitFilter('readYear', 'all')"
+          @remove="clearReadPeriod"
           class="custom-chip theme-border"
         />
         <Chip
@@ -165,14 +165,15 @@
       <div class="sidebar-content">
         <div class="filter-group">
           <label id="filter-read-status">{{ t('library.read_status') }}</label>
-          <SelectButton
+          <Dropdown
             :modelValue="filters.readState"
-            :options="['all', 'read', 'unread']"
-            :optionLabel="opt => opt === 'all' ? t('library.all') : (opt === 'read' ? t('library.read') : t('library.unread'))"
-            :allowEmpty="false"
+            :options="readStateOptions"
+            optionLabel="label"
+            optionValue="value"
             aria-labelledby="filter-read-status"
+            class="w-full custom-dropdown"
+            panelClass="custom-panel"
             @update:modelValue="value => emitFilter('readState', value)"
-            class="w-full custom-selectbutton"
           />
         </div>
 
@@ -187,7 +188,7 @@
             :placeholder="t('library.select_year')"
             class="w-full custom-dropdown"
             panelClass="custom-panel"
-            @update:modelValue="value => emitFilter('readYear', value)"
+            @update:modelValue="setReadYear"
           />
         </div>
 
@@ -291,7 +292,6 @@ import { tagColor } from '../utils/tagColors.js'
 import { ref, computed, watch, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Sidebar from 'primevue/sidebar'
-import SelectButton from 'primevue/selectbutton'
 import MultiSelect from 'primevue/multiselect'
 import Dropdown from 'primevue/dropdown'
 import Chip from 'primevue/chip'
@@ -299,7 +299,7 @@ import AddBookDialog from './AddBookDialog.vue'
 import api from '../services/api.js'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 // Os filtros vêm do useLibrary (fonte única); este componente só exibe e emite
 // mudanças. Assim filtros vindos da URL, do "Limpar" do estado vazio etc.
@@ -350,6 +350,42 @@ const yearOptions = computed(() => {
 })
 
 const hasReadYear = computed(() => Boolean(props.filters.readYear) && props.filters.readYear !== 'all')
+
+const READ_STATE_KEYS = {
+  all: 'library.all',
+  want: 'status.want',
+  reading: 'status.reading',
+  read: 'library.read',
+  unread: 'library.unread'
+}
+
+const readStateOptions = computed(() =>
+  ['all', 'want', 'reading', 'read', 'unread'].map(value => ({ value, label: t(READ_STATE_KEYS[value]) }))
+)
+
+function readStateLabel(value) {
+  return t(READ_STATE_KEYS[value] ?? 'library.all')
+}
+
+// "Lidos em 2025" ou "Lidos em março de 2025" (quando veio do gráfico mensal).
+const readPeriodLabel = computed(() => {
+  const { readYear, readMonth } = props.filters
+  if (!readMonth) return t('library.read_year_chip', { year: readYear })
+  const month = new Date(Number(readYear), readMonth - 1, 1)
+    .toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR', { month: 'long', year: 'numeric' })
+  return t('library.read_month_chip', { period: month })
+})
+
+// Trocar o ano tira o mês (ele só existe junto com o ano de onde veio).
+function setReadYear(value) {
+  emit('filter-change', { key: 'readMonth', value: null, silent: true })
+  emitFilter('readYear', value)
+}
+
+function clearReadPeriod() {
+  emit('filter-change', { key: 'readMonth', value: null, silent: true })
+  emitFilter('readYear', 'all')
+}
 
 const hasActiveFilters = computed(() => {
   const f = props.filters

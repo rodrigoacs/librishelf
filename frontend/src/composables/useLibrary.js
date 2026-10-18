@@ -8,6 +8,7 @@ function defaultFilters() {
     search: '',
     readState: 'all',
     readYear: 'all',
+    readMonth: null,
     author: [],
     publisher: [],
     tags: [],
@@ -29,9 +30,9 @@ function buildParams(filters) {
 
   if (filters.search) params.search = filters.search
 
-  if (filters.readState !== 'all') {
-    params.readState = filters.readState === 'read' ? 'true' : 'false'
-  }
+  if (filters.readState === 'read') params.readState = 'true'
+  else if (filters.readState === 'unread') params.readState = 'false'
+  else if (filters.readState === 'reading' || filters.readState === 'want') params.readState = filters.readState
 
   // Listas vão como parâmetro repetido (author=A&author=B): o nome pode ter vírgula.
   if (filters.author?.length > 0) {
@@ -50,6 +51,7 @@ function buildParams(filters) {
 
   if (filters.readYear && filters.readYear !== 'all') {
     params.readYear = filters.readYear
+    if (filters.readMonth) params.readMonth = filters.readMonth
   }
 
   return params

@@ -221,33 +221,55 @@
           class="details-content view"
         >
           <div
-            v-if="!isReadOnly || book.read_date"
+            v-if="!isReadOnly"
             class="read-state"
           >
-            <template v-if="book.read_date">
-              <span class="read-pill">
+            <div
+              class="status-picker"
+              role="group"
+              :aria-label="t('status.label')"
+            >
+              <button
+                v-for="option in STATUS_OPTIONS"
+                :key="option"
+                type="button"
+                class="status-option"
+                :class="[option, { active: currentStatus === option }]"
+                :aria-pressed="currentStatus === option"
+                :disabled="readSaving"
+                @click="changeStatus(option)"
+              >
                 <i
-                  class="pi pi-check"
+                  :class="STATUS_ICONS[option]"
                   aria-hidden="true"
                 ></i>
-                {{ t('bookDialog.readOn', { date: formatDate(book.read_date) }) }}
-              </span>
+                <span>{{ t(`status.${option}`) }}</span>
+              </button>
+            </div>
+            <p
+              v-if="statusCaption"
+              class="status-caption"
+            >
+              {{ statusCaption }}
               <button
-                v-if="!isReadOnly"
                 type="button"
                 class="link-btn"
                 :disabled="readSaving"
-                @click="markUnread"
-              >{{ t('bookDialog.undoRead') }}</button>
-            </template>
-            <Button
-              v-else
-              :label="t('bookDialog.markRead')"
-              icon="pi pi-check"
-              class="p-button-sm mark-read-btn"
-              :loading="readSaving"
-              @click="markRead"
-            />
+                @click="changeStatus(currentStatus)"
+              >{{ t('status.clear') }}</button>
+            </p>
+          </div>
+          <div
+            v-else-if="currentStatus !== 'none'"
+            class="read-state"
+          >
+            <span class="read-pill">
+              <i
+                :class="STATUS_ICONS[currentStatus]"
+                aria-hidden="true"
+              ></i>
+              {{ statusCaption }}
+            </span>
           </div>
 
           <ul
@@ -476,6 +498,7 @@ import { currentUser } from '../services/session.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import GeneratedCover from './GeneratedCover.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
+import { statusOf, STATUS_OPTIONS, STATUS_ICONS } from '../utils/readingStatus.js'
 import { validateImageFile, createPreviewHandle } from '../utils/files.js'
 
 const { t, locale } = useI18n()
@@ -509,7 +532,7 @@ const preview = createPreviewHandle()
 
 function emptyBook() {
   // authors: texto para exibir; authorNames: a lista que é editada e salva.
-  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, pubdate: null }
+  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, pubdate: null }
 }
 
 const book = ref(emptyBook())
@@ -552,26 +575,37 @@ const metaItems = computed(() => {
   return items
 })
 
-async function markRead() {
-  readSaving.value = true
-  try {
-    const today = new Date()
-    await api.markAsRead(props.bookId, toApiDate(today))
-    book.value.read_date = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    emit('updated', { book: { book_id: props.bookId, read_date: toApiDate(today) }, coverChanged: false })
-  } catch (error) {
-    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
-  } finally {
-    readSaving.value = false
-  }
-}
+const currentStatus = computed(() => statusOf(book.value))
 
-async function markUnread() {
+const statusCaption = computed(() => {
+  const status = currentStatus.value
+  if (status === 'read') return t('bookDialog.readOn', { date: formatDate(book.value.read_date) })
+  if (status === 'reading') {
+    return book.value.started_at
+      ? t('status.readingSince', { date: formatDate(book.value.started_at) })
+      : t('status.reading')
+  }
+  if (status === 'want') return t('status.wantCaption')
+  return ''
+})
+
+/**
+ * Quero ler / Lendo / Lido. Clicar no status que já está marcado tira o status
+ * (o livro volta a só estar na estante). Datas vão no fuso da pessoa.
+ */
+async function changeStatus(option) {
+  const next = currentStatus.value === option ? 'none' : option
   readSaving.value = true
   try {
-    await api.markAsUnread(props.bookId)
-    book.value.read_date = null
-    emit('updated', { book: { book_id: props.bookId, read_date: null }, coverChanged: false })
+    const today = toApiDate(new Date())
+    const result = await api.setReadingStatus(props.bookId, next, next === 'read' || next === 'reading' ? today : undefined)
+    book.value.read_date = fromApiDate(result.readDate)
+    book.value.started_at = fromApiDate(result.startedAt)
+    book.value.reading_status = result.status === 'want' || result.status === 'reading' ? result.status : null
+    emit('updated', {
+      book: { book_id: props.bookId, read_date: result.readDate, reading_status: book.value.reading_status, started_at: result.startedAt },
+      coverChanged: false
+    })
   } catch (error) {
     toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
@@ -781,6 +815,8 @@ function applyResponse(data) {
     publisher: data.publisher_name || data.publisher || '',
     tags: data.tags || '',
     read_date: fromApiDate(data.read_date),
+    reading_status: data.reading_status ?? null,
+    started_at: fromApiDate(data.started_at),
     pubdate: fromApiDate(data.publication_date)
   }
 }
@@ -1101,18 +1137,67 @@ button.cover-wrapper {
   font-size: 0.8rem;
 }
 
-.mark-read-btn.p-button {
-  background: transparent;
-  border: 1px solid var(--main-color);
-  color: var(--main-color);
-  border-radius: 999px;
-  font-weight: 600;
+.read-state:has(.status-picker) {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
-.mark-read-btn.p-button:enabled:hover {
-  background: rgba(var(--main-color-rgb), 0.12);
+.status-picker {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.status-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.status-option .pi {
+  font-size: 0.8rem;
+}
+
+.status-option:hover:not(:disabled) {
   border-color: var(--main-color);
-  color: var(--main-color);
+  color: var(--text-primary);
+}
+
+.status-option.active {
+  background: var(--main-color);
+  border-color: var(--main-color);
+  color: var(--text-inverse);
+}
+
+.status-option:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.status-option:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+}
+
+.status-caption {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .link-btn {

@@ -27,6 +27,12 @@
         ></span>
 
         <span
+          v-if="status === 'reading' || status === 'want'"
+          class="status-badge"
+          :class="status"
+        >{{ t(`status.${status}`) }}</span>
+
+        <span
           v-if="isRead"
           class="bookmark-ribbon"
           :title="t('book.read_ribbon')"
@@ -81,6 +87,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BookDialog from './BookDialog.vue'
 import { useReadToggle } from '../composables/useReadToggle.js'
+import { statusOf } from '../utils/readingStatus.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import GeneratedCover from './GeneratedCover.vue'
 
@@ -99,7 +106,8 @@ const emit = defineEmits(['updated', 'deleted'])
 const displayDialog = ref(false)
 
 const bookId = computed(() => props.book.book_id ?? props.book.id)
-const isRead = computed(() => Boolean(props.book.read_date))
+const status = computed(() => statusOf(props.book))
+const isRead = computed(() => status.value === 'read')
 const { saving, toggleRead } = useReadToggle(() => props.book, payload => emit('updated', payload))
 const bookCoverUrl = computed(() => coverUrl(bookId.value, props.coverVersion))
 
@@ -113,7 +121,7 @@ function onCoverError(event) {
 
 const ariaLabel = computed(() => {
   const parts = [props.book.title, props.book.authors].filter(Boolean)
-  if (isRead.value) parts.push(t('book.read_ribbon'))
+  if (status.value !== 'none') parts.push(t(`status.${status.value}`))
   return parts.join(' — ')
 })
 </script>
@@ -283,6 +291,31 @@ button.book-card {
   color: var(--text-inverse);
   font-size: 0.8rem;
   font-weight: bold;
+}
+
+.status-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 3;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.3;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.status-badge.reading {
+  background: var(--main-color);
+  color: var(--text-inverse);
+}
+
+.status-badge.want {
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .book-details {

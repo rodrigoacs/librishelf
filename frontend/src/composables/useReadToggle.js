@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import api from '../services/api.js'
 import { toApiDate } from '../utils/dates.js'
+import { statusOf } from '../utils/readingStatus.js'
 
 /**
  * Marcar/desmarcar como lido direto no card ou na linha da lista, sem abrir
@@ -21,7 +22,8 @@ export function useReadToggle(getBook, onUpdated) {
     if (saving.value) return
     const book = getBook()
     const bookId = book.book_id ?? book.id
-    const wasRead = Boolean(book.read_date)
+    // "Lendo" (inclusive releitura) e "Quero ler" viram "Lido"; "Lido" volta a não lido.
+    const wasRead = statusOf(book) === 'read'
 
     saving.value = true
     try {
@@ -31,7 +33,7 @@ export function useReadToggle(getBook, onUpdated) {
       } else {
         const today = toApiDate(new Date())
         await api.markAsRead(bookId, today)
-        onUpdated({ book: { book_id: bookId, read_date: today }, coverChanged: false })
+        onUpdated({ book: { book_id: bookId, read_date: today, reading_status: null }, coverChanged: false })
       }
     } catch (error) {
       toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })

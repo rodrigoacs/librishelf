@@ -58,7 +58,10 @@
     "addFirst": "Add your first book",
     "tipIsbn": "Type the ISBN (on the back, near the barcode) and click Look up.",
     "tipRead": "Mark the books you have read and give them 1 to 5 stars.",
-    "tipShare": "In Account, make your library public to share the link and find other readers."
+    "tipShare": "In Account, make your library public to share the link and find other readers.",
+    "readingNow": "Reading now",
+    "seeReading": "See all",
+    "readOfGoal": "{n} of {goal} for this year's goal"
   },
   "book": {
     "new_title": "New Book",
@@ -138,7 +141,8 @@
     "view_label": "View mode",
     "view_grid": "Grid",
     "view_list": "List",
-    "row_rating": "Rated {n} out of 5"
+    "row_rating": "Rated {n} out of 5",
+    "read_month_chip": "Read in {period}"
   },
   "bookDialog": {
     "bookCover": "Book Cover",
@@ -223,7 +227,7 @@
     "readBooks": "Books Read",
     "unreadBooks": "To Read",
     "readingRate": "Reading Rate",
-    "readingByYear": "Reading by Year",
+    "readingByYear": "Books read per year",
     "favoriteGenres": "Favorite Genres",
     "topAuthors": "Top Authors",
     "noTagsData": "No tag data available",
@@ -231,7 +235,17 @@
     "books": "Books",
     "loadError": "Could not load your statistics.",
     "noYearData": "No reading recorded yet",
-    "invalidIsbn": "{n} book with an invalid ISBN — fix it so it shows up in the community. | {n} books with an invalid ISBN — fix them so they show up in the community."
+    "invalidIsbn": "{n} book with an invalid ISBN — fix it so it shows up in the community. | {n} books with an invalid ISBN — fix them so they show up in the community.",
+    "yearLabel": "Dashboard year",
+    "readingNow": "Reading now",
+    "wantToRead": "Want to read",
+    "ofShelf": "{n}% of your shelf",
+    "readingByMonth": "Books read per month in {year}",
+    "noMonthData": "No books read in {year}",
+    "clickHint": "Click a bar to see the books.",
+    "topPublishers": "Top publishers",
+    "noPublishersData": "No publisher data available",
+    "booksCount": "{n} book | {n} books"
   },
   "login": {
     "header": "Your personal library, everywhere.",
@@ -548,5 +562,32 @@
     "text": "Confirm your email: we sent a link to {email}. Until then, public library, community and followers are locked.",
     "resend": "Resend link",
     "sent": "Link sent"
+  },
+  "status": {
+    "label": "Reading status",
+    "want": "Want to read",
+    "reading": "Reading",
+    "read": "Read",
+    "none": "On the shelf",
+    "clear": "Clear status",
+    "readingSince": "Reading since {date}",
+    "wantCaption": "On your to-read list"
+  },
+  "goal": {
+    "title": "{year} goal",
+    "set": "Set a goal",
+    "edit": "Change goal",
+    "save": "Save goal",
+    "remove": "Remove goal",
+    "question": "How many books do you want to read in {year}?",
+    "ofTarget": "of {goal} book | of {goal} books",
+    "done": "Goal reached! 🎉",
+    "ahead": "{n} book ahead of pace | {n} books ahead of pace",
+    "behind": "{n} book behind pace to finish the year | {n} books behind pace to finish the year",
+    "onTrack": "Right on pace",
+    "missed": "{n} book short | {n} books short",
+    "future": "This year has not started yet",
+    "empty": "No goal for this year. You have read no books so far. | No goal for this year. You have read {n} book so far. | No goal for this year. You have read {n} books so far.",
+    "paceMarker": "Where you need to be today"
   }
 }

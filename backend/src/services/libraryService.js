@@ -48,6 +48,26 @@ function normalizeReadDate(value) {
   return date
 }
 
+const READ_STATES = ['all', 'read', 'unread', 'true', 'false', 'reading', 'want']
+export const READING_STATUSES = ['none', 'want', 'reading', 'read']
+
+function normalizeReadState(value) {
+  if (value === undefined || value === null || value === '') return 'all'
+  if (!READ_STATES.includes(String(value))) {
+    throw httpError("Parâmetro 'readState' inválido.", STATUS.BAD_REQUEST)
+  }
+  return String(value)
+}
+
+function normalizeReadMonth(value) {
+  if (value === undefined || value === null || value === '') return undefined
+  const month = Number(value)
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    throw httpError("Parâmetro 'readMonth' inválido: use um número de 1 a 12.", STATUS.BAD_REQUEST)
+  }
+  return month
+}
+
 function normalizeReadYear(readYear) {
   if (readYear === undefined || readYear === null || readYear === '' || readYear === 'all') return 'all'
 
@@ -89,8 +109,9 @@ async function getPublicBook(username, bookId) {
 async function getAllBooksByUser(userId, query) {
   const filters = {
     search: query.search || undefined,
-    readState: query.readState || 'all',
+    readState: normalizeReadState(query.readState),
     readYear: normalizeReadYear(query.readYear),
+    readMonth: normalizeReadMonth(query.readMonth),
     author: query.author || undefined,
     publisher: query.publisher || undefined,
     tags: query.tags || undefined,
@@ -196,7 +217,9 @@ async function updateBookDetails(bookId, userId, rawBook) {
     input.rating = current?.rating ?? null
   }
 
-  return await libraryRepository.updateBook(bookId, input)
+  await libraryRepository.updateBook(bookId, input)
+  if (input.readDate) await libraryRepository.clearWantIfRead(bookId)
+  return true
 }
 
 async function checkBookOwnership(bookId, userId) {
@@ -244,6 +267,52 @@ async function markBookAsUnread(bookId, userId) {
   return await libraryRepository.updateReadDate(bookId, null)
 }
 
+/**
+ * Status de leitura em um passo só:
+ *   none    → só na estante (tira "Quero ler"/"Lendo" e a data de leitura)
+ *   want    → "Quero ler" (apaga a data de leitura)
+ *   reading → "Lendo" desde `date` (ou hoje); num livro já lido é releitura e a data antiga fica
+ *   read    → "Lido" em `date` (ou hoje)
+ * Devolve { status, readDate, startedAt } já como ficaram no banco.
+ */
+async function setReadingStatus(bookId, userId, rawStatus, rawDate) {
+  await checkBookOwnership(bookId, userId)
+  const status = String(rawStatus ?? '')
+
+  if (!READING_STATUSES.includes(status)) {
+    throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST)
+  }
+
+  if (status === 'read') {
+    const readDate = normalizeReadDate(rawDate) ?? new Date().toISOString().slice(0, 10)
+    await libraryRepository.updateReadDate(bookId, readDate)
+    return { status: 'read', readDate, startedAt: null }
+  }
+
+  let startedAt = null
+  if (status === 'reading') {
+    startedAt = normalizeReadDate(rawDate)
+    if (!startedAt) {
+      const current = await libraryRepository.getBookByIdForUser(bookId, userId)
+      startedAt = current?.reading_status === 'reading' && current.started_at
+        ? new Date(current.started_at).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10)
+    }
+  }
+
+  const row = await libraryRepository.setReadingStatus(bookId, {
+    status: status === 'want' || status === 'reading' ? status : null,
+    startedAt,
+    clearRead: status !== 'reading'
+  })
+
+  return {
+    status: row.reading_status ?? (row.read_date ? 'read' : 'none'),
+    readDate: row.read_date,
+    startedAt: row.started_at
+  }
+}
+
 export {
   getAllBooksByUser,
   getBookById,
@@ -256,6 +325,7 @@ export {
   deleteBook,
   markBookAsRead,
   markBookAsUnread,
+  setReadingStatus,
   setRating,
   getPublicLibraryByUsername,
   normalizeDate,

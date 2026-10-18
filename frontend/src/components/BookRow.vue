@@ -50,8 +50,8 @@
 
       <span
         class="col read"
-        :class="{ 'is-read': isRead }"
-      >{{ isRead ? readDateLabel : t('library.unread') }}</span>
+        :class="[`status-${status}`]"
+      >{{ statusLabel }}</span>
     </button>
 
     <button
@@ -89,6 +89,7 @@ import GeneratedCover from './GeneratedCover.vue'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import { fromApiDate } from '../utils/dates.js'
 import { useReadToggle } from '../composables/useReadToggle.js'
+import { statusOf } from '../utils/readingStatus.js'
 
 /** Linha da biblioteca no modo lista: mais livros por tela, com os dados principais. */
 const props = defineProps({
@@ -101,7 +102,8 @@ const { t, locale } = useI18n()
 const displayDialog = ref(false)
 
 const bookId = computed(() => props.book.book_id ?? props.book.id)
-const isRead = computed(() => Boolean(props.book.read_date))
+const status = computed(() => statusOf(props.book))
+const isRead = computed(() => status.value === 'read')
 const bookCoverUrl = computed(() => coverUrl(bookId.value, props.coverVersion))
 const { saving, toggleRead } = useReadToggle(() => props.book, payload => emit('updated', payload))
 
@@ -122,9 +124,15 @@ const readDateLabel = computed(() => {
   return date.toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 })
 
+const statusLabel = computed(() => {
+  if (status.value === 'read') return readDateLabel.value
+  if (status.value === 'none') return t('library.unread')
+  return t(`status.${status.value}`)
+})
+
 const ariaLabel = computed(() => {
   const parts = [props.book.title, props.book.authors].filter(Boolean)
-  parts.push(isRead.value ? t('library.read') : t('library.unread'))
+  parts.push(status.value === 'read' ? t('library.read') : statusLabel.value)
   return parts.join(' — ')
 })
 </script>
@@ -230,7 +238,16 @@ const ariaLabel = computed(() => {
   font-size: 0.85rem;
 }
 
-.read.is-read {
+.read.status-read {
+  color: var(--text-primary);
+}
+
+.read.status-reading {
+  color: var(--main-color);
+  font-weight: 600;
+}
+
+.read.status-want {
   color: var(--text-primary);
 }
 

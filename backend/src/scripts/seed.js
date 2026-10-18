@@ -429,6 +429,31 @@ async function insertBooks(users, catalog) {
   return total
 }
 
+/**
+ * "Lendo" (até 2 por leitor, começados nos últimos dias) e "Quero ler" (cerca
+ * de 1 em 8 dos não lidos), mais uma meta para o ano atual e o anterior.
+ */
+async function insertReadingStatusAndGoals() {
+  await db.query(`
+    WITH unread AS (
+      SELECT id, row_number() OVER (PARTITION BY user_id ORDER BY id DESC) AS rn
+      FROM librishelf.books WHERE read_date IS NULL
+    )
+    UPDATE librishelf.books b
+    SET reading_status = CASE WHEN u.rn <= 2 THEN 'reading' ELSE 'want' END,
+        started_at = CASE WHEN u.rn <= 2 THEN (current_date - (u.rn * 9)::int) END
+    FROM unread u
+    WHERE b.id = u.id AND (u.rn <= 2 OR u.rn % 8 = 0)
+  `)
+  await db.query(`
+    INSERT INTO librishelf.reading_goals (user_id, year, target)
+    SELECT u.id, y.year, 12 + (u.id * 7 + y.year) % 19
+    FROM librishelf.users u
+    CROSS JOIN (VALUES (EXTRACT(YEAR FROM now())::int), (EXTRACT(YEAR FROM now())::int - 1)) AS y(year)
+    ON CONFLICT DO NOTHING
+  `)
+}
+
 async function insertFollows(users) {
   const byName = new Map(users.map(user => [user.name, user]))
   const pairs = new Map()
@@ -553,6 +578,7 @@ async function main() {
 
   await insertUsers(users)
   const books = await insertBooks(users, catalog)
+  await insertReadingStatusAndGoals()
   const follows = await insertFollows(users)
   const covers = CONFIG.covers ? await generateCovers(catalog) : 0
 
@@ -565,6 +591,8 @@ async function main() {
       (SELECT count(*)::int FROM librishelf.tags) AS tags,
       (SELECT count(*)::int FROM librishelf.books WHERE read_date IS NOT NULL) AS lidos,
       (SELECT count(*)::int FROM librishelf.books WHERE rating IS NOT NULL) AS com_nota,
+      (SELECT count(*)::int FROM librishelf.books WHERE reading_status = 'reading') AS lendo,
+      (SELECT count(*)::int FROM librishelf.books WHERE reading_status = 'want') AS quero_ler,
       (SELECT count(*)::int FROM librishelf.books WHERE isbn IS NOT NULL AND btrim(isbn) <> '' AND isbn13 IS NULL) AS isbn_invalido,
       (SELECT count(*)::int FROM librishelf.users WHERE is_public AND show_in_community) AS na_comunidade
   `)

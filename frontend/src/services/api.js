@@ -104,6 +104,11 @@ export default {
     return client.delete(`/library/${id}/read`)
   },
 
+  /** status: 'none' | 'want' | 'reading' | 'read'; date opcional ('YYYY-MM-DD', no fuso da pessoa). */
+  setReadingStatus(id, status, date) {
+    return client.patch(`/library/${id}/status`, date ? { status, date } : { status })
+  },
+
   setRating(id, rating) {
     return client.patch(`/library/${id}/rating`, { rating })
   },
@@ -172,8 +177,16 @@ export default {
     return client.get('/tags')
   },
 
-  getDashboardStats() {
-    return client.get('/dashboard/stats')
+  getDashboardStats(year) {
+    return client.get(`/dashboard/stats${toQuery(year ? { year } : {})}`)
+  },
+
+  setReadingGoal(year, target) {
+    return client.put('/dashboard/goal', { year, target })
+  },
+
+  deleteReadingGoal(year) {
+    return client.delete(`/dashboard/goal/${year}`)
   },
 
   // --- Público ---

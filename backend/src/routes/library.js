@@ -256,4 +256,14 @@ router.delete('/:id/read', validateNumericId(), async (req, res) => {
   }
 })
 
+// Status de leitura: { status: 'none' | 'want' | 'reading' | 'read', date?: 'YYYY-MM-DD' }
+router.patch('/:id/status', validateNumericId(), async (req, res) => {
+  try {
+    const result = await libraryService.setReadingStatus(req.params.id, req.user.id, req.body?.status, req.body?.date)
+    res.status(STATUS.OK).json(result)
+  } catch (error) {
+    sendError(res, error, 'Erro ao mudar o status de leitura')
+  }
+})
+
 export default router

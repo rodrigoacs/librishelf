@@ -186,9 +186,10 @@ function scrollToTop() {
   scrollContainer.value?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function handleFilterChange({ key, value }) {
-  setFilter(key, value)
-  scrollToTop()
+function handleFilterChange({ key, value, silent = false }) {
+  // silent: muda o filtro sem buscar (vem junto com outra mudança que busca).
+  setFilter(key, value, { fetch: !silent })
+  if (!silent) scrollToTop()
 }
 
 function clearFilters() {

@@ -10,10 +10,29 @@ router.use(authenticateToken)
 
 router.get('/stats', async (req, res) => {
   try {
-    const stats = await dashboardService.getStats(req.user.id)
+    const stats = await dashboardService.getStats(req.user.id, req.query.year)
     res.status(STATUS.OK).json(stats)
   } catch (error) {
     sendError(res, error, 'Dashboard Error')
+  }
+})
+
+// Meta anual: PUT /dashboard/goal { year, target } · DELETE /dashboard/goal/2026
+router.put('/goal', async (req, res) => {
+  try {
+    const goal = await dashboardService.setGoal(req.user.id, req.body?.year, req.body?.target)
+    res.status(STATUS.OK).json(goal)
+  } catch (error) {
+    sendError(res, error, 'Erro ao salvar a meta')
+  }
+})
+
+router.delete('/goal/:year', async (req, res) => {
+  try {
+    await dashboardService.removeGoal(req.user.id, req.params.year)
+    res.status(STATUS.NO_CONTENT).end()
+  } catch (error) {
+    sendError(res, error, 'Erro ao remover a meta')
   }
 })
 

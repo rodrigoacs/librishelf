@@ -18,7 +18,10 @@
     "addFirst": "Adicionar o primeiro livro",
     "tipIsbn": "Digite o ISBN (fica no verso, perto do código de barras) e clique em Buscar.",
     "tipRead": "Marque os livros que já leu e dê uma nota de 1 a 5 estrelas.",
-    "tipShare": "Em Conta, torne a biblioteca pública para compartilhar o link e encontrar outros leitores."
+    "tipShare": "Em Conta, torne a biblioteca pública para compartilhar o link e encontrar outros leitores.",
+    "readingNow": "Lendo agora",
+    "seeReading": "Ver todos",
+    "readOfGoal": "{n} de {goal} da meta do ano"
   },
   "menu": {
     "home": "Início",
@@ -138,7 +141,8 @@
     "view_label": "Modo de exibição",
     "view_grid": "Grade",
     "view_list": "Lista",
-    "row_rating": "Nota {n} de 5"
+    "row_rating": "Nota {n} de 5",
+    "read_month_chip": "Lidos em {period}"
   },
   "bookDialog": {
     "bookCover": "Capa do Livro",
@@ -223,7 +227,7 @@
     "readBooks": "Livros Lidos",
     "unreadBooks": "Para Ler",
     "readingRate": "Taxa de Leitura",
-    "readingByYear": "Leituras por Ano",
+    "readingByYear": "Leituras por ano",
     "favoriteGenres": "Gêneros Favoritos",
     "topAuthors": "Melhores Autores",
     "noTagsData": "Nenhum dado de tags disponível",
@@ -231,7 +235,17 @@
     "books": "Livros",
     "loadError": "Não foi possível carregar as estatísticas.",
     "noYearData": "Nenhuma leitura registrada ainda",
-    "invalidIsbn": "{n} livro com ISBN inválido — corrija para ele aparecer na comunidade. | {n} livros com ISBN inválido — corrija para eles aparecerem na comunidade."
+    "invalidIsbn": "{n} livro com ISBN inválido — corrija para ele aparecer na comunidade. | {n} livros com ISBN inválido — corrija para eles aparecerem na comunidade.",
+    "yearLabel": "Ano do painel",
+    "readingNow": "Lendo agora",
+    "wantToRead": "Quero ler",
+    "ofShelf": "{n}% da estante",
+    "readingByMonth": "Leituras mês a mês em {year}",
+    "noMonthData": "Nenhuma leitura registrada em {year}",
+    "clickHint": "Clique numa barra para ver os livros.",
+    "topPublishers": "Editoras mais presentes",
+    "noPublishersData": "Nenhum dado de editoras disponível",
+    "booksCount": "{n} livro | {n} livros"
   },
   "login": {
     "header": "Sua biblioteca pessoal, em todo lugar.",
@@ -548,5 +562,32 @@
     "text": "Confirme seu e-mail: enviamos um link para {email}. Até lá, biblioteca pública, comunidade e seguidores ficam bloqueados.",
     "resend": "Reenviar link",
     "sent": "Link enviado"
+  },
+  "status": {
+    "label": "Status de leitura",
+    "want": "Quero ler",
+    "reading": "Lendo",
+    "read": "Lido",
+    "none": "Na estante",
+    "clear": "Tirar status",
+    "readingSince": "Lendo desde {date}",
+    "wantCaption": "Na sua lista de próximas leituras"
+  },
+  "goal": {
+    "title": "Meta de {year}",
+    "set": "Definir meta",
+    "edit": "Mudar meta",
+    "save": "Salvar meta",
+    "remove": "Remover meta",
+    "question": "Quantos livros você quer ler em {year}?",
+    "ofTarget": "de {goal} livro | de {goal} livros",
+    "done": "Meta cumprida! 🎉",
+    "ahead": "{n} livro à frente do ritmo | {n} livros à frente do ritmo",
+    "behind": "{n} livro atrás do ritmo para fechar o ano | {n} livros atrás do ritmo para fechar o ano",
+    "onTrack": "No ritmo certo",
+    "missed": "Faltou {n} livro | Faltaram {n} livros",
+    "future": "O ano ainda não começou",
+    "empty": "Sem meta para este ano. Você leu nenhum livro até agora. | Sem meta para este ano. Você leu {n} livro até agora. | Sem meta para este ano. Você leu {n} livros até agora.",
+    "paceMarker": "Onde você precisa estar hoje"
   }
 }
