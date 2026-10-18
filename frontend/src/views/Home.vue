@@ -162,6 +162,42 @@
       </section>
 
       <section
+        v-if="recommendations.length"
+        class="shelf"
+        aria-labelledby="home-recs-title"
+      >
+        <div class="shelf-head">
+          <h2 id="home-recs-title">{{ t('home.recommended') }}</h2>
+          <router-link
+            :to="{ name: 'community', query: { tab: 'discover' } }"
+            class="see-all"
+          >{{ t('home.findReaders') }}</router-link>
+        </div>
+        <div class="shelf-row">
+          <div
+            v-for="rec in recommendations"
+            :key="rec.bookId"
+            class="rec-item"
+          >
+            <BookItem
+              :book="{ book_id: rec.bookId, title: rec.title, authors: rec.authors }"
+              read-only
+              :owner-username="rec.owner"
+            />
+            <p class="rec-reason">{{ recReason(rec) }}</p>
+            <Button
+              :label="rec.added ? t('home.recAdded') : t('status.want')"
+              :icon="rec.added ? 'pi pi-check' : 'pi pi-bookmark'"
+              class="p-button-sm p-button-outlined rec-btn"
+              :disabled="rec.added || rec.adding"
+              :loading="rec.adding"
+              @click="addRecommendation(rec)"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
         v-if="events.length"
         class="activity"
         aria-labelledby="home-activity-title"
@@ -215,17 +251,20 @@ import ReaderName from '../components/ReaderName.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
 import { currentUser } from '../services/session.js'
 import { pendingRequests } from '../services/social.js'
+import { useToast } from 'primevue/usetoast'
 
 const SHELF_SIZE = 6
 const ACTIVITY_SIZE = 4
 
 const { t } = useI18n()
+const toast = useToast()
 
 const loading = ref(true)
 const recentBooks = ref([])
 const readBooks = ref([])
 const readingBooks = ref([])
 const goal = ref(null)
+const recommendations = ref([])
 const total = ref(0)
 const readThisYear = ref(0)
 const events = ref([])
@@ -271,6 +310,33 @@ async function reload() {
   }
 }
 
+async function loadRecommendations() {
+  try {
+    recommendations.value = (await api.getRecommendations()).map(rec => ({ ...rec, adding: false, added: false }))
+  } catch {
+    recommendations.value = []
+  }
+}
+
+function recReason(rec) {
+  if (rec.similarReaders > 0) return t('home.recSimilar', { n: rec.similarReaders }, rec.similarReaders)
+  return t('home.recPopular', { n: rec.readers }, rec.readers)
+}
+
+async function addRecommendation(rec) {
+  rec.adding = true
+  try {
+    await api.wantFromCommunity(rec.bookId)
+    rec.added = true
+    toast.add({ severity: 'success', summary: t('common.success'), detail: t('home.recAddedToast', { title: rec.title }), life: 3000 })
+    reload()
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    rec.adding = false
+  }
+}
+
 async function loadActivity() {
   try {
     const feed = await api.getFeed(1)
@@ -283,6 +349,7 @@ async function loadActivity() {
 onMounted(() => {
   reload()
   loadActivity()
+  loadRecommendations()
 })
 </script>
 
@@ -378,6 +445,25 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1.25rem;
+}
+
+.rec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.rec-reason {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.rec-btn.p-button {
+  border-radius: 999px;
+  justify-content: center;
 }
 
 .activity-list {

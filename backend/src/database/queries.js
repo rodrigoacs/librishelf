@@ -469,6 +469,93 @@ export const COMMUNITY_QUERIES = {
     ORDER BY r.readers DESC, r.title
   `,
 
+  // Encontrar leitores: só quem tem biblioteca pública E participa da comunidade.
+  // $1 = quem procura, $2 = texto (vazio = sugestões), $3 = padrão ILIKE, $4 = limite.
+  FIND_READERS: `
+    WITH mine AS (
+      SELECT ol_work_key, isbn13 FROM librishelf.books
+      WHERE user_id = $1 AND (ol_work_key IS NOT NULL OR isbn13 IS NOT NULL)
+    ),
+    readers AS (
+      SELECT u.id, u.name, u.show_activity,
+        (SELECT count(*)::int FROM librishelf.books b WHERE b.user_id = u.id) AS total_books,
+        (SELECT count(*)::int FROM librishelf.books b WHERE b.user_id = u.id AND b.read_date IS NOT NULL) AS read_books,
+        (SELECT count(*)::int FROM librishelf.books b
+          WHERE b.user_id = u.id AND EXISTS (SELECT 1 FROM mine m WHERE ${SAME_BOOK('m', 'b')})) AS common_books
+      FROM librishelf.users u
+      WHERE u.id <> $1 AND u.is_public AND u.show_in_community AND u.is_active IS NOT FALSE
+        AND ($2 = '' OR u.name ILIKE $3)
+    )
+    SELECT r.name AS username, r.show_activity AS accepts_followers, r.total_books, r.read_books,
+           r.common_books, f.status AS follow_status
+    FROM readers r
+    LEFT JOIN librishelf.follows f ON f.follower_id = $1 AND f.followee_id = r.id
+    WHERE $2 <> '' OR r.common_books > 0 OR r.total_books > 0
+    ORDER BY (lower(r.name) = lower($2)) DESC, r.common_books DESC, r.total_books DESC, r.name
+    LIMIT $4
+  `,
+
+  // Recomendações para o Início: obras das bibliotecas da comunidade que $1
+  // não tem. Pesa mais quem tem livros em comum com $1 e as notas altas; sem
+  // ninguém em comum, vira "populares na comunidade".
+  RECOMMENDATIONS: `
+    WITH mine AS (
+      SELECT ol_work_key, isbn13 FROM librishelf.books WHERE user_id = $1
+    ),
+    community AS (
+      SELECT id FROM librishelf.users
+      WHERE is_public AND show_in_community AND id <> $1 AND is_active IS NOT FALSE
+    ),
+    peers AS (
+      SELECT b.user_id, count(*)::int AS shared
+      FROM librishelf.books b
+      JOIN mine m ON ${SAME_BOOK('m', 'b')}
+      WHERE b.user_id IN (SELECT id FROM community)
+      GROUP BY b.user_id
+    ),
+    candidates AS (
+      SELECT b.id, b.user_id, b.rating, COALESCE(p.shared, 0) AS shared,
+             COALESCE(b.ol_work_key, 'isbn:' || b.isbn13) AS book_key
+      FROM librishelf.books b
+      LEFT JOIN peers p ON p.user_id = b.user_id
+      WHERE b.user_id IN (SELECT id FROM community)
+        AND (b.ol_work_key IS NOT NULL OR b.isbn13 IS NOT NULL)
+        AND NOT EXISTS (SELECT 1 FROM librishelf.books m WHERE m.user_id = $1 AND ${SAME_BOOK('m', 'b')})
+    ),
+    ranked AS (
+      SELECT book_key,
+             count(DISTINCT user_id)::int AS readers,
+             count(DISTINCT user_id) FILTER (WHERE shared > 0)::int AS similar_readers,
+             round(avg(rating)::numeric, 1)::float AS average_rating,
+             sum(1 + LEAST(shared, 10) + CASE WHEN rating >= 4 THEN 2 ELSE 0 END) AS score,
+             (array_agg(id ORDER BY rating DESC NULLS LAST, id))[1] AS sample_book_id
+      FROM candidates
+      GROUP BY book_key
+      ORDER BY score DESC, readers DESC, book_key
+      LIMIT $2
+    )
+    SELECT sb.title, r.readers, r.similar_readers, r.average_rating, r.sample_book_id,
+           u.name AS sample_owner, ${AUTHORS_OF('r.sample_book_id')} AS authors
+    FROM ranked r
+    JOIN librishelf.books sb ON sb.id = r.sample_book_id
+    JOIN librishelf.users u ON u.id = sb.user_id
+    ORDER BY r.score DESC, r.readers DESC, sb.title
+  `,
+
+  // Livro de outro leitor (público + comunidade) para copiar para "Quero ler".
+  SOURCE_BOOK: `
+    SELECT b.id, b.title, b.isbn, b.ol_work_key, b.ol_edition_key, to_char(b.publication_date, 'YYYY-MM-DD') AS publication_date,
+           p.name AS publisher,
+           COALESCE((SELECT json_agg(a.name ORDER BY bal.position, a.id)
+             FROM librishelf.books_authors_link bal JOIN librishelf.authors a ON a.id = bal.author_id
+             WHERE bal.book_id = b.id), '[]'::json) AS authors,
+           EXISTS (SELECT 1 FROM librishelf.books m WHERE m.user_id = $2 AND ${SAME_BOOK('m', 'b')}) AS already_have
+    FROM librishelf.books b
+    JOIN librishelf.users u ON u.id = b.user_id
+    LEFT JOIN librishelf.publishers p ON p.id = b.publisher_id
+    WHERE b.id = $1 AND b.user_id <> $2 AND u.is_public AND u.show_in_community
+  `,
+
   // Livros de $2 que $1 também tem.
   COMMON_BOOKS: `
     SELECT b.id AS book_id, b.title, ${AUTHORS_OF('b.id')} AS authors, count(*) OVER()::int AS total

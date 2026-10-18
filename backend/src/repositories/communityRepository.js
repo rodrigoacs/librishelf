@@ -20,3 +20,19 @@ export async function profileStats(userId) {
   const { rows } = await db.query(pq.STATS, [userId])
   return rows[0]
 }
+
+export async function findReaders(viewerId, text, limit) {
+  const pattern = `%${text.replace(/[\\%_]/g, '\\$&')}%`
+  const { rows } = await db.query(cq.FIND_READERS, [viewerId, text, pattern, limit])
+  return rows
+}
+
+export async function recommendations(userId, limit) {
+  const { rows } = await db.query(cq.RECOMMENDATIONS, [userId, limit])
+  return rows
+}
+
+export async function sourceBook(bookId, userId) {
+  const { rows } = await db.query(cq.SOURCE_BOOK, [bookId, userId])
+  return rows[0] ?? null
+}

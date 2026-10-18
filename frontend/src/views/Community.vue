@@ -183,6 +183,99 @@
         </ul>
       </section>
 
+      <!-- Encontrar leitores -->
+      <section
+        v-show="activeTab === 'discover'"
+        id="panel-discover"
+        role="tabpanel"
+        aria-labelledby="tab-discover"
+        class="panel"
+      >
+        <div
+          class="discover-search"
+          role="search"
+        >
+          <i
+            class="pi pi-search"
+            aria-hidden="true"
+          ></i>
+          <label
+            for="discover-search"
+            class="sr-only"
+          >{{ t('discover.search_label') }}</label>
+          <input
+            id="discover-search"
+            v-model="readerQuery"
+            type="search"
+            class="discover-input"
+            :placeholder="t('discover.search_ph')"
+            autocomplete="off"
+            maxlength="50"
+            @input="searchReaders"
+          />
+        </div>
+        <p class="muted small">
+          {{ readerQuery.trim() ? t('discover.results_hint') : t('discover.suggest_hint') }}
+          <template v-if="!user?.showInCommunity">
+            <router-link :to="{ name: 'settings' }">{{ t('discover.join') }}</router-link>
+          </template>
+        </p>
+
+        <p
+          v-if="readersLoading && readers.length === 0"
+          class="muted"
+        >{{ t('common.loading') }}</p>
+        <p
+          v-else-if="readers.length === 0"
+          class="muted"
+        >{{ readerQuery.trim() ? t('discover.none_found') : t('discover.none_yet') }}</p>
+        <ul
+          v-else
+          class="people-list"
+        >
+          <li
+            v-for="reader in readers"
+            :key="reader.username"
+          >
+            <span class="person">
+              <ReaderAvatar :username="reader.username" />
+              <span class="reader-info">
+                <ReaderName
+                  :username="reader.username"
+                  :is-public="true"
+                />
+                <small class="reader-meta">
+                  {{ t('discover.books', { n: reader.totalBooks }, reader.totalBooks) }}
+                  <template v-if="reader.commonBooks"> · <strong>{{ t('discover.common', { n: reader.commonBooks }, reader.commonBooks) }}</strong></template>
+                </small>
+              </span>
+            </span>
+            <div class="actions">
+              <span
+                v-if="reader.followStatus === 'accepted'"
+                class="status-pill ok"
+              >{{ t('discover.following') }}</span>
+              <span
+                v-else-if="reader.followStatus === 'pending'"
+                class="status-pill"
+              >{{ t('communityView.pending') }}</span>
+              <Button
+                v-else-if="reader.acceptsFollowers"
+                :label="t('discover.follow')"
+                icon="pi pi-user-plus"
+                class="p-button-sm p-button-outlined"
+                :loading="busy === reader.username"
+                @click="followReader(reader)"
+              />
+              <router-link
+                :to="{ name: 'public-library', params: { username: reader.username } }"
+                class="see-shelf"
+              >{{ t('discover.see_shelf') }}</router-link>
+            </div>
+          </li>
+        </ul>
+      </section>
+
       <!-- Seguindo -->
       <section
         v-show="activeTab === 'following'"
@@ -269,7 +362,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -287,7 +381,9 @@ const confirm = useConfirm()
 const user = currentUser
 
 
-const activeTab = ref('feed')
+const route = useRoute()
+// ?tab=discover abre direto em "Encontrar leitores" (link do Início).
+const activeTab = ref(['feed', 'discover', 'requests', 'following', 'followers'].includes(route.query.tab) ? route.query.tab : 'feed')
 const events = ref([])
 const feedPage = ref(0)
 const hasMore = ref(false)
@@ -298,6 +394,7 @@ const busy = ref('')
 
 const tabs = computed(() => [
   { key: 'feed', label: t('communityView.tab_feed') },
+  { key: 'discover', label: t('discover.tab') },
   { key: 'requests', label: t('communityView.tab_requests'), count: connections.value.requests.length },
   { key: 'following', label: t('communityView.tab_following'), count: connections.value.following.length },
   { key: 'followers', label: t('communityView.tab_followers'), count: connections.value.followers.length }
@@ -331,6 +428,51 @@ async function loadFeed({ append = false } = {}) {
     feedLoading.value = false
   }
 }
+
+// --- Encontrar leitores ---
+const readerQuery = ref('')
+const readers = ref([])
+const readersLoading = ref(false)
+let readersLoaded = false
+let searchTimer = null
+let searchRequest = 0
+
+async function loadReaders() {
+  const current = ++searchRequest
+  readersLoading.value = true
+  try {
+    const result = await api.findReaders(readerQuery.value.trim())
+    if (current === searchRequest) readers.value = result
+  } catch {
+    if (current === searchRequest) readers.value = []
+  } finally {
+    if (current === searchRequest) readersLoading.value = false
+    readersLoaded = true
+  }
+}
+
+function searchReaders() {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(loadReaders, 300)
+}
+
+async function followReader(reader) {
+  busy.value = reader.username
+  try {
+    const result = await api.follow(reader.username)
+    reader.followStatus = result?.status ?? 'pending'
+    toast.add({ severity: 'success', summary: t('common.success'), detail: t('discover.requested', { name: reader.username }), life: 3000 })
+    loadConnections()
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    busy.value = ''
+  }
+}
+
+watch(activeTab, tab => {
+  if (tab === 'discover' && !readersLoaded) loadReaders()
+})
 
 async function loadConnections() {
   try {
@@ -371,7 +513,8 @@ function confirmRemove(username) {
 onMounted(async () => {
   await Promise.all([loadFeed(), loadConnections()])
   refreshPendingRequests({ force: true })
-  if (connections.value.requests.length > 0 && events.value.length === 0) activeTab.value = 'requests'
+  if (activeTab.value === 'discover') loadReaders()
+  else if (connections.value.requests.length > 0 && events.value.length === 0) activeTab.value = 'requests'
 })
 </script>
 
@@ -555,6 +698,71 @@ onMounted(async () => {
   gap: 0.5rem;
 }
 
+.status-pill.ok {
+  color: var(--main-color);
+  background: rgba(var(--main-color-rgb), 0.12);
+}
+
+.discover-search {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.discover-search .pi {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.discover-input {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 0.8rem 1rem 0.8rem 2.6rem;
+  border-radius: 10px;
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.discover-input:focus {
+  border-color: var(--main-color);
+  outline: none;
+}
+
+.muted.small {
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.reader-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.reader-meta {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.reader-meta strong {
+  color: var(--main-color);
+  font-weight: 600;
+}
+
+.see-shelf {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.see-shelf:hover {
+  color: var(--text-primary);
+}
+
 .status-pill {
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -569,11 +777,21 @@ onMounted(async () => {
 }
 
 @media (max-width: 640px) {
-  /* As quatro abas cabem na largura do celular, sem rolagem lateral. */
+  /* Cinco abas: no celular a fileira rola para o lado (sem esticar a página). */
+  .tabs {
+    contain: inline-size;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
   .tab {
-    flex: 1;
+    flex: 0 0 auto;
     justify-content: center;
-    padding: 0.7rem 0.35rem;
+    padding: 0.7rem 0.6rem;
     font-size: 0.9rem;
   }
 

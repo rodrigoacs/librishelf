@@ -174,6 +174,19 @@ export default {
   },
 
   // --- Seguir / feed ---
+  findReaders(q = '') {
+    return client.get(`/community/readers${toQuery({ q })}`)
+  },
+
+  getRecommendations() {
+    return client.get('/community/recommendations')
+  },
+
+  /** Copia um livro da comunidade para a minha estante como "Quero ler". */
+  wantFromCommunity(bookId) {
+    return client.post(`/community/books/${bookId}/want`)
+  },
+
   getFeed(page = 1) {
     return client.get(`/social/feed${toQuery({ page })}`)
   },

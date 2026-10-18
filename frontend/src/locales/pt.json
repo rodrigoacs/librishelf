@@ -21,7 +21,13 @@
     "tipShare": "Em Conta, torne a biblioteca pública para compartilhar o link e encontrar outros leitores.",
     "readingNow": "Lendo agora",
     "seeReading": "Ver todos",
-    "readOfGoal": "{n} de {goal} da meta do ano"
+    "readOfGoal": "{n} de {goal} da meta do ano",
+    "recommended": "Recomendados para você",
+    "findReaders": "Encontrar leitores",
+    "recSimilar": "{n} leitor parecido com você tem | {n} leitores parecidos com você têm",
+    "recPopular": "Na estante de {n} leitor | Na estante de {n} leitores",
+    "recAdded": "Na sua lista",
+    "recAddedToast": "\"{title}\" entrou em Quero ler."
   },
   "menu": {
     "home": "Início",
@@ -409,6 +415,22 @@
       "errorLine": "Linha {line} ({title})",
       "seeLibrary": "Ver na biblioteca"
     }
+  },
+  "discover": {
+    "tab": "Encontrar",
+    "search_label": "Buscar leitores",
+    "search_ph": "Buscar leitores pelo nome...",
+    "suggest_hint": "Sugestões: leitores com mais livros em comum com você.",
+    "results_hint": "Só aparecem leitores com biblioteca pública que participam da comunidade.",
+    "join": "Quero aparecer aqui também",
+    "none_found": "Ninguém com esse nome na comunidade.",
+    "none_yet": "Ainda não há leitores na comunidade.",
+    "books": "nenhum livro | {n} livro | {n} livros",
+    "common": "{n} em comum | {n} em comum",
+    "follow": "Seguir",
+    "following": "Seguindo",
+    "requested": "Pedido enviado para {name}.",
+    "see_shelf": "Ver estante"
   },
   "privacy": {
     "title": "Política de Privacidade",

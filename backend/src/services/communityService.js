@@ -5,6 +5,8 @@ import * as socialRepository from '../repositories/socialRepository.js'
 import STATUS from '../utils/statusCodes.js'
 
 const MAX_READERS_LISTED = 20
+const FIND_LIMIT = 24
+const RECOMMENDATION_LIMIT = 6
 const ALSO_HAVE_LIMIT = 5
 const COMMON_LIMIT = 24
 
@@ -92,4 +94,58 @@ export async function publicProfile(username, viewerId) {
   }
 
   return profile
+}
+
+/**
+ * Encontrar leitores pelo nome. Sem texto: sugestões (mais livros em comum).
+ * Só aparece quem tem biblioteca pública e participa da comunidade.
+ */
+export async function findReaders(viewerId, rawText) {
+  const text = typeof rawText === 'string' ? rawText.trim().slice(0, 50) : ''
+  const rows = await communityRepository.findReaders(viewerId, text, FIND_LIMIT)
+  return rows.map(row => ({
+    username: row.username,
+    acceptsFollowers: Boolean(row.accepts_followers),
+    totalBooks: row.total_books,
+    readBooks: row.read_books,
+    commonBooks: row.common_books,
+    followStatus: row.follow_status ?? null
+  }))
+}
+
+/** "Recomendados para você" no Início. */
+export async function recommendations(userId) {
+  const rows = await communityRepository.recommendations(userId, RECOMMENDATION_LIMIT)
+  return rows.map(row => ({
+    title: row.title,
+    authors: row.authors,
+    readers: row.readers,
+    similarReaders: row.similar_readers,
+    averageRating: row.average_rating,
+    bookId: row.sample_book_id,
+    owner: row.sample_owner
+  }))
+}
+
+/** Copia um livro da comunidade para a estante de quem pediu, como "Quero ler". */
+export async function addToWantList(sourceId, userId) {
+  const source = await communityRepository.sourceBook(sourceId, userId)
+  if (!source) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND)
+  if (source.already_have) throw httpError('Este livro já está na sua estante.', STATUS.CONFLICT)
+
+  const bookId = await libraryRepository.createBook({
+    title: source.title,
+    pubDate: source.publication_date,
+    authors: source.authors.length ? source.authors : ['Autor desconhecido'],
+    publisher: source.publisher,
+    tags: [],
+    readDate: null,
+    isbn: source.isbn,
+    user_id: userId,
+    rating: null,
+    olWorkKey: source.ol_work_key,
+    olEditionKey: source.ol_edition_key
+  })
+  await libraryRepository.setReadingStatus(bookId, { status: 'want', startedAt: null, clearRead: true })
+  return { bookId }
 }

@@ -61,7 +61,13 @@
     "tipShare": "In Account, make your library public to share the link and find other readers.",
     "readingNow": "Reading now",
     "seeReading": "See all",
-    "readOfGoal": "{n} of {goal} for this year's goal"
+    "readOfGoal": "{n} of {goal} for this year's goal",
+    "recommended": "Recommended for you",
+    "findReaders": "Find readers",
+    "recSimilar": "{n} reader like you has it | {n} readers like you have it",
+    "recPopular": "On {n} reader's shelf | On {n} readers' shelves",
+    "recAdded": "On your list",
+    "recAddedToast": "\"{title}\" was added to Want to read."
   },
   "book": {
     "new_title": "New Book",
@@ -409,6 +415,22 @@
       "errorLine": "Line {line} ({title})",
       "seeLibrary": "See in library"
     }
+  },
+  "discover": {
+    "tab": "Discover",
+    "search_label": "Search readers",
+    "search_ph": "Search readers by name...",
+    "suggest_hint": "Suggestions: readers with the most books in common with you.",
+    "results_hint": "Only readers with a public library who joined the community show up.",
+    "join": "I want to show up here too",
+    "none_found": "No one with that name in the community.",
+    "none_yet": "No readers in the community yet.",
+    "books": "no books | {n} book | {n} books",
+    "common": "{n} in common | {n} in common",
+    "follow": "Follow",
+    "following": "Following",
+    "requested": "Request sent to {name}.",
+    "see_shelf": "See shelf"
   },
   "privacy": {
     "title": "Privacy Policy",
