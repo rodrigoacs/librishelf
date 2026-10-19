@@ -398,4 +398,18 @@ const ariaLabel = computed(() => {
     display: none;
   }
 }
+
+/* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */
+@media (pointer: coarse) {
+  .row-read {
+    position: relative;
+  }
+
+  .row-read::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+  }
+}
 </style>

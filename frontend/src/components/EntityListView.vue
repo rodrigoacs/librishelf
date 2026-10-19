@@ -434,6 +434,7 @@ onMounted(load)
 .entity-container {
   padding: 2rem;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-app);
 }
 
@@ -855,6 +856,16 @@ button.entity-card {
 
   .search-wrapper {
     max-width: none;
+  }
+}
+
+/* Tela de toque: área de toque de 44px sem mudar o desenho de 30px */
+@media (pointer: coarse) {
+  .rename-btn::after {
+    content: '';
+    position: absolute;
+    inset: -7px;
+    border-radius: 50%;
   }
 }
 </style>

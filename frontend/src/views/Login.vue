@@ -97,7 +97,7 @@ async function handleLogin() {
     await api.login({ username: username.value.trim(), password: password.value })
     await loadSession({ force: true })
 
-    toast.add({ severity: 'success', summary: t('login.welcome'), detail: t('login.success'), life: 3000 })
+    // Sem toast de boas-vindas: a tela de Início já mostra que entrou
     router.replace(safeRedirect(route.query.redirect))
   } catch (error) {
     // 401 = credenciais; qualquer outro (429 do rate limit, 5xx) mostra a

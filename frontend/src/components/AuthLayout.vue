@@ -73,6 +73,7 @@ onMounted(async () => {
 .auth-container {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100vw;
   background-color: var(--bg-app);
   overflow: hidden;

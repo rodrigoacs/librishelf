@@ -28,6 +28,7 @@ const { t } = useI18n()
 <style scoped>
 .not-found {
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   padding: 2rem;
   display: flex;

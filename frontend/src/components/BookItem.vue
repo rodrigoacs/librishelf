@@ -415,4 +415,14 @@ button.book-card {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */
+@media (pointer: coarse) {
+  .quick-read::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+  }
+}
 </style>

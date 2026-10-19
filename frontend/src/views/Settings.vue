@@ -6,11 +6,27 @@
         <p>{{ t('settings.subtitle') }}</p>
       </div>
 
+      <!-- Índice: no celular são 7 cartões em coluna -->
+      <nav
+        class="settings-index"
+        :aria-label="t('settings.index.label')"
+      >
+        <a
+          v-for="item in indexItems"
+          :key="item.id"
+          :href="`#${item.id}`"
+          class="index-link"
+          @click.prevent="jumpTo(item.id)"
+        >{{ item.label }}</a>
+      </nav>
+
       <div class="settings-grid">
         <!-- Biblioteca pública -->
         <section
           class="settings-card"
           aria-labelledby="settings-public-title"
+          id="settings-privacy"
+          tabindex="-1"
         >
           <h2 id="settings-public-title">{{ t('settings.public.title') }}</h2>
           <p class="card-desc">{{ t('settings.public.desc') }}</p>
@@ -107,6 +123,8 @@
         <section
           class="settings-card"
           aria-labelledby="settings-account-title"
+          id="settings-account"
+          tabindex="-1"
         >
           <h2 id="settings-account-title">{{ t('settings.account.title') }}</h2>
           <p class="card-desc">{{ t('settings.account.desc') }}</p>
@@ -147,6 +165,8 @@
         <section
           class="settings-card"
           aria-labelledby="settings-password-title"
+          id="settings-password"
+          tabindex="-1"
         >
           <h2 id="settings-password-title">{{ t('settings.password.title') }}</h2>
           <p class="card-desc">{{ t('settings.password.desc') }}</p>
@@ -217,6 +237,8 @@
         <section
           class="settings-card"
           aria-labelledby="settings-data-title"
+          id="settings-data"
+          tabindex="-1"
         >
           <h2 id="settings-data-title">{{ t('settings.data.title') }}</h2>
           <p class="card-desc">{{ t('settings.data.exportDesc') }}</p>
@@ -297,6 +319,8 @@
         <section
           class="settings-card danger"
           aria-labelledby="settings-delete-title"
+          id="settings-delete"
+          tabindex="-1"
         >
           <h2 id="settings-delete-title">{{ t('settings.delete.title') }}</h2>
           <p class="card-desc">{{ t('settings.delete.desc') }}</p>
@@ -426,6 +450,23 @@ import api from '../services/api.js'
 import { currentUser, updateUser, setUser, clearSession } from '../services/session.js'
 
 const { t, locale } = useI18n()
+
+const indexItems = computed(() => [
+  { id: 'settings-privacy', label: t('settings.index.privacy') },
+  { id: 'settings-account', label: t('settings.index.account') },
+  { id: 'settings-password', label: t('settings.index.password') },
+  { id: 'settings-data', label: t('settings.index.data') },
+  { id: 'settings-delete', label: t('settings.index.delete') }
+])
+
+function jumpTo(id) {
+  const el = document.getElementById(id)
+  if (!el) return
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+  el.focus({ preventScroll: true })
+}
+
 const toast = useToast()
 const router = useRouter()
 
@@ -611,6 +652,7 @@ async function deleteAccount() {
 .settings-container {
   padding: 2rem;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-app);
 }
 
@@ -635,6 +677,46 @@ async function deleteAccount() {
 .view-header p {
   color: var(--text-secondary);
   margin: 0.5rem 0 0 0;
+}
+
+.settings-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: -1rem 0 1.75rem;
+}
+
+.index-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.index-link:hover {
+  border-color: var(--main-color);
+  color: var(--text-primary);
+}
+
+.settings-card {
+  scroll-margin-top: 5rem;
+}
+
+.settings-card:focus {
+  outline: none;
+}
+
+@media (pointer: coarse) {
+  .index-link {
+    min-height: 2.75rem;
+  }
 }
 
 .settings-grid {

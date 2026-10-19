@@ -63,6 +63,7 @@ body {
 .app-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   flex-direction: row;
 }
@@ -71,6 +72,7 @@ body {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }

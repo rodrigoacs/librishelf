@@ -184,7 +184,10 @@
               read-only
               :owner-username="rec.owner"
             />
-            <p class="rec-reason">{{ recReason(rec) }}</p>
+            <p
+              class="rec-reason"
+              :title="recReason(rec)"
+            >{{ recReason(rec) }}</p>
             <Button
               :label="rec.added ? t('home.recAdded') : t('status.want')"
               :icon="rec.added ? 'pi pi-check' : 'pi pi-bookmark'"
@@ -358,6 +361,7 @@ onMounted(() => {
   width: 100%;
   min-width: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-app);
   color: var(--text-primary);
   padding: 2.5rem 2rem 3rem;
@@ -459,9 +463,16 @@ onMounted(() => {
   font-size: var(--fs-xs);
   color: var(--text-secondary);
   line-height: 1.35;
+  /* No máximo 2 linhas: os botões das recomendações ficam na mesma altura */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .rec-btn.p-button {
+  margin-top: auto;
   border-radius: 999px;
   justify-content: center;
 }
@@ -577,6 +588,8 @@ onMounted(() => {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    /* Sem isto o snap encosta o primeiro livro na borda da tela */
+    scroll-padding-inline: 1rem;
     gap: 0.85rem;
     margin: 0 -1rem;
     padding: 0 1rem 0.5rem;

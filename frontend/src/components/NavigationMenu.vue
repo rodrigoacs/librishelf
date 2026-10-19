@@ -259,6 +259,7 @@ const items = computed(() => [
 .navigation-container {
   width: 260px;
   height: 100vh;
+  height: 100dvh;
   flex-shrink: 0;
   background-color: var(--bg-panel);
   border-right: 1px solid var(--border-color);

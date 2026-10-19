@@ -489,6 +489,7 @@ watch(username, () => {
 .public-library-container {
   padding: 2rem;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   background-color: var(--bg-app);
   display: flex;

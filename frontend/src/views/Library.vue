@@ -335,7 +335,9 @@ onUnmounted(() => {
 
 <style scoped>
 .library-container {
+  /* 100dvh desconta a barra de endereço do celular; 100vh fica de reserva */
   height: 100vh;
+  height: 100dvh;
   width: 100%;
   display: flex;
   flex-direction: column;

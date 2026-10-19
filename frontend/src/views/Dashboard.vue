@@ -647,6 +647,7 @@ onMounted(loadStats)
 .dashboard-container {
   padding: 2rem;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-app);
   max-width: 1100px;
   margin: 0 auto;

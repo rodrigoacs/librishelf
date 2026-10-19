@@ -925,4 +925,18 @@ defineExpose({ reloadOptions: loadOptions })
   color: var(--main-color) !important;
   background-color: rgba(var(--main-color-rgb), 0.1) !important;
 }
+
+/* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */
+@media (pointer: coarse) {
+  .view-btn {
+    position: relative;
+  }
+
+  .view-btn::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+  }
+}
 </style>

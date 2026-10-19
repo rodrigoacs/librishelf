@@ -453,6 +453,14 @@
       "failed": "{n} com problema | {n} com problema",
       "errorLine": "Linha {line} ({title})",
       "seeLibrary": "Ver na biblioteca"
+    },
+    "index": {
+      "label": "Nesta página",
+      "privacy": "Privacidade",
+      "account": "Conta",
+      "password": "Senha",
+      "data": "Dados",
+      "delete": "Excluir"
     }
   },
   "discover": {

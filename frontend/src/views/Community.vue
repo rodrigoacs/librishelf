@@ -27,31 +27,38 @@
       </div>
 
       <div
-        class="tabs"
-        role="tablist"
-        :aria-label="t('communityView.title')"
+        class="tabs-wrap"
+        :class="{ 'fade-start': tabsFade.start, 'fade-end': tabsFade.end }"
       >
-        <button
-          v-for="tab in tabs"
-          :id="`tab-${tab.key}`"
-          :key="tab.key"
-          type="button"
-          role="tab"
-          class="tab"
-          :class="{ active: activeTab === tab.key }"
-          :aria-selected="activeTab === tab.key"
-          :aria-controls="`panel-${tab.key}`"
-          :tabindex="activeTab === tab.key ? 0 : -1"
-          @click="activeTab = tab.key"
-          @keydown.right.prevent="moveTab(1)"
-          @keydown.left.prevent="moveTab(-1)"
+        <div
+          ref="tabsEl"
+          class="tabs"
+          role="tablist"
+          :aria-label="t('communityView.title')"
+          @scroll.passive="updateTabsFade"
         >
-          {{ tab.label }}
-          <span
-            v-if="tab.count"
-            class="tab-count"
-          >{{ tab.count }}</span>
-        </button>
+          <button
+            v-for="tab in tabs"
+            :id="`tab-${tab.key}`"
+            :key="tab.key"
+            type="button"
+            role="tab"
+            class="tab"
+            :class="{ active: activeTab === tab.key }"
+            :aria-selected="activeTab === tab.key"
+            :aria-controls="`panel-${tab.key}`"
+            :tabindex="activeTab === tab.key ? 0 : -1"
+            @click="activeTab = tab.key"
+            @keydown.right.prevent="moveTab(1)"
+            @keydown.left.prevent="moveTab(-1)"
+          >
+            {{ tab.label }}
+            <span
+              v-if="tab.count"
+              class="tab-count"
+            >{{ tab.count }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- Feed -->
@@ -362,7 +369,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
@@ -399,6 +406,44 @@ const tabs = computed(() => [
   { key: 'following', label: t('communityView.tab_following'), count: connections.value.following.length },
   { key: 'followers', label: t('communityView.tab_followers'), count: connections.value.followers.length }
 ])
+
+// Abas que não cabem (celular): degradê na borda que tem mais abas e a aba
+// ativa rola para o meio, para "Seguidores" não ficar escondida.
+const tabsEl = ref(null)
+const tabsFade = ref({ start: false, end: false })
+
+function updateTabsFade() {
+  const el = tabsEl.value
+  if (!el) return
+  const max = el.scrollWidth - el.clientWidth
+  tabsFade.value = { start: el.scrollLeft > 4, end: el.scrollLeft < max - 4 }
+}
+
+function centerActiveTab(smooth = true) {
+  const el = tabsEl.value
+  const tab = el?.querySelector('[aria-selected="true"]')
+  if (!el || !tab) return
+  const left = tab.offsetLeft - (el.clientWidth - tab.offsetWidth) / 2
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  el.scrollTo({ left: Math.max(0, left), behavior: smooth && !reduce ? 'smooth' : 'auto' })
+}
+
+watch(activeTab, () => nextTick(() => centerActiveTab()))
+// As contagens chegam depois e mudam a largura das abas
+watch(connections, () => nextTick(() => {
+  centerActiveTab(false)
+  updateTabsFade()
+}))
+
+onMounted(() => {
+  nextTick(() => {
+    centerActiveTab(false)
+    updateTabsFade()
+  })
+  window.addEventListener('resize', updateTabsFade)
+})
+
+onBeforeUnmount(() => window.removeEventListener('resize', updateTabsFade))
 
 function moveTab(step) {
   const keys = tabs.value.map(tab => tab.key)
@@ -522,6 +567,7 @@ onMounted(async () => {
 .community-container {
   padding: 2rem;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-app);
 }
 
@@ -566,12 +612,49 @@ onMounted(async () => {
   color: var(--main-color);
 }
 
+.tabs-wrap {
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.tabs-wrap::before,
+.tabs-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 1px;
+  width: 2.5rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 1;
+}
+
+.tabs-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg-app), transparent);
+}
+
+.tabs-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg-app), transparent);
+}
+
+.tabs-wrap.fade-start::before,
+.tabs-wrap.fade-end::after {
+  opacity: 1;
+}
+
 .tabs {
   display: flex;
   gap: 0.25rem;
   border-bottom: 1px solid var(--border-color);
-  margin-bottom: 1.25rem;
   overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
