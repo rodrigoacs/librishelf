@@ -6,6 +6,9 @@ import { ref } from 'vue'
  */
 export const ACCENT_COLORS = ['blue', 'green', 'purple', 'red', 'orange', 'yellow']
 
+// Cor da barra do navegador no celular (meta theme-color) = --bg-app de cada tema
+const BROWSER_BAR = { dark: '#121212', light: '#f0f0f3' }
+
 const THEME_KEY = 'user-theme'
 const ACCENT_KEY = 'user-accent'
 
@@ -35,6 +38,11 @@ function applyTheme() {
   const root = document.documentElement
   root.setAttribute('data-theme', currentTheme.value)
   root.style.setProperty('--main-color-rgb', `var(--${accentColor.value}-rgb)`)
+  root.style.setProperty('--main-solid-rgb', `var(--${accentColor.value}-solid-rgb)`)
+  // Segue o tema escolhido no app, não o do sistema
+  document.querySelectorAll('meta[name="theme-color"]').forEach(meta => {
+    meta.setAttribute('content', BROWSER_BAR[currentTheme.value])
+  })
   themeVersion.value++
 }
 

@@ -510,7 +510,7 @@ watch(username, () => {
   text-decoration: none;
   font-weight: 700;
   letter-spacing: 0.05em;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   width: fit-content;
 }
 
@@ -535,12 +535,12 @@ watch(username, () => {
 
 .owner-note {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .owner-link {
   color: var(--main-color);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .profile-section {
@@ -568,19 +568,19 @@ watch(username, () => {
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .stat-label {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
 }
 
 .star {
   color: #f5b301;
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
 }
 
 .profile-grid {
@@ -599,7 +599,7 @@ watch(username, () => {
 
 .panel h2 {
   margin: 0 0 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
@@ -623,7 +623,7 @@ watch(username, () => {
   grid-template-columns: 3rem 1fr 2rem;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   padding: 0.15rem 0;
 }
 
@@ -657,7 +657,7 @@ watch(username, () => {
   gap: 0.75rem;
   padding: 0.3rem 0;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .ranked-name {
@@ -684,7 +684,7 @@ watch(username, () => {
 .tag-pill {
   border-radius: 999px;
   padding: 0.2rem 0.65rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--tag-color);
   background: color-mix(in srgb, var(--tag-color) 12%, transparent);
@@ -729,7 +729,7 @@ watch(username, () => {
 
 .recent-title {
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -745,7 +745,7 @@ watch(username, () => {
 
 .muted {
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .small {
@@ -753,8 +753,8 @@ watch(username, () => {
 }
 
 .header-content h1 {
-  font-family: 'Georgia', serif;
-  font-size: 2rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
   color: var(--text-primary);
   margin: 0;
 }
@@ -782,7 +782,7 @@ watch(username, () => {
   text-align: center;
   padding: 4rem;
   color: var(--text-muted);
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -790,7 +790,7 @@ watch(username, () => {
 }
 
 .state-icon {
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
 }
 
 .state-link {
@@ -804,7 +804,7 @@ watch(username, () => {
   gap: 0.5rem;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .public-footer a {

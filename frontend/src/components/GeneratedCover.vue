@@ -56,7 +56,7 @@ defineProps({
 }
 
 .title {
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 11cqi;
   line-height: 1.15;

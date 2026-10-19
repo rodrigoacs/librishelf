@@ -40,7 +40,7 @@ const { t } = useI18n()
 }
 
 .code {
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
   font-size: 6rem;
   font-weight: 700;
   margin: 0;
@@ -50,7 +50,7 @@ const { t } = useI18n()
 
 h1 {
   margin: 1rem 0 0.5rem 0;
-  font-size: 1.6rem;
+  font-size: var(--fs-xl);
 }
 
 .message {
@@ -64,8 +64,8 @@ h1 {
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   border-radius: 999px;
-  background-color: var(--main-color);
-  color: var(--text-inverse);
+  background-color: var(--main-solid);
+  color: var(--on-main);
   text-decoration: none;
   font-weight: 600;
 }

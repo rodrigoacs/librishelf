@@ -73,7 +73,7 @@ async function resend() {
   background: rgba(var(--main-color-rgb), 0.1);
   border-bottom: 1px solid rgba(var(--main-color-rgb), 0.3);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .email-banner > .pi {

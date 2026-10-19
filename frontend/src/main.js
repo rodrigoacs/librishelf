@@ -9,7 +9,11 @@ import ConfirmationService from 'primevue/confirmationservice'
 import Tooltip from 'primevue/tooltip'
 
 import '@fontsource-variable/inter'
-import 'primevue/resources/themes/aura-dark-teal/theme.css'
+import '@fontsource-variable/source-serif-4'
+// Os dois temas convivem: o plugin vite/primevueTheme.js prefixa cada um com
+// [data-theme] e troca o azul do Aura pela cor de destaque do app.
+import 'primevue/resources/themes/aura-dark-blue/theme.css'
+import 'primevue/resources/themes/aura-light-blue/theme.css'
 import 'primeicons/primeicons.css'
 import './assets/main.css'
 

@@ -114,7 +114,7 @@ async function handleLogin() {
 .forgot-link {
   display: inline-block;
   margin-top: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   text-decoration: none;
 }

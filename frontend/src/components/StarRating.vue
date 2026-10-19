@@ -125,19 +125,19 @@ function select(value) {
 }
 
 .clear-btn .pi {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .size-sm .pi {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .size-md .pi {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
 }
 
 .size-lg .pi {
-  font-size: 1.4rem;
+  font-size: var(--fs-xl);
 }
 
 .sr-only {

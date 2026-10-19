@@ -193,13 +193,13 @@ const ariaLabel = computed(() => {
 }
 
 .row-check.checked {
-  background: var(--main-color);
-  border-color: var(--main-color);
-  color: var(--text-inverse);
+  background: var(--main-solid);
+  border-color: var(--main-solid);
+  color: var(--on-main);
 }
 
 .row-check .pi {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
 }
 
@@ -268,7 +268,7 @@ const ariaLabel = computed(() => {
 
 .authors,
 .col {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -287,12 +287,12 @@ const ariaLabel = computed(() => {
   display: flex;
   gap: 2px;
   color: var(--yellow);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .rating .muted {
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .read.status-read {
@@ -323,7 +323,7 @@ const ariaLabel = computed(() => {
 }
 
 .row-read .pi {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
 }
 
@@ -333,9 +333,9 @@ const ariaLabel = computed(() => {
 }
 
 .row-read.is-read {
-  background: var(--main-color);
+  background: var(--main-solid);
   border-color: transparent;
-  color: var(--text-inverse);
+  color: var(--on-main);
 }
 
 .row-read:active {

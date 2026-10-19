@@ -449,8 +449,8 @@ onMounted(load)
 }
 
 .header-content h1 {
-  font-family: 'Georgia', serif;
-  font-size: 2.5rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
   color: var(--text-primary);
   margin: 0;
 }
@@ -481,7 +481,7 @@ onMounted(load)
   padding: 0.8rem 1rem 0.8rem 2.5rem;
   border-radius: 8px;
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   transition: all 0.2s;
 }
 
@@ -501,7 +501,7 @@ onMounted(load)
 
 .total {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   margin-right: auto;
 }
 
@@ -521,7 +521,7 @@ onMounted(load)
   background: transparent;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
 }
@@ -532,9 +532,9 @@ onMounted(load)
 }
 
 .pill.active {
-  background: var(--main-color);
-  border-color: var(--main-color);
-  color: var(--text-inverse);
+  background: var(--main-solid);
+  border-color: var(--main-solid);
+  color: var(--on-main);
 }
 
 .pill:focus-visible,
@@ -546,7 +546,7 @@ onMounted(load)
 .merge-help {
   margin: -0.75rem 0 1.25rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .entity-item {
@@ -577,13 +577,13 @@ button.entity-card {
 }
 
 .select-check.checked {
-  background: var(--main-color);
-  border-color: var(--main-color);
-  color: var(--text-inverse);
+  background: var(--main-solid);
+  border-color: var(--main-solid);
+  color: var(--on-main);
 }
 
 .select-check .pi {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
 }
 
@@ -622,7 +622,7 @@ button.entity-card {
 }
 
 .rename-btn .pi {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .rename-btn:hover {
@@ -669,7 +669,7 @@ button.entity-card {
 .name-form label,
 .name-hint {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   color: var(--text-secondary);
 }
 
@@ -702,7 +702,7 @@ button.entity-card {
   display: flex;
   gap: 0.4rem;
   align-items: flex-start;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-primary);
   background: rgba(var(--main-color-rgb), 0.1);
   border-radius: 8px;
@@ -761,19 +761,19 @@ button.entity-card {
   border: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent);
   flex-shrink: 0;
   color: var(--accent-color);
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
 }
 
 .initials {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   letter-spacing: 1px;
 }
 
 .hash-symbol {
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
 }
 
 .entity-info {
@@ -785,7 +785,7 @@ button.entity-card {
 
 .entity-name {
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -793,7 +793,7 @@ button.entity-card {
 }
 
 .entity-meta {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   margin-top: 0.2rem;
 }
@@ -827,7 +827,7 @@ button.entity-card {
 }
 
 .empty-state>i {
-  font-size: 2.5rem;
+  font-size: var(--fs-3xl);
 }
 
 @keyframes pulse {
@@ -850,7 +850,7 @@ button.entity-card {
   }
 
   .header-content h1 {
-    font-size: 2rem;
+    font-size: var(--fs-2xl);
   }
 
   .search-wrapper {

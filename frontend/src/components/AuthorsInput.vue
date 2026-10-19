@@ -95,7 +95,7 @@ function onUpdate(values) {
   color: var(--text-primary);
   border-radius: 999px;
   padding: 0.2rem 0.65rem;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .authors-input :deep(.p-chips-input-token) {
@@ -112,11 +112,11 @@ function onUpdate(values) {
   box-shadow: none !important;
   outline: none;
   padding: 0.25rem 0.15rem;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
 }
 
 .authors-hint {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 </style>

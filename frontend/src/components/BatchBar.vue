@@ -229,7 +229,7 @@ function confirmDelete() {
   border: none;
   padding: 0.25rem;
   font: inherit;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: var(--main-color);
   cursor: pointer;
   text-decoration: underline;
@@ -254,7 +254,7 @@ function confirmDelete() {
 }
 
 .tag-form label {
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   color: var(--text-secondary);
 }
 

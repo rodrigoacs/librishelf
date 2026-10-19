@@ -537,8 +537,8 @@ onMounted(async () => {
 }
 
 .view-header h1 {
-  font-family: 'Georgia', serif;
-  font-size: 2.5rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
   color: var(--text-primary);
   margin: 0;
 }
@@ -558,7 +558,7 @@ onMounted(async () => {
   padding: 0.85rem 1rem;
   margin-bottom: 1.25rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   line-height: 1.45;
 }
 
@@ -603,7 +603,7 @@ onMounted(async () => {
   background: var(--bg-input);
   border-radius: 999px;
   padding: 0 0.45rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .panel {
@@ -623,7 +623,7 @@ onMounted(async () => {
 }
 
 .empty .pi {
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   color: var(--text-muted);
 }
 
@@ -661,7 +661,7 @@ onMounted(async () => {
 .feed-meta {
   margin: 0.2rem 0 0;
   color: var(--text-secondary);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -733,7 +733,7 @@ onMounted(async () => {
 }
 
 .muted.small {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   margin: 0 0 1rem;
 }
 
@@ -745,7 +745,7 @@ onMounted(async () => {
 
 .reader-meta {
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .reader-meta strong {
@@ -755,7 +755,7 @@ onMounted(async () => {
 
 .see-shelf {
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   white-space: nowrap;
 }
 
@@ -764,7 +764,7 @@ onMounted(async () => {
 }
 
 .status-pill {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-secondary);
   background: var(--bg-input);
   border-radius: 999px;
@@ -792,7 +792,7 @@ onMounted(async () => {
     flex: 0 0 auto;
     justify-content: center;
     padding: 0.7rem 0.6rem;
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
   }
 
   .community-container {
@@ -800,7 +800,7 @@ onMounted(async () => {
   }
 
   .view-header h1 {
-    font-size: 2rem;
+    font-size: var(--fs-2xl);
   }
 
   .people-list li {

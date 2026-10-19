@@ -243,9 +243,9 @@ const items = computed(() => [
   height: 1.25rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: var(--main-color);
-  color: var(--text-inverse, #000);
-  font-size: 0.7rem;
+  background: var(--main-solid);
+  color: var(--on-main);
+  font-size: var(--fs-xs);
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -296,9 +296,9 @@ const items = computed(() => [
 }
 
 .logo-text {
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.4rem;
+  font-size: var(--fs-xl);
   color: var(--text-primary);
   letter-spacing: -1px;
 }
@@ -326,7 +326,7 @@ const items = computed(() => [
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
 }
 
 button.nav-item {
@@ -335,7 +335,7 @@ button.nav-item {
   width: 100%;
   font: inherit;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   text-align: left;
 }
@@ -387,13 +387,13 @@ button.nav-item {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: var(--main-color);
-  color: var(--text-inverse);
+  background-color: var(--main-solid);
+  color: var(--on-main);
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   flex-shrink: 0;
 }
 
@@ -406,7 +406,7 @@ button.nav-item {
 .username {
   color: var(--text-primary);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -414,7 +414,7 @@ button.nav-item {
 
 .user-role {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .settings-btn {
@@ -442,7 +442,7 @@ button.nav-item {
 }
 
 .settings-btn i {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   transition: transform 0.3s ease;
 }
 
@@ -463,7 +463,7 @@ button.nav-item {
 }
 
 .settings-header {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   color: var(--text-muted);
   font-weight: 600;
@@ -477,7 +477,7 @@ button.nav-item {
 }
 
 .settings-label {
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   color: var(--text-primary);
 }
 
@@ -520,10 +520,10 @@ button.nav-item {
   }
 
   .mobile-header .logo-text {
-    font-size: 1.1rem;
+    font-size: var(--fs-lg);
     color: var(--text-primary);
     font-weight: 700;
-    font-family: 'Georgia', serif;
+    font-family: var(--font-display);
   }
 
   .sidebar {

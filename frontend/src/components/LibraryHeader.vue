@@ -482,19 +482,19 @@ defineExpose({ reloadOptions: loadOptions })
 }
 
 .header-title h1 {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   margin: 0;
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.5px;
 }
 
 .count-badge {
-  background-color: var(--main-color);
-  color: var(--text-inverse);
+  background-color: var(--main-solid);
+  color: var(--on-main);
   font-weight: 800;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   padding: 0.15rem 0.6rem;
   border-radius: 20px;
 }
@@ -527,8 +527,8 @@ defineExpose({ reloadOptions: loadOptions })
 }
 
 .view-btn.active {
-  background: var(--main-color);
-  color: var(--text-inverse);
+  background: var(--main-solid);
+  color: var(--on-main);
 }
 
 .view-btn:focus-visible {
@@ -560,7 +560,7 @@ defineExpose({ reloadOptions: loadOptions })
   right: 1rem;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .clear-icon {
@@ -589,7 +589,7 @@ defineExpose({ reloadOptions: loadOptions })
   padding: 0.75rem 2.5rem;
   border-radius: 50px;
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   transition: all 0.2s ease;
 }
 
@@ -625,7 +625,7 @@ defineExpose({ reloadOptions: loadOptions })
 .add-btn {
   font-weight: 600;
   padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .active-filters-bar {
@@ -651,7 +651,7 @@ defineExpose({ reloadOptions: loadOptions })
 }
 
 .filter-label {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 600;
@@ -667,7 +667,7 @@ defineExpose({ reloadOptions: loadOptions })
 .custom-chip {
   background-color: var(--bg-input);
   color: var(--text-primary);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   border: 1px solid var(--border-color);
 }
 
@@ -684,7 +684,7 @@ defineExpose({ reloadOptions: loadOptions })
 }
 
 .clear-all-btn {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   white-space: nowrap;
 }
 
@@ -694,14 +694,14 @@ defineExpose({ reloadOptions: loadOptions })
 
 .sidebar-header h3 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   color: var(--text-primary);
 }
 
 .sidebar-header p {
   margin: 0.5rem 0 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .sidebar-content {
@@ -712,7 +712,7 @@ defineExpose({ reloadOptions: loadOptions })
 
 .filter-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   margin-bottom: 0.5rem;
   font-weight: 600;
@@ -763,7 +763,7 @@ defineExpose({ reloadOptions: loadOptions })
   }
 
   .header-title h1 {
-    font-size: 1.3rem;
+    font-size: var(--fs-lg);
   }
 
   .actions {
@@ -898,9 +898,9 @@ defineExpose({ reloadOptions: loadOptions })
 }
 
 .custom-selectbutton .p-button.p-highlight {
-  background-color: var(--main-color) !important;
-  border-color: var(--main-color) !important;
-  color: var(--text-primary) !important;
+  background-color: var(--main-solid) !important;
+  border-color: var(--main-solid) !important;
+  color: var(--on-main) !important;
   font-weight: 700;
 }
 

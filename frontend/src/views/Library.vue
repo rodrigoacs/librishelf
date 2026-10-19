@@ -410,7 +410,7 @@ onUnmounted(() => {
 }
 
 .loading-more-icon {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   color: var(--main-color);
 }
 
@@ -438,12 +438,12 @@ onUnmounted(() => {
 }
 
 .empty-icon-circle i {
-  font-size: 2.5rem;
+  font-size: var(--fs-3xl);
   opacity: 0.5;
 }
 
 .empty-state h3 {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }

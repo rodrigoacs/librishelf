@@ -626,8 +626,8 @@ async function deleteAccount() {
 }
 
 .view-header h1 {
-  font-family: 'Georgia', serif;
-  font-size: 2.5rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
   color: var(--text-primary);
   margin: 0;
 }
@@ -656,14 +656,14 @@ async function deleteAccount() {
 
 .settings-card h2 {
   margin: 0 0 0.5rem 0;
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   color: var(--text-primary);
 }
 
 .card-desc {
   margin: 0 0 1.25rem 0;
   color: var(--text-secondary);
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   line-height: 1.5;
 }
 
@@ -676,7 +676,7 @@ async function deleteAccount() {
   border-radius: 8px;
   background: rgba(var(--main-color-rgb), 0.08);
   color: var(--text-primary);
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   line-height: 1.45;
 }
 
@@ -693,7 +693,7 @@ async function deleteAccount() {
 
 .toggle-help {
   color: var(--text-secondary);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   line-height: 1.45;
   padding-left: 3.75rem;
 }
@@ -714,7 +714,7 @@ async function deleteAccount() {
 
 .public-link label,
 .field label {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
 }
 
@@ -731,7 +731,7 @@ async function deleteAccount() {
   padding: 0.7rem 1rem;
   border-radius: 8px;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .stack {
@@ -769,7 +769,7 @@ async function deleteAccount() {
   gap: 0.5rem;
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   width: fit-content;
 }
 
@@ -799,7 +799,7 @@ async function deleteAccount() {
 
 .account-row dt {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .account-row dd {
@@ -822,7 +822,7 @@ async function deleteAccount() {
   margin-left: 0.4rem;
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: #b45309;
   background: rgba(245, 158, 11, 0.15);
@@ -836,7 +836,7 @@ async function deleteAccount() {
 
 .sub-title {
   margin: 1.5rem 0 0.25rem;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   color: var(--text-primary);
 }
 
@@ -844,7 +844,7 @@ async function deleteAccount() {
   margin: 0 0 1rem;
   padding-left: 1.2rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   line-height: 1.6;
 }
 
@@ -889,7 +889,7 @@ async function deleteAccount() {
   margin: 0.6rem 0 0;
   padding-left: 1.1rem;
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 
@@ -903,7 +903,7 @@ async function deleteAccount() {
 .dialog-hint {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   line-height: 1.5;
 }
 
@@ -934,7 +934,7 @@ async function deleteAccount() {
   }
 
   .view-header h1 {
-    font-size: 2rem;
+    font-size: var(--fs-2xl);
   }
 
   .link-row {

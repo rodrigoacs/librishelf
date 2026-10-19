@@ -35,7 +35,13 @@
             theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
           }
           root.setAttribute('data-theme', theme)
-          if (accents.indexOf(accent) !== -1) root.style.setProperty('--main-color-rgb', 'var(--' + accent + '-rgb)')
+          if (accents.indexOf(accent) !== -1) {
+            root.style.setProperty('--main-color-rgb', 'var(--' + accent + '-rgb)')
+            root.style.setProperty('--main-solid-rgb', 'var(--' + accent + '-solid-rgb)')
+          }
+          var bar = theme === 'light' ? '#f0f0f3' : '#121212'
+          var metas = document.querySelectorAll('meta[name="theme-color"]')
+          for (var i = 0; i < metas.length; i++) metas[i].setAttribute('content', bar)
           if (lang === 'en') root.lang = 'en'
         } catch (e) {}
       })()

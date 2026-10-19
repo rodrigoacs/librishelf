@@ -156,7 +156,7 @@ onMounted(async () => {
   font-size: 5.5rem;
   font-weight: 700;
   margin: 0;
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: var(--font-display);
   color: #fff;
   letter-spacing: -3px;
   line-height: 1.1;
@@ -165,7 +165,7 @@ onMounted(async () => {
 }
 
 .visual-subtitle {
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   color: #fff;
   margin-top: 0.5rem;
   font-weight: 300;
@@ -204,7 +204,7 @@ onMounted(async () => {
 }
 
 .form-wrapper :deep(.header h1) {
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
@@ -252,7 +252,7 @@ onMounted(async () => {
 .form-wrapper :deep(.p-inputwrapper-focus ~ label),
 .form-wrapper :deep(.p-inputwrapper-filled ~ label) {
   top: -0.75rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   background-color: var(--bg-panel);
   padding: 0 0.5rem;
   color: var(--main-color);
@@ -267,7 +267,7 @@ onMounted(async () => {
 .form-wrapper :deep(.field-hint) {
   display: block;
   margin-top: 0.4rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -275,7 +275,7 @@ onMounted(async () => {
   margin-top: 2rem;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .form-wrapper :deep(.footer p) {
@@ -295,7 +295,7 @@ onMounted(async () => {
 .form-wrapper :deep(.footer .muted-link) {
   color: var(--text-muted);
   font-weight: 400;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 @media (max-width: 900px) {

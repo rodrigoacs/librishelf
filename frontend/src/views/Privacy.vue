@@ -85,7 +85,7 @@ const updatedAt = computed(() => {
   gap: 0.5rem;
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   margin-bottom: 1.5rem;
 }
 
@@ -94,13 +94,13 @@ const updatedAt = computed(() => {
 }
 
 h1 {
-  font-family: 'Georgia', serif;
-  font-size: 2.5rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
   margin: 0;
 }
 
 h2 {
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   margin: 2rem 0 0.5rem 0;
 }
 
@@ -111,11 +111,11 @@ p {
 
 .updated {
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .intro {
-  font-size: 1.05rem;
+  font-size: var(--fs-md);
   color: var(--text-primary);
   margin-top: 1.5rem;
 }
@@ -130,7 +130,7 @@ a {
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: var(--fs-2xl);
   }
 }
 </style>

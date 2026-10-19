@@ -628,7 +628,7 @@ onMounted(loadStats)
   background: rgba(245, 158, 11, 0.08);
   color: var(--text-primary);
   text-decoration: none;
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
 }
 
 .isbn-notice .pi-exclamation-triangle {
@@ -662,9 +662,9 @@ onMounted(loadStats)
 
 .welcome-text h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   color: var(--text-primary);
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
 }
 
 .welcome-text p {
@@ -707,7 +707,7 @@ onMounted(loadStats)
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   flex-shrink: 0;
 }
 
@@ -760,20 +760,20 @@ a.author-row:focus-visible {
 
 .kpi-info .label {
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .kpi-info .value {
   color: var(--text-primary);
-  font-size: 1.8rem;
+  font-size: var(--fs-2xl);
   font-weight: 700;
 }
 
 .kpi-info .sub {
   color: var(--text-secondary);
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
 }
 
 /* Ano + data no cabeçalho */
@@ -806,7 +806,7 @@ a.author-row:focus-visible {
 
 .goal-head h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -820,8 +820,8 @@ a.author-row:focus-visible {
 }
 
 .goal-numbers strong {
-  font-family: 'Georgia', serif;
-  font-size: 2.4rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
   line-height: 1;
   color: var(--text-primary);
 }
@@ -856,7 +856,7 @@ a.author-row:focus-visible {
 
 .goal-status {
   margin: 0.75rem 0 0;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   color: var(--text-secondary);
 }
 
@@ -881,7 +881,7 @@ a.author-row:focus-visible {
 
 .goal-form label {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .goal-form-row {
@@ -898,7 +898,7 @@ a.author-row:focus-visible {
 .chart-hint {
   margin: -1rem 0 1rem;
   color: var(--text-secondary);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
 }
 
 .charts-grid {
@@ -924,7 +924,7 @@ a.author-row:focus-visible {
 .chart-card h3 {
   margin: 0 0 1.5rem 0;
   color: var(--text-primary);
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
 }
 
@@ -1002,7 +1002,7 @@ a.author-row:hover {
 
 .author-row .count {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   margin-left: auto;
   z-index: 2;
 }
@@ -1081,16 +1081,16 @@ a.author-row:hover {
   .kpi-icon {
     width: 36px;
     height: 36px;
-    font-size: 1.1rem;
+    font-size: var(--fs-lg);
     border-radius: 10px;
   }
 
   .kpi-info .label {
-    font-size: 0.72rem;
+    font-size: var(--fs-xs);
   }
 
   .kpi-info .value {
-    font-size: 1.5rem;
+    font-size: var(--fs-xl);
   }
 
   .charts-grid {
@@ -1128,6 +1128,6 @@ a.author-row:hover {
 }
 
 .error-state > i {
-  font-size: 2.5rem;
+  font-size: var(--fs-3xl);
 }
 </style>

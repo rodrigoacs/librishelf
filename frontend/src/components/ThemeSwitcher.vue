@@ -85,7 +85,7 @@ const { currentTheme, accentColor, toggleTheme, setAccent, availableColors } = u
 }
 
 .mode-btn i {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
 }
 
 .divider {

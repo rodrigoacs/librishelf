@@ -549,9 +549,9 @@ onBeforeUnmount(() => preview.clear())
 }
 
 .btn-action-primary {
-  background-color: var(--main-color) !important;
-  border-color: var(--main-color) !important;
-  color: #000 !important;
+  background-color: var(--main-solid) !important;
+  border-color: var(--main-solid) !important;
+  color: var(--on-main) !important;
   font-weight: 600 !important;
 }
 
@@ -669,12 +669,12 @@ button.upload-container {
 
 .upload-container:hover .icon-circle {
   transform: scale(1.1);
-  background-color: var(--main-color);
-  color: #000;
+  background-color: var(--main-solid);
+  color: var(--on-main);
 }
 
 .icon-circle i {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
 }
 
 .upload-text,
@@ -684,12 +684,12 @@ button.upload-container {
 
 .upload-text {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   color: #e4e4e7;
 }
 
 .upload-subtext {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   margin-top: 0.25rem;
 }
 
@@ -747,7 +747,7 @@ button.upload-container {
 }
 
 .form-header h2 {
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   margin: 0 0 0.5rem 0;
   font-weight: 700;
   color: var(--text-primary);
@@ -756,7 +756,7 @@ button.upload-container {
 .form-header p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: var(--fs-md);
 }
 
 .form-content {
@@ -773,7 +773,7 @@ button.upload-container {
 
 .input-group label {
   display: block;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 600;
@@ -797,7 +797,7 @@ button.upload-container {
   border-radius: 8px;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   transition: all 0.2s;
 }
 
@@ -816,7 +816,7 @@ button.upload-container {
 }
 
 .title-input {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   font-weight: 700;
   padding: 1rem;
   background-color: transparent;
@@ -835,7 +835,7 @@ button.upload-container {
 
 .error-msg {
   color: #ef4444;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   margin-top: 0.25rem;
   display: block;
 }
@@ -850,7 +850,7 @@ button.upload-container {
 .isbn-lookup label,
 .group-label {
   display: block;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 600;
@@ -876,7 +876,7 @@ button.upload-container {
 }
 
 .isbn-hint {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-secondary);
 }
 
@@ -928,7 +928,7 @@ button.upload-container {
   border: none;
   color: var(--text-primary);
   padding: 0;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   width: 100%;
 }
 
@@ -980,7 +980,7 @@ button.upload-container {
   }
 
   .form-header h2 {
-    font-size: 1.5rem;
+    font-size: var(--fs-xl);
   }
 
   .dates-grid,

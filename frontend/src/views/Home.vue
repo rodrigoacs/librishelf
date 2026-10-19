@@ -378,8 +378,8 @@ onMounted(() => {
 }
 
 .greeting h1 {
-  font-family: 'Georgia', serif;
-  font-size: 2.4rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
   margin: 0;
   line-height: 1.15;
 }
@@ -425,14 +425,14 @@ onMounted(() => {
 
 .shelf-head h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
 }
 
 .see-all {
   color: var(--main-color);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   white-space: nowrap;
 }
 
@@ -456,7 +456,7 @@ onMounted(() => {
 
 .rec-reason {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-secondary);
   line-height: 1.35;
 }
@@ -505,8 +505,8 @@ onMounted(() => {
 }
 
 .empty-start h2 {
-  font-family: 'Georgia', serif;
-  font-size: 1.8rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
   margin: 0.5rem 0 0;
 }
 
@@ -563,7 +563,7 @@ onMounted(() => {
   }
 
   .greeting h1 {
-    font-size: 1.8rem;
+    font-size: var(--fs-2xl);
   }
 
   .add-btn-home {

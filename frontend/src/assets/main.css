@@ -1,10 +1,26 @@
-
 :root {
   --font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Títulos, logo e capas desenhadas: serifa empacotada, igual em todo sistema */
+  --font-display: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
   --p-focus-ring-color: var(--main-color);
 
-  --main-color-rgb: 58, 134, 255;
+  /* Escala de fonte (use estes tokens em vez de tamanhos soltos) */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.85rem;
+  --fs-md: 0.95rem;
+  --fs-lg: 1.15rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2rem;
+  --fs-3xl: 2.5rem;
+
+  /* Cor de destaque. --main-color: texto, borda, ícone e detalhes;
+     --main-solid: fundo de botão e selo, sempre com --on-main (branco) por cima.
+     O useTheme troca as duas para a cor escolhida (var(--<cor>-rgb)). */
+  --main-color-rgb: var(--blue-rgb);
   --main-color: rgb(var(--main-color-rgb));
+  --main-solid-rgb: var(--blue-solid-rgb);
+  --main-solid: rgb(var(--main-solid-rgb));
+  --on-main: #ffffff;
 
   --bg-app: #121212;
   --bg-panel: #18181b;
@@ -14,8 +30,8 @@
 
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --text-inverse: #000000;
+  /* 5,8:1 no painel e 4,9:1 no campo */
+  --text-muted: #93939c;
 
   --border-color: rgba(255, 255, 255, 0.1);
   --border-hover: rgba(255, 255, 255, 0.2);
@@ -32,6 +48,26 @@
   --purple-rgb: 141, 120, 250;
   --yellow-rgb: 253, 212, 87;
   --orange-rgb: 255, 138, 80;
+  /* Versões escuras das cores de destaque para fundo com texto branco (≥ 4,5:1) */
+  --red-solid-rgb: 214, 31, 80;
+  --green-solid-rgb: 63, 122, 34;
+  --blue-solid-rgb: 37, 99, 235;
+  --purple-solid-rgb: 110, 84, 240;
+  --yellow-solid-rgb: 143, 101, 0;
+  --orange-solid-rgb: 194, 65, 12;
+
+  /* Variáveis do PrimeVue apontando para as do app */
+  --primary-color: var(--main-color);
+  --primary-color-text: var(--on-main);
+  --surface-ground: var(--bg-app);
+  --surface-section: var(--bg-panel);
+  --surface-card: var(--bg-panel);
+  --surface-overlay: var(--bg-panel);
+  --surface-border: var(--border-color);
+  --text-color: var(--text-primary);
+  --text-color-secondary: var(--text-secondary);
+  --highlight-bg: rgba(var(--main-color-rgb), 0.16);
+  --highlight-text-color: var(--main-color);
 
   color-scheme: dark;
 }
@@ -45,24 +81,31 @@
 
   --text-primary: #18181b;
   --text-secondary: #52525b;
-  --text-muted: #a1a1aa;
-  --text-inverse: #ffffff;
+  /* 5,0:1 no fundo do app e 5,7:1 no painel */
+  --text-muted: #66666e;
 
   --border-color: rgba(0, 0, 0, 0.1);
   --border-hover: rgba(0, 0, 0, 0.2);
 
-  --red: #d92d45;
-  --green: #4c8c2b;
-  --blue: #0b75c9;
-  --purple: #6b4efc;
-  --yellow: #d4a017;
-  --orange: #c65327;
-  --red-rgb: 217, 45, 69;
-  --green-rgb: 76, 140, 43;
-  --blue-rgb: 11, 117, 201;
-  --purple-rgb: 107, 78, 252;
-  --yellow-rgb: 212, 160, 23;
-  --orange-rgb: 198, 83, 39;
+  /* No claro a cor de destaque também é texto: todas com ≥ 4,5:1 no fundo do app */
+  --red: #c9283f;
+  --green: #3d7a20;
+  --blue: #0a68b4;
+  --purple: #6344f0;
+  --yellow: #8f6500;
+  --orange: #b8481f;
+  --red-rgb: 201, 40, 63;
+  --green-rgb: 61, 122, 32;
+  --blue-rgb: 10, 104, 180;
+  --purple-rgb: 99, 68, 240;
+  --yellow-rgb: 143, 101, 0;
+  --orange-rgb: 184, 72, 31;
+  --red-solid-rgb: var(--red-rgb);
+  --green-solid-rgb: var(--green-rgb);
+  --blue-solid-rgb: var(--blue-rgb);
+  --purple-solid-rgb: var(--purple-rgb);
+  --yellow-solid-rgb: var(--yellow-rgb);
+  --orange-solid-rgb: var(--orange-rgb);
 
   color-scheme: light;
 }
@@ -102,8 +145,8 @@ img {
   z-index: 1000;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  background: var(--main-color);
-  color: var(--text-inverse);
+  background: var(--main-solid);
+  color: var(--on-main);
   text-decoration: none;
   transition: top 0.2s;
 }
@@ -164,12 +207,12 @@ body {
 }
 
 .p-checkbox.p-highlight .p-checkbox-box {
-  border-color: var(--main-color);
-  background-color: var(--main-color);
+  border-color: var(--main-solid);
+  background-color: var(--main-solid);
 }
 
 .p-checkbox-box .p-icon {
-  color: var(--text-inverse);
+  color: var(--on-main);
 }
 
 .p-inputtext {
@@ -213,9 +256,9 @@ body {
 }
 /* Botão principal (tema). Também definido nos diálogos; aqui vale para todas as telas. */
 .p-button.btn-action-primary {
-  background-color: var(--main-color);
-  border-color: var(--main-color);
-  color: var(--text-inverse, #000);
+  background-color: var(--main-solid);
+  border-color: var(--main-solid);
+  color: var(--on-main);
   font-weight: 600;
 }
 

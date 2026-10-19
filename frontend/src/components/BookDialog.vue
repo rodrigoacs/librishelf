@@ -983,9 +983,9 @@ onBeforeUnmount(() => preview.clear())
 }
 
 .btn-action-primary {
-  background-color: var(--main-color) !important;
-  border-color: var(--main-color) !important;
-  color: var(--text-inverse) !important;
+  background-color: var(--main-solid) !important;
+  border-color: var(--main-solid) !important;
+  color: var(--on-main) !important;
 }
 </style>
 
@@ -1115,7 +1115,7 @@ button.cover-wrapper {
 }
 
 .edit-overlay i {
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   margin-bottom: 0.5rem;
   color: var(--main-color);
 }
@@ -1149,8 +1149,8 @@ button.cover-wrapper {
 }
 
 .book-title {
-  font-family: 'Georgia', serif;
-  font-size: 1.9rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
@@ -1158,7 +1158,7 @@ button.cover-wrapper {
 }
 
 .book-author {
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   color: var(--text-secondary);
   margin: 0;
   font-weight: 400;
@@ -1182,8 +1182,8 @@ button.cover-wrapper {
 }
 
 .title-input {
-  font-family: 'Georgia', serif;
-  font-size: 1.9rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
   font-weight: 700;
 }
 
@@ -1195,13 +1195,13 @@ button.cover-wrapper {
 }
 
 .author-input {
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   color: var(--text-secondary);
 }
 
 .info-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   margin-bottom: 0.4rem;
   font-weight: 500;
@@ -1238,11 +1238,11 @@ button.cover-wrapper {
   background: rgba(var(--main-color-rgb), 0.12);
   color: var(--main-color);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .read-pill .pi {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .read-state:has(.status-picker) {
@@ -1267,14 +1267,14 @@ button.cover-wrapper {
   background: transparent;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .status-option .pi {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .status-option:hover:not(:disabled) {
@@ -1283,9 +1283,9 @@ button.cover-wrapper {
 }
 
 .status-option.active {
-  background: var(--main-color);
-  border-color: var(--main-color);
-  color: var(--text-inverse);
+  background: var(--main-solid);
+  border-color: var(--main-solid);
+  color: var(--on-main);
 }
 
 .status-option:disabled {
@@ -1300,7 +1300,7 @@ button.cover-wrapper {
 
 .status-caption {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -1314,7 +1314,7 @@ button.cover-wrapper {
   padding: 0.25rem;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -1336,13 +1336,13 @@ button.cover-wrapper {
   gap: 0.4rem;
   margin-top: 0.35rem;
   color: var(--main-color);
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   text-decoration: none;
 }
 
 .series-line .pi {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 a.series-line:hover {
@@ -1363,7 +1363,7 @@ a.series-line:hover {
 }
 
 .field-hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-secondary);
 }
 
@@ -1376,7 +1376,7 @@ a.series-line:hover {
 
 .notes-section h3 {
   margin: 0 0 0.4rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -1403,7 +1403,7 @@ a.series-line:hover {
   display: flex;
   flex-wrap: wrap;
   color: var(--text-secondary);
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   line-height: 1.6;
 }
 
@@ -1419,7 +1419,7 @@ a.series-line:hover {
   gap: 0.4rem;
   margin: -0.4rem 0 0;
   color: #f59e0b;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
 }
 
 .tags-list {
@@ -1429,7 +1429,7 @@ a.series-line:hover {
 }
 
 .tag-chip {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   padding: 0.25rem 0.7rem;
   border-radius: 999px;
@@ -1453,7 +1453,7 @@ a.series-line:hover {
   align-items: center;
   gap: 0.5rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .community-toggle {
@@ -1476,7 +1476,7 @@ a.series-line:hover {
 
 .toggle-text {
   flex: 1;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
 }
 
 .community-toggle:hover .toggle-text {
@@ -1497,12 +1497,12 @@ a.series-line:hover {
 
 .avg-rating .pi {
   color: #f5b301;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .chevron {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   transition: transform 0.2s ease;
 }
 
@@ -1542,7 +1542,7 @@ a.series-line:hover {
   background: var(--bg-input);
   border-radius: 999px;
   padding: 0.25rem 0.7rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .reader-link,
@@ -1560,7 +1560,7 @@ a.series-line:hover {
 
 .also-have h3 {
   margin: 0 0 0.35rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -1593,7 +1593,7 @@ a.series-line:hover {
 
 .also-authors,
 .also-count {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
 }
 
@@ -1603,7 +1603,7 @@ a.series-line:hover {
 
 .community-hint {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   line-height: 1.45;
 }
@@ -1657,7 +1657,7 @@ a.series-line:hover {
   border: none;
   color: var(--text-primary);
   padding: 0;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   width: 100%;
 }
 
@@ -1708,7 +1708,7 @@ a.series-line:hover {
   }
 
   .book-title {
-    font-size: 1.5rem;
+    font-size: var(--fs-xl);
   }
 
   /* Capa inteira e pequena, em vez de um recorte gigante. */

@@ -177,14 +177,14 @@ const ariaLabel = computed(() => {
 }
 
 .quick-read .pi {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
 }
 
 .quick-read.is-read {
-  background: var(--main-color);
+  background: var(--main-solid);
   border-color: transparent;
-  color: var(--text-inverse);
+  color: var(--on-main);
 }
 
 .quick-read:active {
@@ -212,7 +212,7 @@ const ariaLabel = computed(() => {
   }
 
   .quick-read.is-read:hover {
-    background: var(--main-color);
+    background: var(--main-solid);
     filter: brightness(1.1);
   }
 }
@@ -295,7 +295,7 @@ button.book-card {
   right: 12px;
   width: 28px;
   height: 42px;
-  background-color: var(--main-color);
+  background-color: var(--main-solid);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
   display: flex;
@@ -310,8 +310,8 @@ button.book-card {
 }
 
 .bookmark-ribbon i {
-  color: var(--text-inverse);
-  font-size: 0.8rem;
+  color: var(--on-main);
+  font-size: var(--fs-sm);
   font-weight: bold;
 }
 
@@ -333,13 +333,13 @@ button.book-card {
 }
 
 .select-check.checked {
-  background: var(--main-color);
-  border-color: var(--main-color);
-  color: var(--text-inverse);
+  background: var(--main-solid);
+  border-color: var(--main-solid);
+  color: var(--on-main);
 }
 
 .select-check .pi {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
 }
 
@@ -355,7 +355,7 @@ button.book-card {
   z-index: 3;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.2px;
   line-height: 1.3;
@@ -363,8 +363,8 @@ button.book-card {
 }
 
 .status-badge.reading {
-  background: var(--main-color);
-  color: var(--text-inverse);
+  background: var(--main-solid);
+  color: var(--on-main);
 }
 
 .status-badge.want {
@@ -385,7 +385,7 @@ button.book-card {
 
 .book-title {
   display: block;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -399,7 +399,7 @@ button.book-card {
 
 .book-author {
   display: block;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   margin: 0;
   white-space: nowrap;
@@ -408,7 +408,7 @@ button.book-card {
 }
 .book-series {
   display: block;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--main-color);
   white-space: nowrap;
