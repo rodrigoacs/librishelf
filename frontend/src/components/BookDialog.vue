@@ -111,7 +111,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
@@ -127,6 +127,7 @@ import BookEditForm from './book/BookEditForm.vue'
 import BookCommunity from './book/BookCommunity.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { statusOf } from '../utils/readingStatus.js'
+import { setOverlayTitle } from '../services/pageTitle.js'
 
 /**
  * Livro aberto: visualização (BookView + BookCommunity) ou edição
@@ -297,9 +298,16 @@ async function loadBookData() {
 watch(() => props.modelValue, (val) => { visible.value = val })
 watch(visible, (val) => emit('update:modelValue', val))
 
+// Título da aba com o livro aberto: "Duna · Biblioteca · Librishelf"
+watch([visible, () => book.value.title], ([open, title]) => {
+  setOverlayTitle(open && title ? title : '')
+})
+
 onMounted(() => {
   if (visible.value) loadBookData()
 })
+
+onBeforeUnmount(() => setOverlayTitle(''))
 </script>
 
 <style scoped>

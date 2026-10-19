@@ -67,7 +67,14 @@
     "recSimilar": "{n} reader like you has it | {n} readers like you have it",
     "recPopular": "On {n} reader's shelf | On {n} readers' shelves",
     "recAdded": "On your list",
-    "recAddedToast": "\"{title}\" was added to Want to read."
+    "recAddedToast": "\"{title}\" was added to Want to read.",
+    "goalDone": "{n} read this year · {goal}-book goal reached",
+    "openBook": "Open \"{title}\"",
+    "finished": "Finished",
+    "finishedToast": "\"{title}\" moved to Read.",
+    "inviteTitle": "What are you reading?",
+    "inviteText": "Mark a book as Reading and it shows up here, with the date you started.",
+    "inviteWant": "Pick from my Want to read list"
   },
   "book": {
     "new_title": "New Book",
@@ -188,7 +195,8 @@
     "view_grid": "Grid",
     "view_list": "List",
     "row_rating": "Rated {n} out of 5",
-    "read_month_chip": "Read in {period}"
+    "read_month_chip": "Read in {period}",
+    "sort_short": "Sort:"
   },
   "bookDialog": {
     "bookCover": "Book Cover",
@@ -630,7 +638,12 @@
     "no_followers": "Nobody follows you yet.",
     "remove": "Remove",
     "remove_confirm": "Remove {'@'}{name} from your followers? They won't be notified.",
-    "private_library": "Private library"
+    "private_library": "Private library",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "event_added_many": "added {n} books",
+    "event_read_many": "finished {n} books",
+    "and_more": "and {n} more"
   },
   "forgot": {
     "title": "Forgot your password",
@@ -752,5 +765,23 @@
     "willMerge": "\"{name}\" already exists: the books will be merged into it.",
     "mergedToast": "Everything is now under \"{name}\".",
     "renamedToast": "Renamed to \"{name}\"."
+  },
+  "pageTitle": {
+    "home": "Home",
+    "library": "Library",
+    "authors": "Authors",
+    "publishers": "Publishers",
+    "tags": "Categories",
+    "dashboard": "Dashboard",
+    "community": "Community",
+    "settings": "Account",
+    "login": "Sign in",
+    "register": "Create account",
+    "forgotPassword": "Forgot password",
+    "resetPassword": "New password",
+    "verifyEmail": "Confirm email",
+    "publicLibrary": "{name}'s library",
+    "privacy": "Privacy",
+    "notFound": "Page not found"
   }
 }

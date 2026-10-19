@@ -88,47 +88,93 @@
           <p>{{ t('communityView.feed_empty') }}</p>
         </div>
 
-        <ul
+        <div
           v-else
-          class="feed-list"
+          class="feed-days"
         >
-          <li
-            v-for="event in events"
-            :key="`${event.type}-${event.bookId}-${event.at}`"
-            class="feed-item"
+          <section
+            v-for="day in feedDays"
+            :key="day.key"
+            class="feed-day"
+            :aria-label="dayLabel(day.date, { t, locale })"
           >
-            <ReaderAvatar
-              :username="event.username"
-              :badge="event.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"
-            />
-            <div class="feed-body">
-              <p class="feed-text">
-                <ReaderName
-                  :username="event.username"
-                  :is-public="event.isPublic"
+            <h3 class="day-title">{{ dayLabel(day.date, { t, locale }) }}</h3>
+            <ul class="feed-list">
+              <li
+                v-for="item in day.items"
+                :key="item.key"
+                class="feed-item"
+              >
+                <ReaderAvatar
+                  :username="item.username"
+                  :badge="item.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"
                 />
-                {{ event.type === 'read' ? t('communityView.event_read') : t('communityView.event_added') }}
-                <router-link
-                  v-if="event.isPublic"
-                  :to="{ name: 'public-library', params: { username: event.username }, query: { book: event.bookId } }"
-                  class="book-link"
-                >{{ event.title }}</router-link>
-                <strong v-else>{{ event.title }}</strong>
-              </p>
-              <p class="feed-meta">
-                <span v-if="event.authors">{{ event.authors }} · </span>
-                <span>{{ formatDate(event.at) }}</span>
-                <StarRating
-                  v-if="event.type === 'read' && event.rating"
-                  :model-value="event.rating"
-                  size="sm"
-                  readonly
-                  class="feed-rating"
-                />
-              </p>
-            </div>
-          </li>
-        </ul>
+                <div class="feed-body">
+                  <p class="feed-text">
+                    <ReaderName
+                      :username="item.username"
+                      :is-public="item.isPublic"
+                    />
+                    <template v-if="item.books.length === 1">
+                      {{ ' ' + (item.type === 'read' ? t('communityView.event_read') : t('communityView.event_added')) + ' ' }}
+                      <router-link
+                        v-if="item.isPublic"
+                        :to="bookLink(item, item.books[0])"
+                        class="book-link"
+                      >{{ item.books[0].title }}</router-link>
+                      <strong v-else>{{ item.books[0].title }}</strong>
+                    </template>
+                    <template v-else>
+                      {{ ' ' + t(item.type === 'read' ? 'communityView.event_read_many' : 'communityView.event_added_many', { n: item.books.length }) }}
+                    </template>
+                  </p>
+                  <p
+                    v-if="item.books.length === 1"
+                    class="feed-meta"
+                  >
+                    <span v-if="item.books[0].authors">{{ item.books[0].authors }}</span>
+                    <StarRating
+                      v-if="item.type === 'read' && item.books[0].rating"
+                      :model-value="item.books[0].rating"
+                      size="sm"
+                      readonly
+                      class="feed-rating"
+                    />
+                  </p>
+                  <p
+                    v-else
+                    class="feed-meta many"
+                  >
+                    <span
+                      v-for="(book, index) in item.books.slice(0, MANY_SHOWN)"
+                      :key="book.bookId"
+                      class="many-item"
+                    ><router-link
+                        v-if="item.isPublic"
+                        :to="bookLink(item, book)"
+                        class="book-link small"
+                      >{{ book.title }}</router-link><template v-else>{{ book.title }}</template>{{ index < Math.min(item.books.length, MANY_SHOWN) - 1 ? ', ' : '' }}</span>
+                    <span v-if="item.books.length > MANY_SHOWN"> {{ t('communityView.and_more', { n: item.books.length - MANY_SHOWN }) }}</span>
+                  </p>
+                </div>
+                <div
+                  class="feed-covers"
+                  :class="{ stack: item.books.length > 1 }"
+                  aria-hidden="true"
+                >
+                  <BookCover
+                    v-for="book in item.books.slice(0, COVERS_SHOWN)"
+                    :key="book.bookId"
+                    :book-id="book.bookId"
+                    :title="book.title"
+                    :author="book.authors"
+                    class="feed-cover"
+                  />
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
 
         <div
           v-if="hasMore"
@@ -379,6 +425,8 @@ import api from '../services/api.js'
 import StarRating from '../components/StarRating.vue'
 import ReaderName from '../components/ReaderName.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
+import BookCover from '../components/BookCover.vue'
+import { groupFeed, dayLabel } from '../utils/feedGroups.js'
 import { currentUser } from '../services/session.js'
 import { refreshPendingRequests } from '../services/social.js'
 
@@ -452,10 +500,13 @@ function moveTab(step) {
   document.getElementById(`tab-${next}`)?.focus()
 }
 
-function formatDate(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(locale.value, { timeZone: 'UTC' })
+// Feed agrupado por dia, com eventos repetidos juntos
+const MANY_SHOWN = 3
+const COVERS_SHOWN = 3
+const feedDays = computed(() => groupFeed(events.value))
+
+function bookLink(item, book) {
+  return { name: 'public-library', params: { username: item.username }, query: { book: book.bookId } }
 }
 
 async function loadFeed({ append = false } = {}) {
@@ -717,11 +768,58 @@ onMounted(async () => {
   padding: 0;
 }
 
+.feed-days {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.day-title {
+  margin: 0 0 0.25rem;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
 .feed-item {
   display: flex;
+  align-items: flex-start;
   gap: 0.85rem;
   padding: 0.85rem 0;
   border-bottom: 1px solid var(--border-color);
+}
+
+.feed-item:last-child {
+  border-bottom: none;
+}
+
+.feed-body {
+  flex: 1;
+}
+
+.feed-covers {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.feed-cover {
+  width: 40px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Vários livros: capas sobrepostas, como uma pilha */
+.feed-covers.stack .feed-cover + .feed-cover {
+  margin-left: -22px;
+}
+
+.feed-covers.stack .feed-cover {
+  border: 2px solid var(--bg-app);
+}
+
+.feed-cover :deep(.title) {
+  font-size: 0;
 }
 
 .person {
@@ -755,14 +853,29 @@ onMounted(async () => {
   margin-left: 0.4rem;
 }
 
+/* Título do livro em texto forte (o @nome já é o link colorido) */
 .book-link {
-  color: var(--main-color);
+  color: var(--text-primary);
   text-decoration: none;
   font-weight: 600;
 }
 
 .book-link:hover {
+  color: var(--main-color);
   text-decoration: underline;
+}
+
+.feed-meta.many {
+  display: block;
+}
+
+.many-item {
+  white-space: normal;
+}
+
+.book-link.small {
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 

@@ -93,27 +93,71 @@
 
     <template v-else>
       <section
-        v-if="readingBooks.length"
         class="shelf reading-shelf"
         aria-labelledby="home-reading-title"
       >
         <div class="shelf-head">
           <h2 id="home-reading-title">{{ t('home.readingNow') }}</h2>
           <router-link
+            v-if="readingTotal > READING_SHOWN"
             :to="{ name: 'library', query: { status: 'reading' } }"
             class="see-all"
           >{{ t('home.seeReading') }}</router-link>
         </div>
-        <div class="shelf-row">
-          <BookItem
-            v-for="book in readingBooks"
+
+        <div
+          v-if="readingBooks.length"
+          class="reading-grid"
+        >
+          <ReadingNowCard
+            v-for="book in readingBooks.slice(0, READING_SHOWN)"
             :key="book.book_id"
             :book="book"
-            quick-actions
             @updated="reload"
-            @deleted="reload"
           />
         </div>
+
+        <!-- Nada em "Lendo": um convite em vez da seção sumir -->
+        <form
+          v-else
+          class="reading-invite"
+          role="search"
+          @submit.prevent="searchLibrary"
+        >
+          <i
+            class="pi pi-book invite-icon"
+            aria-hidden="true"
+          ></i>
+          <div class="invite-body">
+            <h3>{{ t('home.inviteTitle') }}</h3>
+            <p>{{ t('home.inviteText') }}</p>
+            <div class="invite-search">
+              <label
+                for="home-invite-search"
+                class="sr-only"
+              >{{ t('library.search_label') }}</label>
+              <input
+                id="home-invite-search"
+                v-model="inviteSearch"
+                type="search"
+                class="invite-input"
+                :placeholder="t('library.search_ph')"
+                autocomplete="off"
+              />
+              <Button
+                type="submit"
+                :label="t('common.search')"
+                icon="pi pi-search"
+                :aria-label="t('common.search')"
+                class="btn-action-primary invite-btn"
+              />
+            </div>
+            <router-link
+              :to="{ name: 'library', query: { status: 'want' } }"
+              class="invite-link"
+            >{{ t('home.inviteWant') }}</router-link>
+          </div>
+        </form>
       </section>
 
       <section
@@ -130,29 +174,6 @@
         <div class="shelf-row">
           <BookItem
             v-for="book in recentBooks"
-            :key="book.book_id"
-            :book="book"
-            @updated="reload"
-            @deleted="reload"
-          />
-        </div>
-      </section>
-
-      <section
-        v-if="readBooks.length"
-        class="shelf"
-        aria-labelledby="home-read-title"
-      >
-        <div class="shelf-head">
-          <h2 id="home-read-title">{{ t('home.recentlyRead') }}</h2>
-          <router-link
-            :to="{ name: 'dashboard' }"
-            class="see-all"
-          >{{ t('home.seeStats') }}</router-link>
-        </div>
-        <div class="shelf-row">
-          <BookItem
-            v-for="book in readBooks"
             :key="book.book_id"
             :book="book"
             @updated="reload"
@@ -249,23 +270,29 @@ import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
 import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
+import ReadingNowCard from '../components/ReadingNowCard.vue'
 import AddBookDialog from '../components/AddBookDialog.vue'
 import ReaderName from '../components/ReaderName.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
 import { currentUser } from '../services/session.js'
 import { pendingRequests } from '../services/social.js'
 import { useToast } from 'primevue/usetoast'
+import { useRouter } from 'vue-router'
 
 const SHELF_SIZE = 6
+// "Lendo agora" em destaque: até 3 cards grandes
+const READING_SHOWN = 3
 const ACTIVITY_SIZE = 4
 
 const { t } = useI18n()
 const toast = useToast()
+const router = useRouter()
 
 const loading = ref(true)
 const recentBooks = ref([])
-const readBooks = ref([])
 const readingBooks = ref([])
+const readingTotal = ref(0)
+const inviteSearch = ref('')
 const goal = ref(null)
 const recommendations = ref([])
 const total = ref(0)
@@ -283,34 +310,38 @@ const greeting = computed(() => {
 
 const summary = computed(() => {
   if (loading.value || total.value === 0) return ''
-  const read = goal.value
-    ? t('home.readOfGoal', { n: readThisYear.value, goal: goal.value })
-    : t('home.readThisYear', { n: readThisYear.value }, readThisYear.value)
+  let read
+  if (!goal.value) read = t('home.readThisYear', { n: readThisYear.value }, readThisYear.value)
+  else if (readThisYear.value >= goal.value) read = t('home.goalDone', { n: readThisYear.value, goal: goal.value })
+  else read = t('home.readOfGoal', { n: readThisYear.value, goal: goal.value })
   return `${t('home.totalBooks', { n: total.value }, total.value)} · ${read}`
 })
 
 async function reload() {
   try {
-    const [recent, read, reading, stats] = await Promise.all([
+    const [recent, reading, stats] = await Promise.all([
       api.getBooks({ page: 1, limit: SHELF_SIZE, sort: 'recent', order: 'desc' }),
-      api.getBooks({ page: 1, limit: SHELF_SIZE, sort: 'readDate', order: 'desc', readState: 'true' }),
-      api.getBooks({ page: 1, limit: SHELF_SIZE, sort: 'recent', order: 'desc', readState: 'reading' }),
+      api.getBooks({ page: 1, limit: READING_SHOWN, sort: 'recent', order: 'desc', readState: 'reading' }),
       api.getDashboardStats()
     ])
     readingBooks.value = reading.result || []
+    readingTotal.value = reading.total || 0
     goal.value = stats.goal ?? null
     recentBooks.value = recent.result || []
     total.value = recent.total || 0
-    readBooks.value = read.result || []
     const year = new Date().getFullYear()
     readThisYear.value = stats.readingByYear?.find(entry => Number(entry.year) === year)?.count ?? 0
   } catch {
     recentBooks.value = []
-    readBooks.value = []
     readingBooks.value = []
   } finally {
     loading.value = false
   }
+}
+
+function searchLibrary() {
+  const q = inviteSearch.value.trim()
+  router.push({ name: 'library', query: q ? { q } : {} })
 }
 
 async function loadRecommendations() {
@@ -451,6 +482,96 @@ onMounted(() => {
   gap: 1.25rem;
 }
 
+.reading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.reading-invite {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  padding: 1.5rem;
+  background: var(--bg-panel);
+  border: 1px dashed var(--border-hover);
+  border-radius: 14px;
+}
+
+.invite-icon {
+  font-size: var(--fs-2xl);
+  color: var(--main-color);
+  margin-top: 0.15rem;
+}
+
+.invite-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.invite-body h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+}
+
+.invite-body p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.invite-search {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  max-width: 520px;
+}
+
+.invite-input {
+  flex: 1;
+  min-width: 0;
+  height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--fs-md);
+}
+
+.invite-input:focus {
+  outline: none;
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.18);
+}
+
+.invite-input::placeholder {
+  color: var(--text-muted);
+}
+
+.invite-btn.p-button {
+  height: 2.75rem;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.invite-link {
+  align-self: flex-start;
+  color: var(--main-color);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.invite-link:hover {
+  text-decoration: underline;
+}
+
 .rec-item {
   display: flex;
   flex-direction: column;
@@ -579,6 +700,26 @@ onMounted(() => {
 
   .add-btn-home {
     width: 100%;
+  }
+
+  .reading-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reading-invite {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+  }
+
+  .invite-btn :deep(.p-button-label) {
+    display: none;
+  }
+
+  .invite-btn.p-button {
+    width: 2.75rem;
+    padding: 0;
+    justify-content: center;
   }
 
   /* Celular: a estante rola para o lado, como uma prateleira. O contain

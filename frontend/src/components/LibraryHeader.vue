@@ -45,6 +45,39 @@
             ></i>
           </button>
         </div>
+
+        <!-- Ordenar à mão, ao lado da busca (antes só dentro da gaveta de filtros) -->
+        <label class="sort-quick">
+          <i
+            class="pi pi-sort-alt sort-quick-icon"
+            aria-hidden="true"
+          ></i>
+          <span
+            class="sort-quick-prefix"
+            aria-hidden="true"
+          >{{ t('library.sort_short') }}</span>
+          <span
+            class="sort-quick-value"
+            aria-hidden="true"
+          >{{ currentSortLabel }}</span>
+          <!-- O select transparente cobre o botão todo: clique em qualquer ponto abre a lista do sistema -->
+          <select
+            class="sort-quick-select"
+            :value="filters.sortField"
+            :aria-label="t('library.sort_by')"
+            @change="emitFilter('sortField', $event.target.value)"
+          >
+            <option
+              v-for="option in sortOptions"
+              :key="option.value"
+              :value="option.value"
+            >{{ option.label }}</option>
+          </select>
+          <i
+            class="pi pi-chevron-down sort-quick-chevron"
+            aria-hidden="true"
+          ></i>
+        </label>
       </div>
 
       <div class="actions">
@@ -349,6 +382,8 @@ const tagsList = ref([])
 
 const FIRST_YEAR = 1950
 
+const currentSortLabel = computed(() => sortOptions.value.find(option => option.value === props.filters.sortField)?.label ?? '')
+
 const sortOptions = computed(() => [
   { label: t('library.sort.recent'), value: 'recent' },
   { label: t('library.sort.title'), value: 'title' },
@@ -538,7 +573,72 @@ defineExpose({ reloadOptions: loadOptions })
 
 .search-area {
   flex: 1;
-  max-width: 600px;
+  max-width: 760px;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.search-area .search-input-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.sort-quick {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  height: 2.75rem;
+  padding: 0 2.1rem 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.sort-quick:focus-within {
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
+}
+
+.sort-quick-icon {
+  display: none;
+  font-size: var(--fs-sm);
+}
+
+.sort-quick-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 11rem;
+}
+
+.sort-quick-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.sort-quick-select option {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+
+.sort-quick-chevron {
+  position: absolute;
+  right: 0.85rem;
+  font-size: var(--fs-xs);
+  pointer-events: none;
 }
 
 .search-input-wrapper {
@@ -780,6 +880,24 @@ defineExpose({ reloadOptions: loadOptions })
   .custom-search-input {
     padding-top: 0.6rem;
     padding-bottom: 0.6rem;
+  }
+
+  /* Celular: só o ícone e o valor, para a busca continuar larga */
+  .sort-quick {
+    height: 2.6rem;
+    padding: 0 1.9rem 0 0.75rem;
+  }
+
+  .sort-quick-prefix {
+    display: none;
+  }
+
+  .sort-quick-icon {
+    display: inline;
+  }
+
+  .sort-quick-value {
+    display: none;
   }
 
   .add-btn {

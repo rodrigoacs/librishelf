@@ -27,7 +27,14 @@
     "recSimilar": "{n} leitor parecido com você tem | {n} leitores parecidos com você têm",
     "recPopular": "Na estante de {n} leitor | Na estante de {n} leitores",
     "recAdded": "Na sua lista",
-    "recAddedToast": "\"{title}\" entrou em Quero ler."
+    "recAddedToast": "\"{title}\" entrou em Quero ler.",
+    "goalDone": "{n} lidos este ano · meta de {goal} cumprida",
+    "openBook": "Abrir \"{title}\"",
+    "finished": "Terminei",
+    "finishedToast": "\"{title}\" foi para Lidos.",
+    "inviteTitle": "O que você está lendo?",
+    "inviteText": "Marque um livro como Lendo e ele aparece aqui, com a data em que você começou.",
+    "inviteWant": "Escolher na minha lista Quero ler"
   },
   "menu": {
     "home": "Início",
@@ -188,7 +195,8 @@
     "view_grid": "Grade",
     "view_list": "Lista",
     "row_rating": "Nota {n} de 5",
-    "read_month_chip": "Lidos em {period}"
+    "read_month_chip": "Lidos em {period}",
+    "sort_short": "Ordenar:"
   },
   "bookDialog": {
     "bookCover": "Capa do Livro",
@@ -630,7 +638,12 @@
     "no_followers": "Ninguém segue você ainda.",
     "remove": "Remover",
     "remove_confirm": "Remover {'@'}{name} dos seus seguidores? A pessoa não é avisada.",
-    "private_library": "Biblioteca privada"
+    "private_library": "Biblioteca privada",
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "event_added_many": "adicionou {n} livros",
+    "event_read_many": "terminou de ler {n} livros",
+    "and_more": "e mais {n}"
   },
   "forgot": {
     "title": "Esqueci minha senha",
@@ -752,5 +765,23 @@
     "willMerge": "\"{name}\" já existe: os livros serão juntados nele.",
     "mergedToast": "Agora tudo está em \"{name}\".",
     "renamedToast": "Renomeado para \"{name}\"."
+  },
+  "pageTitle": {
+    "home": "Início",
+    "library": "Biblioteca",
+    "authors": "Autores",
+    "publishers": "Editoras",
+    "tags": "Categorias",
+    "dashboard": "Painel",
+    "community": "Comunidade",
+    "settings": "Conta",
+    "login": "Entrar",
+    "register": "Criar conta",
+    "forgotPassword": "Esqueci a senha",
+    "resetPassword": "Nova senha",
+    "verifyEmail": "Confirmar e-mail",
+    "publicLibrary": "Biblioteca de {name}",
+    "privacy": "Privacidade",
+    "notFound": "Página não encontrada"
   }
 }

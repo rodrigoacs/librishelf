@@ -196,6 +196,10 @@
           :to="{ name: 'library' }"
           class="kpi-card total"
         >
+          <i
+            class="pi pi-arrow-up-right kpi-arrow"
+            aria-hidden="true"
+          ></i>
           <div class="kpi-icon"><i class="pi pi-book" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ $t('dashboard.totalBooks') }}</span>
@@ -207,6 +211,10 @@
           :to="{ name: 'library', query: { status: 'read' } }"
           class="kpi-card read"
         >
+          <i
+            class="pi pi-arrow-up-right kpi-arrow"
+            aria-hidden="true"
+          ></i>
           <div class="kpi-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ $t('dashboard.readBooks') }}</span>
@@ -219,6 +227,10 @@
           :to="{ name: 'library', query: { status: 'reading' } }"
           class="kpi-card reading"
         >
+          <i
+            class="pi pi-arrow-up-right kpi-arrow"
+            aria-hidden="true"
+          ></i>
           <div class="kpi-icon"><i class="pi pi-eye" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ t('dashboard.readingNow') }}</span>
@@ -230,6 +242,10 @@
           :to="{ name: 'library', query: { status: 'want' } }"
           class="kpi-card want"
         >
+          <i
+            class="pi pi-arrow-up-right kpi-arrow"
+            aria-hidden="true"
+          ></i>
           <div class="kpi-icon"><i class="pi pi-bookmark" aria-hidden="true"></i></div>
           <div class="kpi-info">
             <span class="label">{{ t('dashboard.wantToRead') }}</span>
@@ -285,12 +301,35 @@
               class="no-data"
             >{{ $t('dashboard.noTagsData') }}</div>
             <Chart
-              v-else
+              v-else-if="stats.topTags.length <= DONUT_MAX"
               type="doughnut"
               :data="tagsChartData"
               :options="doughnutOptions"
               class="h-full w-full"
             />
+            <!-- Mais de 5 categorias: barras leem melhor que a rosca (6 cores só) -->
+            <ul
+              v-else
+              class="tag-bars"
+            >
+              <li
+                v-for="tag in stats.topTags"
+                :key="tag.name"
+              >
+                <router-link
+                  :to="{ name: 'library', query: { tags: tag.name } }"
+                  class="tag-bar-row"
+                  :style="{ '--bar-color': colorFor(tag.name), '--bar-width': `${Math.max(4, (tag.count / topTagMax) * 100)}%` }"
+                >
+                  <span class="tag-bar-name">{{ tag.name }}</span>
+                  <span
+                    class="tag-bar-track"
+                    aria-hidden="true"
+                  ><span class="tag-bar-fill"></span></span>
+                  <span class="tag-bar-count">{{ tag.count }}</span>
+                </router-link>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -577,6 +616,10 @@ const tagsChartData = computed(() => ({
   }]
 }))
 
+// Até 5 categorias a rosca funciona; acima disso vira lista com barras
+const DONUT_MAX = 5
+const topTagMax = computed(() => Math.max(1, ...stats.value.topTags.map(tag => tag.count)))
+
 const doughnutOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
@@ -686,6 +729,7 @@ onMounted(loadStats)
 }
 
 .kpi-card {
+  position: relative;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -693,12 +737,92 @@ onMounted(loadStats)
   display: flex;
   align-items: center;
   gap: 1rem;
-  transition: transform 0.2s;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
 }
 
 .kpi-card:hover {
   transform: translateY(-3px);
   border-color: var(--border-hover);
+}
+
+/* Seta discreta: o cartão leva para a biblioteca filtrada */
+.kpi-arrow {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.kpi-card:hover .kpi-arrow,
+.kpi-card:focus-visible .kpi-arrow {
+  color: var(--kpi-color);
+  transform: translate(2px, -2px);
+}
+
+.tag-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow-y: auto;
+}
+
+.tag-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tag-bar-row:hover {
+  background: var(--bg-hover);
+}
+
+.tag-bar-row:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+}
+
+.tag-bar-name {
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-bar-track {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--bg-input);
+  overflow: hidden;
+}
+
+.tag-bar-fill {
+  display: block;
+  height: 100%;
+  width: var(--bar-width);
+  border-radius: 999px;
+  background: var(--bar-color);
+}
+
+.tag-bar-count {
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  text-align: right;
 }
 
 .kpi-icon {
