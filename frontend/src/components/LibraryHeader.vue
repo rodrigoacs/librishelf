@@ -877,6 +877,10 @@ defineExpose({ reloadOptions: loadOptions })
   color: var(--text-primary);
 }
 
+.p-dropdown-label {
+  background-color: #00000000;
+}
+
 .custom-selectbutton .p-button {
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
