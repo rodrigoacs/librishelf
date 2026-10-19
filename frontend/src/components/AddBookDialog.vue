@@ -2,572 +2,96 @@
   <Dialog
     v-model:visible="visible"
     :modal="true"
-    :dismissableMask="true"
-    class="modern-add-dialog"
-    :breakpoints="{ '960px': '75vw', '640px': '95vw' }"
-    :style="{ width: '900px', maxWidth: '95vw' }"
+    :dismissableMask="false"
+    class="book-form-dialog"
+    :style="{ width: '960px', maxWidth: 'calc(100vw - 2rem)' }"
     :showHeader="false"
     :aria-label="t('book.dialog_label')"
   >
-    <div class="dialog-body">
-      <button
-        type="button"
+    <div class="dialog-shell">
+      <IconButton
         class="close-btn"
-        :aria-label="t('common.close')"
+        icon="pi pi-times"
+        :label="t('common.close')"
         @click="visible = false"
-      >
-        <i
-          class="pi pi-times"
-          aria-hidden="true"
-        ></i>
-      </button>
-
-      <div class="cover-section">
-        <img
-          v-if="previewUrl"
-          :src="previewUrl"
-          class="blur-bg"
-          alt=""
-          aria-hidden="true"
-        />
-
-        <button
-          type="button"
-          class="upload-container"
-          :aria-label="t('book.select_cover')"
-          @click="fileInput?.click()"
-        >
-          <span
-            v-if="previewUrl"
-            class="preview-wrapper"
-          >
-            <img
-              :src="previewUrl"
-              class="cover-preview"
-              alt=""
-            />
-            <span
-              class="change-overlay"
-              aria-hidden="true"
-            >
-              <i class="pi pi-refresh"></i>
-              <span>{{ t('book.change') }}</span>
-            </span>
-          </span>
-
-          <span
-            v-else
-            class="upload-placeholder"
-          >
-            <span
-              class="icon-circle"
-              aria-hidden="true"
-            >
-              <i class="pi pi-camera"></i>
-            </span>
-            <span class="upload-text">{{ t('book.add_cover') }}</span>
-            <span class="upload-subtext">{{ t('book.click_select') }}</span>
-          </span>
-        </button>
-
-        <input
-          type="file"
-          ref="fileInput"
-          accept="image/*"
-          class="hidden-input"
-          tabindex="-1"
-          aria-hidden="true"
-          @change="onFileSelect"
-        />
-      </div>
-
-      <div class="form-section">
-        <div class="form-header">
-          <h2>{{ t('book.new_title') }}</h2>
-          <p>{{ t('book.new_subtitle') }}</p>
-        </div>
-
-        <form
-          class="form-content"
-          novalidate
-          @submit.prevent="saveBook"
-        >
-          <div class="isbn-lookup">
-            <label for="new-book-isbn">{{ t('book.isbn') }}</label>
-            <div class="isbn-row">
-              <input
-                id="new-book-isbn"
-                v-model="book.isbn"
-                class="modern-input meta-input"
-                :placeholder="t('isbn.placeholder')"
-                inputmode="numeric"
-                autocomplete="off"
-                aria-describedby="new-book-isbn-hint"
-                @keydown.enter.prevent="lookupIsbn"
-              />
-              <Button
-                type="button"
-                :label="t('isbn.search')"
-                icon="pi pi-search"
-                class="p-button-outlined isbn-btn"
-                :loading="lookingUp"
-                :disabled="!book.isbn.trim()"
-                @click="lookupIsbn"
-              />
-            </div>
-            <small
-              id="new-book-isbn-hint"
-              class="isbn-hint"
-              :class="{ found: lookupState === 'found', missing: lookupState === 'missing' }"
-              aria-live="polite"
-            >{{ lookupMessage }}</small>
-          </div>
-
-          <div class="input-group main-group">
-            <label
-              for="new-book-title"
-              class="sr-only"
-            >{{ t('book.title_ph') }}</label>
-            <input
-              id="new-book-title"
-              v-model="book.title"
-              class="modern-input title-input"
-              :placeholder="t('book.title_ph')"
-              :class="{ 'error': submitted && !book.title.trim() }"
-              :aria-invalid="submitted && !book.title.trim()"
-              aria-describedby="new-book-title-error"
-              required
-            />
-            <small
-              v-if="submitted && !book.title.trim()"
-              id="new-book-title-error"
-              class="error-msg"
-            >{{ t('book.validation_title') }}</small>
-          </div>
-
-          <div class="input-group">
-            <label
-              for="new-book-authors"
-              class="sr-only"
-            >{{ t('book.author_ph') }}</label>
-            <AuthorsInput
-              v-model="book.authors"
-              input-id="new-book-authors"
-              :placeholder="`${t('book.author_ph')} *`"
-              :invalid="submitted && book.authors.length === 0"
-            />
-            <small
-              v-if="submitted && book.authors.length === 0"
-              id="new-book-authors-error"
-              class="error-msg"
-            >{{ t('book.validation_authors') }}</small>
-          </div>
-
-          <div class="input-group">
-            <i
-              class="pi pi-tags input-icon"
-              aria-hidden="true"
-            ></i>
-            <label
-              for="new-book-tags"
-              class="sr-only"
-            >{{ t('book.tags_ph') }}</label>
-            <input
-              id="new-book-tags"
-              v-model="book.tags"
-              class="modern-input"
-              :placeholder="t('book.tags_ph')"
-            />
-          </div>
-
-          <div class="series-grid">
-            <div class="input-group">
-              <label for="new-book-series">{{ t('series.name') }}</label>
-              <input
-                id="new-book-series"
-                v-model="book.series"
-                class="modern-input meta-input"
-                list="new-book-series-options"
-                maxlength="200"
-                autocomplete="off"
-                :placeholder="t('series.namePlaceholder')"
-                @focus="loadSeriesOptions"
-              />
-              <datalist id="new-book-series-options">
-                <option
-                  v-for="item in seriesOptions"
-                  :key="item.name"
-                  :value="item.name"
-                ></option>
-              </datalist>
-            </div>
-            <div class="input-group">
-              <label for="new-book-series-index">{{ t('series.volume') }}</label>
-              <input
-                id="new-book-series-index"
-                v-model="book.seriesIndex"
-                class="modern-input meta-input"
-                inputmode="decimal"
-                maxlength="7"
-                autocomplete="off"
-                placeholder="-"
-              />
-            </div>
-          </div>
-
-          <div class="dates-grid">
-            <div class="input-group">
-              <label for="new-book-read-date">{{ t('book.read_status') }}</label>
-              <div class="date-wrapper">
-                <i
-                  class="pi"
-                  :class="book.readDate ? 'pi-check-circle text-theme' : 'pi-circle text-gray'"
-                  aria-hidden="true"
-                ></i>
-                <Calendar
-                  inputId="new-book-read-date"
-                  v-model="book.readDate"
-                  :maxDate="today"
-                  dateFormat="dd/mm/yy"
-                  :placeholder="t('book.unread')"
-                  class="modern-calendar"
-                  :showIcon="false"
-                  showButtonBar
-                />
-              </div>
-            </div>
-
-            <div class="input-group">
-              <label for="new-book-pub-date">{{ t('book.pub_date') }}</label>
-              <div class="date-wrapper">
-                <i
-                  class="pi pi-calendar text-gray"
-                  aria-hidden="true"
-                ></i>
-                <Calendar
-                  inputId="new-book-pub-date"
-                  v-model="book.pubDate"
-                  dateFormat="dd/mm/yy"
-                  :placeholder="t('book.pub_date')"
-                  class="modern-calendar"
-                  :showIcon="false"
-                  showButtonBar
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="meta-grid">
-            <div class="input-group">
-              <label for="new-book-publisher">{{ t('book.publisher') }}</label>
-              <input
-                id="new-book-publisher"
-                v-model="book.publisher"
-                class="modern-input meta-input"
-                placeholder="-"
-              />
-            </div>
-            <div class="input-group">
-              <span
-                id="new-book-rating-label"
-                class="group-label"
-              >{{ t('rating.label') }}</span>
-              <StarRating
-                v-model="book.rating"
-                size="lg"
-                :label="t('rating.label')"
-              />
-            </div>
-          </div>
-
-          <div class="form-footer">
-            <Button
-              type="button"
-              :label="t('common.cancel')"
-              class="p-button-text p-button-secondary"
-              @click="visible = false"
-            />
-            <Button
-              type="submit"
-              :label="t('common.new')"
-              icon="pi pi-plus"
-              class="btn-action-primary"
-              :loading="loading"
-            />
-          </div>
-        </form>
-      </div>
+      />
+      <BookEditForm
+        v-if="visible"
+        :key="formKey"
+        mode="create"
+        id-prefix="new-book"
+        @saved="onSaved"
+        @cancel="visible = false"
+      />
     </div>
   </Dialog>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
-import Button from 'primevue/button'
-import Calendar from 'primevue/calendar'
-import { useToast } from 'primevue/usetoast'
-import api from '../services/api.js'
-import AuthorsInput from './AuthorsInput.vue'
-import StarRating from './StarRating.vue'
 import { useI18n } from 'vue-i18n'
-import { toApiDate } from '../utils/dates.js'
-import { validateImageFile, createPreviewHandle } from '../utils/files.js'
+import BookEditForm from './book/BookEditForm.vue'
+import IconButton from './form/IconButton.vue'
 
 const { t } = useI18n()
-
-// Data de leitura não pode estar no futuro (o servidor também recusa).
-const today = new Date()
 
 const props = defineProps({
   visible: Boolean
 })
 
 const emit = defineEmits(['update:visible', 'save'])
-const toast = useToast()
 
 const visible = ref(props.visible)
-const loading = ref(false)
-const submitted = ref(false)
-const fileInput = ref(null)
-const previewUrl = ref(null)
-const selectedFile = ref(null)
-const preview = createPreviewHandle()
+// Formulário novo a cada abertura
+const formKey = ref(0)
 
-const initialBookState = {
-  title: '',
-  authors: [],
-  publisher: '',
-  tags: '',
-  isbn: '',
-  readDate: null,
-  pubDate: null,
-  rating: null,
-  series: '',
-  seriesIndex: ''
-}
-
-// Séries já usadas, para autocompletar (carrega na primeira vez que o campo recebe foco).
-const seriesOptions = ref([])
-async function loadSeriesOptions() {
-  if (seriesOptions.value.length) return
-  try {
-    seriesOptions.value = await api.getSeries()
-  } catch {
-    seriesOptions.value = []
-  }
-}
-
-// Resultado da busca por ISBN: as chaves do Open Library só valem para o ISBN
-// buscado; se a pessoa trocar o ISBN depois, elas não são enviadas.
-const lookup = reactive({ isbn: null, olWorkKey: null, olEditionKey: null, coverId: null })
-const lookingUp = ref(false)
-const lookupState = ref('idle') // idle | found | missing | error
-
-const lookupMessage = computed(() => {
-  if (lookupState.value === 'found') return t('isbn.found')
-  if (lookupState.value === 'missing') return t('isbn.not_found')
-  if (lookupState.value === 'error') return t('isbn.error')
-  return t('isbn.hint')
+watch(() => props.visible, value => {
+  visible.value = value
+  if (value) formKey.value++
 })
 
-const book = reactive({ ...initialBookState })
+watch(visible, value => emit('update:visible', value))
 
-watch(() => props.visible, (newVal) => {
-  visible.value = newVal
-  if (newVal) resetForm()
-})
-
-watch(visible, (newVal) => {
-  emit('update:visible', newVal)
-  if (!newVal) preview.clear()
-})
-
-function resetForm() {
-  Object.assign(book, { ...initialBookState, authors: [] })
-  selectedFile.value = null
-  previewUrl.value = null
-  preview.clear()
-  submitted.value = false
-  clearLookup()
-  lookupState.value = 'idle'
+function onSaved(result) {
+  emit('save', result)
+  visible.value = false
 }
-
-function clearLookup() {
-  Object.assign(lookup, { isbn: null, olWorkKey: null, olEditionKey: null, coverId: null })
-  if (!selectedFile.value) previewUrl.value = null
-}
-
-function parseApiDate(value) {
-  if (!value) return null
-  const [year, month, day] = value.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-
-// Preenche só os campos vazios: o que a pessoa já digitou tem prioridade.
-async function lookupIsbn() {
-  const isbn = book.isbn.trim()
-  if (!isbn || lookingUp.value) return
-
-  lookingUp.value = true
-  try {
-    const found = await api.lookupIsbn(isbn)
-
-    if (!book.title.trim() && found.title) book.title = found.title
-    if (book.authors.length === 0 && found.authors?.length) book.authors = [...found.authors]
-    if (!book.publisher.trim() && found.publisher) book.publisher = found.publisher
-    if (!book.pubDate && found.pubDate) book.pubDate = parseApiDate(found.pubDate)
-
-    Object.assign(lookup, {
-      isbn,
-      olWorkKey: found.olWorkKey,
-      olEditionKey: found.olEditionKey,
-      coverId: found.coverId
-    })
-
-    if (!selectedFile.value && found.coverId) {
-      previewUrl.value = api.isbnCoverUrl(found.coverId)
-    }
-
-    lookupState.value = 'found'
-  } catch (error) {
-    clearLookup()
-    if (error.status === 404) {
-      lookupState.value = 'missing'
-    } else if (error.status === 400) {
-      lookupState.value = 'idle'
-      toast.add({ severity: 'warn', summary: t('common.error'), detail: t('isbn.invalid'), life: 4000 })
-    } else {
-      lookupState.value = 'error'
-    }
-  } finally {
-    lookingUp.value = false
-  }
-}
-
-watch(() => book.isbn, (value) => {
-  if (lookup.isbn && value.trim() !== lookup.isbn) {
-    clearLookup()
-    lookupState.value = 'idle'
-  }
-})
-
-function onFileSelect(event) {
-  const file = event.target.files[0]
-  event.target.value = ''
-  if (!file) return
-
-  const problem = validateImageFile(file)
-  if (problem) {
-    toast.add({ severity: 'warn', summary: t('common.error'), detail: t(problem.key, problem.params || {}), life: 4000 })
-    return
-  }
-
-  selectedFile.value = file
-  previewUrl.value = preview.set(file)
-  lookup.coverId = null
-}
-
-async function saveBook() {
-  submitted.value = true
-
-  if (!book.title.trim()) {
-    toast.add({ severity: 'warn', summary: t('common.error'), detail: t('book.validation_title'), life: 3000 })
-    return
-  }
-
-  if (book.authors.length === 0) {
-    toast.add({ severity: 'warn', summary: t('common.error'), detail: t('book.validation_authors'), life: 3000 })
-    return
-  }
-
-  loading.value = true
-
-  try {
-    const formData = new FormData()
-
-    formData.append('title', book.title.trim())
-    // Um campo "authors" por autor: nomes podem conter vírgula.
-    book.authors.forEach(name => formData.append('authors', name))
-    formData.append('publisher', book.publisher || '')
-    formData.append('isbn', book.isbn || '')
-    formData.append('tags', book.tags || '')
-
-    if (book.pubDate) formData.append('pubDate', toApiDate(book.pubDate))
-    if (book.readDate) formData.append('readDate', toApiDate(book.readDate))
-    if (book.rating) formData.append('rating', String(book.rating))
-    if (book.series?.trim()) formData.append('series', book.series.trim())
-    if (String(book.seriesIndex ?? '').trim()) formData.append('seriesIndex', String(book.seriesIndex).trim())
-
-    if (lookup.isbn && lookup.isbn === book.isbn.trim()) {
-      if (lookup.olWorkKey) formData.append('olWorkKey', lookup.olWorkKey)
-      if (lookup.olEditionKey) formData.append('olEditionKey', lookup.olEditionKey)
-      if (!selectedFile.value && lookup.coverId) formData.append('olCoverId', String(lookup.coverId))
-    }
-
-    if (selectedFile.value) {
-      formData.append('coverImage', selectedFile.value)
-    }
-
-    const result = await api.createBook(formData)
-
-    const expectedCover = selectedFile.value || formData.has('olCoverId')
-    if (expectedCover && result?.coverSaved === false) {
-      toast.add({ severity: 'warn', summary: t('common.success'), detail: t('book.cover_not_saved'), life: 6000 })
-    } else {
-      toast.add({ severity: 'success', summary: t('common.success'), detail: t('book.toast_added'), life: 3000 })
-    }
-
-    emit('save', result)
-    visible.value = false
-  } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message || t('book.toast_error'), life: 4000 })
-  } finally {
-    loading.value = false
-  }
-}
-
-onBeforeUnmount(() => preview.clear())
 </script>
 
 <style>
-.p-dialog.modern-add-dialog {
-  border: 1px solid var(--border-color) !important;
-  border-radius: 16px !important;
-  overflow: hidden !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-  background-color: var(--bg-panel) !important;
-}
-
-.modern-add-dialog .p-dialog-content {
-  padding: 0 !important;
+/* Moldura dos diálogos de livro (Novo livro e o livro aberto) */
+.p-dialog.book-form-dialog {
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   background-color: var(--bg-panel);
+  max-height: min(92vh, 860px);
 }
 
-.modern-add-dialog .p-dialog-header {
-  display: none !important;
+.book-form-dialog .p-dialog-content {
+  padding: 0;
+  background-color: var(--bg-panel);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.btn-action-primary {
-  background-color: var(--main-solid) !important;
-  border-color: var(--main-solid) !important;
-  color: var(--on-main) !important;
-  font-weight: 600 !important;
-}
-
-.btn-action-primary:hover {
-  filter: brightness(1.1);
+@media (max-width: 768px) {
+  .p-dialog.book-form-dialog {
+    max-height: calc(100dvh - 2rem);
+  }
 }
 </style>
 
 <style scoped>
-.dialog-body {
-  display: flex;
-  flex-direction: row;
-  min-height: 550px;
-  width: 100%;
+.dialog-shell {
   position: relative;
-  background-color: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(92vh, 860px);
 }
 
 .close-btn {
@@ -575,418 +99,16 @@ onBeforeUnmount(() => preview.clear())
   top: 1rem;
   right: 1rem;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.2);
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  color: var(--text-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.close-btn:hover {
-  background: rgba(var(--main-color-rgb), 0.2);
-  color: var(--main-color);
-}
-
-.cover-section {
-  flex: 1;
-  max-width: 350px;
-  background-color: var(--bg-input);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  padding: 2rem;
-}
-
-.blur-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(40px) brightness(0.4);
-  z-index: 1;
-  transform: scale(1.2);
-}
-
-button.upload-container {
-  border: none;
-  padding: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  width: 100%;
-}
-
-.upload-container {
-  width: 100%;
-  max-width: 250px;
-  aspect-ratio: 2/3;
-  border-radius: 12px;
-  border: 2px dashed var(--border-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 2;
-  background-color: rgba(24, 24, 27, 0.5);
-}
-
-.upload-container:hover {
-  border-color: var(--main-color);
-  background-color: rgba(var(--main-color-rgb), 0.1);
-}
-
-.upload-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #a1a1aa;
-}
-
-.icon-circle {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-  transition: transform 0.2s;
-}
-
-.upload-container:hover .icon-circle {
-  transform: scale(1.1);
-  background-color: var(--main-solid);
-  color: var(--on-main);
-}
-
-.icon-circle i {
-  font-size: var(--fs-xl);
-}
-
-.upload-text,
-.upload-subtext {
-  display: block;
-}
-
-.upload-text {
-  font-weight: 600;
-  font-size: var(--fs-md);
-  color: #e4e4e7;
-}
-
-.upload-subtext {
-  font-size: var(--fs-sm);
-  margin-top: 0.25rem;
-}
-
-.hidden-input {
-  display: none;
-}
-
-.preview-wrapper {
-  display: block;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.cover-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.change-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-  color: white;
-  gap: 0.5rem;
-}
-
-.upload-container:focus-visible .change-overlay,
-.preview-wrapper:hover .change-overlay {
-  opacity: 1;
-}
-
-.form-section {
-  flex: 1.5;
-  padding: 3rem;
-  background-color: var(--bg-panel);
-  color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  max-height: 90vh;
-}
-
-.form-header {
-  margin-bottom: 2rem;
-}
-
-.form-header h2 {
-  font-size: var(--fs-2xl);
-  margin: 0 0 0.5rem 0;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.form-header p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--fs-md);
-}
-
-.form-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  flex: 1;
-}
-
-.input-group {
-  position: relative;
-  width: 100%;
-}
-
-.input-group label {
-  display: block;
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.5px;
-}
-
-.input-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-
-.modern-input {
-  width: 100%;
-  background-color: var(--bg-input);
-  border: 1px solid transparent;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: var(--fs-md);
-  transition: all 0.2s;
-}
-
-.input-group:has(.input-icon) .modern-input {
-  padding-left: 2.8rem;
-}
-
-.modern-input:focus {
-  outline: none;
-  border-color: var(--main-color);
-  background-color: var(--bg-hover);
-}
-
-.modern-input::placeholder {
-  color: var(--text-muted);
-}
-
-.title-input {
-  font-size: var(--fs-xl);
-  font-weight: 700;
-  padding: 1rem;
-  background-color: transparent;
-  border-bottom: 2px solid var(--border-color);
-  border-radius: 0;
-}
-
-.title-input:focus {
-  background-color: transparent;
-  border-bottom-color: var(--main-color);
-}
-
-.title-input.error {
-  border-bottom-color: #ef4444;
-}
-
-.error-msg {
-  color: #ef4444;
-  font-size: var(--fs-sm);
-  margin-top: 0.25rem;
-  display: block;
-}
-
-.dates-grid,
-.isbn-lookup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.isbn-lookup label,
-.group-label {
-  display: block;
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.group-label {
-  margin-bottom: 0.5rem;
-}
-
-.isbn-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.isbn-row .modern-input {
-  flex: 1;
-  min-width: 0;
-}
-
-.isbn-btn {
-  flex-shrink: 0;
-}
-
-.isbn-hint {
-  font-size: var(--fs-xs);
-  color: var(--text-secondary);
-}
-
-.isbn-hint.found {
-  color: var(--main-color);
-}
-
-.isbn-hint.missing {
-  color: #f59e0b;
-}
-
-.meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.series-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 6.5rem;
-  gap: 1rem;
-}
-
-.date-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background-color: var(--bg-input);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  transition: border-color 0.2s;
-}
-
-.date-wrapper:focus-within {
-  border-color: var(--main-color);
-}
-
-.text-theme {
-  color: var(--main-color);
-}
-
-.text-gray {
-  color: var(--text-muted);
-}
-
-:deep(.modern-calendar .p-inputtext) {
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  padding: 0;
-  font-size: var(--fs-md);
-  width: 100%;
-}
-
-:deep(.modern-calendar .p-inputtext:enabled:focus) {
-  box-shadow: none;
-}
-
-.form-footer {
-  margin-top: 3rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.p-button.p-button-secondary.p-button-text {
-  color: var(--text-secondary) !important;
-}
-
-.p-button.p-button-secondary.p-button-text:hover {
-  color: var(--text-primary) !important;
-  background-color: var(--bg-hover) !important;
 }
 
 @media (max-width: 768px) {
-  .dialog-body {
-    flex-direction: column;
-    min-height: 0;
+  .dialog-shell {
     max-height: calc(100dvh - 2rem);
   }
 
-  .cover-section {
-    flex: none;
-    max-width: 100%;
-    padding: 1rem;
-    height: auto;
-  }
-
-  .upload-container {
-    max-width: 110px;
-  }
-
-  .form-section {
-    flex: 1;
-    min-height: 0;
-    max-height: none;
-    padding: 1.25rem;
-  }
-
-  .form-header h2 {
-    font-size: var(--fs-xl);
-  }
-
-  .dates-grid,
-  .meta-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .close-btn {
+    top: 0.75rem;
+    right: 0.75rem;
   }
 }
 </style>

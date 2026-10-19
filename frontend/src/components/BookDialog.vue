@@ -3,26 +3,39 @@
     v-model:visible="visible"
     :modal="true"
     :dismissableMask="!isEditing"
-    @hide="closeDialog"
-    class="modern-book-dialog"
-    :breakpoints="{ '960px': '75vw', '640px': '95vw' }"
-    :style="{ width: '900px', maxWidth: '95vw' }"
+    class="book-form-dialog"
+    :style="{ width: isEditing ? '960px' : '900px', maxWidth: 'calc(100vw - 2rem)' }"
     :showHeader="false"
     :aria-label="book.title || t('bookDialog.dialog_label')"
+    @hide="closeDialog"
   >
-    <div class="dialog-body">
-      <button
-        type="button"
+    <div
+      class="dialog-shell"
+      :class="{ viewing: !isEditing }"
+    >
+      <IconButton
         class="close-btn"
-        :aria-label="t('common.close')"
+        icon="pi pi-times"
+        :label="t('common.close')"
         @click="visible = false"
-      >
-        <i
-          class="pi pi-times"
-          aria-hidden="true"
-        ></i>
-      </button>
+      />
 
+      <BookEditForm
+        v-if="isEditing"
+        mode="edit"
+        :book-id="bookId"
+        :initial="book"
+        :cover-version="coverVersion"
+        :confirm-message="t('bookDialog.confirmSave')"
+        id-prefix="book-edit"
+        @saved="onSaved"
+        @cancel="isEditing = false"
+      />
+
+      <div
+        v-else
+        class="dialog-body"
+      >
       <div
         class="cover-section"
         :style="coverMissing ? { '--cover-color': colorFor(book.title || book.authors) } : undefined"
@@ -36,14 +49,7 @@
           aria-hidden="true"
         />
         <div class="image-container">
-          <component
-            :is="isEditing ? 'button' : 'div'"
-            :type="isEditing ? 'button' : undefined"
-            class="cover-wrapper"
-            :class="{ 'editable': isEditing }"
-            :aria-label="isEditing ? t('bookDialog.changeCover') : undefined"
-            @click="triggerFileInput"
-          >
+          <div class="cover-wrapper">
             <img
               v-if="!coverMissing"
               :key="displayCoverUrl"
@@ -58,483 +64,33 @@
               :title="book.title"
               :author="book.authors"
             />
-            <span
-              v-if="isEditing"
-              class="edit-overlay"
-              aria-hidden="true"
-            >
-              <i class="pi pi-camera"></i>
-              <span>{{ t('bookDialog.changeCover') }}</span>
-            </span>
-          </component>
-          <input
-            type="file"
-            ref="fileInput"
-            style="display: none"
-            accept="image/*"
-            tabindex="-1"
-            aria-hidden="true"
-            @change="onFileSelected"
-          />
+          </div>
         </div>
       </div>
 
-      <div class="details-section">
-        <div class="details-header">
-          <div class="title-area">
-            <template v-if="isEditing">
-              <label
-                for="book-edit-title"
-                class="sr-only"
-              >{{ t('bookDialog.bookTitle') }}</label>
-              <input
-                id="book-edit-title"
-                v-model="book.title"
-                class="modern-input title-input"
-                :placeholder="t('bookDialog.bookTitle')"
-                :aria-invalid="submitted && !book.title.trim()"
-              />
-              <label
-                for="book-edit-authors"
-                class="sr-only"
-              >{{ t('bookDialog.authorNames') }}</label>
-              <AuthorsInput
-                v-model="book.authorNames"
-                input-id="book-edit-authors"
-                class="author-input"
-                :placeholder="t('bookDialog.authorNames')"
-                :invalid="submitted && book.authorNames.length === 0"
-              />
-              <StarRating
-                v-model="book.rating"
-                class="rating-row"
-                :label="t('rating.label')"
-              />
-            </template>
-            <template v-else>
-              <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}
-              </h1>
-              <h2 class="book-author">{{ book.authors || (loading ? '' : t('bookDialog.unknownAuthor')) }}</h2>
-              <template v-if="book.series && !loading">
-                <router-link
-                  v-if="!isReadOnly"
-                  :to="{ name: 'library', query: { series: book.series, sort: 'series', order: 'asc' } }"
-                  class="series-line"
-                  :title="t('series.seeAll', { series: book.series })"
-                  @click="visible = false"
-                >
-                  <i
-                    class="pi pi-clone"
-                    aria-hidden="true"
-                  ></i>
-                  {{ seriesLabel }}
-                </router-link>
-                <span
-                  v-else
-                  class="series-line"
-                >
-                  <i
-                    class="pi pi-clone"
-                    aria-hidden="true"
-                  ></i>
-                  {{ seriesLabel }}
-                </span>
-              </template>
-              <template v-if="!loading && !loadFailed">
-                <StarRating
-                  v-if="!isReadOnly"
-                  :model-value="book.rating"
-                  class="rating-row"
-                  :disabled="ratingSaving"
-                  :label="t('rating.label')"
-                  @update:model-value="quickRate"
-                />
-                <StarRating
-                  v-else-if="book.rating"
-                  :model-value="book.rating"
-                  class="rating-row"
-                  readonly
-                />
-              </template>
-            </template>
-          </div>
+        <div class="details-section">
+          <BookView
+            :book="book"
+            :is-read-only="isReadOnly"
+            :loading="loading"
+            :load-failed="loadFailed"
+            :read-saving="readSaving"
+            :rating-saving="ratingSaving"
+            @change-status="changeStatus"
+            @rate="quickRate"
+            @navigate="visible = false"
+          />
 
-        </div>
+          <BookCommunity
+            v-if="!isReadOnly && !loading && !loadFailed"
+            :book-id="bookId"
+          />
 
-        <!-- Edição: formulário completo -->
-        <div
-          v-if="isEditing"
-          class="details-content"
-        >
-          <div class="info-group">
-            <label for="book-edit-tags">{{ t('bookDialog.tags') }}</label>
-            <input
-              id="book-edit-tags"
-              v-model="book.tags"
-              class="modern-input"
-              :placeholder="t('bookDialog.tagsPlaceholder')"
-            />
-          </div>
-
-          <div class="series-grid">
-            <div class="info-group">
-              <label for="book-series">{{ t('series.name') }}</label>
-              <input
-                id="book-series"
-                v-model="book.series"
-                class="modern-input"
-                list="book-series-options"
-                maxlength="200"
-                autocomplete="off"
-                :placeholder="t('series.namePlaceholder')"
-              />
-              <datalist id="book-series-options">
-                <option
-                  v-for="item in seriesOptions"
-                  :key="item.name"
-                  :value="item.name"
-                ></option>
-              </datalist>
-            </div>
-            <div class="info-group">
-              <label for="book-series-index">{{ t('series.volume') }}</label>
-              <input
-                id="book-series-index"
-                v-model="book.series_index"
-                class="modern-input"
-                inputmode="decimal"
-                maxlength="7"
-                autocomplete="off"
-                placeholder="-"
-              />
-            </div>
-          </div>
-
-          <div class="info-group">
-            <label for="book-notes">{{ t('notes.label') }}</label>
-            <textarea
-              id="book-notes"
-              v-model="book.notes"
-              class="modern-input notes-input"
-              rows="4"
-              maxlength="5000"
-              :placeholder="t('notes.placeholder')"
-            ></textarea>
-            <span class="field-hint">{{ t('notes.privateHint') }} · {{ (book.notes || '').length }}/5000</span>
-          </div>
-
-          <div class="dates-grid">
-            <div class="info-group">
-              <label for="book-read-date">{{ t('bookDialog.readDateLabel') }}</label>
-              <div class="date-input-wrapper">
-                <i
-                  class="pi"
-                  :class="book.read_date ? 'pi-check-circle text-theme' : 'pi-circle text-gray'"
-                  aria-hidden="true"
-                ></i>
-                <Calendar
-                  inputId="book-read-date"
-                  v-model="book.read_date"
-                  :maxDate="today"
-                  dateFormat="dd/mm/yy"
-                  :placeholder="t('bookDialog.notRead')"
-                  class="modern-calendar"
-                  :showIcon="false"
-                  showButtonBar
-                />
-              </div>
-            </div>
-
-            <div class="info-group">
-              <label for="book-pub-date">{{ t('bookDialog.publication') }}</label>
-              <div class="date-input-wrapper">
-                <i
-                  class="pi pi-calendar text-gray"
-                  aria-hidden="true"
-                ></i>
-                <Calendar
-                  inputId="book-pub-date"
-                  v-model="book.pubdate"
-                  dateFormat="dd/mm/yy"
-                  :placeholder="t('bookDialog.dateUnknown')"
-                  class="modern-calendar"
-                  :showIcon="false"
-                  showButtonBar
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="meta-grid">
-            <div class="info-group">
-              <label for="book-publisher">{{ t('bookDialog.publisher') }}</label>
-              <input
-                id="book-publisher"
-                v-model="book.publisher"
-                class="modern-input meta-input"
-                placeholder="-"
-              />
-            </div>
-            <div class="info-group">
-              <label for="book-isbn">{{ t('bookDialog.isbn') }}</label>
-              <input
-                id="book-isbn"
-                v-model="book.isbn"
-                class="modern-input meta-input"
-                placeholder="-"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Visualização: o livro primeiro, o resto a um clique -->
-        <div
-          v-else-if="!loading && !loadFailed"
-          class="details-content view"
-        >
+          <!-- Ações do dono, longe do X de fechar e com nome escrito -->
           <div
-            v-if="!isReadOnly"
-            class="read-state"
+            v-if="!isReadOnly && !loading && !loadFailed"
+            class="dialog-footer"
           >
-            <div
-              class="status-picker"
-              role="group"
-              :aria-label="t('status.label')"
-            >
-              <button
-                v-for="option in STATUS_OPTIONS"
-                :key="option"
-                type="button"
-                class="status-option"
-                :class="[option, { active: currentStatus === option }]"
-                :aria-pressed="currentStatus === option"
-                :disabled="readSaving"
-                @click="changeStatus(option)"
-              >
-                <i
-                  :class="STATUS_ICONS[option]"
-                  aria-hidden="true"
-                ></i>
-                <span>{{ t(`status.${option}`) }}</span>
-              </button>
-            </div>
-            <p
-              v-if="statusCaption"
-              class="status-caption"
-            >
-              {{ statusCaption }}
-              <button
-                type="button"
-                class="link-btn"
-                :disabled="readSaving"
-                @click="changeStatus(currentStatus)"
-              >{{ t('status.clear') }}</button>
-            </p>
-          </div>
-          <div
-            v-else-if="currentStatus !== 'none'"
-            class="read-state"
-          >
-            <span class="read-pill">
-              <i
-                :class="STATUS_ICONS[currentStatus]"
-                aria-hidden="true"
-              ></i>
-              {{ statusCaption }}
-            </span>
-          </div>
-
-          <ul
-            v-if="metaItems.length"
-            class="meta-line"
-          >
-            <li
-              v-for="item in metaItems"
-              :key="item.key"
-              :title="item.title"
-            >{{ item.text }}</li>
-          </ul>
-
-          <p
-            v-if="showIsbnWarning"
-            id="book-isbn-warning"
-            class="isbn-warning"
-          >
-            <i
-              class="pi pi-exclamation-triangle"
-              aria-hidden="true"
-            ></i>
-            {{ t('bookDialog.isbnInvalid') }}
-          </p>
-
-          <div
-            v-if="tagList.length"
-            class="tags-list"
-            :aria-label="t('bookDialog.tags')"
-          >
-            <span
-              v-for="(tag, index) in tagList"
-              :key="`${tag}-${index}`"
-              class="tag-chip"
-              :style="{ '--tag-color': tagColor(tag) }"
-            >{{ tag }}</span>
-          </div>
-
-          <section
-            v-if="!isReadOnly && book.notes"
-            class="notes-section"
-            aria-labelledby="book-notes-title"
-          >
-            <h3 id="book-notes-title">
-              <i
-                class="pi pi-pencil"
-                aria-hidden="true"
-              ></i>
-              {{ t('notes.title') }}
-            </h3>
-            <p class="notes-text">{{ book.notes }}</p>
-          </section>
-
-          <section
-            v-if="showCommunity"
-            class="community-section"
-          >
-            <p
-              v-if="communityLoading"
-              class="muted-line"
-            >{{ t('common.loading') }}</p>
-
-            <p
-              v-else-if="communityError"
-              class="muted-line"
-            >{{ t('community.load_error') }}</p>
-
-            <template v-else-if="community">
-              <p
-                v-if="community.readerCount === 0"
-                class="muted-line"
-              >
-                <i
-                  class="pi pi-users"
-                  aria-hidden="true"
-                ></i>
-                {{ t('community.no_readers') }}
-              </p>
-
-              <template v-else>
-                <button
-                  type="button"
-                  class="community-toggle"
-                  :aria-expanded="communityOpen"
-                  aria-controls="book-community-panel"
-                  @click="communityOpen = !communityOpen"
-                >
-                  <i
-                    class="pi pi-users"
-                    aria-hidden="true"
-                  ></i>
-                  <span class="toggle-text">
-                    {{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}
-                    <span
-                      v-if="community.averageRating"
-                      class="avg-rating"
-                    >
-                      <i
-                        class="pi pi-star-fill"
-                        aria-hidden="true"
-                      ></i>
-                      {{ formatAverage(community.averageRating) }}
-                    </span>
-                  </span>
-                  <i
-                    class="pi pi-chevron-down chevron"
-                    :class="{ open: communityOpen }"
-                    aria-hidden="true"
-                  ></i>
-                </button>
-
-                <div
-                  v-show="communityOpen"
-                  id="book-community-panel"
-                  class="community-panel"
-                >
-                  <ul class="reader-list">
-                    <li
-                      v-for="reader in community.readers"
-                      :key="reader.username"
-                    >
-                      <router-link
-                        :to="{ name: 'public-library', params: { username: reader.username } }"
-                        class="reader-link"
-                      >@{{ reader.username }}</router-link>
-                      <i
-                        v-if="reader.hasRead"
-                        class="pi pi-check-circle text-theme"
-                        v-tooltip.top="t('community.has_read')"
-                        :aria-label="t('community.has_read')"
-                      ></i>
-                      <StarRating
-                        v-if="reader.rating"
-                        :model-value="reader.rating"
-                        size="sm"
-                        readonly
-                      />
-                    </li>
-                  </ul>
-
-                  <div
-                    v-if="community.alsoHave.length"
-                    class="also-have"
-                  >
-                    <h3>{{ t('community.also_have') }}</h3>
-                    <ul>
-                      <li
-                        v-for="item in community.alsoHave.slice(0, ALSO_HAVE_SHOWN)"
-                        :key="`${item.owner}-${item.bookId}`"
-                      >
-                        <router-link
-                          :to="{ name: 'public-library', params: { username: item.owner }, query: { book: item.bookId } }"
-                          class="also-link"
-                        >
-                          <span class="also-title">{{ item.title }}</span>
-                          <span
-                            v-if="item.authors"
-                            class="also-authors"
-                          >{{ item.authors }}</span>
-                        </router-link>
-                        <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers)
-                          }}</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </template>
-
-              <p
-                v-if="!currentUser?.showInCommunity"
-                class="community-hint"
-              >
-                <i18n-t
-                  scope="global"
-                  keypath="community.join_hint"
-                  tag="span"
-                >
-                  <template #settings>
-                    <router-link :to="{ name: 'settings' }">{{ t('community.settings_link') }}</router-link>
-                  </template>
-                </i18n-t>
-              </p>
-            </template>
-          </section>
-        </div>
-
-        <!-- Ações do dono, longe do X de fechar e com nome escrito -->
-        <div
-          v-if="!isReadOnly && !loading && !loadFailed"
-          class="dialog-footer"
-          :class="{ editing: isEditing }"
-        >
-          <template v-if="!isEditing">
             <Button
               :label="t('bookDialog.deleteShort')"
               icon="pi pi-trash"
@@ -547,22 +103,7 @@
               class="p-button-outlined p-button-secondary p-button-sm footer-edit"
               @click="editMode"
             />
-          </template>
-          <template v-else>
-            <Button
-              :label="t('bookDialog.cancel')"
-              class="p-button-text p-button-secondary p-button-sm"
-              :disabled="isSaving"
-              @click="cancelEdit"
-            />
-            <Button
-              :label="t('bookDialog.saveShort')"
-              icon="pi pi-check"
-              class="btn-action-primary p-button-sm"
-              :loading="isSaving"
-              @click="confirmSave"
-            />
-          </template>
+          </div>
         </div>
       </div>
     </div>
@@ -570,26 +111,28 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
-import Calendar from 'primevue/calendar'
 import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import api from '../services/api.js'
-import AuthorsInput from './AuthorsInput.vue'
-import StarRating from './StarRating.vue'
-import { tagColor, colorFor } from '../utils/tagColors.js'
-import { currentUser } from '../services/session.js'
+import { colorFor } from '../utils/tagColors.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import GeneratedCover from './GeneratedCover.vue'
+import IconButton from './form/IconButton.vue'
+import BookView from './book/BookView.vue'
+import BookEditForm from './book/BookEditForm.vue'
+import BookCommunity from './book/BookCommunity.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
-import { statusOf, STATUS_OPTIONS, STATUS_ICONS } from '../utils/readingStatus.js'
-import { seriesText } from '../utils/series.js'
-import { validateImageFile, createPreviewHandle } from '../utils/files.js'
+import { statusOf } from '../utils/readingStatus.js'
 
-const { t, locale } = useI18n()
+/**
+ * Livro aberto: visualização (BookView + BookCommunity) ou edição
+ * (BookEditForm, o mesmo formulário do Novo livro).
+ */
+const { t } = useI18n()
 const props = defineProps({
   modelValue: Boolean,
   bookId: Number,
@@ -598,25 +141,17 @@ const props = defineProps({
   ownerUsername: { type: String, default: '' }
 })
 
-// Data de leitura não pode estar no futuro (o servidor também recusa).
-const today = new Date()
-
 const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])
 const toast = useToast()
 const confirm = useConfirm()
-
 
 const visible = ref(props.modelValue)
 const loading = ref(true)
 const loadFailed = ref(false)
 const isEditing = ref(false)
-const isSaving = ref(false)
-const submitted = ref(false)
-const fileInput = ref(null)
-const selectedFile = ref(null)
-const previewUrl = ref(null)
 const coverVersion = ref(0)
-const preview = createPreviewHandle()
+const ratingSaving = ref(false)
+const readSaving = ref(false)
 
 function emptyBook() {
   // authors: texto para exibir; authorNames: a lista que é editada e salva.
@@ -624,78 +159,23 @@ function emptyBook() {
 }
 
 const book = ref(emptyBook())
-let originalBook = null
 
-const tagList = computed(() => {
-  if (!book.value.tags) return []
-  return book.value.tags.split(',').map(tag => tag.trim()).filter(Boolean)
-})
+const displayCoverUrl = computed(() => coverUrl(props.bookId, coverVersion.value))
 
-const ALSO_HAVE_SHOWN = 3
+// Sem imagem: capa desenhada e fundo na cor do livro, em vez do quadro cinza.
+const coverMissing = ref(false)
+watch(displayCoverUrl, () => { coverMissing.value = false })
 
-const ratingSaving = ref(false)
-const readSaving = ref(false)
-const communityOpen = ref(false)
-const community = ref(null)
-const communityLoading = ref(false)
-const communityError = ref(false)
-
-const showIsbnWarning = computed(() => !isEditing.value && !loading.value && !book.value.isbnValid)
-const showCommunity = computed(() => !props.isReadOnly && !isEditing.value && !loading.value && !loadFailed.value)
-
-function formatDate(value) {
-  const date = value instanceof Date ? value : new Date(value)
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(locale.value)
+function onCoverError(event) {
+  if (coverFallbackExhausted(event)) coverMissing.value = true
 }
-
-// Editora · ano · ISBN numa linha só; a data completa fica no title.
-const metaItems = computed(() => {
-  const items = []
-  if (book.value.publisher) items.push({ key: 'publisher', text: book.value.publisher })
-  if (book.value.pubdate) {
-    items.push({
-      key: 'year',
-      text: String(book.value.pubdate.getFullYear()),
-      title: t('bookDialog.publishedOn', { date: formatDate(book.value.pubdate) })
-    })
-  }
-  if (book.value.isbn) items.push({ key: 'isbn', text: `ISBN ${book.value.isbn}` })
-  return items
-})
-
-const currentStatus = computed(() => statusOf(book.value))
-
-const seriesLabel = computed(() => seriesText(book.value, t, locale.value))
-
-// Séries já usadas, para autocompletar ao editar.
-const seriesOptions = ref([])
-async function loadSeriesOptions() {
-  if (props.isReadOnly || seriesOptions.value.length) return
-  try {
-    seriesOptions.value = await api.getSeries()
-  } catch {
-    seriesOptions.value = []
-  }
-}
-
-const statusCaption = computed(() => {
-  const status = currentStatus.value
-  if (status === 'read') return t('bookDialog.readOn', { date: formatDate(book.value.read_date) })
-  if (status === 'reading') {
-    return book.value.started_at
-      ? t('status.readingSince', { date: formatDate(book.value.started_at) })
-      : t('status.reading')
-  }
-  if (status === 'want') return t('status.wantCaption')
-  return ''
-})
 
 /**
  * Quero ler / Lendo / Lido. Clicar no status que já está marcado tira o status
  * (o livro volta a só estar na estante). Datas vão no fuso da pessoa.
  */
 async function changeStatus(option) {
-  const next = currentStatus.value === option ? 'none' : option
+  const next = statusOf(book.value) === option ? 'none' : option
   readSaving.value = true
   try {
     const today = toApiDate(new Date())
@@ -714,24 +194,6 @@ async function changeStatus(option) {
   }
 }
 
-function formatAverage(value) {
-  return Number(value).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-}
-
-async function loadCommunity() {
-  if (props.isReadOnly || !props.bookId) return
-  communityLoading.value = true
-  communityError.value = false
-  try {
-    community.value = await api.getBookCommunity(props.bookId)
-  } catch {
-    communityError.value = true
-    community.value = null
-  } finally {
-    communityLoading.value = false
-  }
-}
-
 // Nota direto da visualização, sem entrar no modo de edição.
 async function quickRate(value) {
   const previous = book.value.rating
@@ -746,51 +208,6 @@ async function quickRate(value) {
     toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
     ratingSaving.value = false
-  }
-}
-
-const displayCoverUrl = computed(() => previewUrl.value || coverUrl(props.bookId, coverVersion.value))
-
-// Sem imagem: capa desenhada e fundo na cor do livro, em vez do quadro cinza.
-const coverMissing = ref(false)
-watch(displayCoverUrl, () => { coverMissing.value = false })
-
-function onCoverError(event) {
-  if (coverFallbackExhausted(event)) coverMissing.value = true
-}
-
-
-function triggerFileInput() {
-  if (isEditing.value) fileInput.value?.click()
-}
-
-function onFileSelected(event) {
-  const file = event.target.files[0]
-  event.target.value = ''
-  if (!file) return
-
-  const problem = validateImageFile(file)
-  if (problem) {
-    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t(problem.key, problem.params || {}), life: 4000 })
-    return
-  }
-
-  selectedFile.value = file
-  previewUrl.value = preview.set(file)
-}
-
-function clearSelectedFile() {
-  selectedFile.value = null
-  previewUrl.value = null
-  preview.clear()
-}
-
-function cloneBook(source) {
-  return {
-    ...source,
-    authorNames: [...(source.authorNames || [])],
-    read_date: source.read_date ? new Date(source.read_date) : null,
-    pubdate: source.pubdate ? new Date(source.pubdate) : null
   }
 }
 
@@ -818,94 +235,19 @@ function deleteBook() {
 
 function editMode() {
   if (loading.value || loadFailed.value) return
-  originalBook = cloneBook(book.value)
-  submitted.value = false
   isEditing.value = true
-  loadSeriesOptions()
-}
-
-function cancelEdit() {
-  if (originalBook) book.value = cloneBook(originalBook)
-  clearSelectedFile()
-  submitted.value = false
-  isEditing.value = false
 }
 
 function closeDialog() {
-  if (isEditing.value) cancelEdit()
+  isEditing.value = false
   visible.value = false
 }
 
-function validate() {
-  submitted.value = true
-
-  if (!book.value.title.trim()) {
-    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.validationTitle'), life: 3000 })
-    return false
-  }
-
-  if (book.value.authorNames.length === 0) {
-    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.validationAuthors'), life: 3000 })
-    return false
-  }
-
-  return true
-}
-
-function confirmSave() {
-  if (!validate()) return
-
-  confirm.require({
-    message: t('bookDialog.confirmSave'),
-    header: t('bookDialog.confirm'),
-    icon: 'pi pi-exclamation-circle',
-    acceptClass: 'p-button-rounded btn-action-primary',
-    rejectClass: 'p-button-text p-button-secondary',
-    acceptLabel: t('bookDialog.save'),
-    rejectLabel: t('bookDialog.cancel'),
-    accept: () => saveBookDetails()
-  })
-}
-
-async function saveBookDetails() {
-  isSaving.value = true
-  let coverChanged = false
-
-  try {
-    const response = await api.updateBook(props.bookId, {
-      title: book.value.title.trim(),
-      authors: book.value.authorNames,
-      publisher: book.value.publisher,
-      tags: tagList.value,
-      isbn: book.value.isbn,
-      rating: book.value.rating,
-      pubDate: toApiDate(book.value.pubdate),
-      readDate: toApiDate(book.value.read_date),
-      series: (book.value.series || '').trim(),
-      seriesIndex: String(book.value.series_index ?? '').trim() || null,
-      notes: book.value.notes || ''
-    })
-
-    if (selectedFile.value) {
-      const formData = new FormData()
-      formData.append('coverImage', selectedFile.value)
-      await api.updateCover(props.bookId, formData)
-      coverChanged = true
-      coverVersion.value = Date.now()
-    }
-
-    isEditing.value = false
-    submitted.value = false
-    clearSelectedFile()
-    applyResponse(response.book)
-
-    emit('updated', { book: { ...response.book, book_id: props.bookId }, coverChanged })
-    toast.add({ severity: 'success', summary: t('bookDialog.success'), detail: t('bookDialog.changesSaved'), life: 3000 })
-  } catch (error) {
-    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
-  } finally {
-    isSaving.value = false
-  }
+function onSaved({ book: saved, coverChanged }) {
+  if (coverChanged) coverVersion.value = Date.now()
+  applyResponse(saved)
+  isEditing.value = false
+  emit('updated', { book: { ...saved, book_id: props.bookId }, coverChanged })
 }
 
 function applyResponse(data) {
@@ -934,7 +276,6 @@ async function loadBookData() {
 
   loading.value = true
   loadFailed.value = false
-  clearSelectedFile()
 
   try {
     const response = props.isReadOnly
@@ -942,8 +283,7 @@ async function loadBookData() {
       : await api.getBookById(props.bookId)
 
     applyResponse(response)
-    loadCommunity()
-  } catch (error) {
+  } catch {
     // Sem os dados reais a edição fica bloqueada: antes dava para salvar
     // "Erro ao carregar" por cima do título verdadeiro.
     loadFailed.value = true
@@ -960,43 +300,15 @@ watch(visible, (val) => emit('update:modelValue', val))
 onMounted(() => {
   if (visible.value) loadBookData()
 })
-
-onBeforeUnmount(() => preview.clear())
 </script>
 
-<style>
-.p-dialog.modern-book-dialog {
-  border: none !important;
-  border-radius: 16px !important;
-  overflow: hidden !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-  background-color: var(--bg-panel) !important;
-}
-
-.modern-book-dialog .p-dialog-content {
-  padding: 0 !important;
-  background-color: var(--bg-panel);
-}
-
-.modern-book-dialog .p-dialog-header {
-  display: none !important;
-}
-
-.btn-action-primary {
-  background-color: var(--main-solid) !important;
-  border-color: var(--main-solid) !important;
-  color: var(--on-main) !important;
-}
-</style>
-
 <style scoped>
-.dialog-body {
-  display: flex;
-  flex-direction: row;
-  min-height: 440px;
+.dialog-shell {
   position: relative;
-  width: 100%;
-  background-color: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(92vh, 860px);
 }
 
 .close-btn {
@@ -1004,22 +316,16 @@ onBeforeUnmount(() => preview.clear())
   top: 1rem;
   right: 1rem;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.2);
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  color: var(--text-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
 }
 
-.close-btn:hover {
-  background: rgba(var(--main-color-rgb), 0.2);
-  color: var(--main-color);
+.dialog-body {
+  display: flex;
+  flex-direction: row;
+  min-height: 440px;
+  max-height: inherit;
+  position: relative;
+  width: 100%;
+  background-color: var(--bg-panel);
 }
 
 .cover-section {
@@ -1069,55 +375,11 @@ onBeforeUnmount(() => preview.clear())
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }
 
-button.cover-wrapper {
-  border: none;
-  padding: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  display: block;
-}
-
-.cover-wrapper.editable {
-  cursor: pointer;
-}
-
 .main-cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: filter 0.3s ease;
-}
-
-.editable:hover .main-cover {
-  filter: brightness(0.5) blur(2px);
-}
-
-.edit-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 5;
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-.editable:hover .edit-overlay {
-  opacity: 1;
-}
-
-.edit-overlay i {
-  font-size: var(--fs-2xl);
-  margin-bottom: 0.5rem;
-  color: var(--main-color);
 }
 
 .details-section {
@@ -1129,483 +391,7 @@ button.cover-wrapper {
   flex-direction: column;
   gap: 1.5rem;
   overflow-y: auto;
-  max-height: 85vh;
-}
-
-.details-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  /* Espaço para o X do canto não encostar no título. */
-  padding-right: 2rem;
-}
-
-.title-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.book-title {
-  font-family: var(--font-display);
-  font-size: var(--fs-2xl);
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.2;
-  color: var(--text-primary);
-}
-
-.book-author {
-  font-size: var(--fs-lg);
-  color: var(--text-secondary);
-  margin: 0;
-  font-weight: 400;
-}
-
-.modern-input {
-  background: transparent;
-  border: 1px solid transparent;
-  color: inherit;
-  font-family: inherit;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  width: 100%;
-  transition: all 0.2s;
-}
-
-.modern-input:not(.readonly):focus {
-  background-color: var(--bg-input);
-  border-color: var(--main-color);
-  outline: none;
-}
-
-.title-input {
-  font-family: var(--font-display);
-  font-size: var(--fs-2xl);
-  font-weight: 700;
-}
-
-/* Na edição, todos os campos de baixo com a mesma cara. */
-.details-content .modern-input {
-  background-color: var(--bg-input);
-  padding: 0.7rem 0.75rem;
-  border-radius: 8px;
-}
-
-.author-input {
-  font-size: var(--fs-lg);
-  color: var(--text-secondary);
-}
-
-.info-group label {
-  display: block;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  margin-bottom: 0.4rem;
-  font-weight: 500;
-}
-
-.details-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.details-content.view {
-  gap: 1.1rem;
-}
-
-.rating-row {
-  margin-top: 0.35rem;
-}
-
-/* Lido / marcar como lido */
-.read-state {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.read-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
-  background: rgba(var(--main-color-rgb), 0.12);
-  color: var(--main-color);
-  font-weight: 600;
-  font-size: var(--fs-md);
-}
-
-.read-pill .pi {
-  font-size: var(--fs-sm);
-}
-
-.read-state:has(.status-picker) {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-}
-
-.status-picker {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.status-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.status-option .pi {
-  font-size: var(--fs-sm);
-}
-
-.status-option:hover:not(:disabled) {
-  border-color: var(--main-color);
-  color: var(--text-primary);
-}
-
-.status-option.active {
-  background: var(--main-solid);
-  border-color: var(--main-solid);
-  color: var(--on-main);
-}
-
-.status-option:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-
-.status-option:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
-}
-
-.status-caption {
-  margin: 0;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.link-btn {
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.link-btn:hover {
-  color: var(--text-primary);
-}
-
-.link-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-/* Editora · ano · ISBN */
-.series-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.35rem;
-  color: var(--main-color);
-  font-size: var(--fs-md);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.series-line .pi {
-  font-size: var(--fs-sm);
-}
-
-a.series-line:hover {
-  text-decoration: underline;
-}
-
-.series-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 6.5rem;
-  gap: 1rem;
-}
-
-.notes-input {
-  resize: vertical;
-  min-height: 5.5rem;
-  font: inherit;
-  line-height: 1.5;
-}
-
-.field-hint {
-  font-size: var(--fs-xs);
-  color: var(--text-secondary);
-}
-
-.notes-section {
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 0.85rem 1rem;
-  background: rgba(var(--main-color-rgb), 0.05);
-}
-
-.notes-section h3 {
-  margin: 0 0 0.4rem;
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.notes-text {
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  color: var(--text-primary);
-  line-height: 1.55;
-  max-height: 12rem;
-  overflow-y: auto;
-}
-
-.meta-line {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  color: var(--text-secondary);
-  font-size: var(--fs-md);
-  line-height: 1.6;
-}
-
-.meta-line li+li::before {
-  content: '·';
-  margin: 0 0.5rem;
-  color: var(--text-muted);
-}
-
-.isbn-warning {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin: -0.4rem 0 0;
-  color: #f59e0b;
-  font-size: var(--fs-sm);
-}
-
-.tags-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.tag-chip {
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  padding: 0.25rem 0.7rem;
-  border-radius: 999px;
-  color: var(--tag-color);
-  background: color-mix(in srgb, var(--tag-color) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
-}
-
-/* Comunidade recolhida */
-.community-section {
-  border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.muted-line {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  font-size: var(--fs-md);
-}
-
-.community-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 0.35rem 0;
-  font: inherit;
-  color: var(--text-primary);
-  cursor: pointer;
-  text-align: left;
-}
-
-.community-toggle>.pi-users {
-  color: var(--text-secondary);
-}
-
-.toggle-text {
-  flex: 1;
-  font-size: var(--fs-md);
-}
-
-.community-toggle:hover .toggle-text {
-  color: var(--main-color);
-}
-
-.community-toggle:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-.avg-rating {
-  margin-left: 0.5rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.avg-rating .pi {
-  color: #f5b301;
-  font-size: var(--fs-sm);
-}
-
-.chevron {
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-  transition: transform 0.2s ease;
-}
-
-.chevron.open {
-  transform: rotate(180deg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chevron {
-    transition: none;
-  }
-}
-
-.community-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.reader-list,
-.also-have ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.reader-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.reader-list li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: var(--bg-input);
-  border-radius: 999px;
-  padding: 0.25rem 0.7rem;
-  font-size: var(--fs-sm);
-}
-
-.reader-link,
-.also-link,
-.community-hint a {
-  color: var(--main-color);
-  text-decoration: none;
-}
-
-.reader-link:hover,
-.also-link:hover .also-title,
-.community-hint a:hover {
-  text-decoration: underline;
-}
-
-.also-have h3 {
-  margin: 0 0 0.35rem;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.also-have li {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
-  padding: 0.45rem 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.also-have li:last-child {
-  border-bottom: none;
-}
-
-.also-link {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.also-title {
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.also-authors,
-.also-count {
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-}
-
-.also-count {
-  flex-shrink: 0;
-}
-
-.community-hint {
-  margin: 0;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  line-height: 1.45;
+  max-height: inherit;
 }
 
 .dialog-footer {
@@ -1618,78 +404,31 @@ a.series-line:hover {
   gap: 0.75rem;
 }
 
-.dialog-footer.editing {
-  justify-content: flex-end;
-}
-
 .footer-edit.p-button {
   border-radius: 8px;
 }
 
-.dates-grid,
-.meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.date-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background-color: var(--bg-input);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-}
-
-.text-theme {
-  color: var(--main-color);
-  font-weight: bold;
-}
-
-.text-gray {
-  color: var(--text-muted);
-}
-
-:deep(.modern-calendar .p-inputtext) {
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  padding: 0;
-  font-size: var(--fs-md);
-  width: 100%;
-}
-
-.meta-input {
-  background-color: var(--bg-input);
-  padding: 0.75rem;
-  border-radius: 8px;
-  color: var(--text-primary);
-}
-
-.meta-input.readonly {
-  background-color: transparent;
-  padding: 0;
-}
-
-.p-button.p-button-secondary.p-button-text {
-  color: var(--text-secondary) !important;
-}
-
-.p-button.p-button-secondary.p-button-text:hover {
-  color: var(--text-primary) !important;
-  background-color: var(--bg-hover) !important;
-}
-
 @media (max-width: 768px) {
-
   /* Celular/tablet em pé: capa compacta em cima e só os detalhes rolam,
      para o botão de fechar e o título ficarem sempre à vista. */
+  .dialog-shell {
+    max-height: calc(100dvh - 2rem);
+  }
+
+  .close-btn {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  /* Por cima da capa */
+  .viewing .close-btn {
+    background: rgba(0, 0, 0, 0.4);
+    color: #ffffff;
+  }
+
   .dialog-body {
     flex-direction: column;
     min-height: 0;
-    max-height: calc(100dvh - 2rem);
   }
 
   .cover-section {
@@ -1707,10 +446,6 @@ a.series-line:hover {
     gap: 1.25rem;
   }
 
-  .book-title {
-    font-size: var(--fs-xl);
-  }
-
   /* Capa inteira e pequena, em vez de um recorte gigante. */
   .image-container {
     padding: 1rem;
@@ -1722,16 +457,6 @@ a.series-line:hover {
     width: auto;
     height: 100%;
     max-width: none;
-  }
-
-  .details-header {
-    padding-right: 0;
-  }
-
-  .dates-grid,
-  .meta-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
   }
 }
 </style>

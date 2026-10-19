@@ -102,6 +102,45 @@
     "quick_read_short": "Marcar como lido",
     "quick_unread_short": "Desmarcar como lido"
   },
+  "bookForm": {
+    "newTitle": "Novo livro",
+    "editTitle": "Editar livro",
+    "newSubtitle": "Busque pelo ISBN ou preencha à mão.",
+    "isbn": "ISBN",
+    "title": "Título",
+    "authors": "Autores",
+    "aboutSection": "Sobre o livro",
+    "readingSection": "Sua leitura",
+    "publisher": "Editora",
+    "pubDate": "Data de publicação",
+    "tags": "Categorias",
+    "tagsHint": "Separe por vírgula. Ex.: Ficção, Clássicos",
+    "statusNone": "Sem status: o livro fica só na estante.",
+    "statusClear": "Toque de novo no status para tirar.",
+    "readOn": "Lido em",
+    "startedOn": "Começou a ler em",
+    "submitCreate": "Adicionar livro",
+    "submitEdit": "Salvar",
+    "statusNotSaved": "O livro foi salvo, mas o status de leitura não. Marque de novo pelo livro.",
+    "cover": {
+      "choose": "Escolher imagem de capa",
+      "change": "Trocar capa",
+      "drop": "Arraste uma imagem ou clique",
+      "dropNow": "Solte a imagem aqui",
+      "hint": "Imagem de até {mb} MB",
+      "fromIsbn": "Capa encontrada pelo ISBN"
+    },
+    "errors": {
+      "titleRequired": "Informe o título.",
+      "authorsRequired": "Informe pelo menos um autor.",
+      "isbnDuplicate": "Você já tem um livro com este ISBN.",
+      "invalidDate": "Data inválida.",
+      "futureDate": "A data não pode estar no futuro.",
+      "volume": "Use um número de 0 a 9999 (ex.: 2 ou 1,5).",
+      "rating": "A nota vai de 1 a 5.",
+      "coverInvalid": "Este arquivo não é uma imagem válida."
+    }
+  },
   "library": {
     "search_ph": "Pesquisar por título, autor ou ISBN...",
     "filters_adv": "Filtros Avançados",

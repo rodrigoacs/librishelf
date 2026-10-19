@@ -102,6 +102,45 @@
     "quick_read_short": "Mark as read",
     "quick_unread_short": "Mark as unread"
   },
+  "bookForm": {
+    "newTitle": "New book",
+    "editTitle": "Edit book",
+    "newSubtitle": "Look it up by ISBN or fill it in by hand.",
+    "isbn": "ISBN",
+    "title": "Title",
+    "authors": "Authors",
+    "aboutSection": "About the book",
+    "readingSection": "Your reading",
+    "publisher": "Publisher",
+    "pubDate": "Publication date",
+    "tags": "Categories",
+    "tagsHint": "Separate with commas. E.g.: Fiction, Classics",
+    "statusNone": "No status: the book just sits on your shelf.",
+    "statusClear": "Tap the status again to clear it.",
+    "readOn": "Read on",
+    "startedOn": "Started reading on",
+    "submitCreate": "Add book",
+    "submitEdit": "Save",
+    "statusNotSaved": "The book was saved, but its reading status wasn't. Set it again from the book.",
+    "cover": {
+      "choose": "Choose a cover image",
+      "change": "Change cover",
+      "drop": "Drag an image here or click",
+      "dropNow": "Drop the image here",
+      "hint": "Image up to {mb} MB",
+      "fromIsbn": "Cover found by ISBN"
+    },
+    "errors": {
+      "titleRequired": "Enter the title.",
+      "authorsRequired": "Enter at least one author.",
+      "isbnDuplicate": "You already have a book with this ISBN.",
+      "invalidDate": "Invalid date.",
+      "futureDate": "The date can't be in the future.",
+      "volume": "Use a number from 0 to 9999 (e.g. 2 or 1.5).",
+      "rating": "Ratings go from 1 to 5.",
+      "coverInvalid": "This file isn't a valid image."
+    }
+  },
   "library": {
     "search_ph": "Search by title, author or ISBN...",
     "filters_adv": "Advanced Filters",

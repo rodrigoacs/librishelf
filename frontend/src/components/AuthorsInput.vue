@@ -1,46 +1,74 @@
 <template>
   <div
     class="authors-input"
-    :class="{ invalid }"
+    :class="{ invalid: Boolean(error), floated: focused || modelValue.length > 0 }"
   >
-    <Chips
-      :modelValue="modelValue"
-      :inputId="inputId"
-      :placeholder="modelValue.length ? '' : placeholder"
-      :allowDuplicate="false"
-      addOnBlur
-      :max="maxAuthors"
-      :aria-invalid="invalid || undefined"
-      :aria-describedby="`${inputId}-hint`"
-      @update:modelValue="onUpdate"
-    />
+    <div class="field-box">
+      <Chips
+        :modelValue="modelValue"
+        :inputId="inputId"
+        :allowDuplicate="false"
+        addOnBlur
+        :max="maxAuthors"
+        :aria-invalid="error ? 'true' : undefined"
+        :aria-describedby="describedBy"
+        @update:modelValue="onUpdate"
+        @focus="focused = true"
+        @blur="focused = false"
+      />
+      <label
+        :for="inputId"
+        class="field-label"
+      >{{ label }}<span
+          v-if="required"
+          class="required-mark"
+          aria-hidden="true"
+        > *</span></label>
+    </div>
+    <small
+      v-if="error"
+      :id="`${inputId}-error`"
+      class="field-error"
+    >
+      <i
+        class="pi pi-exclamation-circle"
+        aria-hidden="true"
+      ></i>
+      {{ error }}
+    </small>
     <small
       :id="`${inputId}-hint`"
-      class="authors-hint"
+      class="field-hint"
     >{{ t('book.authors_hint') }}</small>
   </div>
 </template>
 
 <script setup>
+import { computed, ref } from 'vue'
 import Chips from 'primevue/chips'
 import { useI18n } from 'vue-i18n'
 
 /**
- * Lista de autores como etiquetas. Cada autor entra com Enter (ou ao sair do
- * campo), então vírgula faz parte do nome e nunca separa autores.
+ * Lista de autores como etiquetas, com rótulo flutuante igual ao TextField.
+ * Cada autor entra com Enter (ou ao sair do campo), então vírgula faz parte
+ * do nome e nunca separa autores.
  */
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   inputId: { type: String, required: true },
-  placeholder: { type: String, default: '' },
-  invalid: { type: Boolean, default: false }
+  label: { type: String, default: '' },
+  error: { type: String, default: '' },
+  required: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:modelValue'])
 const { t } = useI18n()
+const focused = ref(false)
 
 // Mesmo limite do backend (utils/nameList.js → MAX_NAMES).
 const maxAuthors = 30
+
+const describedBy = computed(() => [props.error ? `${props.inputId}-error` : '', `${props.inputId}-hint`].filter(Boolean).join(' '))
 
 function onUpdate(values) {
   const seen = new Set()
@@ -62,8 +90,26 @@ function onUpdate(values) {
 .authors-input {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
   width: 100%;
+  min-width: 0;
+}
+
+.field-box {
+  position: relative;
+  background-color: var(--bg-input);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-box:focus-within {
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.18);
+}
+
+.invalid .field-box {
+  border-color: var(--red);
 }
 
 .authors-input :deep(.p-chips) {
@@ -72,30 +118,22 @@ function onUpdate(values) {
 
 .authors-input :deep(.p-chips-multiple-container) {
   width: 100%;
-  min-height: 2.75rem;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.35rem 0.5rem;
+  min-height: 3.25rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 10px;
+  padding: 1.4rem 0.6rem 0.4rem;
   gap: 0.35rem;
   flex-wrap: wrap;
-}
-
-.authors-input :deep(.p-chips.p-focus .p-chips-multiple-container) {
-  border-color: var(--main-color);
-  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
-}
-
-.authors-input.invalid :deep(.p-chips-multiple-container) {
-  border-color: var(--red);
 }
 
 .authors-input :deep(.p-chips-token) {
   background-color: rgba(var(--main-color-rgb), 0.15);
   color: var(--text-primary);
   border-radius: 999px;
-  padding: 0.2rem 0.65rem;
-  font-size: var(--fs-md);
+  padding: 0.15rem 0.65rem;
+  font-size: var(--fs-sm);
 }
 
 .authors-input :deep(.p-chips-input-token) {
@@ -107,16 +145,66 @@ function onUpdate(values) {
 .authors-input :deep(.p-chips-input-token input:focus) {
   width: 100%;
   color: var(--text-primary);
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   outline: none;
-  padding: 0.25rem 0.15rem;
+  padding: 0.1rem 0.3rem;
+  font: inherit;
   font-size: var(--fs-md);
 }
 
-.authors-hint {
+.field-label {
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  top: 1rem;
+  color: var(--text-secondary);
+  font-size: var(--fs-md);
+  line-height: 1.2;
+  pointer-events: none;
+  transform-origin: left top;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.floated .field-label {
+  transform: translateY(-0.6rem) scale(0.8);
+  font-weight: 600;
+}
+
+.field-box:focus-within .field-label {
+  color: var(--main-color);
+}
+
+.invalid .field-label {
+  color: var(--red);
+}
+
+.required-mark {
+  color: var(--text-muted);
+}
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--red);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.field-error .pi {
+  font-size: var(--fs-xs);
+}
+
+.field-hint {
   color: var(--text-muted);
   font-size: var(--fs-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-label {
+    transition: none;
+  }
 }
 </style>
