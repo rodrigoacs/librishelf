@@ -46,38 +46,30 @@
           </button>
         </div>
 
-        <!-- Ordenar à mão, ao lado da busca (antes só dentro da gaveta de filtros) -->
-        <label class="sort-quick">
-          <i
-            class="pi pi-sort-alt sort-quick-icon"
-            aria-hidden="true"
-          ></i>
-          <span
-            class="sort-quick-prefix"
-            aria-hidden="true"
-          >{{ t('library.sort_short') }}</span>
-          <span
-            class="sort-quick-value"
-            aria-hidden="true"
-          >{{ currentSortLabel }}</span>
-          <!-- O select transparente cobre o botão todo: clique em qualquer ponto abre a lista do sistema -->
-          <select
-            class="sort-quick-select"
-            :value="filters.sortField"
-            :aria-label="t('library.sort_by')"
-            @change="emitFilter('sortField', $event.target.value)"
-          >
-            <option
-              v-for="option in sortOptions"
-              :key="option.value"
-              :value="option.value"
-            >{{ option.label }}</option>
-          </select>
-          <i
-            class="pi pi-chevron-down sort-quick-chevron"
-            aria-hidden="true"
-          ></i>
-        </label>
+        <!-- Ordenar à mão, ao lado da busca (antes só dentro da gaveta de filtros).
+             Dropdown do PrimeVue, e não <select>: a lista nativa não segue o tema. -->
+        <Dropdown
+          :modelValue="filters.sortField"
+          :options="sortOptions"
+          optionLabel="label"
+          optionValue="value"
+          :aria-label="t('library.sort_by')"
+          class="sort-quick"
+          panelClass="custom-panel sort-quick-panel"
+          scrollHeight="22rem"
+          @update:modelValue="value => emitFilter('sortField', value)"
+        >
+          <template #value>
+            <span class="sort-quick-content">
+              <i
+                class="pi pi-sort-alt sort-quick-icon"
+                aria-hidden="true"
+              ></i>
+              <span class="sort-quick-prefix">{{ t('library.sort_short') }}</span>
+              <span class="sort-quick-value">{{ currentSortLabel }}</span>
+            </span>
+          </template>
+        </Dropdown>
       </div>
 
       <div class="actions">
@@ -585,25 +577,46 @@ defineExpose({ reloadOptions: loadOptions })
   min-width: 0;
 }
 
-.sort-quick {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+.sort-quick.p-dropdown {
   flex-shrink: 0;
   height: 2.75rem;
-  padding: 0 2.1rem 0 0.9rem;
+  align-items: center;
   border-radius: 999px;
   border: 1px solid var(--border-color);
   background: var(--bg-input);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  cursor: pointer;
+  box-shadow: none;
 }
 
-.sort-quick:focus-within {
+.sort-quick.p-dropdown:not(.p-disabled):hover {
+  border-color: var(--border-hover);
+}
+
+.sort-quick.p-dropdown.p-focus {
   border-color: var(--main-color);
   box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
+}
+
+.sort-quick :deep(.p-dropdown-label) {
+  display: flex;
+  align-items: center;
+  padding: 0 0.25rem 0 0.95rem;
+  background: transparent;
+  border: none;
+}
+
+.sort-quick :deep(.p-dropdown-trigger) {
+  width: 2.25rem;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.sort-quick-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
 }
 
 .sort-quick-icon {
@@ -618,27 +631,6 @@ defineExpose({ reloadOptions: loadOptions })
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 11rem;
-}
-
-.sort-quick-select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  opacity: 0;
-  cursor: pointer;
-  font: inherit;
-}
-
-.sort-quick-select option {
-  background: var(--bg-panel);
-  color: var(--text-primary);
-}
-
-.sort-quick-chevron {
-  position: absolute;
-  right: 0.85rem;
-  font-size: var(--fs-xs);
-  pointer-events: none;
 }
 
 .search-input-wrapper {
@@ -882,10 +874,12 @@ defineExpose({ reloadOptions: loadOptions })
     padding-bottom: 0.6rem;
   }
 
-  /* Celular: só o ícone e o valor, para a busca continuar larga */
-  .sort-quick {
+  .sort-quick.p-dropdown {
     height: 2.6rem;
-    padding: 0 1.9rem 0 0.75rem;
+  }
+
+  .sort-quick :deep(.p-dropdown-label) {
+    padding-left: 0.8rem;
   }
 
   .sort-quick-prefix {
@@ -1046,6 +1040,25 @@ defineExpose({ reloadOptions: loadOptions })
 .custom-panel .p-multiselect-item.p-highlight {
   color: var(--main-color) !important;
   background-color: rgba(var(--main-color-rgb), 0.1) !important;
+}
+
+/* Lista do "Ordenar" ao lado da busca */
+.sort-quick-panel.p-dropdown-panel {
+  min-width: 13rem;
+  margin-top: 0.35rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.sort-quick-panel .p-dropdown-items {
+  padding: 0.35rem;
+}
+
+.sort-quick-panel .p-dropdown-item {
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 /* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */
