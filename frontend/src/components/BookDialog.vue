@@ -1,11 +1,9 @@
 <template>
-  <Dialog
+  <AppDialog
     v-model:visible="visible"
-    :modal="true"
-    :dismissableMask="!isEditing"
-    class="book-form-dialog"
-    :style="{ width: isEditing ? '960px' : '900px', maxWidth: 'calc(100vw - 2rem)' }"
-    :showHeader="false"
+    :size="isEditing ? 'xl' : 'lg'"
+    :dismissable="!isEditing"
+    dialog-class="book-form-dialog"
     :aria-label="book.title || t('bookDialog.dialog_label')"
     @hide="closeDialog"
   >
@@ -107,13 +105,13 @@
         </div>
       </div>
     </div>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup>
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Dialog from 'primevue/dialog'
+import AppDialog from './ui/AppDialog.vue'
 import AppButton from './ui/AppButton.vue'
 import { useToast } from '../services/toast.js'
 import { useConfirm } from '../services/confirm.js'

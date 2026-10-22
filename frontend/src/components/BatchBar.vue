@@ -26,11 +26,10 @@
         aria-controls="batch-status-menu"
         @click="event => statusMenu.toggle(event)"
       />
-      <Menu
+      <PopupMenu
         id="batch-status-menu"
         ref="statusMenu"
-        :model="statusItems"
-        popup
+        :items="statusItems"
       />
 
       <AppButton
@@ -60,12 +59,10 @@
       />
     </div>
 
-    <Dialog
+    <AppDialog
       v-model:visible="tagDialog"
-      modal
+      size="sm"
       :header="t('batch.categoryTitle', { n: count }, count)"
-      :style="{ width: 'min(26rem, 92vw)' }"
-      :draggable="false"
     >
       <form
         class="tag-form"
@@ -107,7 +104,7 @@
           />
         </div>
       </form>
-    </Dialog>
+    </AppDialog>
   </div>
 </template>
 
@@ -117,8 +114,8 @@ import { useI18n } from 'vue-i18n'
 import { useConfirm } from '../services/confirm.js'
 import { useToast } from '../services/toast.js'
 import AppButton from './ui/AppButton.vue'
-import Menu from 'primevue/menu'
-import Dialog from 'primevue/dialog'
+import PopupMenu from './ui/PopupMenu.vue'
+import AppDialog from './ui/AppDialog.vue'
 import api from '../services/api.js'
 import { toApiDate } from '../utils/dates.js'
 

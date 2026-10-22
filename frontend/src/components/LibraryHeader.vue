@@ -192,135 +192,149 @@
       />
     </div>
 
-    <Sidebar
+    <AppDialog
       v-model:visible="visibleFilters"
-      position="right"
-      class="custom-sidebar"
-      :modal="true"
+      drawer
+      dialog-class="filters-drawer"
       :aria-label="t('library.filters_adv')"
     >
-      <div class="sidebar-header">
-        <h3>{{ t('library.filters_adv') }}</h3>
-        <p>{{ t('library.refine_view') }}</p>
-      </div>
-
-      <div class="sidebar-content">
-        <div class="filter-group">
-          <label id="filter-read-status">{{ t('library.read_status') }}</label>
-          <Dropdown
-            :modelValue="filters.readState"
-            :options="readStateOptions"
-            optionLabel="label"
-            optionValue="value"
-            aria-labelledby="filter-read-status"
-            class="w-full custom-dropdown"
-            panelClass="custom-panel"
-            @update:modelValue="value => emitFilter('readState', value)"
+      <div class="drawer-body">
+        <div class="sidebar-header">
+          <div>
+            <h3>{{ t('library.filters_adv') }}</h3>
+            <p>{{ t('library.refine_view') }}</p>
+          </div>
+          <IconButton
+            icon="pi pi-times"
+            :label="t('common.close')"
+            @click="visibleFilters = false"
           />
         </div>
 
-        <div class="filter-group">
-          <label for="filter-read-year">{{ t('library.read_year') }}</label>
-          <Dropdown
-            inputId="filter-read-year"
-            :modelValue="hasReadYear ? filters.readYear : 'all'"
-            :options="yearOptions"
-            optionLabel="label"
-            optionValue="value"
-            :placeholder="t('library.select_year')"
-            class="w-full custom-dropdown"
-            panelClass="custom-panel"
-            @update:modelValue="setReadYear"
-          />
-        </div>
-
-        <div class="filter-group">
-          <label for="filter-sort">{{ t('library.sort_by') }}</label>
-          <div class="sort-row">
+        <div class="sidebar-content">
+          <div class="filter-group">
+            <label id="filter-read-status">{{ t('library.read_status') }}</label>
             <Dropdown
-              inputId="filter-sort"
-              :modelValue="filters.sortField"
-              :options="sortOptions"
+              appendTo="self"
+              :modelValue="filters.readState"
+              :options="readStateOptions"
               optionLabel="label"
               optionValue="value"
-              class="custom-dropdown"
+              aria-labelledby="filter-read-status"
+              class="w-full custom-dropdown"
               panelClass="custom-panel"
-              @update:modelValue="value => emitFilter('sortField', value)"
+              @update:modelValue="value => emitFilter('readState', value)"
             />
-            <AppButton
-              @click="emitFilter('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc')"
-              :icon="filters.sortOrder === 'asc' ? 'pi pi-sort-amount-down' : 'pi pi-sort-amount-up-alt'"
-              :aria-label="filters.sortOrder === 'asc' ? t('library.sort_asc') : t('library.sort_desc')"
-              v-tooltip.bottom="filters.sortOrder === 'asc' ? t('library.sort_asc') : t('library.sort_desc')"
-              class="btn-outlined btn-secondary sort-btn"
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-read-year">{{ t('library.read_year') }}</label>
+            <Dropdown
+              appendTo="self"
+              inputId="filter-read-year"
+              :modelValue="hasReadYear ? filters.readYear : 'all'"
+              :options="yearOptions"
+              optionLabel="label"
+              optionValue="value"
+              :placeholder="t('library.select_year')"
+              class="w-full custom-dropdown"
+              panelClass="custom-panel"
+              @update:modelValue="setReadYear"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-sort">{{ t('library.sort_by') }}</label>
+            <div class="sort-row">
+              <Dropdown
+                appendTo="self"
+                inputId="filter-sort"
+                :modelValue="filters.sortField"
+                :options="sortOptions"
+                optionLabel="label"
+                optionValue="value"
+                class="custom-dropdown"
+                panelClass="custom-panel"
+                @update:modelValue="value => emitFilter('sortField', value)"
+              />
+              <AppButton
+                @click="emitFilter('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc')"
+                :icon="filters.sortOrder === 'asc' ? 'pi pi-sort-amount-down' : 'pi pi-sort-amount-up-alt'"
+                :aria-label="filters.sortOrder === 'asc' ? t('library.sort_asc') : t('library.sort_desc')"
+                v-tooltip.bottom="filters.sortOrder === 'asc' ? t('library.sort_asc') : t('library.sort_desc')"
+                class="btn-outlined btn-secondary sort-btn"
+              />
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-tags">{{ t('library.tags') }}</label>
+            <MultiSelect
+              appendTo="self"
+              inputId="filter-tags"
+              :modelValue="filters.tags"
+              :options="tagsList"
+              optionLabel="name"
+              optionValue="name"
+              :placeholder="t('library.select_tags')"
+              :maxSelectedLabels="2"
+              :selectedItemsLabel="`{0} ${t('library.selected_tags')}`"
+              filter
+              class="w-full custom-multiselect"
+              panelClass="custom-panel"
+              @update:modelValue="value => emitFilter('tags', value)"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-authors">{{ t('library.authors') }}</label>
+            <MultiSelect
+              appendTo="self"
+              inputId="filter-authors"
+              :modelValue="filters.author"
+              :options="authorsList"
+              optionLabel="name"
+              optionValue="name"
+              :placeholder="t('library.select_authors')"
+              :maxSelectedLabels="2"
+              :selectedItemsLabel="`{0} ${t('library.selected_authors')}`"
+              filter
+              class="w-full custom-multiselect"
+              panelClass="custom-panel"
+              @update:modelValue="value => emitFilter('author', value)"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-publishers">{{ t('library.publishers') }}</label>
+            <MultiSelect
+              appendTo="self"
+              inputId="filter-publishers"
+              :modelValue="filters.publisher"
+              :options="publishersList"
+              optionLabel="name"
+              optionValue="name"
+              :placeholder="t('library.select_publishers')"
+              :maxSelectedLabels="2"
+              :selectedItemsLabel="`{0} ${t('library.selected_publishers')}`"
+              filter
+              class="w-full custom-multiselect"
+              panelClass="custom-panel"
+              @update:modelValue="value => emitFilter('publisher', value)"
             />
           </div>
         </div>
 
-        <div class="filter-group">
-          <label for="filter-tags">{{ t('library.tags') }}</label>
-          <MultiSelect
-            inputId="filter-tags"
-            :modelValue="filters.tags"
-            :options="tagsList"
-            optionLabel="name"
-            optionValue="name"
-            :placeholder="t('library.select_tags')"
-            :maxSelectedLabels="2"
-            :selectedItemsLabel="`{0} ${t('library.selected_tags')}`"
-            filter
-            class="w-full custom-multiselect"
-            panelClass="custom-panel"
-            @update:modelValue="value => emitFilter('tags', value)"
-          />
-        </div>
-
-        <div class="filter-group">
-          <label for="filter-authors">{{ t('library.authors') }}</label>
-          <MultiSelect
-            inputId="filter-authors"
-            :modelValue="filters.author"
-            :options="authorsList"
-            optionLabel="name"
-            optionValue="name"
-            :placeholder="t('library.select_authors')"
-            :maxSelectedLabels="2"
-            :selectedItemsLabel="`{0} ${t('library.selected_authors')}`"
-            filter
-            class="w-full custom-multiselect"
-            panelClass="custom-panel"
-            @update:modelValue="value => emitFilter('author', value)"
-          />
-        </div>
-
-        <div class="filter-group">
-          <label for="filter-publishers">{{ t('library.publishers') }}</label>
-          <MultiSelect
-            inputId="filter-publishers"
-            :modelValue="filters.publisher"
-            :options="publishersList"
-            optionLabel="name"
-            optionValue="name"
-            :placeholder="t('library.select_publishers')"
-            :maxSelectedLabels="2"
-            :selectedItemsLabel="`{0} ${t('library.selected_publishers')}`"
-            filter
-            class="w-full custom-multiselect"
-            panelClass="custom-panel"
-            @update:modelValue="value => emitFilter('publisher', value)"
+        <div class="sidebar-footer">
+          <AppButton
+            :label="t('library.clear_all')"
+            icon="pi pi-filter-slash"
+            class="btn-outlined btn-danger w-full"
+            @click="emit('reset')"
           />
         </div>
       </div>
-
-      <div class="sidebar-footer">
-        <AppButton
-          :label="t('library.clear_all')"
-          icon="pi pi-filter-slash"
-          class="btn-outlined btn-danger w-full"
-          @click="emit('reset')"
-        />
-      </div>
-    </Sidebar>
+    </AppDialog>
 
     <AddBookDialog
       v-model:visible="addBookDialogVisible"
@@ -333,7 +347,8 @@
 import { tagColor } from '../utils/tagColors.js'
 import { ref, computed, watch, onMounted } from 'vue'
 import AppButton from './ui/AppButton.vue'
-import Sidebar from 'primevue/sidebar'
+import AppDialog from './ui/AppDialog.vue'
+import IconButton from './form/IconButton.vue'
 import MultiSelect from 'primevue/multiselect'
 import Dropdown from 'primevue/dropdown'
 import AppChip from './ui/AppChip.vue'
@@ -781,6 +796,10 @@ defineExpose({ reloadOptions: loadOptions })
 }
 
 .sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -935,31 +954,17 @@ defineExpose({ reloadOptions: loadOptions })
 </style>
 
 <style>
-.custom-sidebar.p-sidebar {
-  background-color: var(--bg-panel) !important;
-  border-left: 1px solid var(--border-color);
-  width: 24rem !important;
-}
-
-@media (max-width: 768px) {
-  .custom-sidebar.p-sidebar {
-    width: 90vw !important;
-  }
-}
-
-.custom-sidebar .p-sidebar-header {
-  display: none !important;
-}
-
-.custom-sidebar .p-sidebar-content {
-  padding: 2rem !important;
-  height: 100%;
+/* Gaveta de filtros (AppDialog drawer) */
+.filters-drawer .drawer-body {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  padding: 1.5rem 1.5rem 1.75rem 2rem;
+  overflow-y: auto;
 }
 
-.custom-sidebar .p-dropdown,
-.custom-sidebar .p-multiselect {
+.filters-drawer .p-dropdown,
+.filters-drawer .p-multiselect {
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -969,23 +974,23 @@ defineExpose({ reloadOptions: loadOptions })
   align-items: center;
 }
 
-.custom-sidebar .p-multiselect-label-container {
+.filters-drawer .p-multiselect-label-container {
   display: flex;
   align-items: center;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.custom-sidebar .p-dropdown:not(.p-disabled):hover,
-.custom-sidebar .p-multiselect:not(.p-disabled):hover,
-.custom-sidebar .p-dropdown.p-focus,
-.custom-sidebar .p-multiselect.p-focus {
+.filters-drawer .p-dropdown:not(.p-disabled):hover,
+.filters-drawer .p-multiselect:not(.p-disabled):hover,
+.filters-drawer .p-dropdown.p-focus,
+.filters-drawer .p-multiselect.p-focus {
   border-color: var(--main-color) !important;
   box-shadow: 0 0 0 1px rgba(var(--main-color-rgb), 0.2) !important;
 }
 
-.custom-sidebar .p-dropdown-label,
-.custom-sidebar .p-multiselect-label {
+.filters-drawer .p-dropdown-label,
+.filters-drawer .p-multiselect-label {
   color: var(--text-primary);
 }
 

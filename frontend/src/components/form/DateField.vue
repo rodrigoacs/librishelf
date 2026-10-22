@@ -24,6 +24,7 @@
         :maxDate="maxDate || undefined"
         dateFormat="dd/mm/yy"
         class="field-calendar"
+        appendTo="self"
         :showIcon="false"
         showButtonBar
         :aria-invalid="error ? 'true' : undefined"

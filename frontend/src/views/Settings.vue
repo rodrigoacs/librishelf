@@ -334,12 +334,10 @@
       </div>
     </div>
 
-    <Dialog
+    <AppDialog
       v-model:visible="deleteDialogVisible"
-      modal
+      size="sm"
       :header="t('settings.delete.confirmTitle')"
-      :style="{ width: '460px', maxWidth: '95vw' }"
-      :dismissableMask="!deleting"
       :closable="!deleting"
     >
       <form
@@ -374,14 +372,12 @@
           />
         </div>
       </form>
-    </Dialog>
+    </AppDialog>
 
-    <Dialog
+    <AppDialog
       v-model:visible="accountDialog.visible"
-      modal
+      size="sm"
       :header="accountDialog.field === 'email' ? t('settings.account.emailTitle') : t('settings.account.usernameTitle')"
-      :style="{ width: 'min(28rem, 92vw)' }"
-      :draggable="false"
     >
       <form
         class="stack"
@@ -416,7 +412,7 @@
           :disabled="!accountDialog.value.trim() || !accountDialog.password"
         />
       </form>
-    </Dialog>
+    </AppDialog>
   </div>
 </template>
 
@@ -427,7 +423,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
 import AppButton from '../components/ui/AppButton.vue'
-import Dialog from 'primevue/dialog'
+import AppDialog from '../components/ui/AppDialog.vue'
 import AppSwitch from '../components/ui/AppSwitch.vue'
 import api from '../services/api.js'
 import { currentUser, updateUser, setUser, clearSession } from '../services/session.js'

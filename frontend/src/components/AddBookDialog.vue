@@ -1,11 +1,9 @@
 <template>
-  <Dialog
+  <AppDialog
     v-model:visible="visible"
-    :modal="true"
-    :dismissableMask="false"
-    class="book-form-dialog"
-    :style="{ width: '960px', maxWidth: 'calc(100vw - 2rem)' }"
-    :showHeader="false"
+    size="xl"
+    :dismissable="false"
+    dialog-class="book-form-dialog"
     :aria-label="t('book.dialog_label')"
   >
     <div class="dialog-shell">
@@ -24,12 +22,12 @@
         @cancel="visible = false"
       />
     </div>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
-import Dialog from 'primevue/dialog'
+import AppDialog from './ui/AppDialog.vue'
 import { useI18n } from 'vue-i18n'
 import BookEditForm from './book/BookEditForm.vue'
 import IconButton from './form/IconButton.vue'
@@ -60,26 +58,13 @@ function onSaved(result) {
 </script>
 
 <style>
-/* Moldura dos diálogos de livro (Novo livro e o livro aberto) */
-.p-dialog.book-form-dialog {
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  background-color: var(--bg-panel);
+/* Diálogos de livro (Novo livro e o livro aberto): mais altos que o padrão */
+.book-form-dialog .app-dialog-panel {
   max-height: min(92vh, 860px);
 }
 
-.book-form-dialog .p-dialog-content {
-  padding: 0;
-  background-color: var(--bg-panel);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
 @media (max-width: 768px) {
-  .p-dialog.book-form-dialog {
+  .book-form-dialog .app-dialog-panel {
     max-height: calc(100dvh - 2rem);
   }
 }

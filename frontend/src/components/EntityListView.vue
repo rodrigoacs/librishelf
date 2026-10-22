@@ -209,12 +209,10 @@
       />
     </div>
 
-    <Dialog
+    <AppDialog
       v-model:visible="nameDialog.visible"
-      modal
+      size="sm"
       :header="nameDialog.mode === 'merge' ? t('entities.mergeTitle', { n: nameDialog.from.length }) : t('entities.renameTitle')"
-      :style="{ width: 'min(28rem, 92vw)' }"
-      :draggable="false"
     >
       <form
         class="name-form"
@@ -274,7 +272,7 @@
           />
         </div>
       </form>
-    </Dialog>
+    </AppDialog>
   </div>
 </template>
 
@@ -284,7 +282,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
 import AppButton from './ui/AppButton.vue'
-import Dialog from 'primevue/dialog'
+import AppDialog from './ui/AppDialog.vue'
 import api from '../services/api.js'
 
 /**
