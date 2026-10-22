@@ -10,12 +10,11 @@
           class="sr-only"
           for="dashboard-year"
         >{{ t('dashboard.yearLabel') }}</label>
-        <Dropdown
+        <AppSelect
           inputId="dashboard-year"
           :modelValue="year"
           :options="yearOptions"
           class="year-dropdown"
-          panelClass="custom-panel"
           @update:modelValue="changeYear"
         />
         <div class="date-display">{{ currentDate }}</div>
@@ -385,7 +384,7 @@ import { useToast } from '../services/toast.js'
 import ChartCanvas from '../components/ui/ChartCanvas.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
 import AppButton from '../components/ui/AppButton.vue'
-import Dropdown from 'primevue/dropdown'
+import AppSelect from '../components/ui/AppSelect.vue'
 import NumberField from '../components/ui/NumberField.vue'
 import api from '../services/api.js'
 import { useTheme, cssVar } from '../composables/useTheme.js'
@@ -1014,10 +1013,6 @@ a.author-row:focus-visible {
   flex-wrap: wrap;
 }
 
-.goal-input :deep(.p-inputnumber-input) {
-  width: 6rem;
-}
-
 .chart-hint {
   margin: -1rem 0 1rem;
   color: var(--text-secondary);
@@ -1058,7 +1053,7 @@ a.author-row:focus-visible {
   min-height: 0;
 }
 
-.chart-wrapper > :deep(.p-chart) {
+.chart-wrapper > .chart-canvas {
   position: relative;
   width: 100%;
   height: 100%;
@@ -1107,9 +1102,8 @@ a.author-row:hover {
 }
 
 .author-row .rank {
-  color: var(--author-color) !important;
+  color: var(--author-color);
   font-weight: bold;
-  color: var(--text-secondary);
   width: 20px;
 }
 

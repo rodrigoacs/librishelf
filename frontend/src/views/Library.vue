@@ -281,7 +281,7 @@ function afterBatch() {
 }
 
 function onKeydown(event) {
-  if (event.key === 'Escape' && selecting.value && !document.querySelector('.p-dialog-mask')) toggleSelecting()
+  if (event.key === 'Escape' && selecting.value && !document.querySelector('dialog[open]')) toggleSelecting()
 }
 
 // Grade ou lista: vem da URL (?view=list); sem ela, a última escolha neste navegador.
@@ -383,16 +383,8 @@ onUnmounted(() => {
   aspect-ratio: 2/3.5;
 }
 
-:deep(.p-skeleton) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-:deep(.p-skeleton)::after {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
-}
-
 .cover-skeleton {
-  border-radius: 12px !important;
+  border-radius: 12px;
   flex: 1;
 }
 

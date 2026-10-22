@@ -47,16 +47,15 @@
         </div>
 
         <!-- Ordenar à mão, ao lado da busca (antes só dentro da gaveta de filtros).
-             Dropdown do PrimeVue, e não <select>: a lista nativa não segue o tema. -->
-        <Dropdown
+             AppSelect, e não <select>: a lista nativa não segue o tema. -->
+        <AppSelect
           :modelValue="filters.sortField"
           :options="sortOptions"
           optionLabel="label"
           optionValue="value"
           :aria-label="t('library.sort_by')"
           class="sort-quick"
-          panelClass="custom-panel sort-quick-panel"
-          scrollHeight="22rem"
+          panel-class="sort-quick-panel"
           @update:modelValue="value => emitFilter('sortField', value)"
         >
           <template #value>
@@ -69,7 +68,7 @@
               <span class="sort-quick-value">{{ currentSortLabel }}</span>
             </span>
           </template>
-        </Dropdown>
+        </AppSelect>
       </div>
 
       <div class="actions">
@@ -214,31 +213,27 @@
         <div class="sidebar-content">
           <div class="filter-group">
             <label id="filter-read-status">{{ t('library.read_status') }}</label>
-            <Dropdown
-              appendTo="self"
+            <AppSelect
               :modelValue="filters.readState"
               :options="readStateOptions"
               optionLabel="label"
               optionValue="value"
               aria-labelledby="filter-read-status"
-              class="w-full custom-dropdown"
-              panelClass="custom-panel"
+              class="w-full"
               @update:modelValue="value => emitFilter('readState', value)"
             />
           </div>
 
           <div class="filter-group">
             <label for="filter-read-year">{{ t('library.read_year') }}</label>
-            <Dropdown
-              appendTo="self"
+            <AppSelect
               inputId="filter-read-year"
               :modelValue="hasReadYear ? filters.readYear : 'all'"
               :options="yearOptions"
               optionLabel="label"
               optionValue="value"
               :placeholder="t('library.select_year')"
-              class="w-full custom-dropdown"
-              panelClass="custom-panel"
+              class="w-full"
               @update:modelValue="setReadYear"
             />
           </div>
@@ -246,15 +241,13 @@
           <div class="filter-group">
             <label for="filter-sort">{{ t('library.sort_by') }}</label>
             <div class="sort-row">
-              <Dropdown
-                appendTo="self"
+              <AppSelect
                 inputId="filter-sort"
                 :modelValue="filters.sortField"
                 :options="sortOptions"
                 optionLabel="label"
                 optionValue="value"
                 class="custom-dropdown"
-                panelClass="custom-panel"
                 @update:modelValue="value => emitFilter('sortField', value)"
               />
               <AppButton
@@ -269,57 +262,51 @@
 
           <div class="filter-group">
             <label for="filter-tags">{{ t('library.tags') }}</label>
-            <MultiSelect
-              appendTo="self"
+            <AppMultiSelect
               inputId="filter-tags"
               :modelValue="filters.tags"
               :options="tagsList"
               optionLabel="name"
               optionValue="name"
               :placeholder="t('library.select_tags')"
-              :maxSelectedLabels="2"
-              :selectedItemsLabel="`{0} ${t('library.selected_tags')}`"
+              :max-labels="2"
+              :selected-label="`{0} ${t('library.selected_tags')}`"
               filter
-              class="w-full custom-multiselect"
-              panelClass="custom-panel"
+              class="w-full"
               @update:modelValue="value => emitFilter('tags', value)"
             />
           </div>
 
           <div class="filter-group">
             <label for="filter-authors">{{ t('library.authors') }}</label>
-            <MultiSelect
-              appendTo="self"
+            <AppMultiSelect
               inputId="filter-authors"
               :modelValue="filters.author"
               :options="authorsList"
               optionLabel="name"
               optionValue="name"
               :placeholder="t('library.select_authors')"
-              :maxSelectedLabels="2"
-              :selectedItemsLabel="`{0} ${t('library.selected_authors')}`"
+              :max-labels="2"
+              :selected-label="`{0} ${t('library.selected_authors')}`"
               filter
-              class="w-full custom-multiselect"
-              panelClass="custom-panel"
+              class="w-full"
               @update:modelValue="value => emitFilter('author', value)"
             />
           </div>
 
           <div class="filter-group">
             <label for="filter-publishers">{{ t('library.publishers') }}</label>
-            <MultiSelect
-              appendTo="self"
+            <AppMultiSelect
               inputId="filter-publishers"
               :modelValue="filters.publisher"
               :options="publishersList"
               optionLabel="name"
               optionValue="name"
               :placeholder="t('library.select_publishers')"
-              :maxSelectedLabels="2"
-              :selectedItemsLabel="`{0} ${t('library.selected_publishers')}`"
+              :max-labels="2"
+              :selected-label="`{0} ${t('library.selected_publishers')}`"
               filter
-              class="w-full custom-multiselect"
-              panelClass="custom-panel"
+              class="w-full"
               @update:modelValue="value => emitFilter('publisher', value)"
             />
           </div>
@@ -349,8 +336,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import AppButton from './ui/AppButton.vue'
 import AppDialog from './ui/AppDialog.vue'
 import IconButton from './form/IconButton.vue'
-import MultiSelect from 'primevue/multiselect'
-import Dropdown from 'primevue/dropdown'
+import AppMultiSelect from './ui/AppMultiSelect.vue'
+import AppSelect from './ui/AppSelect.vue'
 import AppChip from './ui/AppChip.vue'
 import AddBookDialog from './AddBookDialog.vue'
 import api from '../services/api.js'
@@ -592,37 +579,14 @@ defineExpose({ reloadOptions: loadOptions })
   min-width: 0;
 }
 
-.sort-quick.p-dropdown {
+.sort-quick {
   flex-shrink: 0;
-  height: 2.75rem;
-  align-items: center;
+}
+
+.sort-quick :deep(.app-select-trigger) {
+  min-height: 2.75rem;
   border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-input);
-  box-shadow: none;
-}
-
-.sort-quick.p-dropdown:not(.p-disabled):hover {
-  border-color: var(--border-hover);
-}
-
-.sort-quick.p-dropdown.p-focus {
-  border-color: var(--main-color);
-  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
-}
-
-.sort-quick :deep(.p-dropdown-label) {
-  display: flex;
-  align-items: center;
-  padding: 0 0.25rem 0 0.95rem;
-  background: transparent;
-  border: none;
-}
-
-.sort-quick :deep(.p-dropdown-trigger) {
-  width: 2.25rem;
-  background: transparent;
-  color: var(--text-secondary);
+  padding: 0 0.85rem 0 0.95rem;
 }
 
 .sort-quick-content {
@@ -713,20 +677,20 @@ defineExpose({ reloadOptions: loadOptions })
   align-items: center;
 }
 
-.action-btn {
-  color: var(--text-secondary) !important;
+.action-btn.btn {
+  --btn-fg: var(--text-secondary);
   width: 42px;
   height: 42px;
 }
 
-.action-btn:hover {
-  background-color: var(--bg-hover) !important;
-  color: var(--text-primary) !important;
+.action-btn.btn:hover:not(:disabled) {
+  --btn-bg: var(--bg-hover);
+  --btn-fg: var(--text-primary);
 }
 
-.action-btn.active-filter {
-  color: var(--main-color) !important;
-  background-color: rgba(var(--main-color-rgb), 0.1) !important;
+.action-btn.btn.active-filter {
+  --btn-fg: var(--main-color);
+  --btn-bg: rgba(var(--main-color-rgb), 0.1);
 }
 
 .add-btn {
@@ -839,7 +803,7 @@ defineExpose({ reloadOptions: loadOptions })
 
 .sort-row .custom-dropdown {
   flex: 1;
-  width: auto !important;
+  width: auto;
   min-width: 0;
 }
 
@@ -893,11 +857,8 @@ defineExpose({ reloadOptions: loadOptions })
     padding-bottom: 0.6rem;
   }
 
-  .sort-quick.p-dropdown {
-    height: 2.6rem;
-  }
-
-  .sort-quick :deep(.p-dropdown-label) {
+  .sort-quick :deep(.app-select-trigger) {
+    min-height: 2.6rem;
     padding-left: 0.8rem;
   }
 
@@ -946,9 +907,9 @@ defineExpose({ reloadOptions: loadOptions })
     flex-shrink: 0;
   }
 
-  .clear-all-btn {
+  .clear-all-btn.btn {
     flex-shrink: 0;
-    padding: 0.35rem 0.5rem !important;
+    padding: 0.35rem 0.5rem;
   }
 }
 </style>
@@ -963,107 +924,9 @@ defineExpose({ reloadOptions: loadOptions })
   overflow-y: auto;
 }
 
-.filters-drawer .p-dropdown,
-.filters-drawer .p-multiselect {
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  transition: all 0.2s;
-  height: 42px;
-  display: flex;
-  align-items: center;
-}
-
-.filters-drawer .p-multiselect-label-container {
-  display: flex;
-  align-items: center;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.filters-drawer .p-dropdown:not(.p-disabled):hover,
-.filters-drawer .p-multiselect:not(.p-disabled):hover,
-.filters-drawer .p-dropdown.p-focus,
-.filters-drawer .p-multiselect.p-focus {
-  border-color: var(--main-color) !important;
-  box-shadow: 0 0 0 1px rgba(var(--main-color-rgb), 0.2) !important;
-}
-
-.filters-drawer .p-dropdown-label,
-.filters-drawer .p-multiselect-label {
-  color: var(--text-primary);
-}
-
-.p-dropdown-label {
-  background-color: #00000000;
-}
-
-.custom-selectbutton .btn {
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  transition: all 0.2s;
-}
-
-.custom-selectbutton .btn:hover {
-  background-color: var(--bg-hover);
-}
-
-.p-selectbutton .btn.p-highlight::before {
-  background-color: #00000000 !important;
-}
-
-.p-multiselect-panel .p-multiselect-header {
-  background-color: var(--bg-panel) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.custom-selectbutton .btn.p-highlight {
-  background-color: var(--main-solid) !important;
-  border-color: var(--main-solid) !important;
-  color: var(--on-main) !important;
-  font-weight: 700;
-}
-
-.custom-panel.p-dropdown-panel,
-.custom-panel.p-multiselect-panel {
-  background-color: var(--bg-panel) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-.custom-panel .p-dropdown-item,
-.custom-panel .p-multiselect-item {
-  color: var(--text-primary) !important;
-}
-
-.custom-panel .p-dropdown-item:hover,
-.custom-panel .p-multiselect-item:hover {
-  background-color: var(--bg-hover) !important;
-}
-
-.custom-panel .p-dropdown-item.p-highlight,
-.custom-panel .p-multiselect-item.p-highlight {
-  color: var(--main-color) !important;
-  background-color: rgba(var(--main-color-rgb), 0.1) !important;
-}
-
 /* Lista do "Ordenar" ao lado da busca */
-.sort-quick-panel.p-dropdown-panel {
+.sort-quick-panel {
   min-width: 13rem;
-  margin-top: 0.35rem;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-}
-
-.sort-quick-panel .p-dropdown-items {
-  padding: 0.35rem;
-}
-
-.sort-quick-panel .p-dropdown-item {
-  border-radius: 8px;
-  padding: 0.6rem 0.85rem;
-  font-size: var(--fs-sm);
 }
 
 /* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */

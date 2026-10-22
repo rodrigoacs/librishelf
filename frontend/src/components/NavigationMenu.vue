@@ -508,8 +508,8 @@ button.nav-item {
     height: 60px;
   }
 
-  .menu-btn {
-    color: var(--text-primary) !important;
+  .menu-btn.btn {
+    --btn-fg: var(--text-primary);
     padding: 0;
     width: 40px;
   }

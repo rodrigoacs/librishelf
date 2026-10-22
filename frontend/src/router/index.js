@@ -10,8 +10,8 @@ import { setRouteTitle } from '../services/pageTitle.js'
  *   public       — acessível com ou sem sessão (mostra o menu se houver sessão)
  *   title        — chave de pageTitle.* para o título da aba (services/pageTitle.js)
  *
- * Views carregadas sob demanda: o chart.js do Dashboard e o PrimeVue pesado
- * das telas internas não entram no bundle do login.
+ * Views carregadas sob demanda: o chart.js do Dashboard e as telas internas
+ * não entram no bundle do login.
  */
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

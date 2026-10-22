@@ -20,7 +20,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
 
 | Layer    | Tech                                                                 |
 |----------|----------------------------------------------------------------------|
-| Frontend | Vue 3, Vite, PrimeVue 3, vue-i18n, Chart.js                           |
+| Frontend | Vue 3, Vite, vue-i18n, Chart.js, PrimeIcons (own UI components in `src/components/ui`) |
 | Backend  | Node.js 22+, Express 5, `pg`, `sharp` (covers → AVIF/JPG), JWT in an httpOnly cookie |
 | Database | PostgreSQL (schema `librishelf`)                                     |
 | Deploy   | Docker Compose; nginx serves the SPA and proxies `/api` to the backend |

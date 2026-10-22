@@ -2,7 +2,6 @@
   --font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   /* Títulos, logo e capas desenhadas: serifa empacotada, igual em todo sistema */
   --font-display: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
-  --p-focus-ring-color: var(--main-color);
 
   /* Escala de fonte (use estes tokens em vez de tamanhos soltos) */
   --fs-xs: 0.75rem;
@@ -55,19 +54,6 @@
   --purple-solid-rgb: 110, 84, 240;
   --yellow-solid-rgb: 143, 101, 0;
   --orange-solid-rgb: 194, 65, 12;
-
-  /* Variáveis do PrimeVue apontando para as do app */
-  --primary-color: var(--main-color);
-  --primary-color-text: var(--on-main);
-  --surface-ground: var(--bg-app);
-  --surface-section: var(--bg-panel);
-  --surface-card: var(--bg-panel);
-  --surface-overlay: var(--bg-panel);
-  --surface-border: var(--border-color);
-  --text-color: var(--text-primary);
-  --text-color-secondary: var(--text-secondary);
-  --highlight-bg: rgba(var(--main-color-rgb), 0.16);
-  --highlight-text-color: var(--main-color);
 
   color-scheme: dark;
 }
@@ -199,61 +185,6 @@ body {
   outline-offset: 2px;
 }
 
-.p-checkbox .p-checkbox-box {
-  border: 2px solid var(--text-muted);
-  background: transparent;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.p-checkbox.p-highlight .p-checkbox-box {
-  border-color: var(--main-solid);
-  background-color: var(--main-solid);
-}
-
-.p-checkbox-box .p-icon {
-  color: var(--on-main);
-}
-
-.p-inputtext {
-  background-color: var(--bg-input);
-  color: var(--text-primary);
-  border: 1px solid transparent;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.p-inputtext:enabled:focus {
-  outline: none;
-  border-color: var(--main-color);
-  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
-}
-
-.p-inputtext:disabled {
-  background-color: transparent;
-  color: var(--text-muted);
-  opacity: 0.7;
-}
-
-.p-dialog-mask {
-  background-color: var(--bg-overlay) !important;
-  backdrop-filter: blur(4px);
-}
-
-.dialog-overlay {
-  background-color: var(--bg-panel);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-@media (max-width: 768px) {
-  .dialog-overlay {
-    width: 90%;
-  }
-}
 /* ------------------------------------------------------------------ botões
  * AppButton (components/ui/AppButton.vue). Sem classe de variante é o botão
  * principal: fundo na cor de destaque e texto branco.

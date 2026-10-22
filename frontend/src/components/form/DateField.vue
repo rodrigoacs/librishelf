@@ -5,7 +5,6 @@
   >
     <div class="field-box">
       <input
-        v-if="native"
         :id="id"
         type="date"
         class="field-control native"
@@ -14,22 +13,6 @@
         :aria-invalid="error ? 'true' : undefined"
         :aria-describedby="describedBy"
         @input="onNativeInput"
-        @focus="focused = true"
-        @blur="focused = false"
-      />
-      <Calendar
-        v-else
-        :inputId="id"
-        :modelValue="modelValue"
-        :maxDate="maxDate || undefined"
-        dateFormat="dd/mm/yy"
-        class="field-calendar"
-        appendTo="self"
-        :showIcon="false"
-        showButtonBar
-        :aria-invalid="error ? 'true' : undefined"
-        :aria-describedby="describedBy"
-        @update:modelValue="value => emit('update:modelValue', value || null)"
         @focus="focused = true"
         @blur="focused = false"
       />
@@ -57,14 +40,13 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
-import Calendar from 'primevue/calendar'
+import { computed, ref } from 'vue'
 import { toApiDate } from '../../utils/dates.js'
 
 /**
- * Data com rótulo flutuante. Até 640px usa o seletor nativo do celular
- * (<input type="date">), mais fácil de usar com o polegar que o calendário
- * flutuante do PrimeVue.
+ * Data com rótulo flutuante, no seletor nativo do navegador
+ * (<input type="date">): calendário do sistema no celular e digitação
+ * dia/mês/ano no computador.
  */
 const props = defineProps({
   modelValue: { type: Date, default: null },
@@ -77,11 +59,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const focused = ref(false)
 
-const query = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(max-width: 640px)') : null
-const native = ref(Boolean(query?.matches))
-const onChange = event => { native.value = event.matches }
-onMounted(() => query?.addEventListener?.('change', onChange))
-onBeforeUnmount(() => query?.removeEventListener?.('change', onChange))
 
 const describedBy = computed(() => (props.error ? `${props.id}-error` : undefined))
 
@@ -118,8 +95,7 @@ function onNativeInput(event) {
   border-color: var(--red);
 }
 
-.field-control,
-.field-calendar :deep(.p-inputtext) {
+.field-control {
   width: 100%;
   min-height: 3.25rem;
   background: transparent;
@@ -133,15 +109,7 @@ function onNativeInput(event) {
   border-radius: 10px;
 }
 
-.field-calendar {
-  display: block;
-  width: 100%;
-}
 
-.field-calendar :deep(.p-inputtext:enabled:focus) {
-  box-shadow: none;
-  border: none;
-}
 
 /* Vazio e sem foco, o texto do seletor nativo (dd/mm/aaaa) fica escondido atrás do rótulo */
 .date-field:not(.floated) .native {

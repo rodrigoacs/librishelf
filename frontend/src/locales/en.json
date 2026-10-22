@@ -40,7 +40,10 @@
     "skipToContent": "Skip to content",
     "removeItem": "Remove {name}",
     "decrease": "Decrease",
-    "increase": "Increase"
+    "increase": "Increase",
+    "noResults": "Nothing found.",
+    "typeToSeeMore": "{n} more — type to filter.",
+    "clearSelection": "Clear selection"
   },
   "home": {
     "morning": "Good morning, {name}",

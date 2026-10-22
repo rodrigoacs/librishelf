@@ -1,7 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import primevueTheme from './vite/primevueTheme.js'
 import preloadIconFont from './vite/preloadIconFont.js'
 
 export default defineConfig(({ mode }) => {
@@ -10,7 +9,7 @@ export default defineConfig(({ mode }) => {
   const apiTarget = env.VITE_DEV_API_TARGET || 'http://localhost:3050'
 
   return {
-    plugins: [primevueTheme(), vue(), preloadIconFont()],
+    plugins: [vue(), preloadIconFont()],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url))

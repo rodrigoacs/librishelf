@@ -77,7 +77,10 @@
     "skipToContent": "Pular para o conteúdo",
     "removeItem": "Tirar {name}",
     "decrease": "Diminuir",
-    "increase": "Aumentar"
+    "increase": "Aumentar",
+    "noResults": "Nada encontrado.",
+    "typeToSeeMore": "Mais {n} — digite para filtrar.",
+    "clearSelection": "Limpar seleção"
   },
   "book": {
     "new_title": "Novo Livro",

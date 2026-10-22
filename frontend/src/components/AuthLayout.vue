@@ -225,46 +225,6 @@ onMounted(async () => {
   width: 100%;
 }
 
-.form-wrapper :deep(.p-inputtext) {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 1rem;
-  width: 100%;
-}
-
-.form-wrapper :deep(.p-inputtext:focus),
-.form-wrapper :deep(.p-inputwrapper-focus .p-inputtext) {
-  border-color: var(--main-color);
-  box-shadow: 0 0 0 1px var(--main-color);
-}
-
-.form-wrapper :deep(.p-float-label label) {
-  color: var(--text-secondary);
-  top: 50%;
-  margin-top: -0.5rem;
-  left: 1rem;
-  transition: all 0.2s ease;
-  pointer-events: none;
-}
-
-.form-wrapper :deep(.p-inputtext:focus ~ label),
-.form-wrapper :deep(.p-inputtext.p-filled ~ label),
-.form-wrapper :deep(.p-inputwrapper-focus ~ label),
-.form-wrapper :deep(.p-inputwrapper-filled ~ label) {
-  top: -0.75rem;
-  font-size: var(--fs-xs);
-  background-color: var(--bg-panel);
-  padding: 0 0.5rem;
-  color: var(--main-color);
-  left: 0.5rem;
-  z-index: 2;
-}
-
-.form-wrapper :deep(.p-password) {
-  width: 100%;
-}
-
 .form-wrapper :deep(.field-hint) {
   display: block;
   margin-top: 0.4rem;
