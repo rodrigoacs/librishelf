@@ -31,17 +31,17 @@
           :key="n"
           class="book-skeleton"
         >
-          <Skeleton
+          <AppSkeleton
             height="100%"
             class="cover-skeleton"
           />
           <div class="info-skeleton">
-            <Skeleton
+            <AppSkeleton
               width="85%"
               height="1rem"
               class="mb-2"
             />
-            <Skeleton
+            <AppSkeleton
               width="60%"
               height="0.8rem"
             />
@@ -61,10 +61,10 @@
           ></i>
         </div>
         <h3>{{ t('library.load_error') }}</h3>
-        <Button
+        <AppButton
           :label="t('common.retry')"
           icon="pi pi-refresh"
-          class="p-button-outlined p-button-secondary mt-3"
+          class="btn-outlined btn-secondary mt-3"
           @click="refreshData"
         />
       </div>
@@ -146,10 +146,10 @@
         <h3>{{ t('library.empty_title') }}</h3>
         <p>{{ t('library.empty_msg') }}</p>
 
-        <Button
+        <AppButton
           :label="t('library.clear_all')"
           icon="pi pi-filter-slash"
-          class="p-button-outlined p-button-secondary mt-3"
+          class="btn-outlined btn-secondary mt-3"
           @click="clearFilters"
         />
       </div>
@@ -167,8 +167,8 @@ import BookItem from '../components/BookItem.vue'
 import BookRow from '../components/BookRow.vue'
 import BatchBar from '../components/BatchBar.vue'
 import { queryToFilters, queryToView, filtersToQuery, sameQuery, VIEW_MODES } from '../utils/libraryQuery.js'
-import Skeleton from 'primevue/skeleton'
-import Button from 'primevue/button'
+import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import AppButton from '../components/ui/AppButton.vue'
 import { useLibrary } from '../composables/useLibrary.js'
 
 const { t } = useI18n()

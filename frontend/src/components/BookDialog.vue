@@ -91,16 +91,16 @@
             v-if="!isReadOnly && !loading && !loadFailed"
             class="dialog-footer"
           >
-            <Button
+            <AppButton
               :label="t('bookDialog.deleteShort')"
               icon="pi pi-trash"
-              class="p-button-text p-button-danger p-button-sm"
+              class="btn-text btn-danger btn-sm"
               @click="deleteBook"
             />
-            <Button
+            <AppButton
               :label="t('bookDialog.editShort')"
               icon="pi pi-pencil"
-              class="p-button-outlined p-button-secondary p-button-sm footer-edit"
+              class="btn-outlined btn-secondary btn-sm footer-edit"
               @click="editMode"
             />
           </div>
@@ -114,9 +114,9 @@
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
-import Button from 'primevue/button'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
+import AppButton from './ui/AppButton.vue'
+import { useToast } from '../services/toast.js'
+import { useConfirm } from '../services/confirm.js'
 import api from '../services/api.js'
 import { colorFor } from '../utils/tagColors.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
@@ -217,8 +217,8 @@ function deleteBook() {
     message: t('bookDialog.confirmDelete'),
     header: t('bookDialog.confirm'),
     icon: 'pi pi-exclamation-triangle',
-    acceptClass: 'p-button-rounded p-button-danger',
-    rejectClass: 'p-button-text p-button-secondary',
+    acceptClass: 'btn-rounded btn-danger',
+    rejectClass: 'btn-text btn-secondary',
     acceptLabel: t('bookDialog.delete'),
     rejectLabel: t('bookDialog.cancel'),
     accept: async () => {
@@ -412,7 +412,7 @@ onBeforeUnmount(() => setOverlayTitle(''))
   gap: 0.75rem;
 }
 
-.footer-edit.p-button {
+.footer-edit.btn {
   border-radius: 8px;
 }
 

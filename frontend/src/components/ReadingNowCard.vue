@@ -32,10 +32,10 @@
         ></i>
         {{ since }}
       </p>
-      <Button
+      <AppButton
         :label="t('home.finished')"
         icon="pi pi-check"
-        class="p-button-sm p-button-outlined finish-btn"
+        class="btn-sm btn-outlined finish-btn"
         :loading="saving"
         @click="finish"
       />
@@ -55,8 +55,8 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import { useToast } from 'primevue/usetoast'
+import AppButton from './ui/AppButton.vue'
+import { useToast } from '../services/toast.js'
 import api from '../services/api.js'
 import BookCover from './BookCover.vue'
 import BookDialog from './BookDialog.vue'
@@ -177,7 +177,7 @@ async function finish() {
   font-size: var(--fs-xs);
 }
 
-.finish-btn.p-button {
+.finish-btn.btn {
   margin-top: auto;
   align-self: flex-start;
   border-radius: 999px;

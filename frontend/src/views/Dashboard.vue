@@ -26,12 +26,12 @@
       v-if="loading"
       class="loading-layout"
     >
-      <Skeleton
+      <AppSkeleton
         height="150px"
         class="chart-skeleton"
       />
       <div class="kpi-grid">
-        <Skeleton
+        <AppSkeleton
           height="120px"
           class="kpi-skeleton"
           v-for="n in 4"
@@ -39,11 +39,11 @@
         />
       </div>
       <div class="charts-grid">
-        <Skeleton
+        <AppSkeleton
           height="350px"
           class="chart-skeleton"
         />
-        <Skeleton
+        <AppSkeleton
           height="350px"
           class="chart-skeleton"
         />
@@ -60,10 +60,10 @@
         aria-hidden="true"
       ></i>
       <p>{{ $t('dashboard.loadError') }}</p>
-      <Button
+      <AppButton
         :label="$t('common.retry')"
         icon="pi pi-refresh"
-        class="p-button-outlined p-button-secondary"
+        class="btn-outlined btn-secondary"
         @click="loadStats"
       />
     </div>
@@ -99,18 +99,18 @@
             v-if="!editingGoal"
             class="goal-actions"
           >
-            <Button
+            <AppButton
               v-if="stats.goal"
               :label="t('goal.edit')"
               icon="pi pi-pencil"
-              class="p-button-text p-button-sm"
+              class="btn-text btn-sm"
               @click="startEditGoal"
             />
-            <Button
+            <AppButton
               v-else
               :label="t('goal.set')"
               icon="pi pi-flag"
-              class="p-button-sm btn-action-primary"
+              class="btn-sm btn-primary"
               @click="startEditGoal"
             />
           </div>
@@ -123,32 +123,30 @@
         >
           <label for="goal-target">{{ t('goal.question', { year }) }}</label>
           <div class="goal-form-row">
-            <InputNumber
+            <NumberField
               v-model="goalDraft"
               inputId="goal-target"
               :min="1"
               :max="1000"
-              showButtons
-              :useGrouping="false"
               class="goal-input"
             />
-            <Button
+            <AppButton
               type="submit"
               :label="t('goal.save')"
               :loading="goalSaving"
-              class="p-button-sm btn-action-primary"
+              class="btn-sm btn-primary"
             />
-            <Button
+            <AppButton
               type="button"
               :label="t('common.cancel')"
-              class="p-button-text p-button-sm"
+              class="btn-text btn-sm"
               @click="editingGoal = false"
             />
-            <Button
+            <AppButton
               v-if="stats.goal"
               type="button"
               :label="t('goal.remove')"
-              class="p-button-text p-button-sm p-button-danger"
+              class="btn-text btn-sm btn-danger"
               :disabled="goalSaving"
               @click="removeGoal"
             />
@@ -263,7 +261,7 @@
               v-if="readInYear === 0"
               class="no-data"
             >{{ t('dashboard.noMonthData', { year }) }}</div>
-            <Chart
+            <ChartCanvas
               v-else
               type="bar"
               :data="monthChartData"
@@ -280,7 +278,7 @@
               v-if="stats.readingByYear.length === 0"
               class="no-data"
             >{{ $t('dashboard.noYearData') }}</div>
-            <Chart
+            <ChartCanvas
               v-else
               type="bar"
               :data="yearChartData"
@@ -300,7 +298,7 @@
               v-if="stats.topTags.length === 0"
               class="no-data"
             >{{ $t('dashboard.noTagsData') }}</div>
-            <Chart
+            <ChartCanvas
               v-else-if="stats.topTags.length <= DONUT_MAX"
               type="doughnut"
               :data="tagsChartData"
@@ -383,12 +381,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
-import Chart from 'primevue/chart'
-import Skeleton from 'primevue/skeleton'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import ChartCanvas from '../components/ui/ChartCanvas.vue'
+import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import AppButton from '../components/ui/AppButton.vue'
 import Dropdown from 'primevue/dropdown'
-import InputNumber from 'primevue/inputnumber'
+import NumberField from '../components/ui/NumberField.vue'
 import api from '../services/api.js'
 import { useTheme, cssVar } from '../composables/useTheme.js'
 import { colorFor, tagColorName } from '../utils/tagColors.js'

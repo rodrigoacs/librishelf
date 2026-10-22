@@ -25,40 +25,28 @@
       />
 
       <div class="field">
-        <span class="p-float-label">
-          <Password
-            inputId="reset-password"
-            v-model="password"
-            class="w-full"
-            toggleMask
-            :promptLabel="t('register.passwordPrompt')"
-            :weakLabel="t('register.weak')"
-            :mediumLabel="t('register.medium')"
-            :strongLabel="t('register.strong')"
-            :inputProps="{ autocomplete: 'new-password' }"
-          />
-          <label for="reset-password">{{ t('reset.newPassword') }}</label>
-        </span>
+        <PasswordField
+          id="reset-password"
+          v-model="password"
+          :label="t('reset.newPassword')"
+          autocomplete="new-password"
+          strength
+        />
       </div>
 
       <div class="field">
-        <span class="p-float-label">
-          <Password
-            inputId="reset-confirm"
-            v-model="confirm"
-            class="w-full"
-            :feedback="false"
-            toggleMask
-            :inputProps="{ autocomplete: 'new-password' }"
-          />
-          <label for="reset-confirm">{{ t('reset.confirm') }}</label>
-        </span>
+        <PasswordField
+          id="reset-confirm"
+          v-model="confirm"
+          :label="t('reset.confirm')"
+          autocomplete="new-password"
+        />
       </div>
 
-      <Button
+      <AppButton
         type="submit"
         :label="t('reset.submit')"
-        class="btn-action-primary w-full p-button-lg"
+        class="btn-primary w-full btn-lg"
         :loading="loading"
       />
     </form>
@@ -71,12 +59,12 @@
 </template>
 
 <script setup>
+import PasswordField from '../components/form/PasswordField.vue'
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import AppButton from '../components/ui/AppButton.vue'
 import AuthLayout from '../components/AuthLayout.vue'
 import api from '../services/api.js'
 import { clearSession } from '../services/session.js'

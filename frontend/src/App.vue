@@ -15,11 +15,8 @@
       id="main-content"
       tabindex="-1"
     >
-      <Toast
-        position="bottom-right"
-        :breakpoints="{ '640px': { width: 'calc(100vw - 2rem)', left: '1rem', right: '1rem' } }"
-      />
-      <ConfirmDialog />
+      <ToastHost />
+      <ConfirmHost />
       <EmailBanner
         v-if="showNavigation && currentUser && currentUser.emailVerified === false"
         :email="currentUser.email"
@@ -34,8 +31,8 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import NavigationMenu from './components/NavigationMenu.vue'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
+import ToastHost from './components/ui/ToastHost.vue'
+import ConfirmHost from './components/ui/ConfirmHost.vue'
 import { isAuthenticated, currentUser } from './services/session.js'
 import EmailBanner from './components/EmailBanner.vue'
 

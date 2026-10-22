@@ -74,7 +74,10 @@
     "loadError": "Não foi possível carregar. Verifique sua conexão e tente de novo.",
     "back": "Voltar",
     "saving": "Salvando...",
-    "skipToContent": "Pular para o conteúdo"
+    "skipToContent": "Pular para o conteúdo",
+    "removeItem": "Tirar {name}",
+    "decrease": "Diminuir",
+    "increase": "Aumentar"
   },
   "book": {
     "new_title": "Novo Livro",
@@ -783,5 +786,9 @@
     "publicLibrary": "Biblioteca de {name}",
     "privacy": "Privacidade",
     "notFound": "Página não encontrada"
+  },
+  "password": {
+    "show": "Mostrar senha",
+    "hide": "Esconder senha"
   }
 }

@@ -42,7 +42,7 @@
           </p>
 
           <div class="toggle-row">
-            <InputSwitch
+            <AppSwitch
               inputId="settings-public-toggle"
               :modelValue="isPublic"
               :disabled="savingVisibility || (!emailVerified && !isPublic)"
@@ -64,10 +64,10 @@
                 readonly
                 @focus="event => event.target.select()"
               />
-              <Button
+              <AppButton
                 :label="copied ? t('common.copied') : t('common.copy')"
                 :icon="copied ? 'pi pi-check' : 'pi pi-copy'"
-                class="p-button-outlined p-button-secondary"
+                class="btn-outlined btn-secondary"
                 @click="copyLink"
               />
             </div>
@@ -85,7 +85,7 @@
           <div class="stack">
             <div class="toggle-block">
               <div class="toggle-row">
-                <InputSwitch
+                <AppSwitch
                   inputId="settings-community-toggle"
                   :modelValue="showInCommunity"
                   :disabled="savingVisibility || !isPublic || (!emailVerified && !showInCommunity)"
@@ -102,7 +102,7 @@
 
             <div class="toggle-block">
               <div class="toggle-row">
-                <InputSwitch
+                <AppSwitch
                   inputId="settings-activity-toggle"
                   :modelValue="showActivity"
                   :disabled="savingVisibility || (!emailVerified && !showActivity)"
@@ -134,9 +134,9 @@
               <dt>{{ t('settings.account.username') }}</dt>
               <dd>
                 <span class="account-value">{{ user?.name }}</span>
-                <Button
+                <AppButton
                   :label="t('settings.account.change')"
-                  class="p-button-text p-button-sm"
+                  class="btn-text btn-sm"
                   @click="openAccountDialog('username')"
                 />
               </dd>
@@ -151,9 +151,9 @@
                     class="badge-pending"
                   >{{ t('settings.account.notVerified') }}</span>
                 </span>
-                <Button
+                <AppButton
                   :label="t('settings.account.change')"
-                  class="p-button-text p-button-sm"
+                  class="btn-text btn-sm"
                   @click="openAccountDialog('email')"
                 />
               </dd>
@@ -188,46 +188,35 @@
             />
 
             <div class="field">
-              <label for="settings-current-password">{{ t('settings.password.current') }}</label>
-              <Password
-                inputId="settings-current-password"
+              <PasswordField
+                id="settings-current-password"
                 v-model="passwordForm.current"
-                :feedback="false"
-                toggleMask
-                class="w-full"
-                :inputProps="{ autocomplete: 'current-password' }"
+                :label="t('settings.password.current')"
+                autocomplete="current-password"
               />
             </div>
             <div class="field">
-              <label for="settings-new-password">{{ t('settings.password.new') }}</label>
-              <Password
-                inputId="settings-new-password"
+              <PasswordField
+                id="settings-new-password"
                 v-model="passwordForm.next"
-                toggleMask
-                class="w-full"
-                :promptLabel="t('register.passwordPrompt')"
-                :weakLabel="t('register.weak')"
-                :mediumLabel="t('register.medium')"
-                :strongLabel="t('register.strong')"
-                :inputProps="{ autocomplete: 'new-password' }"
+                :label="t('settings.password.new')"
+                autocomplete="new-password"
+                strength
               />
             </div>
             <div class="field">
-              <label for="settings-confirm-password">{{ t('settings.password.confirm') }}</label>
-              <Password
-                inputId="settings-confirm-password"
+              <PasswordField
+                id="settings-confirm-password"
                 v-model="passwordForm.confirm"
-                :feedback="false"
-                toggleMask
-                class="w-full"
-                :inputProps="{ autocomplete: 'new-password' }"
+                :label="t('settings.password.confirm')"
+                autocomplete="new-password"
               />
             </div>
 
-            <Button
+            <AppButton
               type="submit"
               :label="t('settings.password.submit')"
-              class="btn-action-primary"
+              class="btn-primary"
               :loading="savingPassword"
             />
           </form>
@@ -243,18 +232,18 @@
           <h2 id="settings-data-title">{{ t('settings.data.title') }}</h2>
           <p class="card-desc">{{ t('settings.data.exportDesc') }}</p>
           <div class="button-row">
-            <Button
+            <AppButton
               :label="t('settings.data.exportJson')"
               icon="pi pi-download"
-              class="p-button-outlined p-button-sm"
+              class="btn-outlined btn-sm"
               :loading="exporting === 'json'"
               :disabled="Boolean(exporting)"
               @click="downloadExport('json')"
             />
-            <Button
+            <AppButton
               :label="t('settings.data.exportCsv')"
               icon="pi pi-file"
-              class="p-button-outlined p-button-sm"
+              class="btn-outlined btn-sm"
               :loading="exporting === 'csv'"
               :disabled="Boolean(exporting)"
               @click="downloadExport('csv')"
@@ -324,10 +313,10 @@
         >
           <h2 id="settings-delete-title">{{ t('settings.delete.title') }}</h2>
           <p class="card-desc">{{ t('settings.delete.desc') }}</p>
-          <Button
+          <AppButton
             :label="t('settings.delete.button')"
             icon="pi pi-trash"
-            class="p-button-danger p-button-outlined"
+            class="btn-danger btn-outlined"
             @click="openDeleteDialog"
           />
         </section>
@@ -360,29 +349,26 @@
       >
         <p class="card-desc">{{ t('settings.delete.confirmMsg') }}</p>
         <div class="field">
-          <label for="settings-delete-password">{{ t('settings.delete.password') }}</label>
-          <Password
-            inputId="settings-delete-password"
+          <PasswordField
+            id="settings-delete-password"
             v-model="deletePassword"
-            :feedback="false"
-            toggleMask
-            class="w-full"
-            :inputProps="{ autocomplete: 'current-password' }"
+            :label="t('settings.delete.password')"
+            autocomplete="current-password"
           />
         </div>
         <div class="dialog-actions">
-          <Button
+          <AppButton
             type="button"
             :label="t('common.cancel')"
-            class="p-button-text p-button-secondary"
+            class="btn-text btn-secondary"
             :disabled="deleting"
             @click="deleteDialogVisible = false"
           />
-          <Button
+          <AppButton
             type="submit"
             :label="t('settings.delete.confirmButton')"
             icon="pi pi-trash"
-            class="p-button-danger"
+            class="btn-danger"
             :loading="deleting"
             :disabled="!deletePassword"
           />
@@ -415,20 +401,17 @@
           />
         </div>
         <div class="field">
-          <label for="settings-account-password">{{ t('settings.password.current') }}</label>
-          <Password
-            inputId="settings-account-password"
+          <PasswordField
+            id="settings-account-password"
             v-model="accountDialog.password"
-            :feedback="false"
-            toggleMask
-            class="w-full"
-            :inputProps="{ autocomplete: 'current-password' }"
+            :label="t('settings.password.current')"
+            autocomplete="current-password"
           />
         </div>
-        <Button
+        <AppButton
           type="submit"
           :label="t('common.save')"
-          class="btn-action-primary"
+          class="btn-primary"
           :loading="accountDialog.saving"
           :disabled="!accountDialog.value.trim() || !accountDialog.password"
         />
@@ -438,14 +421,14 @@
 </template>
 
 <script setup>
+import PasswordField from '../components/form/PasswordField.vue'
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import AppButton from '../components/ui/AppButton.vue'
 import Dialog from 'primevue/dialog'
-import InputSwitch from 'primevue/inputswitch'
-import Password from 'primevue/password'
+import AppSwitch from '../components/ui/AppSwitch.vue'
 import api from '../services/api.js'
 import { currentUser, updateUser, setUser, clearSession } from '../services/session.js'
 
@@ -823,7 +806,7 @@ async function deleteAccount() {
   align-items: stretch;
 }
 
-.stack>.p-button {
+.stack>.btn {
   align-self: flex-start;
 }
 

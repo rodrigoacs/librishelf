@@ -37,7 +37,10 @@
     "loadError": "Could not load. Check your connection and try again.",
     "back": "Back",
     "saving": "Saving...",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "removeItem": "Remove {name}",
+    "decrease": "Decrease",
+    "increase": "Increase"
   },
   "home": {
     "morning": "Good morning, {name}",
@@ -783,5 +786,9 @@
     "publicLibrary": "{name}'s library",
     "privacy": "Privacy",
     "notFound": "Page not found"
+  },
+  "password": {
+    "show": "Show password",
+    "hide": "Hide password"
   }
 }

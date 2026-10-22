@@ -15,25 +15,25 @@
       v-if="state !== 'loading'"
       class="auth-form"
     >
-      <Button
+      <AppButton
         v-if="state === 'done'"
         :label="isAuthenticated ? t('verify.goHome') : t('verify.goLogin')"
-        class="btn-action-primary w-full p-button-lg"
+        class="btn-primary w-full btn-lg"
         @click="router.replace(isAuthenticated ? { name: 'home' } : { name: 'login' })"
       />
       <template v-else>
-        <Button
+        <AppButton
           v-if="isAuthenticated"
           :label="t('verify.resend')"
           icon="pi pi-envelope"
-          class="btn-action-primary w-full"
+          class="btn-primary w-full"
           :loading="resending"
           @click="resend"
         />
-        <Button
+        <AppButton
           v-else
           :label="t('verify.goLogin')"
-          class="p-button-outlined p-button-secondary w-full"
+          class="btn-outlined btn-secondary w-full"
           @click="router.replace({ name: 'login', query: { redirect: '/settings' } })"
         />
       </template>
@@ -45,8 +45,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import AppButton from '../components/ui/AppButton.vue'
 import AuthLayout from '../components/AuthLayout.vue'
 import api from '../services/api.js'
 import { isAuthenticated, loadSession, updateUser } from '../services/session.js'

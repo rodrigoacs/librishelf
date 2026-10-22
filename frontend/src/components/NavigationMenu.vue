@@ -2,10 +2,10 @@
   <div class="navigation-container">
 
     <div class="mobile-header">
-      <Button
+      <AppButton
         ref="menuButton"
         icon="pi pi-bars"
-        class="p-button-text menu-btn"
+        class="btn-text menu-btn"
         :aria-label="t('menu.openMenu')"
         :aria-expanded="mobileMenuOpen"
         aria-controls="app-sidebar"
@@ -172,7 +172,7 @@
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
+import AppButton from './ui/AppButton.vue'
 import ThemeSwitcher from './ThemeSwitcher.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 import api from '../services/api.js'

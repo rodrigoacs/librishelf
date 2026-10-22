@@ -15,24 +15,20 @@
       @submit.prevent="submit"
     >
       <div class="field">
-        <span class="p-float-label">
-          <InputText
-            id="forgot-email"
-            v-model="email"
-            type="email"
-            class="w-full"
-            autocomplete="email"
-            autocapitalize="none"
-            spellcheck="false"
-          />
-          <label for="forgot-email">{{ t('forgot.email') }}</label>
-        </span>
+        <TextField
+          id="forgot-email"
+          v-model="email"
+          :label="t('forgot.email')"
+          type="email"
+          autocomplete="email"
+          :input-attrs="{ autocapitalize: 'none', spellcheck: 'false' }"
+        />
       </div>
 
-      <Button
+      <AppButton
         type="submit"
         :label="t('forgot.submit')"
-        class="btn-action-primary w-full p-button-lg"
+        class="btn-primary w-full btn-lg"
         :loading="loading"
       />
     </form>
@@ -51,9 +47,9 @@
         ></i>
         {{ t('forgot.checkSpam') }}
       </p>
-      <Button
+      <AppButton
         :label="t('forgot.tryAgain')"
-        class="p-button-outlined p-button-secondary w-full"
+        class="btn-outlined btn-secondary w-full"
         @click="sent = false"
       />
     </div>
@@ -65,11 +61,11 @@
 </template>
 
 <script setup>
+import TextField from '../components/form/TextField.vue'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
-import InputText from 'primevue/inputtext'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import AppButton from '../components/ui/AppButton.vue'
 import AuthLayout from '../components/AuthLayout.vue'
 import api from '../services/api.js'
 

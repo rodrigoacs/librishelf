@@ -118,7 +118,6 @@
 /* Controles e navegação não selecionam texto ao clicar; o conteúdo (títulos,
    autores, ISBN, textos) continua selecionável e copiável. */
 button,
-.p-button,
 nav,
 .nav-item,
 img {
@@ -255,14 +254,191 @@ body {
     width: 90%;
   }
 }
-/* Botão principal (tema). Também definido nos diálogos; aqui vale para todas as telas. */
-.p-button.btn-action-primary {
-  background-color: var(--main-solid);
-  border-color: var(--main-solid);
-  color: var(--on-main);
+/* ------------------------------------------------------------------ botões
+ * AppButton (components/ui/AppButton.vue). Sem classe de variante é o botão
+ * principal: fundo na cor de destaque e texto branco.
+ */
+.btn {
+  --btn-bg: var(--main-solid);
+  --btn-fg: var(--on-main);
+  --btn-border: var(--main-solid);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--btn-border);
+  border-radius: 10px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font: inherit;
+  font-size: var(--fs-md);
   font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
 }
 
-.p-button.btn-action-primary:hover {
-  filter: brightness(1.1);
+.btn:hover:not(:disabled) {
+  --btn-bg: color-mix(in srgb, var(--main-solid) 88%, black);
+  --btn-border: var(--btn-bg);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn.btn-loading {
+  cursor: progress;
+}
+
+.btn-icon {
+  font-size: 0.95em;
+}
+
+/* Contornado e só texto: cor de destaque, sem fundo */
+.btn.btn-outlined,
+.btn.btn-text {
+  --btn-bg: transparent;
+  --btn-fg: var(--main-color);
+  --btn-border: rgba(var(--main-color-rgb), 0.5);
+}
+
+.btn.btn-text {
+  --btn-border: transparent;
+}
+
+.btn.btn-outlined:hover:not(:disabled),
+.btn.btn-text:hover:not(:disabled) {
+  --btn-bg: rgba(var(--main-color-rgb), 0.1);
+  --btn-border: rgba(var(--main-color-rgb), 0.5);
+}
+
+.btn.btn-text:hover:not(:disabled) {
+  --btn-border: transparent;
+}
+
+/* Secundário: cinza, para "Cancelar" e ações de apoio */
+.btn.btn-secondary {
+  --btn-bg: var(--bg-input);
+  --btn-fg: var(--text-primary);
+  --btn-border: var(--bg-input);
+}
+
+.btn.btn-secondary.btn-outlined {
+  --btn-bg: transparent;
+  --btn-fg: var(--text-secondary);
+  --btn-border: var(--border-hover);
+}
+
+.btn.btn-secondary.btn-text {
+  --btn-bg: transparent;
+  --btn-fg: var(--text-secondary);
+  --btn-border: transparent;
+}
+
+.btn.btn-secondary:hover:not(:disabled) {
+  --btn-bg: var(--bg-hover);
+  --btn-fg: var(--text-primary);
+  --btn-border: var(--bg-hover);
+}
+
+.btn.btn-secondary.btn-outlined:hover:not(:disabled) {
+  --btn-border: var(--text-muted);
+}
+
+/* Perigo: excluir */
+.btn.btn-danger {
+  --btn-bg: rgb(var(--red-solid-rgb));
+  --btn-fg: #ffffff;
+  --btn-border: rgb(var(--red-solid-rgb));
+}
+
+.btn.btn-danger:hover:not(:disabled) {
+  --btn-bg: color-mix(in srgb, rgb(var(--red-solid-rgb)) 88%, black);
+  --btn-border: var(--btn-bg);
+}
+
+.btn.btn-danger.btn-text,
+.btn.btn-danger.btn-outlined {
+  --btn-bg: transparent;
+  --btn-fg: var(--red);
+  --btn-border: transparent;
+}
+
+.btn.btn-danger.btn-outlined {
+  --btn-border: rgba(var(--red-rgb), 0.5);
+}
+
+.btn.btn-danger.btn-text:hover:not(:disabled),
+.btn.btn-danger.btn-outlined:hover:not(:disabled) {
+  --btn-bg: rgba(var(--red-rgb), 0.1);
+}
+
+.btn.btn-sm {
+  min-height: 2.1rem;
+  padding: 0.35rem 0.85rem;
+  font-size: var(--fs-sm);
+  border-radius: 8px;
+}
+
+.btn.btn-lg {
+  min-height: 3rem;
+  padding: 0.7rem 1.4rem;
+  font-size: var(--fs-lg);
+}
+
+.btn.btn-rounded {
+  border-radius: 999px;
+}
+
+.btn.btn-icon-only {
+  width: 2.5rem;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.btn.btn-sm.btn-icon-only {
+  width: 2.1rem;
+}
+
+.btn.w-full {
+  width: 100%;
+}
+
+@media (pointer: coarse) {
+  .btn {
+    min-height: 2.75rem;
+  }
+
+  .btn.btn-icon-only {
+    width: 2.75rem;
+  }
+}
+
+/* v-tooltip (directives/tooltip.js) */
+.app-tooltip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  z-index: 3000;
+  max-width: 240px;
+  padding: 0.35rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--text-primary);
+  color: var(--bg-panel);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.35;
+  pointer-events: none;
+  overflow: visible;
 }

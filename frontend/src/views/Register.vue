@@ -14,74 +14,50 @@
       novalidate
     >
       <div class="field">
-        <span class="p-float-label">
-          <InputText
-            id="register-name"
-            v-model="name"
-            class="w-full"
-            autocomplete="username"
-            autocapitalize="none"
-            spellcheck="false"
-            maxlength="50"
-            aria-describedby="register-name-hint"
-          />
-          <label for="register-name">{{ t('register.user') }}</label>
-        </span>
-        <small
-          id="register-name-hint"
-          class="field-hint"
-        >{{ t('register.invalidUsername') }}</small>
+        <TextField
+          id="register-name"
+          v-model="name"
+          :label="t('register.user')"
+          autocomplete="username"
+          maxlength="50"
+          :hint="t('register.invalidUsername')"
+          :input-attrs="{ autocapitalize: 'none', spellcheck: 'false' }"
+        />
       </div>
 
       <div class="field">
-        <span class="p-float-label">
-          <InputText
-            id="register-email"
-            v-model="email"
-            class="w-full"
-            type="email"
-            autocomplete="email"
-          />
-          <label for="register-email">{{ t('register.email') }}</label>
-        </span>
+        <TextField
+          id="register-email"
+          v-model="email"
+          :label="t('register.email')"
+          type="email"
+          autocomplete="email"
+        />
       </div>
 
       <div class="field">
-        <span class="p-float-label">
-          <Password
-            inputId="register-password"
-            v-model="password"
-            class="w-full"
-            toggleMask
-            :feedback="true"
-            :promptLabel="t('register.passwordPrompt')"
-            :weakLabel="t('register.weak')"
-            :mediumLabel="t('register.medium')"
-            :strongLabel="t('register.strong')"
-            :inputProps="{ autocomplete: 'new-password' }"
-          />
-          <label for="register-password">{{ t('register.password') }}</label>
-        </span>
+        <PasswordField
+          id="register-password"
+          v-model="password"
+          :label="t('register.password')"
+          autocomplete="new-password"
+          strength
+        />
       </div>
 
       <div class="field">
-        <span class="p-float-label">
-          <Password
-            inputId="register-confirm-password"
-            v-model="confirmPassword"
-            class="w-full"
-            :feedback="false"
-            toggleMask
-            :inputProps="{ autocomplete: 'new-password' }"
-          />
-          <label for="register-confirm-password">{{ t('register.confirmPassword') }}</label>
-        </span>
+        <PasswordField
+          id="register-confirm-password"
+          v-model="confirmPassword"
+          :label="t('register.confirmPassword')"
+          autocomplete="new-password"
+        />
       </div>
 
-      <Button
+      <AppButton
         type="submit"
         :label="t('register.register')"
-        class="btn-action-primary w-full p-button-lg"
+        class="btn-primary w-full btn-lg"
         :loading="loading"
       />
     </form>
@@ -100,13 +76,13 @@
 </template>
 
 <script setup>
+import PasswordField from '../components/form/PasswordField.vue'
+import TextField from '../components/form/TextField.vue'
 import { isWeakPassword } from '../utils/password.js'
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useToast } from 'primevue/usetoast'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import AppButton from '../components/ui/AppButton.vue'
 import { useI18n } from 'vue-i18n'
 import AuthLayout from '../components/AuthLayout.vue'
 import api from '../services/api.js'

@@ -8,11 +8,11 @@
           class="summary"
         >{{ summary }}</p>
       </div>
-      <Button
+      <AppButton
         v-if="!isEmpty"
         :label="t('home.addBook')"
         icon="pi pi-plus"
-        class="btn-action-primary add-btn-home"
+        class="btn-primary add-btn-home"
         @click="addDialogVisible = true"
       />
     </header>
@@ -39,7 +39,7 @@
       class="shelf-skeleton"
       aria-busy="true"
     >
-      <Skeleton
+      <AppSkeleton
         v-for="n in 6"
         :key="n"
         height="260px"
@@ -60,10 +60,10 @@
       />
       <h2>{{ t('home.emptyTitle') }}</h2>
       <p>{{ t('home.emptyText') }}</p>
-      <Button
+      <AppButton
         :label="t('home.addFirst')"
         icon="pi pi-plus"
-        class="btn-action-primary"
+        class="btn-primary"
         @click="addDialogVisible = true"
       />
       <ul class="tips">
@@ -144,12 +144,12 @@
                 :placeholder="t('library.search_ph')"
                 autocomplete="off"
               />
-              <Button
+              <AppButton
                 type="submit"
                 :label="t('common.search')"
                 icon="pi pi-search"
                 :aria-label="t('common.search')"
-                class="btn-action-primary invite-btn"
+                class="btn-primary invite-btn"
               />
             </div>
             <router-link
@@ -209,10 +209,10 @@
               class="rec-reason"
               :title="recReason(rec)"
             >{{ recReason(rec) }}</p>
-            <Button
+            <AppButton
               :label="rec.added ? t('home.recAdded') : t('status.want')"
               :icon="rec.added ? 'pi pi-check' : 'pi pi-bookmark'"
-              class="p-button-sm p-button-outlined rec-btn"
+              class="btn-sm btn-outlined rec-btn"
               :disabled="rec.added || rec.adding"
               :loading="rec.adding"
               @click="addRecommendation(rec)"
@@ -266,8 +266,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import Skeleton from 'primevue/skeleton'
+import AppButton from '../components/ui/AppButton.vue'
+import AppSkeleton from '../components/ui/AppSkeleton.vue'
 import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import ReadingNowCard from '../components/ReadingNowCard.vue'
@@ -276,7 +276,7 @@ import ReaderName from '../components/ReaderName.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
 import { currentUser } from '../services/session.js'
 import { pendingRequests } from '../services/social.js'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '../services/toast.js'
 import { useRouter } from 'vue-router'
 
 const SHELF_SIZE = 6
@@ -554,7 +554,7 @@ onMounted(() => {
   color: var(--text-muted);
 }
 
-.invite-btn.p-button {
+.invite-btn.btn {
   height: 2.75rem;
   border-radius: 10px;
   flex-shrink: 0;
@@ -592,7 +592,7 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.rec-btn.p-button {
+.rec-btn.btn {
   margin-top: auto;
   border-radius: 999px;
   justify-content: center;
@@ -712,11 +712,11 @@ onMounted(() => {
     padding: 1.25rem;
   }
 
-  .invite-btn :deep(.p-button-label) {
+  .invite-btn :deep(.btn-label) {
     display: none;
   }
 
-  .invite-btn.p-button {
+  .invite-btn.btn {
     width: 2.75rem;
     padding: 0;
     justify-content: center;

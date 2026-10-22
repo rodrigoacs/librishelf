@@ -37,12 +37,12 @@
             hint-live
             :input-attrs="isCreate ? { onKeydown: onIsbnKeydown } : {}"
           />
-          <Button
+          <AppButton
             v-if="isCreate"
             type="button"
             :label="t('isbn.search')"
             icon="pi pi-search"
-            class="p-button-outlined isbn-btn"
+            class="btn-outlined isbn-btn"
             :loading="lookingUp"
             :disabled="!form.isbn.trim()"
             @click="lookupIsbn"
@@ -179,18 +179,18 @@
     </div>
 
     <footer class="form-footer">
-      <Button
+      <AppButton
         type="button"
         :label="t('common.cancel')"
-        class="p-button-text p-button-secondary"
+        class="btn-text btn-secondary"
         :disabled="saving"
         @click="emit('cancel')"
       />
-      <Button
+      <AppButton
         type="submit"
         :label="isCreate ? t('bookForm.submitCreate') : t('bookForm.submitEdit')"
         :icon="isCreate ? 'pi pi-plus' : 'pi pi-check'"
-        class="btn-action-primary"
+        class="btn-primary"
         :loading="saving"
       />
     </footer>
@@ -200,9 +200,9 @@
 <script setup>
 import { computed, nextTick, reactive, ref, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
+import AppButton from '../ui/AppButton.vue'
+import { useToast } from '../../services/toast.js'
+import { useConfirm } from '../../services/confirm.js'
 import api from '../../services/api.js'
 import AuthorsInput from '../AuthorsInput.vue'
 import StarRating from '../StarRating.vue'
@@ -516,8 +516,8 @@ function askConfirm() {
       message: props.confirmMessage,
       header: t('bookDialog.confirm'),
       icon: 'pi pi-exclamation-circle',
-      acceptClass: 'btn-action-primary',
-      rejectClass: 'p-button-text p-button-secondary',
+      acceptClass: 'btn-primary',
+      rejectClass: 'btn-text btn-secondary',
       acceptLabel: t('bookDialog.save'),
       rejectLabel: t('bookDialog.cancel'),
       accept: () => resolve(true),
@@ -684,7 +684,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus() })
   grid-template-columns: minmax(0, 1fr);
 }
 
-.isbn-btn.p-button {
+.isbn-btn.btn {
   height: 3.25rem;
   border-radius: 10px;
 }
@@ -752,7 +752,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus() })
   background: var(--bg-panel);
 }
 
-.form-footer :deep(.p-button-secondary.p-button-text) {
+.form-footer :deep(.btn-secondary.btn-text) {
   color: var(--text-secondary);
 }
 
@@ -784,15 +784,15 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus() })
     padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom));
   }
 
-  .form-footer :deep(.p-button) {
+  .form-footer :deep(.btn) {
     white-space: nowrap;
   }
 
-  .form-footer :deep(.btn-action-primary) {
+  .form-footer :deep(.btn-primary) {
     flex: 1;
   }
 
-  .form-footer :deep(.btn-action-primary .p-button-icon) {
+  .form-footer :deep(.btn-primary .btn-icon) {
     display: none;
   }
 }

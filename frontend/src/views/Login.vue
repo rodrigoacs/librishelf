@@ -14,41 +14,32 @@
       novalidate
     >
       <div class="field">
-        <span class="p-float-label">
-          <InputText
-            id="login-user"
-            v-model="username"
-            class="w-full"
-            autocomplete="username"
-            autocapitalize="none"
-            spellcheck="false"
-          />
-          <label for="login-user">{{ t('login.user') }}</label>
-        </span>
+        <TextField
+          id="login-user"
+          v-model="username"
+          :label="t('login.user')"
+          autocomplete="username"
+          :input-attrs="{ autocapitalize: 'none', spellcheck: 'false' }"
+        />
       </div>
 
       <div class="field">
-        <span class="p-float-label">
-          <Password
-            inputId="login-password"
-            v-model="password"
-            class="w-full"
-            :feedback="false"
-            toggleMask
-            :inputProps="{ autocomplete: 'current-password' }"
-          />
-          <label for="login-password">{{ t('login.password') }}</label>
-        </span>
+        <PasswordField
+          id="login-password"
+          v-model="password"
+          :label="t('login.password')"
+          autocomplete="current-password"
+        />
         <router-link
           :to="{ name: 'forgot-password' }"
           class="forgot-link"
         >{{ t('login.forgot') }}</router-link>
       </div>
 
-      <Button
+      <AppButton
         type="submit"
         :label="t('login.login')"
-        class="btn-action-primary w-full p-button-lg"
+        class="btn-primary w-full btn-lg"
         :loading="loading"
       />
     </form>
@@ -64,12 +55,12 @@
 </template>
 
 <script setup>
+import PasswordField from '../components/form/PasswordField.vue'
+import TextField from '../components/form/TextField.vue'
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useToast } from 'primevue/usetoast'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import AppButton from '../components/ui/AppButton.vue'
 import { useI18n } from 'vue-i18n'
 import AuthLayout from '../components/AuthLayout.vue'
 import api from '../services/api.js'

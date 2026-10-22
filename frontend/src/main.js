@@ -3,10 +3,7 @@ import i18n from './i18n'
 import App from './App.vue'
 import router from './router'
 import PrimeVue from 'primevue/config'
-
-import ToastService from 'primevue/toastservice'
-import ConfirmationService from 'primevue/confirmationservice'
-import Tooltip from 'primevue/tooltip'
+import tooltip from './directives/tooltip.js'
 
 import '@fontsource-variable/inter'
 import '@fontsource-variable/source-serif-4'
@@ -28,9 +25,6 @@ const app = createApp(App)
 app.use(router)
 app.use(i18n)
 app.use(PrimeVue, { ripple: true })
-
-app.use(ToastService)
-app.use(ConfirmationService)
-app.directive('tooltip', Tooltip)
+app.directive('tooltip', tooltip)
 
 app.mount('#app')

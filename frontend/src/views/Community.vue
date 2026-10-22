@@ -180,10 +180,10 @@
           v-if="hasMore"
           class="load-more"
         >
-          <Button
+          <AppButton
             :label="t('publicLibrary.loadMore')"
             icon="pi pi-angle-down"
-            class="p-button-outlined p-button-secondary"
+            class="btn-outlined btn-secondary"
             :loading="feedLoading"
             @click="loadFeed({ append: true })"
           />
@@ -218,16 +218,16 @@
               />
             </span>
             <div class="actions">
-              <Button
+              <AppButton
                 :label="t('communityView.accept')"
                 icon="pi pi-check"
-                class="p-button-sm btn-action-primary"
+                class="btn-sm btn-primary"
                 :loading="busy === person.username"
                 @click="act(person.username, () => api.acceptRequest(person.username), 'communityView.accepted')"
               />
-              <Button
+              <AppButton
                 :label="t('communityView.reject')"
-                class="p-button-sm p-button-text p-button-secondary"
+                class="btn-sm btn-text btn-secondary"
                 :disabled="busy === person.username"
                 @click="act(person.username, () => api.rejectRequest(person.username), 'communityView.rejected')"
               />
@@ -312,11 +312,11 @@
                 v-else-if="reader.followStatus === 'pending'"
                 class="status-pill"
               >{{ t('communityView.pending') }}</span>
-              <Button
+              <AppButton
                 v-else-if="reader.acceptsFollowers"
                 :label="t('discover.follow')"
                 icon="pi pi-user-plus"
-                class="p-button-sm p-button-outlined"
+                class="btn-sm btn-outlined"
                 :loading="busy === reader.username"
                 @click="followReader(reader)"
               />
@@ -361,9 +361,9 @@
                 v-if="person.status === 'pending'"
                 class="status-pill"
               >{{ t('communityView.pending') }}</span>
-              <Button
+              <AppButton
                 :label="person.status === 'pending' ? t('profile.cancel_request') : t('communityView.unfollow')"
-                class="p-button-sm p-button-text p-button-secondary"
+                class="btn-sm btn-text btn-secondary"
                 :loading="busy === person.username"
                 @click="act(person.username, () => api.unfollow(person.username))"
               />
@@ -400,9 +400,9 @@
               />
             </span>
             <div class="actions">
-              <Button
+              <AppButton
                 :label="t('communityView.remove')"
-                class="p-button-sm p-button-text p-button-danger"
+                class="btn-sm btn-text btn-danger"
                 :loading="busy === person.username"
                 @click="confirmRemove(person.username)"
               />
@@ -418,9 +418,9 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import { useConfirm } from '../services/confirm.js'
+import AppButton from '../components/ui/AppButton.vue'
 import api from '../services/api.js'
 import StarRating from '../components/StarRating.vue'
 import ReaderName from '../components/ReaderName.vue'
@@ -598,8 +598,8 @@ function confirmRemove(username) {
     message: t('communityView.remove_confirm', { name: username }),
     header: t('bookDialog.confirm'),
     icon: 'pi pi-exclamation-triangle',
-    acceptClass: 'p-button-danger',
-    rejectClass: 'p-button-text p-button-secondary',
+    acceptClass: 'btn-danger',
+    rejectClass: 'btn-text btn-secondary',
     acceptLabel: t('communityView.remove'),
     rejectLabel: t('common.cancel'),
     accept: () => act(username, () => api.removeFollower(username))

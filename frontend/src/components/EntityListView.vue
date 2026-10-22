@@ -94,10 +94,10 @@
           aria-hidden="true"
         ></i>
         <p>{{ t(errorKey) }}</p>
-        <Button
+        <AppButton
           :label="t('common.retry')"
           icon="pi pi-refresh"
-          class="p-button-outlined p-button-secondary"
+          class="btn-outlined btn-secondary"
           @click="load"
         />
       </div>
@@ -200,10 +200,10 @@
       :aria-label="t('entities.mergeMode')"
     >
       <span aria-live="polite">{{ t('entities.selected', { n: selected.size }, selected.size) }}</span>
-      <Button
+      <AppButton
         :label="t('entities.mergeAction')"
         icon="pi pi-sitemap"
-        class="p-button-sm btn-action-primary"
+        class="btn-sm btn-primary"
         :disabled="selected.size < 2"
         @click="openMerge"
       />
@@ -259,16 +259,16 @@
           {{ t('entities.willMerge', { name: mergeTarget }) }}
         </p>
         <div class="name-actions">
-          <Button
+          <AppButton
             type="button"
             :label="t('common.cancel')"
-            class="p-button-text p-button-sm"
+            class="btn-text btn-sm"
             @click="nameDialog.visible = false"
           />
-          <Button
+          <AppButton
             type="submit"
             :label="nameDialog.mode === 'merge' || mergeTarget ? t('entities.mergeAction') : t('common.save')"
-            class="p-button-sm btn-action-primary"
+            class="btn-sm btn-primary"
             :loading="saving"
             :disabled="!nameDialog.to.trim()"
           />
@@ -282,8 +282,8 @@
 import { tagColor } from '../utils/tagColors.js'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import AppButton from './ui/AppButton.vue'
 import Dialog from 'primevue/dialog'
 import api from '../services/api.js'
 

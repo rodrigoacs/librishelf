@@ -39,27 +39,27 @@
           </template>
 
           <template v-else-if="viewer">
-            <Button
+            <AppButton
               v-if="followStatus === 'accepted'"
               :label="t('profile.following')"
               icon="pi pi-check"
-              class="p-button-outlined p-button-secondary"
+              class="btn-outlined btn-secondary"
               :loading="followBusy"
               @click="unfollow"
             />
-            <Button
+            <AppButton
               v-else-if="followStatus === 'pending'"
               :label="t('profile.cancel_request')"
               icon="pi pi-clock"
-              class="p-button-outlined p-button-secondary"
+              class="btn-outlined btn-secondary"
               :loading="followBusy"
               @click="unfollow"
             />
-            <Button
+            <AppButton
               v-else-if="profile.acceptsFollowers"
               :label="t('profile.follow')"
               icon="pi pi-user-plus"
-              class="btn-action-primary"
+              class="btn-primary"
               :loading="followBusy"
               @click="follow"
             />
@@ -276,10 +276,10 @@
       role="alert"
     >
       <p>{{ t('publicLibrary.error') }}</p>
-      <Button
+      <AppButton
         :label="t('common.retry')"
         icon="pi pi-refresh"
-        class="p-button-outlined p-button-secondary"
+        class="btn-outlined btn-secondary"
         @click="loadLibrary()"
       />
     </div>
@@ -306,10 +306,10 @@
         v-if="books.length < total"
         class="load-more"
       >
-        <Button
+        <AppButton
           :label="t('publicLibrary.loadMore')"
           icon="pi pi-angle-down"
-          class="p-button-outlined p-button-secondary"
+          class="btn-outlined btn-secondary"
           :loading="loading"
           @click="loadLibrary({ append: true })"
         />
@@ -337,8 +337,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import { useToast } from 'primevue/usetoast'
+import AppButton from '../components/ui/AppButton.vue'
+import { useToast } from '../services/toast.js'
 import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import BookDialog from '../components/BookDialog.vue'

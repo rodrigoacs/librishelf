@@ -18,10 +18,10 @@
         </template>
       </i18n-t>
     </p>
-    <Button
+    <AppButton
       :label="sent ? t('emailBanner.sent') : t('emailBanner.resend')"
       :icon="sent ? 'pi pi-check' : undefined"
-      class="p-button-sm p-button-text resend-btn"
+      class="btn-sm btn-text resend-btn"
       :disabled="sent"
       :loading="sending"
       @click="resend"
@@ -32,8 +32,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
-import Button from 'primevue/button'
+import { useToast } from '../services/toast.js'
+import AppButton from './ui/AppButton.vue'
 import api from '../services/api.js'
 import { updateUser } from '../services/session.js'
 

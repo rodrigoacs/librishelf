@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '../services/toast.js'
 import api from '../services/api.js'
 import { toApiDate } from '../utils/dates.js'
 import { statusOf } from '../utils/readingStatus.js'

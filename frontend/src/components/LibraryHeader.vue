@@ -96,9 +96,9 @@
           </button>
         </div>
 
-        <Button
+        <AppButton
           icon="pi pi-check-square"
-          class="p-button-rounded p-button-text action-btn"
+          class="btn-rounded btn-text action-btn"
           :class="{ 'active-filter': selecting }"
           :aria-pressed="selecting"
           :aria-label="t('batch.selectMode')"
@@ -106,9 +106,9 @@
           @click="emit('toggle-select')"
         />
 
-        <Button
+        <AppButton
           icon="pi pi-filter"
-          class="p-button-rounded p-button-text action-btn"
+          class="btn-rounded btn-text action-btn"
           :class="{ 'active-filter': hasActiveFilters }"
           @click="visibleFilters = true"
           v-tooltip.bottom="t('library.filters_adv')"
@@ -116,10 +116,10 @@
           :aria-expanded="visibleFilters"
         />
 
-        <Button
+        <AppButton
           :label="t('common.new')"
           icon="pi pi-plus"
-          class="p-button-rounded btn-action-primary add-btn"
+          class="btn-rounded btn-primary add-btn"
           @click="addBookDialogVisible = true"
         />
       </div>
@@ -131,35 +131,35 @@
     >
       <div class="filter-label">{{ t('library.filtering_by') }}</div>
       <div class="chips-container">
-        <Chip
+        <AppChip
           v-if="filters.readState !== 'all'"
           :label="readStateLabel(filters.readState)"
           removable
           @remove="emitFilter('readState', 'all')"
           class="custom-chip theme-border"
         />
-        <Chip
+        <AppChip
           v-if="hasReadYear"
           :label="readPeriodLabel"
           removable
           @remove="clearReadPeriod"
           class="custom-chip theme-border"
         />
-        <Chip
+        <AppChip
           v-if="filters.series"
           :label="t('series.chip', { series: filters.series })"
           removable
           @remove="emitFilter('series', '')"
           class="custom-chip theme-border"
         />
-        <Chip
+        <AppChip
           v-if="filters.isbnStatus === 'invalid'"
           :label="t('library.invalid_isbn_chip')"
           removable
           @remove="emitFilter('isbnStatus', 'all')"
           class="custom-chip theme-border"
         />
-        <Chip
+        <AppChip
           v-for="name in filters.author"
           :key="`author-${name}`"
           :label="name"
@@ -167,7 +167,7 @@
           @remove="removeFromList('author', name)"
           class="custom-chip theme-border"
         />
-        <Chip
+        <AppChip
           v-for="name in filters.publisher"
           :key="`publisher-${name}`"
           :label="name"
@@ -175,7 +175,7 @@
           @remove="removeFromList('publisher', name)"
           class="custom-chip theme-border"
         />
-        <Chip
+        <AppChip
           v-for="name in filters.tags"
           :key="`tag-${name}`"
           :label="'#' + name"
@@ -185,9 +185,9 @@
           :style="{ '--tag-color': tagColor(name) }"
         />
       </div>
-      <Button
+      <AppButton
         :label="t('library.clear_all')"
-        class="p-button-text p-button-sm p-button-danger clear-all-btn"
+        class="btn-text btn-sm btn-danger clear-all-btn"
         @click="emit('reset')"
       />
     </div>
@@ -247,12 +247,12 @@
               panelClass="custom-panel"
               @update:modelValue="value => emitFilter('sortField', value)"
             />
-            <Button
+            <AppButton
               @click="emitFilter('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc')"
               :icon="filters.sortOrder === 'asc' ? 'pi pi-sort-amount-down' : 'pi pi-sort-amount-up-alt'"
               :aria-label="filters.sortOrder === 'asc' ? t('library.sort_asc') : t('library.sort_desc')"
               v-tooltip.bottom="filters.sortOrder === 'asc' ? t('library.sort_asc') : t('library.sort_desc')"
-              class="p-button-outlined p-button-secondary sort-btn"
+              class="btn-outlined btn-secondary sort-btn"
             />
           </div>
         </div>
@@ -313,10 +313,10 @@
       </div>
 
       <div class="sidebar-footer">
-        <Button
+        <AppButton
           :label="t('library.clear_all')"
           icon="pi pi-filter-slash"
-          class="p-button-outlined p-button-danger w-full"
+          class="btn-outlined btn-danger w-full"
           @click="emit('reset')"
         />
       </div>
@@ -332,11 +332,11 @@
 <script setup>
 import { tagColor } from '../utils/tagColors.js'
 import { ref, computed, watch, onMounted } from 'vue'
-import Button from 'primevue/button'
+import AppButton from './ui/AppButton.vue'
 import Sidebar from 'primevue/sidebar'
 import MultiSelect from 'primevue/multiselect'
 import Dropdown from 'primevue/dropdown'
-import Chip from 'primevue/chip'
+import AppChip from './ui/AppChip.vue'
 import AddBookDialog from './AddBookDialog.vue'
 import api from '../services/api.js'
 import { useI18n } from 'vue-i18n'
@@ -993,18 +993,18 @@ defineExpose({ reloadOptions: loadOptions })
   background-color: #00000000;
 }
 
-.custom-selectbutton .p-button {
+.custom-selectbutton .btn {
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   transition: all 0.2s;
 }
 
-.custom-selectbutton .p-button:hover {
+.custom-selectbutton .btn:hover {
   background-color: var(--bg-hover);
 }
 
-.p-selectbutton .p-button.p-highlight::before {
+.p-selectbutton .btn.p-highlight::before {
   background-color: #00000000 !important;
 }
 
@@ -1013,7 +1013,7 @@ defineExpose({ reloadOptions: loadOptions })
   border-bottom: 1px solid var(--border-color) !important;
 }
 
-.custom-selectbutton .p-button.p-highlight {
+.custom-selectbutton .btn.p-highlight {
   background-color: var(--main-solid) !important;
   border-color: var(--main-solid) !important;
   color: var(--on-main) !important;

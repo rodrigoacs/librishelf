@@ -16,11 +16,11 @@
     >{{ allSelected ? t('batch.selectNone') : t('batch.selectAll') }}</button>
 
     <div class="batch-actions">
-      <Button
+      <AppButton
         :label="t('batch.status')"
         :aria-label="t('batch.status')"
         icon="pi pi-check-circle"
-        class="p-button-sm p-button-outlined batch-btn"
+        class="btn-sm btn-outlined batch-btn"
         :disabled="!count || busy"
         aria-haspopup="true"
         aria-controls="batch-status-menu"
@@ -33,27 +33,27 @@
         popup
       />
 
-      <Button
+      <AppButton
         :label="t('batch.category')"
         :aria-label="t('batch.category')"
         icon="pi pi-tags"
-        class="p-button-sm p-button-outlined batch-btn"
+        class="btn-sm btn-outlined batch-btn"
         :disabled="!count || busy"
         @click="openTagDialog"
       />
 
-      <Button
+      <AppButton
         :label="t('batch.delete')"
         :aria-label="t('batch.delete')"
         icon="pi pi-trash"
-        class="p-button-sm p-button-outlined p-button-danger batch-btn"
+        class="btn-sm btn-outlined btn-danger batch-btn"
         :disabled="!count || busy"
         @click="confirmDelete"
       />
 
-      <Button
+      <AppButton
         icon="pi pi-times"
-        class="p-button-sm p-button-text p-button-rounded close-btn"
+        class="btn-sm btn-text btn-rounded close-btn"
         :aria-label="t('batch.cancel')"
         v-tooltip.top="t('batch.cancel')"
         @click="emit('cancel')"
@@ -89,19 +89,19 @@
           ></option>
         </datalist>
         <div class="tag-form-actions">
-          <Button
+          <AppButton
             type="button"
             :label="t('batch.removeCategory')"
             icon="pi pi-minus"
-            class="p-button-sm p-button-text p-button-danger"
+            class="btn-sm btn-text btn-danger"
             :disabled="!tagName.trim() || busy"
             @click="applyTag('removeTag')"
           />
-          <Button
+          <AppButton
             type="submit"
             :label="t('batch.addCategory')"
             icon="pi pi-plus"
-            class="p-button-sm btn-action-primary"
+            class="btn-sm btn-primary"
             :disabled="!tagName.trim() || busy"
             :loading="busy"
           />
@@ -114,9 +114,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
-import Button from 'primevue/button'
+import { useConfirm } from '../services/confirm.js'
+import { useToast } from '../services/toast.js'
+import AppButton from './ui/AppButton.vue'
 import Menu from 'primevue/menu'
 import Dialog from 'primevue/dialog'
 import api from '../services/api.js'
@@ -190,8 +190,8 @@ function confirmDelete() {
     message: t('batch.confirmDelete', { n: count.value }, count.value),
     header: t('bookDialog.confirm'),
     icon: 'pi pi-exclamation-triangle',
-    acceptClass: 'p-button-rounded p-button-danger',
-    rejectClass: 'p-button-text p-button-secondary',
+    acceptClass: 'btn-rounded btn-danger',
+    rejectClass: 'btn-text btn-secondary',
     acceptLabel: t('batch.delete'),
     rejectLabel: t('common.cancel'),
     accept: () => run({ action: 'delete' }, 'batch.doneDelete')
@@ -243,7 +243,7 @@ function confirmDelete() {
   flex-wrap: wrap;
 }
 
-.batch-btn.p-button {
+.batch-btn.btn {
   border-radius: 999px;
 }
 
@@ -285,11 +285,11 @@ function confirmDelete() {
     gap: 0.5rem;
   }
 
-  .batch-btn.p-button :deep(.p-button-label) {
+  .batch-btn.btn :deep(.btn-label) {
     display: none;
   }
 
-  .batch-btn.p-button :deep(.p-button-icon) {
+  .batch-btn.btn :deep(.btn-icon) {
     margin: 0;
   }
 }
