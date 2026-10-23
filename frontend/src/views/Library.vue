@@ -8,6 +8,7 @@
       <LibraryHeader
         ref="header"
         :books-quantity="totalRecords"
+        :library-total="libraryTotal"
         :filters="filters"
         :view="viewMode"
         :selecting="selecting"
@@ -133,6 +134,27 @@
         </div>
       </div>
 
+      <!-- Estante vazia de verdade (sem filtro): o próximo passo é cadastrar -->
+      <div
+        v-else-if="!isFiltered(filters)"
+        class="empty-state"
+      >
+        <div class="empty-icon-circle">
+          <i
+            class="pi pi-book"
+            aria-hidden="true"
+          ></i>
+        </div>
+        <h3>{{ t('home.emptyTitle') }}</h3>
+        <p>{{ t('home.emptyText') }}</p>
+        <AppButton
+          :label="t('home.addFirst')"
+          icon="pi pi-plus"
+          class="btn-primary mt-3"
+          @click="header?.openAddBook()"
+        />
+      </div>
+
       <div
         v-else
         class="empty-state"
@@ -169,7 +191,7 @@ import BatchBar from '../components/BatchBar.vue'
 import { queryToFilters, queryToView, filtersToQuery, sameQuery, VIEW_MODES } from '../utils/libraryQuery.js'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
 import AppButton from '../components/ui/AppButton.vue'
-import { useLibrary } from '../composables/useLibrary.js'
+import { useLibrary, isFiltered } from '../composables/useLibrary.js'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -177,6 +199,7 @@ const router = useRouter()
 const {
   books,
   totalRecords,
+  libraryTotal,
   loading,
   loadingMore,
   error,

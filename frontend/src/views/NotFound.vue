@@ -6,23 +6,81 @@
     >404</p>
     <h1>{{ t('notFound.title') }}</h1>
     <p class="message">{{ t('notFound.message') }}</p>
-    <router-link
-      to="/"
-      class="home-link"
+
+    <!-- Quem está logado procura direto na biblioteca, sem voltar ao início -->
+    <form
+      v-if="isAuthenticated"
+      class="search-form"
+      role="search"
+      @submit.prevent="search"
     >
+      <label
+        for="not-found-search"
+        class="sr-only"
+      >{{ t('notFound.searchLabel') }}</label>
       <i
-        class="pi pi-home"
+        class="pi pi-search search-icon"
         aria-hidden="true"
       ></i>
-      {{ t('notFound.goHome') }}
-    </router-link>
+      <input
+        id="not-found-search"
+        v-model="query"
+        type="search"
+        :placeholder="t('notFound.searchPh')"
+        autocomplete="off"
+        enterkeyhint="search"
+      />
+      <AppButton
+        type="submit"
+        :label="t('notFound.searchButton')"
+        class="btn-sm"
+        :disabled="!query.trim()"
+      />
+    </form>
+
+    <nav
+      class="links"
+      :aria-label="t('notFound.linksLabel')"
+    >
+      <router-link
+        to="/"
+        class="btn btn-primary"
+      >
+        <i
+          class="pi pi-home"
+          aria-hidden="true"
+        ></i>
+        <span>{{ t('notFound.goHome') }}</span>
+      </router-link>
+      <router-link
+        :to="{ name: 'library' }"
+        class="btn btn-outlined btn-secondary"
+      >
+        <i
+          class="pi pi-book"
+          aria-hidden="true"
+        ></i>
+        <span>{{ t('notFound.goLibrary') }}</span>
+      </router-link>
+    </nav>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import AppButton from '../components/ui/AppButton.vue'
+import { isAuthenticated } from '../services/session.js'
 
 const { t } = useI18n()
+const router = useRouter()
+const query = ref('')
+
+function search() {
+  const q = query.value.trim()
+  if (q) router.push({ name: 'library', query: { q } })
+}
 </script>
 
 <style scoped>
@@ -30,7 +88,7 @@ const { t } = useI18n()
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
-  padding: 2rem;
+  padding: 2rem 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -59,19 +117,54 @@ h1 {
   margin: 0 0 2rem 0;
 }
 
-.home-link {
-  display: inline-flex;
+.search-form {
+  position: relative;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  width: min(100%, 26rem);
+  margin-bottom: 1.5rem;
+  padding: 0.3rem 0.3rem 0.3rem 2.5rem;
+  border: 1px solid var(--border-color);
   border-radius: 999px;
-  background-color: var(--main-solid);
-  color: var(--on-main);
-  text-decoration: none;
-  font-weight: 600;
+  background: var(--bg-panel);
 }
 
-.home-link:hover {
-  filter: brightness(1.1);
+.search-form:focus-within {
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-muted);
+}
+
+.search-form input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--fs-md);
+  padding: 0.45rem 0;
+  outline: none;
+}
+
+.search-form .btn {
+  border-radius: 999px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.links .btn {
+  border-radius: 999px;
 }
 </style>

@@ -1,6 +1,8 @@
 <template>
   <div class="book-view">
     <div class="details-header">
+      <!-- Capa pequena ao lado do título (o diálogo só mostra no celular) -->
+      <slot name="cover"></slot>
       <div class="title-area">
         <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}
         </h1>
@@ -476,6 +478,19 @@ a.series-line:hover {
 
   .details-header {
     padding-right: 0;
+  }
+}
+
+/* Celular: sem a faixa da capa em cima, o X fica ao lado do título */
+@media (max-width: 600px) {
+  .details-header {
+    padding-right: 2.25rem;
+    gap: 0.9rem;
+  }
+
+  .title-area {
+    min-width: 0;
+    gap: 0.35rem;
   }
 }
 </style>

@@ -7,7 +7,8 @@
         <span
           class="count-badge"
           v-if="booksQuantity !== undefined"
-        >{{ booksQuantity }}</span>
+          aria-live="polite"
+        >{{ countLabel }}</span>
       </div>
 
       <div class="search-area">
@@ -350,6 +351,7 @@ const { t, locale } = useI18n()
 // aparecem aqui como chips.
 const props = defineProps({
   booksQuantity: Number,
+  libraryTotal: { type: Number, default: null },
   filters: { type: Object, required: true },
   view: { type: String, default: 'grid' },
   selecting: { type: Boolean, default: false }
@@ -446,6 +448,15 @@ const hasActiveFilters = computed(() => {
     f.tags.length > 0
 })
 
+// Com filtro ou busca: "12 de 150"; sem filtro, só o total
+const countLabel = computed(() => {
+  const shown = props.booksQuantity
+  const total = props.libraryTotal
+  const filtered = hasActiveFilters.value || Boolean(props.filters.search)
+  if (filtered && total !== null && total !== shown) return t('library.count_of', { shown, total })
+  return String(shown)
+})
+
 function emitFilter(key, value) {
   emit('filter-change', { key, value })
 }
@@ -483,7 +494,7 @@ onMounted(loadOptions)
 
 // A Library chama isto depois de editar/excluir um livro: autores, editoras e
 // tags novos aparecem nos filtros sem recarregar a página.
-defineExpose({ reloadOptions: loadOptions })
+defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVisible.value = true } })
 </script>
 
 <style scoped>
@@ -832,13 +843,24 @@ defineExpose({ reloadOptions: loadOptions })
     gap: 0.6rem 0.75rem;
   }
 
+  /* Contagem embaixo do título: ao lado, as ações a cobriam ("12 de 150"
+     não cabe na coluna do título) */
   .header-title {
     grid-area: title;
-    gap: 0.6rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    min-width: 0;
   }
 
   .header-title h1 {
     font-size: var(--fs-lg);
+    line-height: 1.1;
+  }
+
+  .count-badge {
+    padding: 0 0.45rem;
+    white-space: nowrap;
   }
 
   .actions {

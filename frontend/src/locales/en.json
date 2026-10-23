@@ -202,7 +202,8 @@
     "view_list": "List",
     "row_rating": "Rated {n} out of 5",
     "read_month_chip": "Read in {period}",
-    "sort_short": "Sort:"
+    "sort_short": "Sort:",
+    "count_of": "{shown} of {total}"
   },
   "bookDialog": {
     "bookCover": "Book Cover",
@@ -251,7 +252,8 @@
     "publishedOn": "Published on {date}",
     "editShort": "Edit",
     "deleteShort": "Delete",
-    "saveShort": "Save changes"
+    "saveShort": "Save changes",
+    "editShortcut": "Edit (shortcut: E)"
   },
   "authors": {
     "title": "Authors",
@@ -475,6 +477,10 @@
       "password": "Password",
       "data": "Data",
       "delete": "Delete"
+    },
+    "errors": {
+      "required": "Fill in this field.",
+      "email": "Enter a valid email, like name{'@'}example.com."
     }
   },
   "discover": {
@@ -571,7 +577,12 @@
   "notFound": {
     "title": "Page not found",
     "message": "The address you opened does not exist or has moved.",
-    "goHome": "Go to home"
+    "goHome": "Go to home",
+    "searchLabel": "Search your library",
+    "searchPh": "Search title, author or ISBN",
+    "searchButton": "Search",
+    "goLibrary": "Go to library",
+    "linksLabel": "Where to go"
   },
   "rating": {
     "label": "Your rating",
@@ -770,7 +781,23 @@
     "finalName": "Final name",
     "willMerge": "\"{name}\" already exists: the books will be merged into it.",
     "mergedToast": "Everything is now under \"{name}\".",
-    "renamedToast": "Renamed to \"{name}\"."
+    "renamedToast": "Renamed to \"{name}\".",
+    "empty": {
+      "authors": {
+        "title": "No authors yet",
+        "text": "Authors show up here as you add books."
+      },
+      "publishers": {
+        "title": "No publishers yet",
+        "text": "Publishers show up here as you add books (with the ISBN, they come in automatically)."
+      },
+      "tags": {
+        "title": "No categories yet",
+        "text": "Open a book, tap Edit and give it categories like “fiction” or “to reread”. They show up here."
+      },
+      "openLibrary": "Open library",
+      "clearSearch": "Clear search"
+    }
   },
   "pageTitle": {
     "home": "Home",

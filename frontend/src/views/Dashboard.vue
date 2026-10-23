@@ -17,7 +17,6 @@
           class="year-dropdown"
           @update:modelValue="changeYear"
         />
-        <div class="date-display">{{ currentDate }}</div>
       </div>
     </div>
 
@@ -415,14 +414,6 @@ const stats = ref({
 
 const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
 
-const currentDate = computed(() => {
-  const text = new Date().toLocaleDateString(dateLocale.value, {
-    weekday: 'long', day: 'numeric', month: 'long'
-  })
-  // Só a primeira letra: "Sábado, 10 de outubro" (o CSS capitalize fazia "De Outubro").
-  return text.charAt(0).toUpperCase() + text.slice(1)
-})
-
 // Anos com leitura + o ano atual, do mais novo para o mais antigo.
 const yearOptions = computed(() => {
   const years = new Set([CURRENT_YEAR, year.value, ...stats.value.readingByYear.map(item => item.year)])
@@ -711,11 +702,6 @@ onMounted(loadStats)
 .welcome-text p {
   margin: 0.5rem 0 0;
   color: var(--text-secondary);
-}
-
-.date-display {
-  color: var(--main-color);
-  font-weight: 600;
 }
 
 .kpi-grid {

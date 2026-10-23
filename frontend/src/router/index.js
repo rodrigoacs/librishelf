@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { loadSession, isAuthenticated } from '../services/session.js'
 import { setRouteTitle } from '../services/pageTitle.js'
+import { installRouteFocus } from '../services/routeFocus.js'
 
 /**
  * meta:
@@ -71,6 +72,7 @@ router.beforeEach(async (to) => {
 })
 
 router.afterEach(to => setRouteTitle(to))
+installRouteFocus(router)
 
 export { safeRedirect }
 export default router

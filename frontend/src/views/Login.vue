@@ -102,16 +102,26 @@ async function handleLogin() {
 </script>
 
 <style scoped>
+/* Link de verdade (cor do tema, sublinhado), alinhado à direita embaixo da senha */
 .forgot-link {
-  display: inline-block;
-  margin-top: 0.5rem;
+  display: block;
+  width: fit-content;
+  margin: 0.5rem 0 0 auto;
   font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  text-decoration: none;
+  font-weight: 600;
+  color: var(--main-color);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .forgot-link:hover {
-  color: var(--main-color);
-  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+
+@media (pointer: coarse) {
+  .forgot-link {
+    padding: 0.6rem 0;
+    margin-top: 0;
+  }
 }
 </style>

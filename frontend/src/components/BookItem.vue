@@ -42,7 +42,7 @@
         >{{ t(`status.${status}`) }}</span>
 
         <span
-          v-if="isRead"
+          v-if="isRead && !showQuick"
           class="bookmark-ribbon"
           :title="t('book.read_ribbon')"
           aria-hidden="true"
@@ -66,7 +66,7 @@
     </button>
 
     <button
-      v-if="quickActions && !readOnly && !selectable"
+      v-if="showQuick"
       type="button"
       class="quick-read"
       :class="{ 'is-read': isRead, busy: saving }"
@@ -130,6 +130,9 @@ const displayDialog = ref(false)
 const bookId = computed(() => props.book.book_id ?? props.book.id)
 const status = computed(() => statusOf(props.book))
 const isRead = computed(() => status.value === 'read')
+// Na biblioteca do dono a própria fita é o botão: lido = fita cheia (clicar
+// desmarca); não lido = fita vazada que aparece ao passar o mouse.
+const showQuick = computed(() => props.quickActions && !props.readOnly && !props.selectable)
 const { saving, toggleRead } = useReadToggle(() => props.book, payload => emit('updated', payload))
 const bookCoverUrl = computed(() => coverUrl(bookId.value, props.coverVersion))
 
@@ -155,25 +158,27 @@ const ariaLabel = computed(() => {
   position: relative;
 }
 
-/* Marcar como lido sem abrir o livro: canto superior esquerdo da capa
-   (a fita de "lido" fica no direito). No mouse aparece ao passar por cima;
-   no toque fica sempre visível. */
+/* Marcar como lido sem abrir o livro: a fita do canto superior direito é o
+   botão. Lido = fita cheia; não lido = fita escura vazada, que no mouse só
+   aparece ao passar por cima e no toque fica sempre visível. */
 .quick-read {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: -2px;
+  right: 12px;
   z-index: 4;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(0, 0, 0, 0.55);
-  color: #ffffff;
+  width: 28px;
+  height: 42px;
+  padding: 6px 0 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.85);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease, height 0.2s ease, transform 0.2s ease;
 }
 
 .quick-read .pi {
@@ -183,22 +188,19 @@ const ariaLabel = computed(() => {
 
 .quick-read.is-read {
   background: var(--main-solid);
-  border-color: transparent;
   color: var(--on-main);
 }
 
-.quick-read:active {
-  transform: scale(0.92);
-}
-
 .quick-read:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: none;
+  height: 48px;
+  background: var(--main-solid);
+  color: var(--on-main);
   opacity: 1;
 }
 
 @media (hover: hover) {
-  .quick-read {
+  .quick-read:not(.is-read) {
     opacity: 0;
   }
 
@@ -207,13 +209,19 @@ const ariaLabel = computed(() => {
     opacity: 1;
   }
 
-  .quick-read:hover {
-    background: rgba(0, 0, 0, 0.75);
+  /* Acompanha o card, que sobe ao passar o mouse */
+  .book-card-wrapper:hover .quick-read {
+    height: 48px;
+    transform: translateY(-5px);
+  }
+
+  .quick-read:not(.is-read):hover {
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
   }
 
   .quick-read.is-read:hover {
-    background: var(--main-solid);
-    filter: brightness(1.1);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)) brightness(1.1);
   }
 }
 
@@ -418,11 +426,10 @@ button.book-card {
 
 /* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */
 @media (pointer: coarse) {
-  .quick-read::after {
-    content: '';
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
+  .quick-read {
+    width: 34px;
+    height: 46px;
+    right: 8px;
   }
 }
 </style>

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Librishelf — pacote 7: sem PrimeVue (3 de 3)
+# Pacote 9 — códigos de erro, nomes reservados, bloquear leitor, noindex
 #
 # Rode na raiz do repositório Librishelf, na branch fix/audit-2026-08, com
-# o pacote anterior já commitado:   bash pacote-7-sem-primevue-3.sh
+# o pacote anterior já commitado:   bash pacote-9-base-e-seguranca.sh
 #
 # O que faz: aplica o patch (git apply; se o editor tiver reformatado algum
 # arquivo, tenta git apply --3way), roda os testes unitários do backend e o
@@ -18,26 +18,43 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 [ "$BRANCH" = "fix/audit-2026-08" ] || echo "⚠ Branch atual: $BRANCH (esperado fix/audit-2026-08). Continuando."
 
 FILES=(
-  README.md
-  frontend/package-lock.json
-  frontend/package.json
-  frontend/src/assets/main.css
-  frontend/src/components/AuthLayout.vue
-  frontend/src/components/AuthorsInput.vue
-  frontend/src/components/LibraryHeader.vue
-  frontend/src/components/NavigationMenu.vue
-  frontend/src/components/form/DateField.vue
-  frontend/src/components/ui/AppMultiSelect.vue
-  frontend/src/components/ui/AppSelect.vue
-  frontend/src/composables/useFloatingPanel.js
+  backend/db/migrations/007_blocks.sql
+  backend/db/schema.sql
+  backend/src/database/queries.js
+  backend/src/middlewares/errorHandler.js
+  backend/src/middlewares/rateLimiter.js
+  backend/src/middlewares/validateId.js
+  backend/src/repositories/socialRepository.js
+  backend/src/routes/isbn.js
+  backend/src/routes/library.js
+  backend/src/routes/social.js
+  backend/src/services/authService.js
+  backend/src/services/communityService.js
+  backend/src/services/dashboardService.js
+  backend/src/services/dataService.js
+  backend/src/services/libraryService.js
+  backend/src/services/namesService.js
+  backend/src/services/openLibraryService.js
+  backend/src/services/socialService.js
+  backend/src/tests/integration/blocks.test.js
+  backend/src/tests/unit/reservedNames.test.js
+  backend/src/utils/httpError.js
+  backend/src/utils/nameList.js
+  backend/src/utils/passwordPolicy.js
+  backend/src/utils/reservedNames.js
+  backend/src/utils/sendError.js
+  frontend/nginx.conf
+  frontend/public/robots.txt
   frontend/src/locales/en.json
   frontend/src/locales/pt.json
-  frontend/src/main.js
   frontend/src/router/index.js
-  frontend/src/views/Dashboard.vue
-  frontend/src/views/Library.vue
-  frontend/vite.config.js
-  frontend/vite/primevueTheme.js
+  frontend/src/services/api.js
+  frontend/src/services/fetchClient.js
+  frontend/src/services/pageTitle.js
+  frontend/src/utils/bookFormErrors.js
+  frontend/src/views/PublicLibrary.vue
+  frontend/src/views/Register.vue
+  frontend/src/views/Settings.vue
 )
 
 DIRTY=$(git status --porcelain -- "${FILES[@]}")
@@ -50,1917 +67,2583 @@ fi
 PATCH_FILE=$(mktemp)
 trap 'rm -f "$PATCH_FILE"' EXIT
 cat > "$PATCH_FILE" <<'__LIBRISHELF_PATCH__'
-diff --git a/README.md b/README.md
-index bbcc587a80a571e47ae48f517d24daedd6f62702..e7dcbf43eac10235bedf4d9f217caf1fe74690ca 100644
---- a/README.md
-+++ b/README.md
-@@ -20,7 +20,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
+diff --git a/backend/db/migrations/007_blocks.sql b/backend/db/migrations/007_blocks.sql
+new file mode 100644
+index 0000000000000000000000000000000000000000..0c1d108f7e417dd26d16e2c4df1e7c0a9ad8e5b5
+--- /dev/null
++++ b/backend/db/migrations/007_blocks.sql
+@@ -0,0 +1,16 @@
++-- 007 — bloquear leitores
++-- Idempotente: pode rodar mais de uma vez.
++--
++-- Quem bloqueia some para o bloqueado (e vice-versa) na comunidade: "quem tem
++-- este livro", busca de leitores, recomendações e pedidos para seguir. Ao
++-- bloquear, os vínculos de seguir entre os dois são apagados.
++CREATE TABLE IF NOT EXISTS librishelf.blocks (
++  blocker_id integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
++  blocked_id integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
++  created_at timestamp without time zone NOT NULL DEFAULT now(),
++  PRIMARY KEY (blocker_id, blocked_id),
++  CONSTRAINT blocks_not_self CHECK (blocker_id <> blocked_id)
++);
++
++-- A checagem é nos dois sentidos: o índice cobre a busca por quem foi bloqueado.
++CREATE INDEX IF NOT EXISTS idx_blocks_blocked ON librishelf.blocks (blocked_id, blocker_id);
+diff --git a/backend/db/schema.sql b/backend/db/schema.sql
+index 03f297b86bfaa0b6beca687d5b00de1738dedc65..191282ac8b050289ac505a1878d42a4b99509b4e 100644
+--- a/backend/db/schema.sql
++++ b/backend/db/schema.sql
+@@ -1247,3 +1247,25 @@ CREATE INDEX IF NOT EXISTS idx_books_user_series
+ INSERT INTO librishelf.schema_migrations (version)
+ VALUES ('006_series_and_notes')
+ ON CONFLICT (version) DO NOTHING;
++
++-- ===========================================================================
++-- 007 — bloquear leitores
++-- ===========================================================================
++--
++-- Quem bloqueia some para o bloqueado (e vice-versa) na comunidade: "quem tem
++-- este livro", busca de leitores, recomendações e pedidos para seguir. Ao
++-- bloquear, os vínculos de seguir entre os dois são apagados.
++CREATE TABLE IF NOT EXISTS librishelf.blocks (
++  blocker_id integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
++  blocked_id integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
++  created_at timestamp without time zone NOT NULL DEFAULT now(),
++  PRIMARY KEY (blocker_id, blocked_id),
++  CONSTRAINT blocks_not_self CHECK (blocker_id <> blocked_id)
++);
++
++-- A checagem é nos dois sentidos: o índice cobre a busca por quem foi bloqueado.
++CREATE INDEX IF NOT EXISTS idx_blocks_blocked ON librishelf.blocks (blocked_id, blocker_id);
++
++INSERT INTO librishelf.schema_migrations (version)
++VALUES ('007_blocks')
++ON CONFLICT (version) DO NOTHING;
+diff --git a/backend/src/database/queries.js b/backend/src/database/queries.js
+index 0763e8cb827dd77bffd2fca782ad08635bee1a6d..a07ea4999f2acfcbf07b807240016c7cb715def1 100644
+--- a/backend/src/database/queries.js
++++ b/backend/src/database/queries.js
+@@ -406,6 +406,12 @@ const SAME_BOOK = (a, b) => `(
+   OR (${a}.isbn13 IS NOT NULL AND ${b}.isbn13 = ${a}.isbn13)
+ )`
  
- | Layer    | Tech                                                                 |
- |----------|----------------------------------------------------------------------|
--| Frontend | Vue 3, Vite, PrimeVue 3, vue-i18n, Chart.js                           |
-+| Frontend | Vue 3, Vite, vue-i18n, Chart.js, PrimeIcons (own UI components in `src/components/ui`) |
- | Backend  | Node.js 22+, Express 5, `pg`, `sharp` (covers → AVIF/JPG), JWT in an httpOnly cookie |
- | Database | PostgreSQL (schema `librishelf`)                                     |
- | Deploy   | Docker Compose; nginx serves the SPA and proxies `/api` to the backend |
-diff --git a/frontend/package-lock.json b/frontend/package-lock.json
-index add56850c6cb9cfb06866b225475b16fe285a6d9..5fcdad159b0f1c73597ab0c78c06bbe97b31031c 100644
---- a/frontend/package-lock.json
-+++ b/frontend/package-lock.json
-@@ -12,14 +12,12 @@
-         "@fontsource-variable/source-serif-4": "^5.3.0",
-         "chart.js": "^4.5.1",
-         "primeicons": "^7.0.0",
--        "primevue": "^3.52.0",
-         "vue": "^3.4.21",
-         "vue-i18n": "^11.2.8",
-         "vue-router": "^4.3.0"
-       },
-       "devDependencies": {
-         "@vitejs/plugin-vue": "^6.0.9",
--        "postcss": "^8.5.29",
-         "vite": "^8.3.4"
-       },
-       "engines": {
-@@ -959,15 +957,6 @@
-       "integrity": "sha512-jK3Et9UzwzTsd6tzl2RmwrVY/b8raJ3QZLzoDACj+oTJ0oX7L9Hy+XnVwgo4QVKlKpnP/Ur13SXV/pVh4LzaDw==",
-       "license": "MIT"
-     },
--    "node_modules/primevue": {
--      "version": "3.53.1",
--      "resolved": "https://registry.npmjs.org/primevue/-/primevue-3.53.1.tgz",
--      "integrity": "sha512-Bp4peZPdhfKYXwvtsOGGh5dfgmTelm+LZEZKGs/c5mOHhsUJ6xi3EcOZoQVI6oklS946ayMQvgD5L0S7itGO0g==",
--      "license": "MIT",
--      "peerDependencies": {
--        "vue": "^3.0.0"
--      }
--    },
-     "node_modules/rolldown": {
-       "version": "1.2.13",
-       "resolved": "https://registry.npmjs.org/rolldown/-/rolldown-1.2.13.tgz",
-diff --git a/frontend/package.json b/frontend/package.json
-index c2da8e5da7b1e06a53e97b8d61c71f0eb8b67bf3..78110a2c60aff5d0fa4c434c8019fc8914241f98 100644
---- a/frontend/package.json
-+++ b/frontend/package.json
-@@ -13,14 +13,12 @@
-     "@fontsource-variable/source-serif-4": "^5.3.0",
-     "chart.js": "^4.5.1",
-     "primeicons": "^7.0.0",
--    "primevue": "^3.52.0",
-     "vue": "^3.4.21",
-     "vue-i18n": "^11.2.8",
-     "vue-router": "^4.3.0"
-   },
-   "devDependencies": {
-     "@vitejs/plugin-vue": "^6.0.9",
--    "postcss": "^8.5.29",
-     "vite": "^8.3.4"
-   },
-   "engines": {
-diff --git a/frontend/src/assets/main.css b/frontend/src/assets/main.css
-index d9863529ec0ed6208066f4a309ee4e46b9434cb3..b04ee9e752fee202734591a09ee02470fcc255bb 100644
---- a/frontend/src/assets/main.css
-+++ b/frontend/src/assets/main.css
-@@ -2,7 +2,6 @@
-   --font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-   /* Títulos, logo e capas desenhadas: serifa empacotada, igual em todo sistema */
-   --font-display: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
--  --p-focus-ring-color: var(--main-color);
++// Nenhum dos dois bloqueou o outro (tabela librishelf.blocks, migration 007).
++const NOT_BLOCKED = (a, b) => `NOT EXISTS (
++  SELECT 1 FROM librishelf.blocks bl
++  WHERE (bl.blocker_id = ${a} AND bl.blocked_id = ${b}) OR (bl.blocker_id = ${b} AND bl.blocked_id = ${a})
++)`
++
+ const AUTHORS_OF = (bookExpr) => `(
+   SELECT string_agg(a.name, ', ' ORDER BY bal.position, a.id)
+   FROM librishelf.books_authors_link bal
+@@ -426,7 +432,7 @@ export const COMMUNITY_QUERIES = {
+     FROM me
+     JOIN librishelf.books b ON ${SAME_BOOK('me', 'b')}
+     JOIN librishelf.users u ON u.id = b.user_id
+-    WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community
++    WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
+     ORDER BY u.id, b.rating DESC NULLS LAST
+   `,
  
-   /* Escala de fonte (use estes tokens em vez de tamanhos soltos) */
-   --fs-xs: 0.75rem;
-@@ -56,19 +55,6 @@
-   --yellow-solid-rgb: 143, 101, 0;
-   --orange-solid-rgb: 194, 65, 12;
+@@ -441,7 +447,7 @@ export const COMMUNITY_QUERIES = {
+       FROM me
+       JOIN librishelf.books b ON ${SAME_BOOK('me', 'b')}
+       JOIN librishelf.users u ON u.id = b.user_id
+-      WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community
++      WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
+     ),
+     candidates AS (
+       SELECT b.id, b.title, b.user_id, COALESCE(b.ol_work_key, 'isbn:' || b.isbn13) AS book_key
+@@ -484,6 +490,7 @@ export const COMMUNITY_QUERIES = {
+           WHERE b.user_id = u.id AND EXISTS (SELECT 1 FROM mine m WHERE ${SAME_BOOK('m', 'b')})) AS common_books
+       FROM librishelf.users u
+       WHERE u.id <> $1 AND u.is_public AND u.show_in_community AND u.is_active IS NOT FALSE
++        AND ${NOT_BLOCKED('u.id', '$1')}
+         AND ($2 = '' OR u.name ILIKE $3)
+     )
+     SELECT r.name AS username, r.show_activity AS accepts_followers, r.total_books, r.read_books,
+@@ -505,6 +512,7 @@ export const COMMUNITY_QUERIES = {
+     community AS (
+       SELECT id FROM librishelf.users
+       WHERE is_public AND show_in_community AND id <> $1 AND is_active IS NOT FALSE
++        AND ${NOT_BLOCKED('id', '$1')}
+     ),
+     peers AS (
+       SELECT b.user_id, count(*)::int AS shared
+@@ -553,7 +561,7 @@ export const COMMUNITY_QUERIES = {
+     FROM librishelf.books b
+     JOIN librishelf.users u ON u.id = b.user_id
+     LEFT JOIN librishelf.publishers p ON p.id = b.publisher_id
+-    WHERE b.id = $1 AND b.user_id <> $2 AND u.is_public AND u.show_in_community
++    WHERE b.id = $1 AND b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
+   `,
  
--  /* Variáveis do PrimeVue apontando para as do app */
--  --primary-color: var(--main-color);
--  --primary-color-text: var(--on-main);
--  --surface-ground: var(--bg-app);
--  --surface-section: var(--bg-panel);
--  --surface-card: var(--bg-panel);
--  --surface-overlay: var(--bg-panel);
--  --surface-border: var(--border-color);
--  --text-color: var(--text-primary);
--  --text-color-secondary: var(--text-secondary);
--  --highlight-bg: rgba(var(--main-color-rgb), 0.16);
--  --highlight-text-color: var(--main-color);
+   // Livros de $2 que $1 também tem.
+@@ -688,6 +696,27 @@ export const SOCIAL_QUERIES = {
+     WHERE follower_id = $1 AND followee_id = $2 AND status = 'pending'
+     RETURNING status
+   `,
++  // Bloqueios (migration 007)
++  IS_BLOCKED: `
++    SELECT
++      EXISTS (SELECT 1 FROM librishelf.blocks WHERE blocker_id = $1 AND blocked_id = $2) AS blocked_by_me,
++      EXISTS (SELECT 1 FROM librishelf.blocks WHERE blocker_id = $2 AND blocked_id = $1) AS blocked_me
++  `,
++  BLOCK: `
++    INSERT INTO librishelf.blocks (blocker_id, blocked_id) VALUES ($1, $2)
++    ON CONFLICT (blocker_id, blocked_id) DO NOTHING
++  `,
++  DELETE_FOLLOWS_BETWEEN: `
++    DELETE FROM librishelf.follows
++    WHERE (follower_id = $1 AND followee_id = $2) OR (follower_id = $2 AND followee_id = $1)
++  `,
++  UNBLOCK: 'DELETE FROM librishelf.blocks WHERE blocker_id = $1 AND blocked_id = $2 RETURNING blocked_id',
++  BLOCKED_LIST: `
++    SELECT u.name AS username, bl.created_at
++    FROM librishelf.blocks bl JOIN librishelf.users u ON u.id = bl.blocked_id
++    WHERE bl.blocker_id = $1
++    ORDER BY bl.created_at DESC
++  `,
+   PENDING_COUNT: `SELECT count(*)::int AS count FROM librishelf.follows WHERE followee_id = $1 AND status = 'pending'`,
+   CONNECTIONS: `
+     SELECT 'following' AS kind, u.name AS username, f.status, f.created_at, u.is_public
+diff --git a/backend/src/middlewares/errorHandler.js b/backend/src/middlewares/errorHandler.js
+index ad212402aee695a973087b53bae64f1d51903b63..6988a811b05728704c1124cd901af5409d6ebd01 100644
+--- a/backend/src/middlewares/errorHandler.js
++++ b/backend/src/middlewares/errorHandler.js
+@@ -1,5 +1,6 @@
+ import logger from '../utils/logger.js'
+ import STATUS from '../utils/statusCodes.js'
++import { errorBody } from '../utils/httpError.js'
+ 
+ const GENERIC_MESSAGE = 'Erro interno do servidor.'
+ 
+@@ -24,6 +25,8 @@ export default (err, req, res, next) => {
+ 
+   res.status(statusCode).json({
+     status: 'error',
+-    error: isControlled ? err.message : GENERIC_MESSAGE
++    ...(isControlled
++      ? errorBody(err.message, err.errorCode, err.params)
++      : errorBody(GENERIC_MESSAGE))
+   })
+ }
+diff --git a/backend/src/middlewares/rateLimiter.js b/backend/src/middlewares/rateLimiter.js
+index e31368f8759a31f880be97e093ae240c79da46fe..29bc383ba58b424153d9ebee652bc612d5e64999 100644
+--- a/backend/src/middlewares/rateLimiter.js
++++ b/backend/src/middlewares/rateLimiter.js
+@@ -1,7 +1,8 @@
+ import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
+ import STATUS from '../utils/statusCodes.js'
++import { errorBody } from '../utils/httpError.js'
+ 
+-function buildLimiter({ windowMs, max, message, perUser = false }) {
++function buildLimiter({ windowMs, max, message, code, perUser = false }) {
+   return rateLimit({
+     windowMs,
+     max,
+@@ -14,7 +15,7 @@ function buildLimiter({ windowMs, max, message, perUser = false }) {
+       ? (req) => (req.user?.id ? `user:${req.user.id}` : ipKeyGenerator(req.ip))
+       : (req) => ipKeyGenerator(req.ip),
+     handler: (req, res) => {
+-      res.status(STATUS.TOO_MANY_REQUESTS).json({ error: message })
++      res.status(STATUS.TOO_MANY_REQUESTS).json(errorBody(message, code))
+     }
+   })
+ }
+@@ -22,13 +23,15 @@ function buildLimiter({ windowMs, max, message, perUser = false }) {
+ const loginLimiter = buildLimiter({
+   windowMs: 15 * 60 * 1000,
+   max: 10,
+-  message: 'Muitas tentativas de login. Tente novamente em alguns minutos.'
++  message: 'Muitas tentativas de login. Tente novamente em alguns minutos.',
++  code: 'RATE_LIMIT_LOGIN'
+ })
+ 
+ const registerLimiter = buildLimiter({
+   windowMs: 60 * 60 * 1000,
+   max: 20,
+-  message: 'Muitas tentativas de cadastro. Tente novamente mais tarde.'
++  message: 'Muitas tentativas de cadastro. Tente novamente mais tarde.',
++  code: 'RATE_LIMIT_REGISTER'
+ })
+ 
+ // Troca de senha e exclusão de conta pedem a senha atual: mesmo cuidado do login.
+@@ -36,7 +39,8 @@ const sensitiveLimiter = buildLimiter({
+   windowMs: 15 * 60 * 1000,
+   max: 10,
+   perUser: true,
+-  message: 'Muitas tentativas. Tente novamente em alguns minutos.'
++  message: 'Muitas tentativas. Tente novamente em alguns minutos.',
++  code: 'RATE_LIMIT_ATTEMPTS'
+ })
+ 
+ // Upload converte para AVIF (pesado em CPU).
+@@ -44,14 +48,16 @@ const uploadLimiter = buildLimiter({
+   windowMs: 15 * 60 * 1000,
+   max: 60,
+   perUser: true,
+-  message: 'Muitos envios em pouco tempo. Tente novamente em alguns minutos.'
++  message: 'Muitos envios em pouco tempo. Tente novamente em alguns minutos.',
++  code: 'RATE_LIMIT_UPLOAD'
+ })
+ 
+ // Rotas públicas (biblioteca compartilhada, mosaico): sem login, por IP.
+ const publicLimiter = buildLimiter({
+   windowMs: 60 * 1000,
+   max: 120,
+-  message: 'Muitas requisições. Tente novamente em instantes.'
++  message: 'Muitas requisições. Tente novamente em instantes.',
++  code: 'RATE_LIMIT'
+ })
+ 
+ // Busca por ISBN: cada consulta vira chamadas ao Open Library.
+@@ -59,7 +65,8 @@ const isbnLimiter = buildLimiter({
+   windowMs: 60 * 1000,
+   max: 30,
+   perUser: true,
+-  message: 'Muitas buscas por ISBN em pouco tempo. Aguarde um minuto.'
++  message: 'Muitas buscas por ISBN em pouco tempo. Aguarde um minuto.',
++  code: 'RATE_LIMIT_ISBN'
+ })
+ 
+ // Seguir/aceitar/remover: evita spam de pedidos.
+@@ -67,21 +74,24 @@ const socialLimiter = buildLimiter({
+   windowMs: 15 * 60 * 1000,
+   max: 100,
+   perUser: true,
+-  message: 'Muitas ações em pouco tempo. Tente novamente em alguns minutos.'
++  message: 'Muitas ações em pouco tempo. Tente novamente em alguns minutos.',
++  code: 'RATE_LIMIT_ACTIONS'
+ })
+ 
+ // E-mails (esqueci minha senha, reenviar confirmação): poucos por hora.
+ const mailLimiter = buildLimiter({
+   windowMs: 60 * 60 * 1000,
+   max: 5,
+-  message: 'Muitos pedidos de e-mail. Tente novamente mais tarde.'
++  message: 'Muitos pedidos de e-mail. Tente novamente mais tarde.',
++  code: 'RATE_LIMIT_EMAIL'
+ })
+ 
+ // Links recebidos por e-mail (redefinir senha, confirmar e-mail): sem chute em massa.
+ const tokenLimiter = buildLimiter({
+   windowMs: 15 * 60 * 1000,
+   max: 20,
+-  message: 'Muitas tentativas. Tente novamente em alguns minutos.'
++  message: 'Muitas tentativas. Tente novamente em alguns minutos.',
++  code: 'RATE_LIMIT_ATTEMPTS'
+ })
+ 
+ export { mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, isbnLimiter, socialLimiter }
+diff --git a/backend/src/middlewares/validateId.js b/backend/src/middlewares/validateId.js
+index 886ca1cbcb5e4c865dba9ec5dd46efbd0bbc0ec1..e4e0096fecc7d3e2acbd1a8625febee0f4756285 100644
+--- a/backend/src/middlewares/validateId.js
++++ b/backend/src/middlewares/validateId.js
+@@ -1,4 +1,5 @@
+ import STATUS from '../utils/statusCodes.js'
++import { errorBody } from '../utils/httpError.js'
+ 
+ const NUMERIC_ID_PATTERN = /^\d+$/
+ // Teto do tipo `integer` do Postgres. Acima disso a query estoura com 500.
+@@ -16,9 +17,11 @@ function validateNumericId(paramName = 'id') {
+     const value = req.params[paramName]
+ 
+     if (!isValidId(value)) {
+-      return res.status(STATUS.BAD_REQUEST).json({
+-        error: `Parâmetro '${paramName}' inválido: deve ser um número inteiro positivo.`
+-      })
++      return res.status(STATUS.BAD_REQUEST).json(errorBody(
++        `Parâmetro '${paramName}' inválido: deve ser um número inteiro positivo.`,
++        'PARAM_INVALID',
++        { param: paramName }
++      ))
+     }
+ 
+     next()
+diff --git a/backend/src/repositories/socialRepository.js b/backend/src/repositories/socialRepository.js
+index 8e062f4a279abfb3c93e78f968ec0e7b8ae20a75..5424575fe995ec61cff1482c8dca4eea63bba10e 100644
+--- a/backend/src/repositories/socialRepository.js
++++ b/backend/src/repositories/socialRepository.js
+@@ -36,3 +36,35 @@ export async function feed(userId, limit, offset) {
+   const { rows } = await db.query(q.FEED, [userId, limit, offset])
+   return rows
+ }
++
++/** { blockedByMe, blockedMe } entre $viewer e $other. */
++export async function blockState(viewerId, otherId) {
++  const { rows } = await db.query(q.IS_BLOCKED, [viewerId, otherId])
++  return { blockedByMe: rows[0].blocked_by_me, blockedMe: rows[0].blocked_me }
++}
++
++/** Bloqueia e apaga os vínculos de seguir entre os dois, numa transação. */
++export async function block(blockerId, blockedId) {
++  const client = await db.connect()
++  try {
++    await client.query('BEGIN')
++    await client.query(q.BLOCK, [blockerId, blockedId])
++    await client.query(q.DELETE_FOLLOWS_BETWEEN, [blockerId, blockedId])
++    await client.query('COMMIT')
++  } catch (err) {
++    await client.query('ROLLBACK')
++    throw err
++  } finally {
++    client.release()
++  }
++}
++
++export async function unblock(blockerId, blockedId) {
++  const { rows } = await db.query(q.UNBLOCK, [blockerId, blockedId])
++  return rows.length > 0
++}
++
++export async function blockedList(userId) {
++  const { rows } = await db.query(q.BLOCKED_LIST, [userId])
++  return rows
++}
+diff --git a/backend/src/routes/isbn.js b/backend/src/routes/isbn.js
+index b116a22e2abd70ab9cf6f557ff9c56e846b4ad61..8a2faddc6d7174aae5ed12ee6e5f3b007c38aa8b 100644
+--- a/backend/src/routes/isbn.js
++++ b/backend/src/routes/isbn.js
+@@ -3,6 +3,7 @@ import { authenticateToken } from '../middlewares/auth.js'
+ import { isbnLimiter } from '../middlewares/rateLimiter.js'
+ import * as openLibrary from '../services/openLibraryService.js'
+ import STATUS from '../utils/statusCodes.js'
++import { errorBody } from '../utils/httpError.js'
+ import sendError from '../utils/sendError.js'
+ 
+ const router = express.Router()
+@@ -13,7 +14,7 @@ router.use(authenticateToken, isbnLimiter)
+ router.get('/cover/:coverId', async (req, res) => {
+   try {
+     const image = await openLibrary.fetchCover(req.params.coverId)
+-    if (!image) return res.status(STATUS.NOT_FOUND).json({ error: 'Capa não encontrada.' })
++    if (!image) return res.status(STATUS.NOT_FOUND).json(errorBody('Capa não encontrada.', 'COVER_NOT_FOUND'))
+ 
+     res.set('Cache-Control', 'private, max-age=3600')
+     res.type('image/jpeg').send(image)
+@@ -25,7 +26,7 @@ router.get('/cover/:coverId', async (req, res) => {
+ router.get('/:isbn', async (req, res) => {
+   try {
+     const book = await openLibrary.lookupIsbn(req.params.isbn)
+-    if (!book) return res.status(STATUS.NOT_FOUND).json({ error: 'Nenhum livro encontrado para este ISBN.' })
++    if (!book) return res.status(STATUS.NOT_FOUND).json(errorBody('Nenhum livro encontrado para este ISBN.', 'ISBN_NOT_FOUND'))
+ 
+     res.status(STATUS.OK).json(book)
+   } catch (error) {
+diff --git a/backend/src/routes/library.js b/backend/src/routes/library.js
+index 4d8feb78174c24b1695968a38984d1d441217c71..d3f53f41730c7e199ef1de3c357b827bbd322371 100644
+--- a/backend/src/routes/library.js
++++ b/backend/src/routes/library.js
+@@ -9,6 +9,7 @@ import * as communityService from '../services/communityService.js'
+ import { fetchCover } from '../services/openLibraryService.js'
+ import { validateNumericId } from '../middlewares/validateId.js'
+ import STATUS from '../utils/statusCodes.js'
++import { errorBody } from '../utils/httpError.js'
+ import UPLOAD_DIR from '../config/uploadDir.js'
+ import { saveBookCover, isValidImage } from '../utils/imageProcessor.js'
+ import { uploadLimiter, publicLimiter } from '../middlewares/rateLimiter.js'
+@@ -45,10 +46,13 @@ function handleUpload(uploadMiddleware) {
+   return (req, res, next) => {
+     uploadMiddleware(req, res, (err) => {
+       if (err) {
+-        const message = err.code === 'LIMIT_FILE_SIZE'
+-          ? (req.path.endsWith('/import') ? `O arquivo pode ter no máximo ${MAX_CSV_MB} MB.` : `A imagem pode ter no máximo ${MAX_UPLOAD_MB} MB.`)
+-          : err.message
+-        return res.status(STATUS.BAD_REQUEST).json({ error: message })
++        const isImport = req.path.endsWith('/import')
++        if (err.code === 'LIMIT_FILE_SIZE') {
++          return res.status(STATUS.BAD_REQUEST).json(isImport
++            ? errorBody(`O arquivo pode ter no máximo ${MAX_CSV_MB} MB.`, 'FILE_TOO_LARGE', { max: MAX_CSV_MB })
++            : errorBody(`A imagem pode ter no máximo ${MAX_UPLOAD_MB} MB.`, 'IMAGE_TOO_LARGE', { max: MAX_UPLOAD_MB }))
++        }
++        return res.status(STATUS.BAD_REQUEST).json(errorBody(err.message, isImport ? 'CSV_REQUIRED' : 'IMAGE_ONLY'))
+       }
+       next()
+     })
+@@ -107,7 +111,7 @@ router.get('/public/u/:username/book/:id', publicLimiter, validateNumericId(), a
+     const { username, id } = req.params
+     const book = await libraryService.getPublicBook(username, id)
+ 
+-    if (!book) return res.status(STATUS.NOT_FOUND).json({ error: 'Livro não encontrado.' })
++    if (!book) return res.status(STATUS.NOT_FOUND).json(errorBody('Livro não encontrado.', 'BOOK_NOT_FOUND'))
+ 
+     res.status(STATUS.OK).json(book)
+   } catch (error) {
+@@ -160,7 +164,7 @@ router.get('/:id', validateNumericId(), async (req, res) => {
+     const { id } = req.params
+     // Escopado ao usuário logado: livro de outra pessoa responde 404, igual a inexistente.
+     const book = await libraryService.getBookById(id, req.user.id)
+-    if (!book) return res.status(STATUS.NOT_FOUND).json({ error: 'Book not found.' })
++    if (!book) return res.status(STATUS.NOT_FOUND).json(errorBody('Livro não encontrado.', 'BOOK_NOT_FOUND'))
+     res.status(STATUS.OK).json(book)
+   } catch (error) {
+     sendError(res, error, 'Erro ao buscar livro')
+@@ -179,7 +183,7 @@ router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), async
+     // 400 e nada fica gravado (antes o livro ficava órfão e o usuário duplicava
+     // ao tentar de novo).
+     if (req.file && !(await isValidImage(req.file.buffer))) {
+-      return res.status(STATUS.BAD_REQUEST).json({ error: 'Arquivo enviado não é uma imagem válida.' })
++      return res.status(STATUS.BAD_REQUEST).json(errorBody('Arquivo enviado não é uma imagem válida.', 'IMAGE_INVALID'))
+     }
+ 
+     const newBookId = await libraryService.addNewBook(bookData)
+@@ -240,7 +244,7 @@ router.post('/:id/cover', validateNumericId(), uploadLimiter, handleUpload(uploa
+     const userId = req.user.id
+ 
+     if (!req.file) {
+-      return res.status(STATUS.BAD_REQUEST).json({ error: 'Nenhuma imagem enviada.' })
++      return res.status(STATUS.BAD_REQUEST).json(errorBody('Nenhuma imagem enviada.', 'IMAGE_REQUIRED'))
+     }
+ 
+     await libraryService.checkBookOwnership(id, userId)
+diff --git a/backend/src/routes/social.js b/backend/src/routes/social.js
+index ddfd37a1b4122b9e3c8e99c2a930d57aa173ac5a..c622a8a310283b134ce049d8f18206c0f3169465 100644
+--- a/backend/src/routes/social.js
++++ b/backend/src/routes/social.js
+@@ -25,6 +25,30 @@ router.get('/connections', async (req, res) => {
+   }
+ })
+ 
++router.get('/blocks', async (req, res) => {
++  try {
++    res.status(STATUS.OK).json(await socialService.blockedUsers(req.user.id))
++  } catch (error) {
++    sendError(res, error, 'Erro ao listar bloqueados')
++  }
++})
++
++router.post('/blocks/:username', socialLimiter, async (req, res) => {
++  try {
++    res.status(STATUS.OK).json(await socialService.blockUser(req.user.id, req.params.username))
++  } catch (error) {
++    sendError(res, error, 'Erro ao bloquear')
++  }
++})
++
++router.delete('/blocks/:username', socialLimiter, async (req, res) => {
++  try {
++    res.status(STATUS.OK).json(await socialService.unblockUser(req.user.id, req.params.username))
++  } catch (error) {
++    sendError(res, error, 'Erro ao desbloquear')
++  }
++})
++
+ router.get('/requests/count', async (req, res) => {
+   try {
+     res.status(STATUS.OK).json(await socialService.pendingCount(req.user.id))
+diff --git a/backend/src/services/authService.js b/backend/src/services/authService.js
+index 4583ca8654c783c1d1513a5fbcf990330de90be9..a0f8cf8729eece63d54d60e748af6eeec698777f 100644
+--- a/backend/src/services/authService.js
++++ b/backend/src/services/authService.js
+@@ -9,6 +9,8 @@ import crypto from 'node:crypto'
+ import * as tokenRepository from '../repositories/tokenRepository.js'
+ import { sendMail } from './mailService.js'
+ import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail } from './emailTemplates.js'
++import { httpError } from '../utils/httpError.js'
++import { isReservedUsername } from '../utils/reservedNames.js'
+ 
+ const SECRET_KEY = process.env.SECRET_KEY
+ const TOKEN_TTL = '7d'
+@@ -23,12 +25,6 @@ const USERNAME_PATTERN = /^[\p{L}\p{N}._-]+$/u
+ // mesmo custo e a resposta leva o mesmo tempo, sem permitir enumerar usuários.
+ const DUMMY_HASH = bcrypt.hashSync('librishelf-dummy-password', BCRYPT_ROUNDS)
+ 
+-function httpError(message, status) {
+-  const error = new Error(message)
+-  error.status = status
+-  return error
+-}
 -
-   color-scheme: dark;
+ function isNonEmptyString(value) {
+   return typeof value === 'string' && value.trim().length > 0
+ }
+@@ -74,14 +70,14 @@ function toProfile(user) {
+ 
+ async function verifyCurrentPassword(userId, password) {
+   if (typeof password !== 'string' || password.length === 0) {
+-    throw httpError('Informe a senha atual.', STATUS.BAD_REQUEST)
++    throw httpError('Informe a senha atual.', STATUS.BAD_REQUEST, 'CURRENT_PASSWORD_REQUIRED')
+   }
+ 
+   const user = await authRepository.getPasswordHashById(userId)
+   const isValid = await bcrypt.compare(password, user?.password_hash || DUMMY_HASH)
+ 
+   if (!user || !isValid) {
+-    throw httpError('Senha atual incorreta.', STATUS.UNAUTHORIZED)
++    throw httpError('Senha atual incorreta.', STATUS.UNAUTHORIZED, 'CURRENT_PASSWORD_WRONG')
+   }
+ 
+   return user.password_hash
+@@ -89,7 +85,7 @@ async function verifyCurrentPassword(userId, password) {
+ 
+ async function loginUser(username, password) {
+   if (!isNonEmptyString(username) || typeof password !== 'string' || password.length === 0) {
+-    throw httpError('Username and password are required.', STATUS.BAD_REQUEST)
++    throw httpError('Username and password are required.', STATUS.BAD_REQUEST, 'CREDENTIALS_REQUIRED')
+   }
+ 
+   const user = await authRepository.getUserByUsername(username.trim())
+@@ -97,7 +93,7 @@ async function loginUser(username, password) {
+   const isPasswordValid = await bcrypt.compare(password, user?.password_hash || DUMMY_HASH)
+ 
+   if (!user || !isPasswordValid) {
+-    throw httpError('User or password invalid.', STATUS.UNAUTHORIZED)
++    throw httpError('User or password invalid.', STATUS.UNAUTHORIZED, 'INVALID_CREDENTIALS')
+   }
+ 
+   return {
+@@ -113,34 +109,38 @@ async function getUserProfile(id) {
+ 
+ async function registerUser(username, password, email, locale) {
+   if (!isNonEmptyString(username) || !isNonEmptyString(email)) {
+-    throw httpError('Username, password, and email are required.', STATUS.BAD_REQUEST)
++    throw httpError('Username, password, and email are required.', STATUS.BAD_REQUEST, 'REGISTER_FIELDS_REQUIRED')
+   }
+ 
+   const cleanUsername = username.trim()
+   const cleanEmail = email.trim()
+ 
+   if (cleanUsername.length > MAX_USERNAME_LENGTH) {
+-    throw httpError(`O usuário pode ter no máximo ${MAX_USERNAME_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
++    throw httpError(`O usuário pode ter no máximo ${MAX_USERNAME_LENGTH} caracteres.`, STATUS.BAD_REQUEST, 'USERNAME_TOO_LONG', { max: MAX_USERNAME_LENGTH })
+   }
+ 
+   // Letras, números, ponto, hífen e sublinhado. Isso também impede "@" (o login
+   // aceita usuário OU e-mail no mesmo campo) e barras no link público.
+   if (!USERNAME_PATTERN.test(cleanUsername)) {
+-    throw httpError('O usuário só pode ter letras, números, ponto, hífen e sublinhado.', STATUS.BAD_REQUEST)
++    throw httpError('O usuário só pode ter letras, números, ponto, hífen e sublinhado.', STATUS.BAD_REQUEST, 'USERNAME_INVALID')
++  }
++
++  if (isReservedUsername(cleanUsername)) {
++    throw httpError('Este nome de usuário é reservado. Escolha outro.', STATUS.BAD_REQUEST, 'USERNAME_RESERVED')
+   }
+ 
+   if (!EMAIL_PATTERN.test(cleanEmail)) {
+-    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST)
++    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST, 'EMAIL_INVALID')
+   }
+ 
+   const passwordCheck = validatePassword(password)
+   if (!passwordCheck.valid) {
+-    throw httpError(passwordCheck.reason, STATUS.BAD_REQUEST)
++    throw httpError(passwordCheck.reason, STATUS.BAD_REQUEST, passwordCheck.code, passwordCheck.params)
+   }
+ 
+   const existingUser = await authRepository.getUserByUsername(cleanUsername)
+   if (existingUser) {
+-    throw httpError('Username already taken.', STATUS.CONFLICT)
++    throw httpError('Username already taken.', STATUS.CONFLICT, 'USERNAME_TAKEN')
+   }
+ 
+   const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS)
+@@ -152,7 +152,7 @@ async function registerUser(username, password, email, locale) {
+     // Duas requisições simultâneas passam pela checagem acima; a constraint
+     // UNIQUE do banco é quem decide, e a violação vira 409 em vez de 500.
+     if (err.code === UNIQUE_VIOLATION) {
+-      throw httpError('Username or email already taken.', STATUS.CONFLICT)
++      throw httpError('Username or email already taken.', STATUS.CONFLICT, 'USERNAME_OR_EMAIL_TAKEN')
+     }
+     throw err
+   }
+@@ -180,21 +180,21 @@ async function deliverVerification(user, locale) {
+ /** Reenvia a confirmação para quem está logado. */
+ async function resendVerification(userId, locale) {
+   const user = await authRepository.getUserById(userId)
+-  if (!user) throw httpError('User not found.', STATUS.NOT_FOUND)
++  if (!user) throw httpError('User not found.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
+   if (user.email_verified_at) return { alreadyVerified: true }
+ 
+   try {
+     await deliverVerification(user, locale)
+   } catch (err) {
+     logger.error('Falha ao reenviar confirmação de e-mail', { userId, message: err.message })
+-    throw httpError('Não foi possível enviar o e-mail agora. Tente de novo em alguns minutos.', 502)
++    throw httpError('Não foi possível enviar o e-mail agora. Tente de novo em alguns minutos.', 502, 'EMAIL_SEND_FAILED')
+   }
+   return { alreadyVerified: false }
  }
  
-@@ -199,61 +185,6 @@ body {
-   outline-offset: 2px;
+ async function verifyEmail(token) {
+   const userId = await consumeLinkToken(token, 'verify_email')
+-  if (!userId) throw httpError(INVALID_LINK, STATUS.BAD_REQUEST)
++  if (!userId) throw httpError(INVALID_LINK, STATUS.BAD_REQUEST, 'LINK_INVALID')
+   await authRepository.markEmailVerified(userId)
+   logger.info('E-mail confirmado', { userId })
  }
+@@ -205,7 +205,7 @@ async function verifyEmail(token) {
+  */
+ async function requestPasswordReset(email, locale) {
+   if (!isNonEmptyString(email) || !EMAIL_PATTERN.test(email.trim())) {
+-    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST)
++    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST, 'EMAIL_INVALID')
+   }
  
--.p-checkbox .p-checkbox-box {
--  border: 2px solid var(--text-muted);
--  background: transparent;
--  border-radius: 6px;
--  transition: all 0.2s;
+   const user = await authRepository.getUserByEmail(email.trim())
+@@ -232,11 +232,11 @@ async function requestPasswordReset(email, locale) {
+ async function resetPassword(token, newPassword) {
+   const passwordCheck = validatePassword(newPassword)
+   if (!passwordCheck.valid) {
+-    throw httpError(passwordCheck.reason, STATUS.BAD_REQUEST)
++    throw httpError(passwordCheck.reason, STATUS.BAD_REQUEST, passwordCheck.code, passwordCheck.params)
+   }
+ 
+   const userId = await consumeLinkToken(token, 'reset_password')
+-  if (!userId) throw httpError(INVALID_LINK, STATUS.BAD_REQUEST)
++  if (!userId) throw httpError(INVALID_LINK, STATUS.BAD_REQUEST, 'LINK_INVALID')
+ 
+   const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS)
+   await authRepository.updatePassword(userId, hashedPassword)
+@@ -255,11 +255,11 @@ async function changePassword(userId, currentPassword, newPassword) {
+ 
+   const passwordCheck = validatePassword(newPassword)
+   if (!passwordCheck.valid) {
+-    throw httpError(passwordCheck.reason, STATUS.BAD_REQUEST)
++    throw httpError(passwordCheck.reason, STATUS.BAD_REQUEST, passwordCheck.code, passwordCheck.params)
+   }
+ 
+   if (await bcrypt.compare(newPassword, currentHash)) {
+-    throw httpError('A nova senha precisa ser diferente da atual.', STATUS.BAD_REQUEST)
++    throw httpError('A nova senha precisa ser diferente da atual.', STATUS.BAD_REQUEST, 'PASSWORD_SAME')
+   }
+ 
+   const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS)
+@@ -282,20 +282,20 @@ async function setPrivacy(userId, body = {}) {
+   const provided = fields.filter(field => body[field] !== undefined)
+ 
+   if (provided.length === 0) {
+-    throw httpError('Nada para alterar.', STATUS.BAD_REQUEST)
++    throw httpError('Nada para alterar.', STATUS.BAD_REQUEST, 'NOTHING_TO_UPDATE')
+   }
+ 
+   const invalid = provided.find(field => typeof body[field] !== 'boolean')
+   if (invalid) {
+-    throw httpError(`Campo '${invalid}' precisa ser true ou false.`, STATUS.BAD_REQUEST)
++    throw httpError(`Campo '${invalid}' precisa ser true ou false.`, STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: invalid })
+   }
+ 
+   // Ligar qualquer opção pública exige e-mail confirmado; desligar, sempre pode.
+   if (provided.some(field => body[field] === true)) {
+     const user = await authRepository.getUserById(userId)
+-    if (!user) throw httpError('User not found.', STATUS.NOT_FOUND)
++    if (!user) throw httpError('User not found.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
+     if (!user.email_verified_at) {
+-      throw httpError('Confirme seu e-mail para deixar a biblioteca pública ou participar da comunidade.', STATUS.FORBIDDEN)
++      throw httpError('Confirme seu e-mail para deixar a biblioteca pública ou participar da comunidade.', STATUS.FORBIDDEN, 'EMAIL_NOT_VERIFIED_PUBLIC')
+     }
+   }
+ 
+@@ -304,7 +304,7 @@ async function setPrivacy(userId, body = {}) {
+     showInCommunity: body.showInCommunity ?? null,
+     showActivity: body.showActivity ?? null
+   })
+-  if (!result) throw httpError('User not found.', STATUS.NOT_FOUND)
++  if (!result) throw httpError('User not found.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
+ 
+   return {
+     isPublic: result.is_public,
+@@ -329,23 +329,23 @@ async function changeEmail(userId, password, newEmail, locale) {
+ 
+   const email = typeof newEmail === 'string' ? newEmail.trim() : ''
+   if (!EMAIL_PATTERN.test(email) || email.length > 254) {
+-    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST)
++    throw httpError('E-mail inválido.', STATUS.BAD_REQUEST, 'EMAIL_INVALID')
+   }
+ 
+   const current = await authRepository.getUserById(userId)
+-  if (!current) throw httpError('User not found.', STATUS.NOT_FOUND)
++  if (!current) throw httpError('User not found.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
+   if (current.email.toLowerCase() === email.toLowerCase()) {
+-    throw httpError('Este já é o seu e-mail.', STATUS.BAD_REQUEST)
++    throw httpError('Este já é o seu e-mail.', STATUS.BAD_REQUEST, 'EMAIL_SAME')
+   }
+   if (await authRepository.isEmailTaken(email, userId)) {
+-    throw httpError('Este e-mail já está em uso em outra conta.', STATUS.CONFLICT)
++    throw httpError('Este e-mail já está em uso em outra conta.', STATUS.CONFLICT, 'EMAIL_TAKEN')
+   }
+ 
+   let updated
+   try {
+     updated = await authRepository.updateEmail(userId, email)
+   } catch (err) {
+-    if (err.code === UNIQUE_VIOLATION) throw httpError('Este e-mail já está em uso em outra conta.', STATUS.CONFLICT)
++    if (err.code === UNIQUE_VIOLATION) throw httpError('Este e-mail já está em uso em outra conta.', STATUS.CONFLICT, 'EMAIL_TAKEN')
+     throw err
+   }
+ 
+@@ -373,25 +373,28 @@ async function changeUsername(userId, password, newName) {
+   await verifyCurrentPassword(userId, password)
+ 
+   const name = typeof newName === 'string' ? newName.trim() : ''
+-  if (!name) throw httpError('Informe o novo nome de usuário.', STATUS.BAD_REQUEST)
++  if (!name) throw httpError('Informe o novo nome de usuário.', STATUS.BAD_REQUEST, 'USERNAME_REQUIRED')
+   if (name.length > MAX_USERNAME_LENGTH) {
+-    throw httpError(`O usuário pode ter no máximo ${MAX_USERNAME_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
++    throw httpError(`O usuário pode ter no máximo ${MAX_USERNAME_LENGTH} caracteres.`, STATUS.BAD_REQUEST, 'USERNAME_TOO_LONG', { max: MAX_USERNAME_LENGTH })
+   }
+   if (!USERNAME_PATTERN.test(name)) {
+-    throw httpError('O usuário só pode ter letras, números, ponto, hífen e sublinhado.', STATUS.BAD_REQUEST)
++    throw httpError('O usuário só pode ter letras, números, ponto, hífen e sublinhado.', STATUS.BAD_REQUEST, 'USERNAME_INVALID')
++  }
++  if (isReservedUsername(name)) {
++    throw httpError('Este nome de usuário é reservado. Escolha outro.', STATUS.BAD_REQUEST, 'USERNAME_RESERVED')
+   }
+   if (await authRepository.isNameTaken(name, userId)) {
+-    throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT)
++    throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT, 'USERNAME_TAKEN')
+   }
+ 
+   let updated
+   try {
+     updated = await authRepository.updateName(userId, name)
+   } catch (err) {
+-    if (err.code === UNIQUE_VIOLATION) throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT)
++    if (err.code === UNIQUE_VIOLATION) throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT, 'USERNAME_TAKEN')
+     throw err
+   }
+-  if (!updated) throw httpError('User not found.', STATUS.NOT_FOUND)
++  if (!updated) throw httpError('User not found.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
+ 
+   logger.info('Nome de usuário trocado', { userId })
+   return { token: issueToken(updated), user: toProfile(updated) }
+diff --git a/backend/src/services/communityService.js b/backend/src/services/communityService.js
+index a075b2329493eb831f6650182aabc207d08d3861..84c334f142033101d1255ddc37e0116d38d72954 100644
+--- a/backend/src/services/communityService.js
++++ b/backend/src/services/communityService.js
+@@ -3,6 +3,7 @@ import * as libraryRepository from '../repositories/libraryRepository.js'
+ import * as authRepository from '../repositories/authRepository.js'
+ import * as socialRepository from '../repositories/socialRepository.js'
+ import STATUS from '../utils/statusCodes.js'
++import { httpError } from '../utils/httpError.js'
+ 
+ const MAX_READERS_LISTED = 20
+ const FIND_LIMIT = 24
+@@ -10,19 +11,13 @@ const RECOMMENDATION_LIMIT = 6
+ const ALSO_HAVE_LIMIT = 5
+ const COMMON_LIMIT = 24
+ 
+-function httpError(message, status) {
+-  const error = new Error(message)
+-  error.status = status
+-  return error
 -}
 -
--.p-checkbox.p-highlight .p-checkbox-box {
--  border-color: var(--main-solid);
--  background-color: var(--main-solid);
--}
+ /**
+  * Painel "comunidade" de um livro do próprio usuário: outros leitores
+  * (só quem optou por aparecer), nota média deles e "também têm".
+  */
+ export async function bookCommunity(bookId, userId) {
+   const owner = await libraryRepository.getBookOwner(bookId)
+-  if (!owner || owner.user_id !== userId) throw httpError('Book not found.', STATUS.NOT_FOUND)
++  if (!owner || owner.user_id !== userId) throw httpError('Book not found.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
+ 
+   const readers = await communityRepository.readersOfBook(bookId, userId)
+   const ratings = readers.map(r => r.rating).filter(r => r !== null)
+@@ -55,7 +50,7 @@ export async function bookCommunity(bookId, userId) {
+  */
+ export async function publicProfile(username, viewerId) {
+   const user = await authRepository.getUserByName(username)
+-  if (!user || !user.is_public) throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND)
++  if (!user || !user.is_public) throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND, 'LIBRARY_NOT_FOUND')
+ 
+   const stats = await communityRepository.profileStats(user.id)
+ 
+@@ -80,13 +75,20 @@ export async function publicProfile(username, viewerId) {
+     if (viewerId === user.id) {
+       profile.viewer = { isOwner: true }
+     } else {
+-      const common = user.show_in_community
++      const { blockedByMe, blockedMe } = await socialRepository.blockState(viewerId, user.id)
++      const blocked = blockedByMe || blockedMe
++      const common = user.show_in_community && !blocked
+         ? await communityRepository.commonBooks(viewerId, user.id, COMMON_LIMIT)
+         : null
+ 
++      // Quem foi bloqueado vê o perfil como qualquer visitante (é público),
++      // mas sem "seguir" nem livros em comum. Não é avisado do bloqueio.
++      if (blockedMe) profile.acceptsFollowers = false
++
+       profile.viewer = {
+         isOwner: false,
+-        followStatus: await socialRepository.followStatus(viewerId, user.id),
++        followStatus: blocked ? null : await socialRepository.followStatus(viewerId, user.id),
++        blockedByMe,
+         commonCount: common ? common.total : null,
+         commonBooks: common ? common.books : []
+       }
+@@ -130,8 +132,8 @@ export async function recommendations(userId) {
+ /** Copia um livro da comunidade para a estante de quem pediu, como "Quero ler". */
+ export async function addToWantList(sourceId, userId) {
+   const source = await communityRepository.sourceBook(sourceId, userId)
+-  if (!source) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND)
+-  if (source.already_have) throw httpError('Este livro já está na sua estante.', STATUS.CONFLICT)
++  if (!source) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
++  if (source.already_have) throw httpError('Este livro já está na sua estante.', STATUS.CONFLICT, 'BOOK_ALREADY_ON_SHELF')
+ 
+   const bookId = await libraryRepository.createBook({
+     title: source.title,
+diff --git a/backend/src/services/dashboardService.js b/backend/src/services/dashboardService.js
+index e5201ba998d39a65dc3739c331099edd50ef7956..02c3e2b5a2156fba1d0397eda54479cd40950508 100644
+--- a/backend/src/services/dashboardService.js
++++ b/backend/src/services/dashboardService.js
+@@ -1,18 +1,13 @@
+ import * as dashboardRepository from '../repositories/dashboardRepository.js'
+ import STATUS from '../utils/statusCodes.js'
 -
--.p-checkbox-box .p-icon {
--  color: var(--on-main);
+-function httpError(message, status) {
+-  const error = new Error(message)
+-  error.status = status
+-  return error
 -}
--
--.p-inputtext {
--  background-color: var(--bg-input);
--  color: var(--text-primary);
--  border: 1px solid transparent;
--  padding: 0.75rem 1rem;
--  border-radius: 8px;
--  transition: all 0.2s;
--}
--
--.p-inputtext:enabled:focus {
--  outline: none;
--  border-color: var(--main-color);
--  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
--}
--
--.p-inputtext:disabled {
--  background-color: transparent;
--  color: var(--text-muted);
--  opacity: 0.7;
--}
--
--.p-dialog-mask {
--  background-color: var(--bg-overlay) !important;
--  backdrop-filter: blur(4px);
--}
--
--.dialog-overlay {
--  background-color: var(--bg-panel);
--  color: var(--text-primary);
--  border: 1px solid var(--border-color);
--  border-radius: 16px;
--  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
--}
--
--@media (max-width: 768px) {
--  .dialog-overlay {
--    width: 90%;
--  }
--}
- /* ------------------------------------------------------------------ botões
-  * AppButton (components/ui/AppButton.vue). Sem classe de variante é o botão
-  * principal: fundo na cor de destaque e texto branco.
-diff --git a/frontend/src/components/AuthLayout.vue b/frontend/src/components/AuthLayout.vue
-index 8da626cc0cab09d503a2a4d37c5b1a1cbbb6cadb..f442190b68a0b0d095bd59d6350b9463610ed2fc 100644
---- a/frontend/src/components/AuthLayout.vue
-+++ b/frontend/src/components/AuthLayout.vue
-@@ -225,46 +225,6 @@ onMounted(async () => {
-   width: 100%;
++import { httpError } from '../utils/httpError.js'
+ 
+ /** Ano do painel (gráfico mensal e meta). Padrão: o ano atual. */
+ function normalizeYear(value) {
+   if (value === undefined || value === null || value === '') return new Date().getFullYear()
+   const year = Number(value)
+   if (!Number.isInteger(year) || year < 1900 || year > 2200) {
+-    throw httpError("Ano inválido: use um ano com 4 dígitos.", STATUS.BAD_REQUEST)
++    throw httpError("Ano inválido: use um ano com 4 dígitos.", STATUS.BAD_REQUEST, 'YEAR_INVALID')
+   }
+   return year
  }
- 
--.form-wrapper :deep(.p-inputtext) {
--  background-color: var(--bg-panel);
--  border: 1px solid var(--border-color);
--  color: var(--text-primary);
--  padding: 1rem;
--  width: 100%;
--}
--
--.form-wrapper :deep(.p-inputtext:focus),
--.form-wrapper :deep(.p-inputwrapper-focus .p-inputtext) {
--  border-color: var(--main-color);
--  box-shadow: 0 0 0 1px var(--main-color);
--}
--
--.form-wrapper :deep(.p-float-label label) {
--  color: var(--text-secondary);
--  top: 50%;
--  margin-top: -0.5rem;
--  left: 1rem;
--  transition: all 0.2s ease;
--  pointer-events: none;
--}
--
--.form-wrapper :deep(.p-inputtext:focus ~ label),
--.form-wrapper :deep(.p-inputtext.p-filled ~ label),
--.form-wrapper :deep(.p-inputwrapper-focus ~ label),
--.form-wrapper :deep(.p-inputwrapper-filled ~ label) {
--  top: -0.75rem;
--  font-size: var(--fs-xs);
--  background-color: var(--bg-panel);
--  padding: 0 0.5rem;
--  color: var(--main-color);
--  left: 0.5rem;
--  z-index: 2;
--}
--
--.form-wrapper :deep(.p-password) {
--  width: 100%;
--}
--
- .form-wrapper :deep(.field-hint) {
-   display: block;
-   margin-top: 0.4rem;
-diff --git a/frontend/src/components/AuthorsInput.vue b/frontend/src/components/AuthorsInput.vue
-index 521478c92c407919414aa6282396e1e2d0da8ff1..71fc29226c67c9c9833d5cdebd055d58ab43471e 100644
---- a/frontend/src/components/AuthorsInput.vue
-+++ b/frontend/src/components/AuthorsInput.vue
-@@ -1,21 +1,46 @@
- <template>
-   <div
-     class="authors-input"
--    :class="{ invalid: Boolean(error), floated: focused || modelValue.length > 0 }"
-+    :class="{ invalid: Boolean(error), floated: focused || modelValue.length > 0 || draft !== '' }"
-   >
-     <div class="field-box">
--      <Chips
--        :modelValue="modelValue"
--        :inputId="inputId"
--        :allowDuplicate="false"
--        addOnBlur
--        :max="maxAuthors"
--        :aria-invalid="error ? 'true' : undefined"
--        :aria-describedby="describedBy"
--        @update:modelValue="onUpdate"
--        @focus="focused = true"
--        @blur="focused = false"
--      />
-+      <div
-+        class="chips-box"
-+        @click="inputEl?.focus()"
-+      >
-+        <span
-+          v-for="(name, index) in modelValue"
-+          :key="name"
-+          class="author-chip"
-+        >
-+          {{ name }}
-+          <button
-+            type="button"
-+            class="author-chip-remove"
-+            :aria-label="t('common.removeItem', { name })"
-+            @click.stop="removeAt(index)"
-+          >
-+            <i
-+              class="pi pi-times"
-+              aria-hidden="true"
-+            ></i>
-+          </button>
-+        </span>
-+        <input
-+          :id="inputId"
-+          ref="inputEl"
-+          v-model="draft"
-+          class="chips-input"
-+          autocomplete="off"
-+          :aria-invalid="error ? 'true' : undefined"
-+          :aria-describedby="describedBy"
-+          :disabled="modelValue.length >= maxAuthors"
-+          @keydown.enter.prevent="commit"
-+          @keydown.backspace="onBackspace"
-+          @focus="focused = true"
-+          @blur="onBlur"
-+        />
-+      </div>
-       <label
-         :for="inputId"
-         class="field-label"
-@@ -45,7 +70,6 @@
- 
- <script setup>
- import { computed, ref } from 'vue'
--import Chips from 'primevue/chips'
- import { useI18n } from 'vue-i18n'
+@@ -20,7 +15,7 @@ function normalizeYear(value) {
+ function normalizeTarget(value) {
+   const target = Number(value)
+   if (!Number.isInteger(target) || target < 1 || target > 1000) {
+-    throw httpError('A meta precisa ser um número inteiro de 1 a 1000.', STATUS.BAD_REQUEST)
++    throw httpError('A meta precisa ser um número inteiro de 1 a 1000.', STATUS.BAD_REQUEST, 'GOAL_INVALID')
+   }
+   return target
+ }
+diff --git a/backend/src/services/dataService.js b/backend/src/services/dataService.js
+index 8cd35e48deba9d0967ffe80c345d3197a097fbe4..f3b6da10085d52139bfd458a19bcb71e67f1544a 100644
+--- a/backend/src/services/dataService.js
++++ b/backend/src/services/dataService.js
+@@ -6,18 +6,13 @@ import { csvToObjects, toCsv } from '../utils/csv.js'
+ import { normalizeIsbn13 } from '../utils/isbn.js'
+ import STATUS from '../utils/statusCodes.js'
+ import logger from '../utils/logger.js'
++import { httpError } from '../utils/httpError.js'
  
  /**
-@@ -64,12 +88,35 @@ const props = defineProps({
- const emit = defineEmits(['update:modelValue'])
- const { t } = useI18n()
- const focused = ref(false)
-+const draft = ref('')
-+const inputEl = ref(null)
+  * Seus dados: exportar tudo (JSON ou CSV) e importar livros de um CSV — do
+  * Goodreads ou o próprio CSV exportado pelo Librishelf.
+  */
  
- // Mesmo limite do backend (utils/nameList.js → MAX_NAMES).
- const maxAuthors = 30
- 
- const describedBy = computed(() => [props.error ? `${props.inputId}-error` : '', `${props.inputId}-hint`].filter(Boolean).join(' '))
- 
-+// Enter (ou sair do campo) põe o nome digitado na lista
-+function commit() {
-+  if (!draft.value.trim()) return
-+  onUpdate([...props.modelValue, draft.value])
-+  draft.value = ''
-+}
-+
-+function onBlur() {
-+  focused.value = false
-+  commit()
-+}
-+
-+// Backspace com o campo vazio tira o último autor
-+function onBackspace() {
-+  if (draft.value === '' && props.modelValue.length) removeAt(props.modelValue.length - 1)
-+}
-+
-+function removeAt(index) {
-+  onUpdate(props.modelValue.filter((_, i) => i !== index))
-+}
-+
- function onUpdate(values) {
-   const seen = new Set()
-   const cleaned = []
-@@ -112,46 +159,63 @@ function onUpdate(values) {
-   border-color: var(--red);
- }
- 
--.authors-input :deep(.p-chips) {
--  width: 100%;
+-function httpError(message, status) {
+-  const error = new Error(message)
+-  error.status = status
+-  return error
 -}
 -
--.authors-input :deep(.p-chips-multiple-container) {
--  width: 100%;
-+.chips-box {
-+  display: flex;
-+  flex-wrap: wrap;
-+  align-items: center;
-+  gap: 0.35rem;
-   min-height: 3.25rem;
--  background: transparent;
--  border: none;
--  box-shadow: none;
--  border-radius: 10px;
-   padding: 1.4rem 0.6rem 0.4rem;
--  gap: 0.35rem;
--  flex-wrap: wrap;
-+  cursor: text;
+ // ---------------------------------------------------------------------------
+ // Exportar
+ // ---------------------------------------------------------------------------
+@@ -37,7 +32,7 @@ async function loadExport(userId) {
+     db.query(q.EXPORT_GOALS, [userId]),
+     db.query(q.EXPORT_BOOKS, [userId])
+   ])
+-  if (!user.rows[0]) throw httpError('User not found.', STATUS.NOT_FOUND)
++  if (!user.rows[0]) throw httpError('User not found.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
+   return { user: user.rows[0], goals: goals.rows, books: books.rows }
  }
  
--.authors-input :deep(.p-chips-token) {
-+.author-chip {
-+  display: inline-flex;
-+  align-items: center;
-+  gap: 0.2rem;
-+  padding: 0.15rem 0.2rem 0.15rem 0.65rem;
-+  border-radius: 999px;
-   background-color: rgba(var(--main-color-rgb), 0.15);
-   color: var(--text-primary);
--  border-radius: 999px;
--  padding: 0.15rem 0.65rem;
-   font-size: var(--fs-sm);
+@@ -217,16 +212,16 @@ const keyOf = (title, author) => `${String(title).toLocaleLowerCase()}\u0000${St
+  * título + primeiro autor) e devolve o resumo com o motivo de cada linha pulada.
+  */
+ export async function importCsv(userId, buffer) {
+-  if (!buffer?.length) throw httpError('Envie o arquivo CSV.', STATUS.BAD_REQUEST)
++  if (!buffer?.length) throw httpError('Envie o arquivo CSV.', STATUS.BAD_REQUEST, 'CSV_REQUIRED')
+ 
+   const { headers, records } = csvToObjects(buffer.toString('utf8'))
+   const format = detectFormat(headers)
+   if (!format) {
+-    throw httpError('Formato não reconhecido: envie o CSV exportado do Goodreads ou do Librishelf.', STATUS.BAD_REQUEST)
++    throw httpError('Formato não reconhecido: envie o CSV exportado do Goodreads ou do Librishelf.', STATUS.BAD_REQUEST, 'CSV_FORMAT')
+   }
+-  if (records.length === 0) throw httpError('O arquivo não tem nenhum livro.', STATUS.BAD_REQUEST)
++  if (records.length === 0) throw httpError('O arquivo não tem nenhum livro.', STATUS.BAD_REQUEST, 'CSV_EMPTY')
+   if (records.length > MAX_IMPORT_ROWS) {
+-    throw httpError(`O arquivo tem ${records.length} livros; o limite por importação é ${MAX_IMPORT_ROWS}.`, STATUS.BAD_REQUEST)
++    throw httpError(`O arquivo tem ${records.length} livros; o limite por importação é ${MAX_IMPORT_ROWS}.`, STATUS.BAD_REQUEST, 'CSV_TOO_MANY', { count: records.length, max: MAX_IMPORT_ROWS })
+   }
+ 
+   const { rows: existing } = await db.query(q.EXISTING_KEYS, [userId])
+diff --git a/backend/src/services/libraryService.js b/backend/src/services/libraryService.js
+index 9f3e90dbc878ed0676c4e506837526714515c2b7..25c48305284d88d2fb2b549e9e79f47e6ce8dd68 100644
+--- a/backend/src/services/libraryService.js
++++ b/backend/src/services/libraryService.js
+@@ -3,16 +3,11 @@ import * as authRepository from '../repositories/authRepository.js'
+ import STATUS from '../utils/statusCodes.js'
+ import { deleteBookCover } from '../utils/imageProcessor.js'
+ import logger from '../utils/logger.js'
+-import { parseNameList, parseTagList, validateNameList } from '../utils/nameList.js'
++import { parseNameList, parseTagList, nameListError } from '../utils/nameList.js'
++import { httpError } from '../utils/httpError.js'
+ 
+ const READ_YEAR_PATTERN = /^\d{4}$/
+ 
+-function httpError(message, status) {
+-  const error = new Error(message)
+-  error.status = status
+-  return error
+-}
+-
+ function normalizeIsbn(isbn) {
+   if (typeof isbn !== 'string') return isbn ?? null
+   const trimmed = isbn.trim()
+@@ -29,7 +24,7 @@ function normalizeDate(value, fieldName) {
+   const parsed = new Date(value)
+ 
+   if (Number.isNaN(parsed.getTime())) {
+-    throw httpError(`Data inválida em '${fieldName}'.`, STATUS.BAD_REQUEST)
++    throw httpError(`Data inválida em '${fieldName}'.`, STATUS.BAD_REQUEST, 'DATE_INVALID', { field: fieldName })
+   }
+ 
+   return parsed.toISOString().split('T')[0]
+@@ -44,7 +39,7 @@ function normalizeReadDate(value) {
+   if (!date) return date
+   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+   if (date > tomorrow) {
+-    throw httpError('A data de leitura não pode estar no futuro.', STATUS.BAD_REQUEST)
++    throw httpError('A data de leitura não pode estar no futuro.', STATUS.BAD_REQUEST, 'READ_DATE_FUTURE')
+   }
+   return date
+ }
+@@ -55,7 +50,7 @@ export const READING_STATUSES = ['none', 'want', 'reading', 'read']
+ function normalizeReadState(value) {
+   if (value === undefined || value === null || value === '') return 'all'
+   if (!READ_STATES.includes(String(value))) {
+-    throw httpError("Parâmetro 'readState' inválido.", STATUS.BAD_REQUEST)
++    throw httpError("Parâmetro 'readState' inválido.", STATUS.BAD_REQUEST, 'PARAM_INVALID', { param: 'readState' })
+   }
+   return String(value)
+ }
+@@ -64,7 +59,7 @@ function normalizeReadMonth(value) {
+   if (value === undefined || value === null || value === '') return undefined
+   const month = Number(value)
+   if (!Number.isInteger(month) || month < 1 || month > 12) {
+-    throw httpError("Parâmetro 'readMonth' inválido: use um número de 1 a 12.", STATUS.BAD_REQUEST)
++    throw httpError("Parâmetro 'readMonth' inválido: use um número de 1 a 12.", STATUS.BAD_REQUEST, 'PARAM_INVALID', { param: 'readMonth' })
+   }
+   return month
+ }
+@@ -74,10 +69,10 @@ const MAX_NOTES_LENGTH = 5000
+ 
+ function normalizeSeries(value) {
+   if (value === undefined || value === null) return null
+-  if (typeof value !== 'string') throw httpError("'series' precisa ser texto.", STATUS.BAD_REQUEST)
++  if (typeof value !== 'string') throw httpError("'series' precisa ser texto.", STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: 'series' })
+   const series = value.trim().replace(/\s+/g, ' ')
+   if (series.length > MAX_SERIES_LENGTH) {
+-    throw httpError(`O nome da série pode ter até ${MAX_SERIES_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
++    throw httpError(`O nome da série pode ter até ${MAX_SERIES_LENGTH} caracteres.`, STATUS.BAD_REQUEST, 'SERIES_TOO_LONG', { max: MAX_SERIES_LENGTH })
+   }
+   return series || null
+ }
+@@ -87,17 +82,17 @@ function normalizeSeriesIndex(value) {
+   if (value === undefined || value === null || value === '') return null
+   const number = Number(String(value).replace(',', '.'))
+   if (!Number.isFinite(number) || number < 0 || number > 9999) {
+-    throw httpError('O volume precisa ser um número de 0 a 9999.', STATUS.BAD_REQUEST)
++    throw httpError('O volume precisa ser um número de 0 a 9999.', STATUS.BAD_REQUEST, 'VOLUME_INVALID')
+   }
+   return Math.round(number * 100) / 100
  }
  
--.authors-input :deep(.p-chips-input-token) {
--  flex: 1;
--  min-width: 8rem;
-+.author-chip-remove {
-+  display: inline-flex;
-+  align-items: center;
-+  justify-content: center;
-+  width: 1.4rem;
-+  height: 1.4rem;
-+  padding: 0;
-+  border: none;
-+  border-radius: 50%;
-+  background: transparent;
-+  color: inherit;
-+  opacity: 0.7;
-+  cursor: pointer;
+ function normalizeNotes(value) {
+   if (value === undefined || value === null) return null
+-  if (typeof value !== 'string') throw httpError("'notes' precisa ser texto.", STATUS.BAD_REQUEST)
++  if (typeof value !== 'string') throw httpError("'notes' precisa ser texto.", STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: 'notes' })
+   const notes = value.replace(/\r\n/g, '\n').trim()
+   if (notes.length > MAX_NOTES_LENGTH) {
+-    throw httpError(`A anotação pode ter até ${MAX_NOTES_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
++    throw httpError(`A anotação pode ter até ${MAX_NOTES_LENGTH} caracteres.`, STATUS.BAD_REQUEST, 'NOTES_TOO_LONG', { max: MAX_NOTES_LENGTH })
+   }
+   return notes || null
+ }
+@@ -106,7 +101,7 @@ function normalizeReadYear(readYear) {
+   if (readYear === undefined || readYear === null || readYear === '' || readYear === 'all') return 'all'
+ 
+   if (!READ_YEAR_PATTERN.test(String(readYear))) {
+-    throw httpError("Parâmetro 'readYear' inválido: use um ano com 4 dígitos.", STATUS.BAD_REQUEST)
++    throw httpError("Parâmetro 'readYear' inválido: use um ano com 4 dígitos.", STATUS.BAD_REQUEST, 'PARAM_INVALID', { param: 'readYear' })
+   }
+ 
+   return String(readYear)
+@@ -117,7 +112,7 @@ async function getPublicLibraryByUsername(username, query) {
+ 
+   // Biblioteca privada responde igual a usuário inexistente: não confirma que a conta existe.
+   if (!user || !user.is_public) {
+-    throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND)
++    throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND, 'LIBRARY_NOT_FOUND')
+   }
+ 
+   const booksData = await getAllBooksByUser(user.id, query)
+@@ -170,7 +165,7 @@ async function getRandomPublicBookIds(limit) {
+ 
+ function requireText(value, fieldName) {
+   if (typeof value !== 'string' || !value.trim()) {
+-    throw httpError(`${fieldName} is required.`, STATUS.BAD_REQUEST)
++    throw httpError(`${fieldName} is required.`, STATUS.BAD_REQUEST, 'FIELD_REQUIRED', { field: fieldName.toLowerCase() })
+   }
+   return value.trim()
+ }
+@@ -190,7 +185,7 @@ function normalizeRating(value) {
+   if (value === undefined || value === null || value === '' || value === 'null') return null
+   const rating = Number(value)
+   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+-    throw httpError('A nota precisa ser um número inteiro de 1 a 5.', STATUS.BAD_REQUEST)
++    throw httpError('A nota precisa ser um número inteiro de 1 a 5.', STATUS.BAD_REQUEST, 'RATING_INVALID')
+   }
+   return rating
+ }
+@@ -198,19 +193,19 @@ function normalizeRating(value) {
+ function normalizeOlKey(value, pattern, field) {
+   if (value === undefined || value === null || value === '') return null
+   if (typeof value !== 'string' || !pattern.test(value)) {
+-    throw httpError(`Campo '${field}' inválido.`, STATUS.BAD_REQUEST)
++    throw httpError(`Campo '${field}' inválido.`, STATUS.BAD_REQUEST, 'FIELD_INVALID', { field })
+   }
+   return value
  }
  
--.authors-input :deep(.p-chips-input-token input),
--.authors-input :deep(.p-chips-input-token input:focus) {
--  width: 100%;
--  color: var(--text-primary);
--  background: transparent;
--  border: none;
--  box-shadow: none;
-+.author-chip-remove .pi {
-+  font-size: 0.65rem;
+ function normalizeBookInput(raw = {}) {
+   const authors = parseNameList(raw.authors)
+-  if (authors.length === 0) throw httpError('Authors is required.', STATUS.BAD_REQUEST)
++  if (authors.length === 0) throw httpError('Authors is required.', STATUS.BAD_REQUEST, 'AUTHORS_REQUIRED')
+ 
+   const tags = parseTagList(raw.tags)
+ 
+-  const listError = validateNameList(authors, 'autores') || validateNameList(tags, 'tags')
+-  if (listError) throw httpError(listError, STATUS.BAD_REQUEST)
++  const listError = nameListError(authors, 'autores') || nameListError(tags, 'tags')
++  if (listError) throw httpError(listError.message, STATUS.BAD_REQUEST, listError.code, listError.params)
+ 
+   const publisher = typeof raw.publisher === 'string' ? raw.publisher.trim() : ''
+ 
+@@ -240,7 +235,7 @@ async function addNewBook(bookData) {
+     const existingBook = await libraryRepository.findBookByIsbn(bookData.isbn, bookData.user_id)
+ 
+     if (existingBook) {
+-      throw httpError('ISBN already exists for this user.', STATUS.CONFLICT)
++      throw httpError('ISBN already exists for this user.', STATUS.CONFLICT, 'ISBN_TAKEN')
+     }
+   }
+ 
+@@ -281,11 +276,11 @@ async function checkBookOwnership(bookId, userId) {
+   const bookOwner = await libraryRepository.getBookOwner(bookId)
+ 
+   if (!bookOwner) {
+-    throw httpError('Book not found.', STATUS.NOT_FOUND)
++    throw httpError('Book not found.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
+   }
+ 
+   if (bookOwner.user_id !== userId) {
+-    throw httpError('Permission denied.', STATUS.FORBIDDEN)
++    throw httpError('Permission denied.', STATUS.FORBIDDEN, 'PERMISSION_DENIED')
+   }
+ 
+   return true
+@@ -335,7 +330,7 @@ async function setReadingStatus(bookId, userId, rawStatus, rawDate) {
+   const status = String(rawStatus ?? '')
+ 
+   if (!READING_STATUSES.includes(status)) {
+-    throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST)
++    throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST, 'STATUS_INVALID')
+   }
+ 
+   if (status === 'read') {
+@@ -382,23 +377,23 @@ const BATCH_ACTIONS = ['status', 'addTag', 'removeTag', 'delete']
+ async function batchUpdate(userId, body = {}) {
+   const { action } = body
+   if (!BATCH_ACTIONS.includes(action)) {
+-    throw httpError("Ação inválida: use 'status', 'addTag', 'removeTag' ou 'delete'.", STATUS.BAD_REQUEST)
++    throw httpError("Ação inválida: use 'status', 'addTag', 'removeTag' ou 'delete'.", STATUS.BAD_REQUEST, 'BATCH_ACTION_INVALID')
+   }
+ 
+   const ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(Number))]
+   if (ids.length === 0 || ids.length > MAX_BATCH || !ids.every(id => Number.isInteger(id) && id > 0 && id <= 2147483647)) {
+-    throw httpError(`Envie de 1 a ${MAX_BATCH} ids de livros válidos.`, STATUS.BAD_REQUEST)
++    throw httpError(`Envie de 1 a ${MAX_BATCH} ids de livros válidos.`, STATUS.BAD_REQUEST, 'BATCH_IDS_INVALID', { max: MAX_BATCH })
+   }
+ 
+   const owned = await libraryRepository.filterOwnedIds(userId, ids)
+   if (owned.length !== ids.length) {
+-    throw httpError('Alguns livros não foram encontrados na sua biblioteca.', STATUS.FORBIDDEN)
++    throw httpError('Alguns livros não foram encontrados na sua biblioteca.', STATUS.FORBIDDEN, 'BATCH_BOOKS_NOT_FOUND')
+   }
+ 
+   if (action === 'status') {
+     const status = String(body.status ?? '')
+     if (!READING_STATUSES.includes(status)) {
+-      throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST)
++      throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST, 'STATUS_INVALID')
+     }
+     const date = normalizeReadDate(body.date) ?? new Date().toISOString().slice(0, 10)
+     return { updated: await libraryRepository.batchSetStatus(ids, status, date) }
+@@ -406,8 +401,9 @@ async function batchUpdate(userId, body = {}) {
+ 
+   if (action === 'addTag' || action === 'removeTag') {
+     const [tag] = parseTagList(body.tag)
+-    const tagError = tag ? validateNameList([tag], 'tags') : 'Informe a categoria.'
+-    if (tagError) throw httpError(tagError, STATUS.BAD_REQUEST)
++    if (!tag) throw httpError('Informe a categoria.', STATUS.BAD_REQUEST, 'TAG_REQUIRED')
++    const tagError = nameListError([tag], 'tags')
++    if (tagError) throw httpError(tagError.message, STATUS.BAD_REQUEST, tagError.code, tagError.params)
+ 
+     if (action === 'addTag') {
+       return { updated: await libraryRepository.batchAddTag(userId, ids, tag) }
+diff --git a/backend/src/services/namesService.js b/backend/src/services/namesService.js
+index 90ae8e2e49aa4f6b7cf7f7ae480b99b07725414b..5410324e95300921d3edb2a0daef54bcae3adafc 100644
+--- a/backend/src/services/namesService.js
++++ b/backend/src/services/namesService.js
+@@ -1,6 +1,7 @@
+ import { db } from '../database/connection.js'
+ import STATUS from '../utils/statusCodes.js'
+-import { parseNameList, parseTagList, validateNameList } from '../utils/nameList.js'
++import { parseNameList, parseTagList, nameListError } from '../utils/nameList.js'
++import { httpError } from '../utils/httpError.js'
+ 
+ /**
+  * Renomear e mesclar autores, editoras e categorias (sempre do próprio usuário).
+@@ -17,12 +18,6 @@ const KINDS = {
+   publisher: { table: 'publishers', label: 'editoras', parse: parseNameList }
+ }
+ 
+-function httpError(message, status) {
+-  const error = new Error(message)
+-  error.status = status
+-  return error
+-}
+-
+ async function moveBooks(client, kind, fromId, toId, userId) {
+   const { table, link, column } = KINDS[kind]
+ 
+@@ -50,10 +45,10 @@ export async function mergeNames(kind, userId, body = {}) {
+   const [to] = config.parse(body.to)
+ 
+   if (from.length === 0 || !to) {
+-    throw httpError('Informe os nomes de origem (from) e o nome final (to).', STATUS.BAD_REQUEST)
++    throw httpError('Informe os nomes de origem (from) e o nome final (to).', STATUS.BAD_REQUEST, 'MERGE_FIELDS_REQUIRED')
+   }
+-  const listError = validateNameList(from, config.label) || validateNameList([to], config.label)
+-  if (listError) throw httpError(listError, STATUS.BAD_REQUEST)
++  const listError = nameListError(from, config.label) || nameListError([to], config.label)
++  if (listError) throw httpError(listError.message, STATUS.BAD_REQUEST, listError.code, listError.params)
+ 
+   const client = await db.connect()
+   try {
+@@ -65,7 +60,7 @@ export async function mergeNames(kind, userId, body = {}) {
+       [userId, from.map(name => name.toLocaleLowerCase())]
+     )
+     if (sources.length !== from.length) {
+-      throw httpError('Algum dos nomes não existe na sua biblioteca.', STATUS.NOT_FOUND)
++      throw httpError('Algum dos nomes não existe na sua biblioteca.', STATUS.NOT_FOUND, 'NAMES_NOT_FOUND')
+     }
+ 
+     const { rows: [existing] } = await client.query(
+diff --git a/backend/src/services/openLibraryService.js b/backend/src/services/openLibraryService.js
+index aedcbabfde519be13c682a002b6bae81f132b9a2..66888d3232bb2f2d364ecfb198ac394ebe72553e 100644
+--- a/backend/src/services/openLibraryService.js
++++ b/backend/src/services/openLibraryService.js
+@@ -1,6 +1,7 @@
+ import logger from '../utils/logger.js'
+ import STATUS from '../utils/statusCodes.js'
+ import { normalizeIsbn13 } from '../utils/isbn.js'
++import { httpError } from '../utils/httpError.js'
+ 
+ /**
+  * Busca de livros por ISBN no Open Library, feita sempre pelo servidor (o
+@@ -52,12 +53,6 @@ function unavailable(cause) {
+   return error
+ }
+ 
+-function httpError(message, status) {
+-  const error = new Error(message)
+-  error.status = status
+-  return error
+-}
+-
+ /** Só para testes: troca o fetch e zera cache/limite. */
+ export function configureForTests({ fetch: customFetch, minInterval = 0 } = {}) {
+   fetchImpl = customFetch
+@@ -209,7 +204,7 @@ async function authorNames(keys) {
+  */
+ export async function lookupIsbn(rawIsbn) {
+   const isbn13 = normalizeIsbn13(rawIsbn)
+-  if (!isbn13) throw httpError('ISBN inválido.', STATUS.BAD_REQUEST)
++  if (!isbn13) throw httpError('ISBN inválido.', STATUS.BAD_REQUEST, 'ISBN_INVALID')
+ 
+   const cached = cacheGet(lookupCache, isbn13)
+   if (cached !== undefined) return cached
+@@ -260,7 +255,7 @@ export async function lookupIsbn(rawIsbn) {
+ /** Capa grande pelo ID (sem limite de requisições no Open Library). */
+ export async function fetchCover(coverId) {
+   const id = Number(coverId)
+-  if (!Number.isInteger(id) || id <= 0) throw httpError('Capa inválida.', STATUS.BAD_REQUEST)
++  if (!Number.isInteger(id) || id <= 0) throw httpError('Capa inválida.', STATUS.BAD_REQUEST, 'COVER_INVALID')
+ 
+   const cached = cacheGet(coverCache, id)
+   if (cached !== undefined) return cached
+@@ -280,10 +275,10 @@ export async function fetchCover(coverId) {
+   if (!response.ok) throw unavailable(new Error(`HTTP ${response.status} na capa ${id}`))
+ 
+   const declared = Number(response.headers.get('content-length'))
+-  if (declared > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502)
++  if (declared > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502, 'COVER_TOO_LARGE')
+ 
+   const buffer = Buffer.from(await response.arrayBuffer())
+-  if (buffer.length > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502)
++  if (buffer.length > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502, 'COVER_TOO_LARGE')
+ 
+   cacheSet(coverCache, id, buffer, CACHE_TTL_MS, COVER_CACHE_MAX)
+   return buffer
+diff --git a/backend/src/services/socialService.js b/backend/src/services/socialService.js
+index a338ee51740eabf6cb911cc34c159af1b35b7d6c..c9031494a85e021870f7bc78be06e919b286a1e4 100644
+--- a/backend/src/services/socialService.js
++++ b/backend/src/services/socialService.js
+@@ -1,33 +1,34 @@
+ import * as socialRepository from '../repositories/socialRepository.js'
+ import * as authRepository from '../repositories/authRepository.js'
+ import STATUS from '../utils/statusCodes.js'
++import { httpError } from '../utils/httpError.js'
+ 
+ const FEED_PAGE_SIZE = 30
+ 
+-function httpError(message, status) {
+-  const error = new Error(message)
+-  error.status = status
+-  return error
+-}
+-
+ // Mesmo erro para "não existe" e "não aceita seguidores": não confirma contas.
+ const NOT_AVAILABLE = 'Leitor não encontrado ou não aceita seguidores.'
+ 
+ async function findUser(username) {
+-  if (typeof username !== 'string' || !username.trim()) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND)
++  if (typeof username !== 'string' || !username.trim()) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND, 'READER_NOT_AVAILABLE')
+   const user = await authRepository.getUserByName(username.trim())
+-  if (!user) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND)
++  if (!user) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND, 'READER_NOT_AVAILABLE')
+   return user
+ }
+ 
+ export async function requestFollow(viewerId, username) {
+   const target = await findUser(username)
+-  if (target.id === viewerId) throw httpError('Você não pode seguir a si mesmo.', STATUS.BAD_REQUEST)
+-  if (!target.show_activity) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND)
++  if (target.id === viewerId) throw httpError('Você não pode seguir a si mesmo.', STATUS.BAD_REQUEST, 'FOLLOW_SELF')
++  if (!target.show_activity) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND, 'READER_NOT_AVAILABLE')
++
++  // Bloqueado por ele: mesma resposta de "não aceita seguidores" (não revela o bloqueio).
++  // Bloqueado por mim: aviso claro, para a pessoa saber que precisa desbloquear.
++  const { blockedByMe, blockedMe } = await socialRepository.blockState(viewerId, target.id)
++  if (blockedMe) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND, 'READER_NOT_AVAILABLE')
++  if (blockedByMe) throw httpError('Você bloqueou este leitor. Desbloqueie para seguir.', STATUS.CONFLICT, 'READER_BLOCKED_BY_YOU')
+ 
+   const viewer = await authRepository.getUserById(viewerId)
+   if (!viewer?.email_verified_at) {
+-    throw httpError('Confirme seu e-mail para seguir outros leitores.', STATUS.FORBIDDEN)
++    throw httpError('Confirme seu e-mail para seguir outros leitores.', STATUS.FORBIDDEN, 'EMAIL_NOT_VERIFIED_FOLLOW')
+   }
+ 
+   const status = await socialRepository.requestFollow(viewerId, target.id)
+@@ -44,20 +45,43 @@ export async function unfollow(viewerId, username) {
+ export async function acceptRequest(viewerId, username) {
+   const follower = await findUser(username)
+   const accepted = await socialRepository.acceptFollow(follower.id, viewerId)
+-  if (!accepted) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND)
++  if (!accepted) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND, 'REQUEST_NOT_FOUND')
+   return { username: follower.name, status: 'accepted' }
+ }
+ 
+ export async function rejectRequest(viewerId, username) {
+   const follower = await findUser(username)
+   const removed = await socialRepository.deleteFollow(follower.id, viewerId, ['pending'])
+-  if (!removed) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND)
++  if (!removed) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND, 'REQUEST_NOT_FOUND')
+ }
+ 
+ export async function removeFollower(viewerId, username) {
+   const follower = await findUser(username)
+   const removed = await socialRepository.deleteFollow(follower.id, viewerId, ['accepted'])
+-  if (!removed) throw httpError('Seguidor não encontrado.', STATUS.NOT_FOUND)
++  if (!removed) throw httpError('Seguidor não encontrado.', STATUS.NOT_FOUND, 'FOLLOWER_NOT_FOUND')
 +}
 +
-+.author-chip-remove:hover,
-+.author-chip-remove:focus-visible {
-+  opacity: 1;
-+  background: rgba(127, 127, 127, 0.25);
-   outline: none;
++/**
++ * Bloquear: o outro deixa de ver você na comunidade (e você a ele), os
++ * vínculos de seguir somem e ele não consegue pedir para seguir de novo.
++ * Ele não é avisado.
++ */
++export async function blockUser(viewerId, username) {
++  const target = await findUser(username)
++  if (target.id === viewerId) throw httpError('Você não pode bloquear a si mesmo.', STATUS.BAD_REQUEST, 'BLOCK_SELF')
++  await socialRepository.block(viewerId, target.id)
++  return { username: target.name, blocked: true }
 +}
 +
-+.chips-input {
-+  flex: 1;
-+  min-width: 8rem;
-   padding: 0.1rem 0.3rem;
-+  border: none;
-+  background: transparent;
-+  color: var(--text-primary);
-   font: inherit;
-   font-size: var(--fs-md);
-+  outline: none;
++export async function unblockUser(viewerId, username) {
++  const target = await findUser(username)
++  await socialRepository.unblock(viewerId, target.id)
++  return { username: target.name, blocked: false }
++}
++
++export async function blockedUsers(viewerId) {
++  const rows = await socialRepository.blockedList(viewerId)
++  return { blocked: rows.map(row => ({ username: row.username, since: row.created_at })) }
  }
  
- .field-label {
-diff --git a/frontend/src/components/LibraryHeader.vue b/frontend/src/components/LibraryHeader.vue
-index e63e7ac1e9f8ebeda629f2f44a357cec31ec5ab0..198dd1b268eb489f0ac120a4c811527d3abeb957 100644
---- a/frontend/src/components/LibraryHeader.vue
-+++ b/frontend/src/components/LibraryHeader.vue
-@@ -47,16 +47,15 @@
-         </div>
+ export async function connections(viewerId) {
+diff --git a/backend/src/tests/integration/blocks.test.js b/backend/src/tests/integration/blocks.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..6d161334f8e4ef5197fc370e9f28b02141961e83
+--- /dev/null
++++ b/backend/src/tests/integration/blocks.test.js
+@@ -0,0 +1,130 @@
++import request from 'supertest'
++import app from '../../app.js'
++import { confirmEmail } from '../helpers/confirmEmail.js'
++import { tokenFrom } from '../helpers/authToken.js'
++import { clearDatabase, closeDatabase } from '../../utils/db.js'
++
++const tokens = {}
++const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
++
++async function signUp(name) {
++  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
++  await confirmEmail(name)
++  tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))
++  // Biblioteca pública + comunidade + aceita seguidores
++  await request(app).patch('/auth/me/visibility').set(auth(name)).send({ isPublic: true, showInCommunity: true, showActivity: true })
++}
++
++async function addBook(user, title, isbn) {
++  const res = await request(app).post('/library').set(auth(user)).field({ title, isbn }).field('authors', 'Autor')
++  if (res.statusCode !== 201) throw new Error(`addBook ${res.statusCode}: ${JSON.stringify(res.body)}`)
++  return res.body.bookId
++}
++
++beforeAll(async () => {
++  await clearDatabase()
++  for (const name of ['lia', 'teo']) await signUp(name)
++})
++
++afterAll(async () => {
++  await closeDatabase()
++})
++
++describe('Códigos de erro', () => {
++  it('erro controlado leva code e params', async () => {
++    const res = await request(app).post('/auth/register').send({ username: 'x'.repeat(60), password: 'senha12345', email: 'x@example.com' })
++    expect(res.statusCode).toBe(400)
++    expect(res.body).toMatchObject({ code: 'USERNAME_TOO_LONG', params: { max: expect.any(Number) } })
++    expect(typeof res.body.error).toBe('string')
++  })
++
++  it('ISBN repetido → ISBN_TAKEN', async () => {
++    await addBook('lia', 'Duna', '9788576570653')
++    const res = await request(app).post('/library').set(auth('lia')).field({ title: 'Duna 2', isbn: '9788576570653' }).field('authors', 'Autor')
++    expect(res.statusCode).toBe(409)
++    expect(res.body.code).toBe('ISBN_TAKEN')
++  })
++
++  it('id inválido → PARAM_INVALID com o nome do parâmetro', async () => {
++    const res = await request(app).get('/library/abc').set(auth('lia'))
++    expect(res.statusCode).toBe(400)
++    expect(res.body).toMatchObject({ code: 'PARAM_INVALID', params: { param: 'id' } })
++  })
++})
++
++describe('Nomes reservados', () => {
++  it.each(['admin', 'Suporte', 's.u.p.o.r.t.e', 'librishelf_oficial', 'Ádmin'])('"%s" não pode ser cadastrado', async (name) => {
++    const res = await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `r${Date.now()}@example.com` })
++    expect(res.statusCode).toBe(400)
++    expect(res.body.code).toBe('USERNAME_RESERVED')
++  })
++
++  it('nem usado na troca de nome', async () => {
++    const res = await request(app).patch('/auth/me/username').set(auth('teo')).send({ username: 'moderador', password: 'senha12345' })
++    expect(res.statusCode).toBe(400)
++    expect(res.body.code).toBe('USERNAME_RESERVED')
++  })
++})
++
++describe('Bloquear leitor', () => {
++  it('bloquear apaga o seguir nos dois sentidos e impede novo pedido', async () => {
++    await request(app).post('/social/follow/lia').set(auth('teo'))
++    await request(app).post('/social/requests/teo/accept').set(auth('lia'))
++    await request(app).post('/social/follow/teo').set(auth('lia'))
++
++    const block = await request(app).post('/social/blocks/teo').set(auth('lia'))
++    expect(block.statusCode).toBe(200)
++
++    const conn = await request(app).get('/social/connections').set(auth('lia'))
++    expect([...conn.body.following, ...conn.body.followers, ...conn.body.requests]).toHaveLength(0)
++
++    // Quem foi bloqueado recebe a mesma resposta de "não aceita seguidores"
++    const again = await request(app).post('/social/follow/lia').set(auth('teo'))
++    expect(again.statusCode).toBe(404)
++    expect(again.body.code).toBe('READER_NOT_AVAILABLE')
++
++    // Quem bloqueou é avisado de que precisa desbloquear
++    const mine = await request(app).post('/social/follow/teo').set(auth('lia'))
++    expect(mine.statusCode).toBe(409)
++    expect(mine.body.code).toBe('READER_BLOCKED_BY_YOU')
++  })
++
++  it('somem um para o outro na comunidade', async () => {
++    const liaBook = await addBook('lia', 'Neuromancer', '9788576570912')
++    const teoBook = await addBook('teo', 'Neuromancer', '9788576570912')
++
++    const fromLia = await request(app).get(`/community/books/${liaBook}`).set(auth('lia'))
++    expect(fromLia.body.readers).toEqual([])
++    const fromTeo = await request(app).get(`/community/books/${teoBook}`).set(auth('teo'))
++    expect(fromTeo.body.readers).toEqual([])
++
++    const search = await request(app).get('/community/readers').query({ q: 'lia' }).set(auth('teo'))
++    expect(search.body.map(r => r.username)).not.toContain('lia')
++  })
++
++  it('perfil: quem bloqueou vê blockedByMe; o bloqueado não pode seguir e não sabe', async () => {
++    const asLia = await request(app).get('/library/public/u/teo/profile').set(auth('lia'))
++    expect(asLia.body.viewer).toMatchObject({ blockedByMe: true, followStatus: null, commonCount: null })
++
++    const asTeo = await request(app).get('/library/public/u/lia/profile').set(auth('teo'))
++    expect(asTeo.body.acceptsFollowers).toBe(false)
++    expect(asTeo.body.viewer).toMatchObject({ blockedByMe: false, commonCount: null })
++  })
++
++  it('lista e desbloqueio', async () => {
++    const list = await request(app).get('/social/blocks').set(auth('lia'))
++    expect(list.body.blocked.map(b => b.username)).toEqual(['teo'])
++
++    await request(app).delete('/social/blocks/teo').set(auth('lia'))
++    expect((await request(app).get('/social/blocks').set(auth('lia'))).body.blocked).toEqual([])
++
++    const follow = await request(app).post('/social/follow/teo').set(auth('lia'))
++    expect(follow.statusCode).toBe(200)
++  })
++
++  it('não dá para bloquear a si mesmo', async () => {
++    const res = await request(app).post('/social/blocks/lia').set(auth('lia'))
++    expect(res.statusCode).toBe(400)
++    expect(res.body.code).toBe('BLOCK_SELF')
++  })
++})
+diff --git a/backend/src/tests/unit/reservedNames.test.js b/backend/src/tests/unit/reservedNames.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..eadaf5637c4786cac88780e5a5a89516e8ff6022
+--- /dev/null
++++ b/backend/src/tests/unit/reservedNames.test.js
+@@ -0,0 +1,11 @@
++import { isReservedUsername } from '../../utils/reservedNames.js'
++
++describe('isReservedUsername', () => {
++  it.each(['admin', 'ADMIN', 'Suporte', 'su.por-te', 'Ádmin', 'librishelf', 'LibriShelf_BR', 'api', 'u'])('%s é reservado', name => {
++    expect(isReservedUsername(name)).toBe(true)
++  })
++
++  it.each(['ana', 'ana.leitora', 'busca', 'administra.dora', 'support42', 'leitor_u'])('%s é livre', name => {
++    expect(isReservedUsername(name)).toBe(false)
++  })
++})
+diff --git a/backend/src/utils/httpError.js b/backend/src/utils/httpError.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..44c51187302b676f48313929a2d7ed74386b5a74
+--- /dev/null
++++ b/backend/src/utils/httpError.js
+@@ -0,0 +1,26 @@
++/**
++ * Erro "controlado" (status < 500 ou 502 de serviço externo): a mensagem vai
++ * para o cliente. Junto vai um código estável (ex.: 'ISBN_TAKEN') e, se
++ * houver, os parâmetros da mensagem ({ max: 200 }). O frontend traduz pelo
++ * código; a mensagem em português fica como reserva para clientes antigos.
++ *
++ * O código fica em `errorCode` (e não `code`) para não se confundir com os
++ * códigos de erro do Postgres ('23505'...).
++ */
++export function httpError(message, status, errorCode, params) {
++  const error = new Error(message)
++  error.status = status
++  if (errorCode) error.errorCode = errorCode
++  if (params) error.params = params
++  return error
++}
++
++/** Corpo JSON padrão de erro: { error, code?, params? } */
++export function errorBody(message, errorCode, params) {
++  const body = { error: message }
++  if (errorCode) body.code = errorCode
++  if (params) body.params = params
++  return body
++}
++
++export default httpError
+diff --git a/backend/src/utils/nameList.js b/backend/src/utils/nameList.js
+index 6de61c39b0c282d50ca6ed9f6ef627bfa6bee704..59a7695395c3c0fcf5a02b9d449bcace99e6dcdc 100644
+--- a/backend/src/utils/nameList.js
++++ b/backend/src/utils/nameList.js
+@@ -57,10 +57,22 @@ export function parseTagList(value) {
+   return dedupe(toArray(value).flatMap(item => (typeof item === 'string' ? item.split(',') : [])))
+ }
  
-         <!-- Ordenar à mão, ao lado da busca (antes só dentro da gaveta de filtros).
--             Dropdown do PrimeVue, e não <select>: a lista nativa não segue o tema. -->
--        <Dropdown
-+             AppSelect, e não <select>: a lista nativa não segue o tema. -->
-+        <AppSelect
-           :modelValue="filters.sortField"
-           :options="sortOptions"
-           optionLabel="label"
-           optionValue="value"
-           :aria-label="t('library.sort_by')"
-           class="sort-quick"
--          panelClass="custom-panel sort-quick-panel"
--          scrollHeight="22rem"
-+          panel-class="sort-quick-panel"
-           @update:modelValue="value => emitFilter('sortField', value)"
-         >
-           <template #value>
-@@ -69,7 +68,7 @@
-               <span class="sort-quick-value">{{ currentSortLabel }}</span>
-             </span>
+-/** Erro de validação (status 400) ou null. */
+-export function validateNameList(names, label) {
+-  if (names.length > MAX_NAMES) return `No máximo ${MAX_NAMES} ${label}.`
++/**
++ * Erro de validação da lista ou null: { message, code, params } — o código
++ * vai para o cliente traduzir (utils/httpError.js).
++ */
++export function nameListError(names, label) {
++  if (names.length > MAX_NAMES) {
++    return { message: `No máximo ${MAX_NAMES} ${label}.`, code: 'NAMES_TOO_MANY', params: { max: MAX_NAMES } }
++  }
+   const tooLong = names.find(name => name.length > MAX_NAME_LENGTH)
+-  if (tooLong) return `Nome muito longo em ${label} (máximo ${MAX_NAME_LENGTH} caracteres).`
++  if (tooLong) {
++    return { message: `Nome muito longo em ${label} (máximo ${MAX_NAME_LENGTH} caracteres).`, code: 'NAME_TOO_LONG', params: { max: MAX_NAME_LENGTH } }
++  }
+   return null
+ }
++
++/** Só a mensagem do erro (ou null). */
++export function validateNameList(names, label) {
++  return nameListError(names, label)?.message ?? null
++}
+diff --git a/backend/src/utils/passwordPolicy.js b/backend/src/utils/passwordPolicy.js
+index b944b24cbb4035cfed62132e95061422135d0633..85eff5284b061055c4aa89bce6e294fe1777d349 100644
+--- a/backend/src/utils/passwordPolicy.js
++++ b/backend/src/utils/passwordPolicy.js
+@@ -5,19 +5,19 @@ const MAX_BYTES = 72
+ 
+ function validatePassword(password) {
+   if (typeof password !== 'string' || password.length < MIN_LENGTH) {
+-    return { valid: false, reason: `A senha precisa ter pelo menos ${MIN_LENGTH} caracteres.` }
++    return { valid: false, reason: `A senha precisa ter pelo menos ${MIN_LENGTH} caracteres.`, code: 'PASSWORD_TOO_SHORT', params: { min: MIN_LENGTH } }
+   }
+ 
+   if (Buffer.byteLength(password, 'utf8') > MAX_BYTES) {
+-    return { valid: false, reason: `A senha pode ter no máximo ${MAX_BYTES} bytes.` }
++    return { valid: false, reason: `A senha pode ter no máximo ${MAX_BYTES} bytes.`, code: 'PASSWORD_TOO_LONG', params: { max: MAX_BYTES } }
+   }
+ 
+   if (!/[a-zA-Z]/.test(password)) {
+-    return { valid: false, reason: 'A senha precisa conter pelo menos uma letra.' }
++    return { valid: false, reason: 'A senha precisa conter pelo menos uma letra.', code: 'PASSWORD_NEEDS_LETTER' }
+   }
+ 
+   if (!/[0-9]/.test(password)) {
+-    return { valid: false, reason: 'A senha precisa conter pelo menos um número.' }
++    return { valid: false, reason: 'A senha precisa conter pelo menos um número.', code: 'PASSWORD_NEEDS_NUMBER' }
+   }
+ 
+   return { valid: true }
+diff --git a/backend/src/utils/reservedNames.js b/backend/src/utils/reservedNames.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e6322c9b5e489f93537af7b76bad85c8b672912
+--- /dev/null
++++ b/backend/src/utils/reservedNames.js
+@@ -0,0 +1,38 @@
++/**
++ * Nomes de usuário que ninguém pode pegar: o nome vira a página pública
++ * /u/<nome>, então "admin", "suporte" ou "librishelf" se passariam pelo
++ * próprio site. Vale no cadastro e na troca de nome; contas antigas com um
++ * desses nomes continuam como estão.
++ *
++ * A comparação ignora maiúsculas, acentos e os separadores . _ - (então
++ * "Su.porte" e "s_u_p_o_r_t_e" também ficam de fora). Qualquer nome que comece
++ * com "librishelf" também.
++ */
++const RESERVED = [
++  // o próprio site e quem fala por ele
++  'librishelf', 'admin', 'administrator', 'administrador', 'adm', 'root', 'sysadmin', 'system', 'sistema',
++  'staff', 'equipe', 'team', 'moderator', 'moderador', 'mod', 'oficial', 'official',
++  'suporte', 'support', 'ajuda', 'help', 'helpdesk', 'contato', 'contact', 'sac', 'atendimento',
++  'security', 'seguranca', 'abuse', 'postmaster', 'hostmaster', 'webmaster', 'noreply', 'naoresponda',
++  'mail', 'email', 'newsletter', 'billing', 'financeiro', 'privacy', 'privacidade', 'legal', 'terms', 'termos',
++  // rotas e palavras do app
++  'api', 'app', 'www', 'u', 'me', 'login', 'logout', 'entrar', 'sair', 'register', 'signup', 'signin',
++  'cadastro', 'settings', 'configuracoes', 'conta', 'account', 'profile', 'perfil', 'dashboard', 'painel',
++  'books', 'livros', 'library', 'biblioteca', 'authors', 'autores', 'publishers', 'editoras', 'tags',
++  'categorias', 'community', 'comunidade', 'feed', 'uploads', 'assets', 'static',
++  'forgotpassword', 'resetpassword', 'verifyemail', 'lists', 'listas', 'reviews', 'resenhas', 'retrospectiva',
++  // valores que confundem
++  'null', 'undefined', 'anonymous', 'anonimo'
++]
++
++const normalize = name => String(name)
++  .normalize('NFD').replace(/\p{Diacritic}/gu, '')
++  .toLowerCase()
++  .replace(/[._-]/g, '')
++
++const RESERVED_SET = new Set(RESERVED.map(normalize))
++
++export function isReservedUsername(name) {
++  const key = normalize(name)
++  return RESERVED_SET.has(key) || key.startsWith('librishelf')
++}
+diff --git a/backend/src/utils/sendError.js b/backend/src/utils/sendError.js
+index ae057093a978fce65a59cf29843fb0af94130c53..c8e4d66a6d7cc160848175ba860f341094e8c0eb 100644
+--- a/backend/src/utils/sendError.js
++++ b/backend/src/utils/sendError.js
+@@ -1,5 +1,6 @@
+ import STATUS from './statusCodes.js'
+ import logger from './logger.js'
++import { errorBody } from './httpError.js'
+ 
+ const GENERIC_MESSAGE = 'Erro interno do servidor.'
+ 
+@@ -12,7 +13,9 @@ function sendError(res, error, context) {
+     logger.error(context || 'Erro não tratado', { message: error.message, stack: error.stack })
+   }
+ 
+-  return res.status(status).json({ error: message })
++  return res.status(status).json(isControlled
++    ? errorBody(message, error.errorCode, error.params)
++    : errorBody(message))
+ }
+ 
+ export default sendError
+\ No newline at end of file
+diff --git a/frontend/nginx.conf b/frontend/nginx.conf
+index 0119c00a0faaacdde0c428ccc31a079a200a7eb7..65a5ab85955ca92e14ba995270d6402dd84f7a07 100644
+--- a/frontend/nginx.conf
++++ b/frontend/nginx.conf
+@@ -36,6 +36,9 @@ server {
+     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+     proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+     proxy_read_timeout 60s;
++
++    # Respostas da API (capas incluídas) fora dos buscadores
++    add_header X-Robots-Tag "noindex" always;
+   }
+ 
+   # Arquivos com hash no nome gerados pelo Vite: cache longo e imutável.
+@@ -45,6 +48,17 @@ server {
+     add_header X-Content-Type-Options "nosniff" always;
+   }
+ 
++  # Bibliotecas públicas: abrem por link, mas não entram em buscadores.
++  location /u/ {
++    try_files $uri /index.html;
++    add_header Cache-Control "no-cache";
++    add_header X-Robots-Tag "noindex, nofollow" always;
++    add_header X-Content-Type-Options "nosniff" always;
++    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
++    add_header X-Frame-Options "DENY" always;
++    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
++  }
++
+   # index.html sempre revalidado, para pegar o build novo após deploy.
+   location / {
+     try_files $uri $uri/ /index.html;
+diff --git a/frontend/public/robots.txt b/frontend/public/robots.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..2859ba9c6fc50aa00a2b163c361f013c3a1f50ae
+--- /dev/null
++++ b/frontend/public/robots.txt
+@@ -0,0 +1,9 @@
++# Bibliotecas públicas (/u/...) não entram em buscadores: quem ativa o
++# compartilhamento pensa no link, não no Google. Elas respondem com
++# X-Robots-Tag: noindex (nginx.conf) e por isso precisam continuar
++# rastreáveis — um Disallow aqui esconderia o noindex.
++User-agent: *
++Disallow: /api/
++Disallow: /reset-password
++Disallow: /verify-email
++Allow: /
+diff --git a/frontend/src/locales/en.json b/frontend/src/locales/en.json
+index 521a165961ee938b591e15c81c5d525a142df30b..8af29dd004e12ce1e8fbdad98e6776b27fa0489a 100644
+--- a/frontend/src/locales/en.json
++++ b/frontend/src/locales/en.json
+@@ -523,14 +523,16 @@
+         "title": "Public library",
+         "paragraphs": [
+           "Your library is private by default. If you turn on sharing in Account, anyone with your link can see your books and covers, and some covers may appear on the site's sign-in pages.",
+-          "You can turn it off whenever you want, and the change is immediate."
++          "You can turn it off whenever you want, and the change is immediate.",
++          "Public libraries don't show up in search engines like Google: the site asks for them not to be indexed."
+         ]
+       },
+       {
+         "title": "Community and followers",
+         "paragraphs": [
+           "Both options start off and live in Account. \"Join the community\" (only with a public library) lets other signed-in readers see that you have the same book, your rating for it and how many books you share.",
+-          "\"Accept followers\" lets other people ask to follow you. Only those you approve see, in their feed, the books you add and finish. You can remove followers or turn the option off at any time, and the change takes effect immediately."
++          "\"Accept followers\" lets other people ask to follow you. Only those you approve see, in their feed, the books you add and finish. You can remove followers or turn the option off at any time, and the change takes effect immediately.",
++          "You can block a reader from their public library: you stop seeing each other in the community and they can't ask to follow you."
+         ]
+       },
+       {
+@@ -820,5 +822,117 @@
+   "password": {
+     "show": "Show password",
+     "hide": "Hide password"
++  },
++  "errors": {
++    "UNKNOWN": "Something went wrong. Please try again.",
++    "INTERNAL_ERROR": "Server error. Please try again shortly.",
++    "NETWORK": "Can't reach the server. Check your connection.",
++    "SESSION_EXPIRED": "Your session expired. Please sign in again.",
++    "RATE_LIMIT": "Too many requests. Try again shortly.",
++    "RATE_LIMIT_LOGIN": "Too many login attempts. Try again in a few minutes.",
++    "RATE_LIMIT_REGISTER": "Too many sign-up attempts. Try again later.",
++    "RATE_LIMIT_UPLOAD": "Too many uploads in a short time. Try again in a few minutes.",
++    "RATE_LIMIT_ISBN": "Too many ISBN lookups. Wait a minute.",
++    "RATE_LIMIT_ACTIONS": "Too many actions in a short time. Try again in a few minutes.",
++    "RATE_LIMIT_EMAIL": "Too many email requests. Try again later.",
++    "RATE_LIMIT_ATTEMPTS": "Too many attempts. Try again in a few minutes.",
++    "PARAM_INVALID": "Invalid parameter: {param}.",
++    "FIELD_INVALID": "Invalid value in {field}.",
++    "FIELD_REQUIRED": "Fill in {field}.",
++    "DATE_INVALID": "Invalid date in {field}.",
++    "READ_DATE_FUTURE": "The read date can't be in the future.",
++    "SERIES_TOO_LONG": "The series name can have up to {max} characters.",
++    "VOLUME_INVALID": "The volume must be a number from 0 to 9999.",
++    "NOTES_TOO_LONG": "The note can have up to {max} characters.",
++    "LIBRARY_NOT_FOUND": "This library doesn't exist or isn't public.",
++    "RATING_INVALID": "The rating must be 1 to 5 stars.",
++    "AUTHORS_REQUIRED": "Add at least one author.",
++    "NAMES_TOO_MANY": "At most {max} names.",
++    "NAME_TOO_LONG": "Each name can have up to {max} characters.",
++    "TAG_REQUIRED": "Enter the category.",
++    "ISBN_TAKEN": "You already have a book with this ISBN.",
++    "ISBN_INVALID": "Invalid ISBN.",
++    "ISBN_NOT_FOUND": "No book found for this ISBN.",
++    "BOOK_NOT_FOUND": "Book not found.",
++    "BOOK_ALREADY_ON_SHELF": "This book is already on your shelf.",
++    "PERMISSION_DENIED": "You don't have permission to do that.",
++    "STATUS_INVALID": "Invalid reading status.",
++    "BATCH_ACTION_INVALID": "Invalid batch action.",
++    "BATCH_IDS_INVALID": "Select 1 to {max} books.",
++    "BATCH_BOOKS_NOT_FOUND": "Some books weren't found in your library.",
++    "COVER_INVALID": "Invalid cover.",
++    "COVER_TOO_LARGE": "The cover found is too large.",
++    "COVER_NOT_FOUND": "Cover not found.",
++    "IMAGE_INVALID": "The uploaded file isn't a valid image.",
++    "IMAGE_ONLY": "Only image files are allowed.",
++    "IMAGE_REQUIRED": "No image uploaded.",
++    "IMAGE_TOO_LARGE": "The image can be at most {max} MB.",
++    "FILE_TOO_LARGE": "The file can be at most {max} MB.",
++    "CSV_REQUIRED": "Upload a .csv file.",
++    "CSV_FORMAT": "Unrecognized format: upload the CSV exported from Goodreads or Librishelf.",
++    "CSV_EMPTY": "The file has no books.",
++    "CSV_TOO_MANY": "The file has {count} books; the import limit is {max}.",
++    "YEAR_INVALID": "Invalid year.",
++    "GOAL_INVALID": "The goal must be a number from 1 to 1000.",
++    "MERGE_FIELDS_REQUIRED": "Choose the names to merge and the final name.",
++    "NAMES_NOT_FOUND": "One of the names no longer exists in your library.",
++    "CURRENT_PASSWORD_REQUIRED": "Enter your current password.",
++    "CURRENT_PASSWORD_WRONG": "Current password is incorrect.",
++    "CREDENTIALS_REQUIRED": "Enter username and password.",
++    "INVALID_CREDENTIALS": "Incorrect username or password.",
++    "REGISTER_FIELDS_REQUIRED": "Fill in username, email and password.",
++    "USERNAME_REQUIRED": "Enter the username.",
++    "USERNAME_TOO_LONG": "The username can have at most {max} characters.",
++    "USERNAME_INVALID": "Use only letters, numbers, dot, hyphen and underscore.",
++    "USERNAME_RESERVED": "This name is reserved. Choose another one.",
++    "USERNAME_TAKEN": "This username is already taken.",
++    "USERNAME_OR_EMAIL_TAKEN": "This username or email is already taken.",
++    "EMAIL_INVALID": "Invalid email.",
++    "EMAIL_SAME": "This is already your email.",
++    "EMAIL_TAKEN": "This email is already used by another account.",
++    "EMAIL_SEND_FAILED": "Couldn't send the email right now. Try again in a few minutes.",
++    "EMAIL_NOT_VERIFIED_PUBLIC": "Confirm your email to make your library public or join the community.",
++    "EMAIL_NOT_VERIFIED_FOLLOW": "Confirm your email to follow other readers.",
++    "PASSWORD_TOO_SHORT": "The password must have at least {min} characters.",
++    "PASSWORD_TOO_LONG": "The password can be at most {max} bytes.",
++    "PASSWORD_NEEDS_LETTER": "The password must have at least one letter.",
++    "PASSWORD_NEEDS_NUMBER": "The password must have at least one number.",
++    "PASSWORD_SAME": "The new password must be different from the current one.",
++    "LINK_INVALID": "This link is invalid or expired. Request a new one.",
++    "NOTHING_TO_UPDATE": "Nothing to change.",
++    "USER_NOT_FOUND": "Account not found.",
++    "READER_NOT_AVAILABLE": "Reader not found or not accepting followers.",
++    "READER_BLOCKED_BY_YOU": "You blocked this reader. Unblock to follow.",
++    "FOLLOW_SELF": "You can't follow yourself.",
++    "BLOCK_SELF": "You can't block yourself.",
++    "REQUEST_NOT_FOUND": "Request not found.",
++    "FOLLOWER_NOT_FOUND": "Follower not found.",
++    "fields": {
++      "title": "title",
++      "isbn": "ISBN",
++      "readDate": "read date",
++      "startedAt": "start date",
++      "pubDate": "publication date",
++      "publicationDate": "publication date",
++      "series": "series",
++      "notes": "note",
++      "olWorkKey": "Open Library work",
++      "olEditionKey": "Open Library edition",
++      "isPublic": "public library",
++      "showInCommunity": "community",
++      "showActivity": "activity"
++    }
++  },
++  "block": {
++    "block": "Block {name}",
++    "unblock": "Unblock",
++    "moreActions": "More actions",
++    "confirmTitle": "Block {name}?",
++    "confirmText": "You'll stop following each other and seeing each other in the community, and this person won't be able to ask to follow you. They aren't notified. You can undo it in Account.",
++    "confirmButton": "Block",
++    "blocked": "{name} was blocked.",
++    "unblocked": "{name} was unblocked.",
++    "listTitle": "Blocked readers",
++    "listEmpty": "Nobody blocked. To block someone, open their public library and use the ⋯ menu."
+   }
+ }
+diff --git a/frontend/src/locales/pt.json b/frontend/src/locales/pt.json
+index c4be3be62565843821a8f582f18b467a7f8abf24..d00f3f741ce64d3fa5f89a8071c21a8d8ef1fde3 100644
+--- a/frontend/src/locales/pt.json
++++ b/frontend/src/locales/pt.json
+@@ -523,14 +523,16 @@
+         "title": "Biblioteca pública",
+         "paragraphs": [
+           "Sua biblioteca é privada por padrão. Se você ativar o compartilhamento em Conta, qualquer pessoa com o seu link pode ver seus livros e capas, e algumas capas podem aparecer nas telas de entrada do site.",
+-          "Você pode desativar quando quiser, e a mudança vale na hora."
++          "Você pode desativar quando quiser, e a mudança vale na hora.",
++          "Bibliotecas públicas não aparecem em buscadores como o Google: o site pede para não serem indexadas."
+         ]
+       },
+       {
+         "title": "Comunidade e seguidores",
+         "paragraphs": [
+           "As duas opções começam desligadas e ficam em Conta. \"Participar da comunidade\" (só com a biblioteca pública) deixa outros leitores logados verem que vocês têm o mesmo livro, sua nota para ele e quantos livros vocês têm em comum.",
+-          "\"Aceitar seguidores\" deixa outras pessoas pedirem para seguir você. Só quem você aprovar vê, no feed, os livros que você adiciona e termina de ler. Você pode remover seguidores ou desligar a opção quando quiser, e a mudança vale na hora."
++          "\"Aceitar seguidores\" deixa outras pessoas pedirem para seguir você. Só quem você aprovar vê, no feed, os livros que você adiciona e termina de ler. Você pode remover seguidores ou desligar a opção quando quiser, e a mudança vale na hora.",
++          "Você pode bloquear um leitor pela biblioteca pública dele: vocês deixam de se ver na comunidade e ele não pode pedir para seguir você."
+         ]
+       },
+       {
+@@ -820,5 +822,117 @@
+   "password": {
+     "show": "Mostrar senha",
+     "hide": "Esconder senha"
++  },
++  "errors": {
++    "UNKNOWN": "Algo deu errado. Tente de novo.",
++    "INTERNAL_ERROR": "Erro no servidor. Tente de novo em instantes.",
++    "NETWORK": "Sem conexão com o servidor. Confira sua internet.",
++    "SESSION_EXPIRED": "Sua sessão expirou. Entre de novo.",
++    "RATE_LIMIT": "Muitas requisições. Tente de novo em instantes.",
++    "RATE_LIMIT_LOGIN": "Muitas tentativas de login. Tente de novo em alguns minutos.",
++    "RATE_LIMIT_REGISTER": "Muitas tentativas de cadastro. Tente de novo mais tarde.",
++    "RATE_LIMIT_UPLOAD": "Muitos envios em pouco tempo. Tente de novo em alguns minutos.",
++    "RATE_LIMIT_ISBN": "Muitas buscas por ISBN em pouco tempo. Aguarde um minuto.",
++    "RATE_LIMIT_ACTIONS": "Muitas ações em pouco tempo. Tente de novo em alguns minutos.",
++    "RATE_LIMIT_EMAIL": "Muitos pedidos de e-mail. Tente de novo mais tarde.",
++    "RATE_LIMIT_ATTEMPTS": "Muitas tentativas. Tente de novo em alguns minutos.",
++    "PARAM_INVALID": "Parâmetro inválido: {param}.",
++    "FIELD_INVALID": "Valor inválido em {field}.",
++    "FIELD_REQUIRED": "Preencha {field}.",
++    "DATE_INVALID": "Data inválida em {field}.",
++    "READ_DATE_FUTURE": "A data de leitura não pode estar no futuro.",
++    "SERIES_TOO_LONG": "O nome da série pode ter até {max} caracteres.",
++    "VOLUME_INVALID": "O volume precisa ser um número de 0 a 9999.",
++    "NOTES_TOO_LONG": "A anotação pode ter até {max} caracteres.",
++    "LIBRARY_NOT_FOUND": "Esta biblioteca não existe ou não é pública.",
++    "RATING_INVALID": "A nota precisa ser de 1 a 5 estrelas.",
++    "AUTHORS_REQUIRED": "Informe pelo menos um autor.",
++    "NAMES_TOO_MANY": "No máximo {max} nomes.",
++    "NAME_TOO_LONG": "Cada nome pode ter até {max} caracteres.",
++    "TAG_REQUIRED": "Informe a categoria.",
++    "ISBN_TAKEN": "Você já tem um livro com este ISBN.",
++    "ISBN_INVALID": "ISBN inválido.",
++    "ISBN_NOT_FOUND": "Nenhum livro encontrado para este ISBN.",
++    "BOOK_NOT_FOUND": "Livro não encontrado.",
++    "BOOK_ALREADY_ON_SHELF": "Este livro já está na sua estante.",
++    "PERMISSION_DENIED": "Você não tem permissão para isso.",
++    "STATUS_INVALID": "Status de leitura inválido.",
++    "BATCH_ACTION_INVALID": "Ação em lote inválida.",
++    "BATCH_IDS_INVALID": "Selecione de 1 a {max} livros.",
++    "BATCH_BOOKS_NOT_FOUND": "Alguns livros não foram encontrados na sua biblioteca.",
++    "COVER_INVALID": "Capa inválida.",
++    "COVER_TOO_LARGE": "A capa encontrada é grande demais.",
++    "COVER_NOT_FOUND": "Capa não encontrada.",
++    "IMAGE_INVALID": "O arquivo enviado não é uma imagem válida.",
++    "IMAGE_ONLY": "Envie só arquivos de imagem.",
++    "IMAGE_REQUIRED": "Nenhuma imagem enviada.",
++    "IMAGE_TOO_LARGE": "A imagem pode ter no máximo {max} MB.",
++    "FILE_TOO_LARGE": "O arquivo pode ter no máximo {max} MB.",
++    "CSV_REQUIRED": "Envie um arquivo .csv.",
++    "CSV_FORMAT": "Formato não reconhecido: envie o CSV exportado do Goodreads ou do Librishelf.",
++    "CSV_EMPTY": "O arquivo não tem nenhum livro.",
++    "CSV_TOO_MANY": "O arquivo tem {count} livros; o limite por importação é {max}.",
++    "YEAR_INVALID": "Ano inválido.",
++    "GOAL_INVALID": "A meta precisa ser um número de 1 a 1000.",
++    "MERGE_FIELDS_REQUIRED": "Escolha os nomes a juntar e o nome final.",
++    "NAMES_NOT_FOUND": "Algum dos nomes não existe mais na sua biblioteca.",
++    "CURRENT_PASSWORD_REQUIRED": "Informe a senha atual.",
++    "CURRENT_PASSWORD_WRONG": "Senha atual incorreta.",
++    "CREDENTIALS_REQUIRED": "Informe usuário e senha.",
++    "INVALID_CREDENTIALS": "Usuário ou senha incorretos.",
++    "REGISTER_FIELDS_REQUIRED": "Preencha usuário, e-mail e senha.",
++    "USERNAME_REQUIRED": "Informe o nome de usuário.",
++    "USERNAME_TOO_LONG": "O nome de usuário pode ter no máximo {max} caracteres.",
++    "USERNAME_INVALID": "Use só letras, números, ponto, hífen e sublinhado.",
++    "USERNAME_RESERVED": "Este nome é reservado. Escolha outro.",
++    "USERNAME_TAKEN": "Este nome de usuário já está em uso.",
++    "USERNAME_OR_EMAIL_TAKEN": "Este nome de usuário ou e-mail já está em uso.",
++    "EMAIL_INVALID": "E-mail inválido.",
++    "EMAIL_SAME": "Este já é o seu e-mail.",
++    "EMAIL_TAKEN": "Este e-mail já está em uso em outra conta.",
++    "EMAIL_SEND_FAILED": "Não foi possível enviar o e-mail agora. Tente de novo em alguns minutos.",
++    "EMAIL_NOT_VERIFIED_PUBLIC": "Confirme seu e-mail para deixar a biblioteca pública ou participar da comunidade.",
++    "EMAIL_NOT_VERIFIED_FOLLOW": "Confirme seu e-mail para seguir outros leitores.",
++    "PASSWORD_TOO_SHORT": "A senha precisa ter pelo menos {min} caracteres.",
++    "PASSWORD_TOO_LONG": "A senha pode ter no máximo {max} bytes.",
++    "PASSWORD_NEEDS_LETTER": "A senha precisa ter pelo menos uma letra.",
++    "PASSWORD_NEEDS_NUMBER": "A senha precisa ter pelo menos um número.",
++    "PASSWORD_SAME": "A nova senha precisa ser diferente da atual.",
++    "LINK_INVALID": "Este link é inválido ou expirou. Peça um novo.",
++    "NOTHING_TO_UPDATE": "Nada para alterar.",
++    "USER_NOT_FOUND": "Conta não encontrada.",
++    "READER_NOT_AVAILABLE": "Leitor não encontrado ou não aceita seguidores.",
++    "READER_BLOCKED_BY_YOU": "Você bloqueou este leitor. Desbloqueie para seguir.",
++    "FOLLOW_SELF": "Você não pode seguir a si mesmo.",
++    "BLOCK_SELF": "Você não pode bloquear a si mesmo.",
++    "REQUEST_NOT_FOUND": "Pedido não encontrado.",
++    "FOLLOWER_NOT_FOUND": "Seguidor não encontrado.",
++    "fields": {
++      "title": "título",
++      "isbn": "ISBN",
++      "readDate": "data de leitura",
++      "startedAt": "data de início",
++      "pubDate": "data de publicação",
++      "publicationDate": "data de publicação",
++      "series": "série",
++      "notes": "anotação",
++      "olWorkKey": "obra do Open Library",
++      "olEditionKey": "edição do Open Library",
++      "isPublic": "biblioteca pública",
++      "showInCommunity": "comunidade",
++      "showActivity": "atividade"
++    }
++  },
++  "block": {
++    "block": "Bloquear {name}",
++    "unblock": "Desbloquear",
++    "moreActions": "Mais ações",
++    "confirmTitle": "Bloquear {name}?",
++    "confirmText": "Vocês deixam de se seguir e de se ver na comunidade, e esta pessoa não poderá pedir para seguir você. Ela não é avisada. Dá para desfazer em Conta.",
++    "confirmButton": "Bloquear",
++    "blocked": "{name} foi bloqueado.",
++    "unblocked": "{name} foi desbloqueado.",
++    "listTitle": "Leitores bloqueados",
++    "listEmpty": "Ninguém bloqueado. Para bloquear, abra a biblioteca pública da pessoa e use o menu ⋯."
+   }
+ }
+diff --git a/frontend/src/router/index.js b/frontend/src/router/index.js
+index 9edf2d7a40cb501df7f0fb045a9e037b988df03e..7e4e548843c9840acfea1eb46315f8171d1a1b6c 100644
+--- a/frontend/src/router/index.js
++++ b/frontend/src/router/index.js
+@@ -10,6 +10,7 @@ import { installRouteFocus } from '../services/routeFocus.js'
+  *   standalone   — tela cheia, sem o menu lateral
+  *   public       — acessível com ou sem sessão (mostra o menu se houver sessão)
+  *   title        — chave de pageTitle.* para o título da aba (services/pageTitle.js)
++ *   noindex      — fora de buscadores (o nginx também manda X-Robots-Tag)
+  *
+  * Views carregadas sob demanda: o chart.js do Dashboard e as telas internas
+  * não entram no bundle do login.
+@@ -33,7 +34,7 @@ const router = createRouter({
+     { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPassword.vue'), meta: { standalone: true, title: 'resetPassword' } },
+     { path: '/verify-email', name: 'verify-email', component: () => import('../views/VerifyEmail.vue'), meta: { standalone: true, title: 'verifyEmail' } },
+ 
+-    { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, title: 'publicLibrary' } },
++    { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, title: 'publicLibrary', noindex: true } },
+     { path: '/privacy', name: 'privacy', component: () => import('../views/Privacy.vue'), meta: { public: true, title: 'privacy' } },
+ 
+     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFound.vue'), meta: { public: true, title: 'notFound' } }
+diff --git a/frontend/src/services/api.js b/frontend/src/services/api.js
+index 01c4932c0e12fdecb65186c495cd25bd176c0dd2..a22b89c3909d33b4d73402058f0215a7203fa222 100644
+--- a/frontend/src/services/api.js
++++ b/frontend/src/services/api.js
+@@ -207,6 +207,18 @@ export default {
+     return client.delete(`/social/follow/${enc(username)}`)
+   },
+ 
++  getBlocked() {
++    return client.get('/social/blocks')
++  },
++
++  block(username) {
++    return client.post(`/social/blocks/${enc(username)}`)
++  },
++
++  unblock(username) {
++    return client.delete(`/social/blocks/${enc(username)}`)
++  },
++
+   acceptRequest(username) {
+     return client.post(`/social/requests/${enc(username)}/accept`)
+   },
+diff --git a/frontend/src/services/fetchClient.js b/frontend/src/services/fetchClient.js
+index 877cd94967c9d586a5b1a82248349119cb7216f4..eb3e818396edaaa5423b9c20901fe7d2ce7c7fc3 100644
+--- a/frontend/src/services/fetchClient.js
++++ b/frontend/src/services/fetchClient.js
+@@ -1,4 +1,5 @@
+ import { API_URL } from '../config/site.js'
++import i18n from '../i18n.js'
+ 
+ // Rotas de auth respondem 401 por credencial errada (login, senha atual
+ // incorreta), não por sessão expirada.
+@@ -18,17 +19,33 @@ export class ApiError extends Error {
+     this.name = 'ApiError'
+     this.status = status
+     this.body = body
++    this.code = body?.code ?? null
+   }
+ }
+ 
++/**
++ * Mensagem no idioma da pessoa: a API manda um código estável (ISBN_TAKEN,
++ * USERNAME_RESERVED...) e, às vezes, parâmetros ({ max: 200 }). Sem tradução
++ * para o código, fica a mensagem que veio do servidor.
++ */
++export function translateApiError(code, params, fallback) {
++  const { t, te } = i18n.global
++  if (!code || !te(`errors.${code}`)) return fallback
++  const values = { ...(params || {}) }
++  if (values.field && te(`errors.fields.${values.field}`)) values.field = t(`errors.fields.${values.field}`)
++  return t(`errors.${code}`, values)
++}
++
+ async function parseError(response) {
+   const text = await response.text()
+ 
+   try {
+     const json = JSON.parse(text)
+-    return new ApiError(json.error || json.message || 'Erro desconhecido', response.status, json)
++    const raw = json.error || json.message || i18n.global.t('errors.UNKNOWN')
++    return new ApiError(translateApiError(json.code, json.params, raw), response.status, json)
+   } catch {
+-    return new ApiError(text || 'Erro na requisição', response.status, null)
++    const fallback = response.status >= 500 ? i18n.global.t('errors.INTERNAL_ERROR') : i18n.global.t('errors.UNKNOWN')
++    return new ApiError(text && text.length < 200 && !text.startsWith('<') ? text : fallback, response.status, null)
+   }
+ }
+ 
+@@ -52,7 +69,14 @@ async function client(endpoint, { body, ...customConfig } = {}) {
+     }
+   }
+ 
+-  const response = await fetch(`${API_URL}${endpoint}`, config)
++  let response
++  try {
++    response = await fetch(`${API_URL}${endpoint}`, config)
++  } catch (error) {
++    // Cancelada de propósito: quem chamou trata. Senão é rede (sem internet, servidor fora).
++    if (error.name === 'AbortError') throw error
++    throw new ApiError(i18n.global.t('errors.NETWORK'), 0, null)
++  }
+ 
+   if (response.status === 401) {
+     const isSessionCheck = endpoint === SESSION_ENDPOINT
+@@ -60,7 +84,7 @@ async function client(endpoint, { body, ...customConfig } = {}) {
+ 
+     if (!isCredentialCheck) {
+       onSessionExpired({ silent: isSessionCheck })
+-      throw new ApiError('Sessão expirada. Faça login novamente.', 401, null)
++      throw new ApiError(i18n.global.t('errors.SESSION_EXPIRED'), 401, null)
+     }
+   }
+ 
+diff --git a/frontend/src/services/pageTitle.js b/frontend/src/services/pageTitle.js
+index b5dcb045d10ba94a8a16672dffab8cde70eff76f..63292fbd440248f71032fa177b86197df29d1cbe 100644
+--- a/frontend/src/services/pageTitle.js
++++ b/frontend/src/services/pageTitle.js
+@@ -24,11 +24,27 @@ function render() {
+   document.title = [overlay, routeTitle(currentRoute), APP_NAME].filter(Boolean).join(' · ')
+ }
+ 
++/** <meta name="robots" content="noindex"> nas rotas com meta.noindex. */
++function setRobots(noindex) {
++  let tag = document.head.querySelector('meta[name="robots"]')
++  if (!noindex) {
++    tag?.remove()
++    return
++  }
++  if (!tag) {
++    tag = document.createElement('meta')
++    tag.name = 'robots'
++    document.head.appendChild(tag)
++  }
++  tag.content = 'noindex, nofollow'
++}
++
+ /** Chamado pelo router.afterEach. */
+ export function setRouteTitle(route) {
+   currentRoute = route
+   overlay = ''
+   render()
++  setRobots(Boolean(route?.meta?.noindex))
+ }
+ 
+ /** Algo aberto por cima da página (o livro); '' tira. */
+diff --git a/frontend/src/utils/bookFormErrors.js b/frontend/src/utils/bookFormErrors.js
+index 931f8f77d5037bcb5f397758156865ae731f3947..2b0d8ba0de83f757af708adb942a6426322fb4d9 100644
+--- a/frontend/src/utils/bookFormErrors.js
++++ b/frontend/src/utils/bookFormErrors.js
+@@ -1,9 +1,9 @@
+ /**
+  * Erros do servidor no formulário de livro → campo e mensagem traduzida.
+- * O backend responde { error: 'texto' } com o status HTTP; aqui o texto é
+- * reconhecido para mostrar o erro embaixo do campo certo (e não num toast
+- * que some em poucos segundos). O que não for reconhecido volta null e vira
+- * toast, como antes.
++ * O backend responde { error, code, params }: pelo código o erro vai para
++ * embaixo do campo certo (e não num toast que some em poucos segundos). Sem
++ * código (servidor antigo), o texto original ainda é reconhecido. O que não
++ * for reconhecido volta null e vira toast, como antes.
+  */
+ 
+ /** Ordem dos campos na tela: o primeiro com erro recebe o foco. */
+@@ -23,10 +23,44 @@ const RULES = [
+   { field: 'cover', test: msg => /imagem|image|arquivo/i.test(msg), key: () => 'bookForm.errors.coverInvalid' }
+ ]
+ 
++// Código da API → campo do formulário (null: o campo vem em params.field)
++const CODE_FIELDS = {
++  ISBN_TAKEN: 'isbn',
++  ISBN_INVALID: 'isbn',
++  AUTHORS_REQUIRED: 'authors',
++  NAMES_TOO_MANY: 'authors',
++  NAME_TOO_LONG: 'authors',
++  READ_DATE_FUTURE: 'statusDate',
++  VOLUME_INVALID: 'seriesIndex',
++  SERIES_TOO_LONG: 'series',
++  NOTES_TOO_LONG: 'notes',
++  RATING_INVALID: 'rating',
++  IMAGE_INVALID: 'cover',
++  IMAGE_ONLY: 'cover',
++  IMAGE_TOO_LARGE: 'cover'
++}
++
++// params.field da API → campo do formulário
++const PARAM_FIELDS = { title: 'title', isbn: 'isbn', pubDate: 'pubDate', publicationDate: 'pubDate', readDate: 'statusDate', startedAt: 'statusDate', series: 'series', notes: 'notes' }
++
++function fieldFromCode(error) {
++  const code = error?.code
++  if (!code) return null
++  if (CODE_FIELDS[code]) return CODE_FIELDS[code]
++  const param = error.body?.params?.field
++  if (['FIELD_REQUIRED', 'FIELD_INVALID', 'DATE_INVALID'].includes(code) && PARAM_FIELDS[param]) return PARAM_FIELDS[param]
++  return null
++}
++
+ export function fieldErrorFromApi(error, t) {
+   const status = error?.status
+   if (status !== 400 && status !== 409) return null
+-  const message = String(error?.message || '')
++
++  // Já traduzida pelo fetchClient a partir do código
++  const byCode = fieldFromCode(error)
++  if (byCode) return { field: byCode, message: error.message }
++
++  const message = String(error?.body?.error || error?.message || '')
+   const rule = RULES.find(item => item.test(message, status))
+   if (!rule) return null
+   return { field: rule.field, message: rule.key ? t(rule.key(status)) : message }
+diff --git a/frontend/src/views/PublicLibrary.vue b/frontend/src/views/PublicLibrary.vue
+index 7931e3bfd364296389c21c8b2abb87aff8071ab5..6b220dec5ffde973940d779edd5eadf49b76cbf1 100644
+--- a/frontend/src/views/PublicLibrary.vue
++++ b/frontend/src/views/PublicLibrary.vue
+@@ -45,8 +45,17 @@
            </template>
--        </Dropdown>
-+        </AppSelect>
-       </div>
  
-       <div class="actions">
-@@ -214,31 +213,27 @@
-         <div class="sidebar-content">
-           <div class="filter-group">
-             <label id="filter-read-status">{{ t('library.read_status') }}</label>
--            <Dropdown
--              appendTo="self"
-+            <AppSelect
-               :modelValue="filters.readState"
-               :options="readStateOptions"
-               optionLabel="label"
-               optionValue="value"
-               aria-labelledby="filter-read-status"
--              class="w-full custom-dropdown"
--              panelClass="custom-panel"
-+              class="w-full"
-               @update:modelValue="value => emitFilter('readState', value)"
+           <template v-else-if="viewer">
++            <!-- Bloqueado por mim: só o desbloquear -->
+             <AppButton
+-              v-if="followStatus === 'accepted'"
++              v-if="viewer.blockedByMe"
++              :label="t('block.unblock')"
++              icon="pi pi-lock-open"
++              class="btn-outlined btn-secondary"
++              :loading="blockBusy"
++              @click="unblock"
++            />
++            <AppButton
++              v-else-if="followStatus === 'accepted'"
+               :label="t('profile.following')"
+               icon="pi pi-check"
+               class="btn-outlined btn-secondary"
+@@ -69,6 +78,20 @@
+               :loading="followBusy"
+               @click="follow"
              />
-           </div>
++            <IconButton
++              v-if="!viewer.blockedByMe"
++              icon="pi pi-ellipsis-h"
++              :label="t('block.moreActions')"
++              class="more-btn"
++              aria-haspopup="true"
++              aria-controls="profile-more-menu"
++              @click="event => moreMenu.toggle(event)"
++            />
++            <PopupMenu
++              id="profile-more-menu"
++              ref="moreMenu"
++              :items="moreItems"
++            />
+           </template>
  
-           <div class="filter-group">
-             <label for="filter-read-year">{{ t('library.read_year') }}</label>
--            <Dropdown
--              appendTo="self"
-+            <AppSelect
-               inputId="filter-read-year"
-               :modelValue="hasReadYear ? filters.readYear : 'all'"
-               :options="yearOptions"
-               optionLabel="label"
-               optionValue="value"
-               :placeholder="t('library.select_year')"
--              class="w-full custom-dropdown"
--              panelClass="custom-panel"
-+              class="w-full"
-               @update:modelValue="setReadYear"
-             />
-           </div>
-@@ -246,15 +241,13 @@
-           <div class="filter-group">
-             <label for="filter-sort">{{ t('library.sort_by') }}</label>
-             <div class="sort-row">
--              <Dropdown
--                appendTo="self"
-+              <AppSelect
-                 inputId="filter-sort"
-                 :modelValue="filters.sortField"
-                 :options="sortOptions"
-                 optionLabel="label"
-                 optionValue="value"
-                 class="custom-dropdown"
--                panelClass="custom-panel"
-                 @update:modelValue="value => emitFilter('sortField', value)"
-               />
-               <AppButton
-@@ -269,57 +262,51 @@
+           <!-- Sem sessão: o mesmo botão Seguir, que leva ao login e volta para cá -->
+@@ -358,6 +381,9 @@ import BookItem from '../components/BookItem.vue'
+ import BookDialog from '../components/BookDialog.vue'
+ import StarRating from '../components/StarRating.vue'
+ import ReaderAvatar from '../components/ReaderAvatar.vue'
++import IconButton from '../components/form/IconButton.vue'
++import PopupMenu from '../components/ui/PopupMenu.vue'
++import { useConfirm } from '../services/confirm.js'
+ import { tagColor, colorFor } from '../utils/tagColors.js'
+ import { fromApiDate } from '../utils/dates.js'
  
-           <div class="filter-group">
-             <label for="filter-tags">{{ t('library.tags') }}</label>
--            <MultiSelect
--              appendTo="self"
-+            <AppMultiSelect
-               inputId="filter-tags"
-               :modelValue="filters.tags"
-               :options="tagsList"
-               optionLabel="name"
-               optionValue="name"
-               :placeholder="t('library.select_tags')"
--              :maxSelectedLabels="2"
--              :selectedItemsLabel="`{0} ${t('library.selected_tags')}`"
-+              :max-labels="2"
-+              :selected-label="`{0} ${t('library.selected_tags')}`"
-               filter
--              class="w-full custom-multiselect"
--              panelClass="custom-panel"
-+              class="w-full"
-               @update:modelValue="value => emitFilter('tags', value)"
-             />
-           </div>
- 
-           <div class="filter-group">
-             <label for="filter-authors">{{ t('library.authors') }}</label>
--            <MultiSelect
--              appendTo="self"
-+            <AppMultiSelect
-               inputId="filter-authors"
-               :modelValue="filters.author"
-               :options="authorsList"
-               optionLabel="name"
-               optionValue="name"
-               :placeholder="t('library.select_authors')"
--              :maxSelectedLabels="2"
--              :selectedItemsLabel="`{0} ${t('library.selected_authors')}`"
-+              :max-labels="2"
-+              :selected-label="`{0} ${t('library.selected_authors')}`"
-               filter
--              class="w-full custom-multiselect"
--              panelClass="custom-panel"
-+              class="w-full"
-               @update:modelValue="value => emitFilter('author', value)"
-             />
-           </div>
- 
-           <div class="filter-group">
-             <label for="filter-publishers">{{ t('library.publishers') }}</label>
--            <MultiSelect
--              appendTo="self"
-+            <AppMultiSelect
-               inputId="filter-publishers"
-               :modelValue="filters.publisher"
-               :options="publishersList"
-               optionLabel="name"
-               optionValue="name"
-               :placeholder="t('library.select_publishers')"
--              :maxSelectedLabels="2"
--              :selectedItemsLabel="`{0} ${t('library.selected_publishers')}`"
-+              :max-labels="2"
-+              :selected-label="`{0} ${t('library.selected_publishers')}`"
-               filter
--              class="w-full custom-multiselect"
--              panelClass="custom-panel"
-+              class="w-full"
-               @update:modelValue="value => emitFilter('publisher', value)"
-             />
-           </div>
-@@ -349,8 +336,8 @@ import { ref, computed, watch, onMounted } from 'vue'
- import AppButton from './ui/AppButton.vue'
- import AppDialog from './ui/AppDialog.vue'
- import IconButton from './form/IconButton.vue'
--import MultiSelect from 'primevue/multiselect'
--import Dropdown from 'primevue/dropdown'
-+import AppMultiSelect from './ui/AppMultiSelect.vue'
-+import AppSelect from './ui/AppSelect.vue'
- import AppChip from './ui/AppChip.vue'
- import AddBookDialog from './AddBookDialog.vue'
- import api from '../services/api.js'
-@@ -592,37 +579,14 @@ defineExpose({ reloadOptions: loadOptions })
-   min-width: 0;
+@@ -430,6 +456,57 @@ async function follow() {
+   }
  }
  
--.sort-quick.p-dropdown {
-+.sort-quick {
-   flex-shrink: 0;
--  height: 2.75rem;
--  align-items: center;
--  border-radius: 999px;
--  border: 1px solid var(--border-color);
--  background: var(--bg-input);
--  box-shadow: none;
--}
--
--.sort-quick.p-dropdown:not(.p-disabled):hover {
--  border-color: var(--border-hover);
--}
--
--.sort-quick.p-dropdown.p-focus {
--  border-color: var(--main-color);
--  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
- }
- 
--.sort-quick :deep(.p-dropdown-label) {
--  display: flex;
--  align-items: center;
--  padding: 0 0.25rem 0 0.95rem;
--  background: transparent;
--  border: none;
--}
--
--.sort-quick :deep(.p-dropdown-trigger) {
--  width: 2.25rem;
--  background: transparent;
--  color: var(--text-secondary);
-+.sort-quick :deep(.app-select-trigger) {
-+  min-height: 2.75rem;
-+  border-radius: 999px;
-+  padding: 0 0.85rem 0 0.95rem;
- }
- 
- .sort-quick-content {
-@@ -713,20 +677,20 @@ defineExpose({ reloadOptions: loadOptions })
-   align-items: center;
- }
- 
--.action-btn {
--  color: var(--text-secondary) !important;
-+.action-btn.btn {
-+  --btn-fg: var(--text-secondary);
-   width: 42px;
-   height: 42px;
- }
- 
--.action-btn:hover {
--  background-color: var(--bg-hover) !important;
--  color: var(--text-primary) !important;
-+.action-btn.btn:hover:not(:disabled) {
-+  --btn-bg: var(--bg-hover);
-+  --btn-fg: var(--text-primary);
- }
- 
--.action-btn.active-filter {
--  color: var(--main-color) !important;
--  background-color: rgba(var(--main-color-rgb), 0.1) !important;
-+.action-btn.btn.active-filter {
-+  --btn-fg: var(--main-color);
-+  --btn-bg: rgba(var(--main-color-rgb), 0.1);
- }
- 
- .add-btn {
-@@ -839,7 +803,7 @@ defineExpose({ reloadOptions: loadOptions })
- 
- .sort-row .custom-dropdown {
-   flex: 1;
--  width: auto !important;
-+  width: auto;
-   min-width: 0;
- }
- 
-@@ -893,11 +857,8 @@ defineExpose({ reloadOptions: loadOptions })
-     padding-bottom: 0.6rem;
++// --- Bloquear ---
++const confirm = useConfirm()
++const moreMenu = ref(null)
++const blockBusy = ref(false)
++
++const moreItems = computed(() => [
++  { label: t('block.block', { name: username.value }), icon: 'pi pi-ban', command: askBlock }
++])
++
++function askBlock() {
++  confirm.require({
++    header: t('block.confirmTitle', { name: username.value }),
++    message: t('block.confirmText'),
++    icon: 'pi pi-ban',
++    acceptLabel: t('block.confirmButton'),
++    rejectLabel: t('common.cancel'),
++    acceptClass: 'btn-rounded btn-danger',
++    rejectClass: 'btn-text btn-secondary',
++    accept: block
++  })
++}
++
++async function block() {
++  blockBusy.value = true
++  try {
++    await api.block(username.value)
++    profile.value.viewer.blockedByMe = true
++    profile.value.viewer.followStatus = null
++    profile.value.viewer.commonCount = null
++    profile.value.viewer.commonBooks = []
++    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.blocked', { name: username.value }), life: 4000 })
++  } catch (error) {
++    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
++  } finally {
++    blockBusy.value = false
++  }
++}
++
++async function unblock() {
++  blockBusy.value = true
++  try {
++    await api.unblock(username.value)
++    await loadProfile()
++    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.unblocked', { name: username.value }), life: 3000 })
++  } catch (error) {
++    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
++  } finally {
++    blockBusy.value = false
++  }
++}
++
+ async function unfollow() {
+   followBusy.value = true
+   try {
+@@ -881,10 +958,14 @@ watch(username, () => {
+     gap: 1rem;
    }
  
--  .sort-quick.p-dropdown {
--    height: 2.6rem;
--  }
--
--  .sort-quick :deep(.p-dropdown-label) {
-+  .sort-quick :deep(.app-select-trigger) {
-+    min-height: 2.6rem;
-     padding-left: 0.8rem;
-   }
- 
-@@ -946,9 +907,9 @@ defineExpose({ reloadOptions: loadOptions })
-     flex-shrink: 0;
-   }
- 
--  .clear-all-btn {
-+  .clear-all-btn.btn {
-     flex-shrink: 0;
--    padding: 0.35rem 0.5rem !important;
-+    padding: 0.35rem 0.5rem;
+-  /* Botão Seguir na largura toda, embaixo do nome */
+-  .follow-area,
+-  .follow-area .btn {
++  /* Botão Seguir na largura toda, embaixo do nome (o ⋯ fica ao lado) */
++  .follow-area {
+     width: 100%;
++    flex-wrap: nowrap;
++  }
++
++  .follow-area .btn {
++    flex: 1;
    }
  }
  </style>
-@@ -963,107 +924,9 @@ defineExpose({ reloadOptions: loadOptions })
-   overflow-y: auto;
+\ No newline at end of file
+diff --git a/frontend/src/views/Register.vue b/frontend/src/views/Register.vue
+index 823df1559c0411ea432f5c24d8399de483b52767..eea71e8694f45c44bf11b9683f7818372344f7a7 100644
+--- a/frontend/src/views/Register.vue
++++ b/frontend/src/views/Register.vue
+@@ -16,7 +16,9 @@
+       <div class="field">
+         <TextField
+           id="register-name"
++          ref="nameField"
+           v-model="name"
++          :error="errors.name"
+           :label="t('register.user')"
+           autocomplete="username"
+           maxlength="50"
+@@ -28,7 +30,9 @@
+       <div class="field">
+         <TextField
+           id="register-email"
++          ref="emailField"
+           v-model="email"
++          :error="errors.email"
+           :label="t('register.email')"
+           type="email"
+           autocomplete="email"
+@@ -38,7 +42,9 @@
+       <div class="field">
+         <PasswordField
+           id="register-password"
++          ref="passwordField"
+           v-model="password"
++          :error="errors.password"
+           :label="t('register.password')"
+           autocomplete="new-password"
+           strength
+@@ -48,7 +54,9 @@
+       <div class="field">
+         <PasswordField
+           id="register-confirm-password"
++          ref="confirmField"
+           v-model="confirmPassword"
++          :error="errors.confirm"
+           :label="t('register.confirmPassword')"
+           autocomplete="new-password"
+         />
+@@ -79,7 +87,7 @@
+ import PasswordField from '../components/form/PasswordField.vue'
+ import TextField from '../components/form/TextField.vue'
+ import { isWeakPassword } from '../utils/password.js'
+-import { ref } from 'vue'
++import { ref, reactive, watch } from 'vue'
+ import { useRouter, useRoute } from 'vue-router'
+ import { useToast } from '../services/toast.js'
+ import AppButton from '../components/ui/AppButton.vue'
+@@ -102,21 +110,57 @@ const password = ref('')
+ const confirmPassword = ref('')
+ const loading = ref(false)
+ 
+-function fail(detail) {
+-  toast.add({ severity: 'error', summary: t('register.error'), detail, life: 4000 })
++// Erros embaixo de cada campo (como na Conta); toast só para o que não é de campo.
++const errors = reactive({ name: '', email: '', password: '', confirm: '' })
++const nameField = ref(null)
++const emailField = ref(null)
++const passwordField = ref(null)
++const confirmField = ref(null)
++const FIELDS = { name: nameField, email: emailField, password: passwordField, confirm: confirmField }
++
++watch(name, () => { errors.name = '' })
++watch(email, () => { errors.email = '' })
++watch(password, () => { errors.password = '' })
++watch(confirmPassword, () => { errors.confirm = '' })
++
++const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
++
++// Código da API → campo
++const CODE_FIELDS = {
++  USERNAME_TAKEN: 'name',
++  USERNAME_OR_EMAIL_TAKEN: 'name',
++  USERNAME_INVALID: 'name',
++  USERNAME_RESERVED: 'name',
++  USERNAME_TOO_LONG: 'name',
++  EMAIL_INVALID: 'email',
++  EMAIL_TAKEN: 'email',
++  PASSWORD_TOO_SHORT: 'password',
++  PASSWORD_TOO_LONG: 'password',
++  PASSWORD_NEEDS_LETTER: 'password',
++  PASSWORD_NEEDS_NUMBER: 'password'
++}
++
++function focusFirstError() {
++  const key = Object.keys(FIELDS).find(k => errors[k])
++  if (key) FIELDS[key].value?.focus()
++}
++
++function validate() {
++  const required = t('settings.errors.required')
++  const cleanName = name.value.trim()
++  errors.name = !cleanName ? required : (USERNAME_PATTERN.test(cleanName) ? '' : t('register.invalidUsername'))
++  errors.email = !email.value.trim() ? required : (EMAIL_PATTERN.test(email.value.trim()) ? '' : t('settings.errors.email'))
++  errors.password = !password.value ? required : (isWeakPassword(password.value) ? t('register.passwordTooWeak') : '')
++  errors.confirm = !confirmPassword.value ? required : (password.value !== confirmPassword.value ? t('register.passwordMismatch') : '')
++  return !Object.values(errors).some(Boolean)
  }
  
--.filters-drawer .p-dropdown,
--.filters-drawer .p-multiselect {
--  background-color: var(--bg-input);
--  border: 1px solid var(--border-color);
--  border-radius: 8px;
--  transition: all 0.2s;
--  height: 42px;
--  display: flex;
--  align-items: center;
--}
--
--.filters-drawer .p-multiselect-label-container {
--  display: flex;
--  align-items: center;
--  padding-top: 0;
--  padding-bottom: 0;
--}
--
--.filters-drawer .p-dropdown:not(.p-disabled):hover,
--.filters-drawer .p-multiselect:not(.p-disabled):hover,
--.filters-drawer .p-dropdown.p-focus,
--.filters-drawer .p-multiselect.p-focus {
--  border-color: var(--main-color) !important;
--  box-shadow: 0 0 0 1px rgba(var(--main-color-rgb), 0.2) !important;
--}
--
--.filters-drawer .p-dropdown-label,
--.filters-drawer .p-multiselect-label {
--  color: var(--text-primary);
--}
--
--.p-dropdown-label {
--  background-color: #00000000;
--}
--
--.custom-selectbutton .btn {
--  background-color: var(--bg-input);
--  border: 1px solid var(--border-color);
--  color: var(--text-secondary);
--  transition: all 0.2s;
--}
--
--.custom-selectbutton .btn:hover {
--  background-color: var(--bg-hover);
--}
--
--.p-selectbutton .btn.p-highlight::before {
--  background-color: #00000000 !important;
--}
--
--.p-multiselect-panel .p-multiselect-header {
--  background-color: var(--bg-panel) !important;
--  border-bottom: 1px solid var(--border-color) !important;
--}
--
--.custom-selectbutton .btn.p-highlight {
--  background-color: var(--main-solid) !important;
--  border-color: var(--main-solid) !important;
--  color: var(--on-main) !important;
--  font-weight: 700;
--}
--
--.custom-panel.p-dropdown-panel,
--.custom-panel.p-multiselect-panel {
--  background-color: var(--bg-panel) !important;
--  border: 1px solid var(--border-color) !important;
--}
--
--.custom-panel .p-dropdown-item,
--.custom-panel .p-multiselect-item {
--  color: var(--text-primary) !important;
--}
--
--.custom-panel .p-dropdown-item:hover,
--.custom-panel .p-multiselect-item:hover {
--  background-color: var(--bg-hover) !important;
--}
--
--.custom-panel .p-dropdown-item.p-highlight,
--.custom-panel .p-multiselect-item.p-highlight {
--  color: var(--main-color) !important;
--  background-color: rgba(var(--main-color-rgb), 0.1) !important;
--}
--
- /* Lista do "Ordenar" ao lado da busca */
--.sort-quick-panel.p-dropdown-panel {
-+.sort-quick-panel {
-   min-width: 13rem;
--  margin-top: 0.35rem;
--  border-radius: 12px;
--  overflow: hidden;
--  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
--}
--
--.sort-quick-panel .p-dropdown-items {
--  padding: 0.35rem;
--}
--
--.sort-quick-panel .p-dropdown-item {
--  border-radius: 8px;
--  padding: 0.6rem 0.85rem;
--  font-size: var(--fs-sm);
- }
- 
- /* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */
-diff --git a/frontend/src/components/NavigationMenu.vue b/frontend/src/components/NavigationMenu.vue
-index 643a986bf316b9d6a5bdb9ddb15a2c06b574335d..892d625cb4620161ecc4213f3d0b663d3822f78f 100644
---- a/frontend/src/components/NavigationMenu.vue
-+++ b/frontend/src/components/NavigationMenu.vue
-@@ -508,8 +508,8 @@ button.nav-item {
-     height: 60px;
+ async function handleRegister() {
+-  if (!name.value.trim() || !email.value.trim() || !password.value) {
+-    toast.add({ severity: 'warn', summary: t('register.attention'), detail: t('register.fillFields'), life: 3000 })
++  if (!validate()) {
++    focusFirstError()
+     return
    }
  
--  .menu-btn {
--    color: var(--text-primary) !important;
-+  .menu-btn.btn {
-+    --btn-fg: var(--text-primary);
-     padding: 0;
-     width: 40px;
+-  if (!USERNAME_PATTERN.test(name.value.trim())) return fail(t('register.invalidUsername'))
+-  if (password.value !== confirmPassword.value) return fail(t('register.passwordMismatch'))
+-
+-  if (isWeakPassword(password.value)) return fail(t('register.passwordTooWeak'))
+-
+   loading.value = true
+   try {
+     await api.register({
+@@ -129,7 +173,13 @@ async function handleRegister() {
+     toast.add({ severity: 'success', summary: t('register.success'), detail: t('register.accountCreatedVerify'), life: 7000 })
+     router.push({ name: 'login', query: route.query })
+   } catch (error) {
+-    fail(error.message || t('register.errorCreating'))
++    const field = CODE_FIELDS[error.code]
++    if (field) {
++      errors[field] = error.message
++      focusFirstError()
++    } else {
++      toast.add({ severity: 'error', summary: t('register.error'), detail: error.message || t('register.errorCreating'), life: 4000 })
++    }
+   } finally {
+     loading.value = false
    }
-diff --git a/frontend/src/components/form/DateField.vue b/frontend/src/components/form/DateField.vue
-index 672d3609ac45ce1cf87144242a1c80548736c912..18b789a7cddfbd9cd7720cb16e3cfdc4a940fdf1 100644
---- a/frontend/src/components/form/DateField.vue
-+++ b/frontend/src/components/form/DateField.vue
-@@ -5,7 +5,6 @@
-   >
-     <div class="field-box">
-       <input
--        v-if="native"
-         :id="id"
-         type="date"
-         class="field-control native"
-@@ -17,22 +16,6 @@
-         @focus="focused = true"
-         @blur="focused = false"
-       />
--      <Calendar
--        v-else
--        :inputId="id"
--        :modelValue="modelValue"
--        :maxDate="maxDate || undefined"
--        dateFormat="dd/mm/yy"
--        class="field-calendar"
--        appendTo="self"
--        :showIcon="false"
--        showButtonBar
--        :aria-invalid="error ? 'true' : undefined"
--        :aria-describedby="describedBy"
--        @update:modelValue="value => emit('update:modelValue', value || null)"
--        @focus="focused = true"
--        @blur="focused = false"
--      />
-       <label
-         :for="id"
-         class="field-label"
-@@ -57,14 +40,13 @@
- </template>
+diff --git a/frontend/src/views/Settings.vue b/frontend/src/views/Settings.vue
+index eed4fdf697eb250001e74df1871ea8b065b083cc..a49d0f032dae9f8163ce86385bdd288dcebd06f7 100644
+--- a/frontend/src/views/Settings.vue
++++ b/frontend/src/views/Settings.vue
+@@ -116,6 +116,40 @@
+                 class="toggle-help"
+               >{{ t('settings.activity.help') }}</small>
+             </div>
++
++            <!-- Leitores bloqueados: não veem você na comunidade nem pedem para seguir -->
++            <div
++              class="blocked-block"
++              id="settings-blocked"
++              tabindex="-1"
++            >
++              <h3 class="sub-title">{{ t('block.listTitle') }}</h3>
++              <p
++                v-if="blockedUsers.length === 0"
++                class="toggle-help"
++              >{{ t('block.listEmpty') }}</p>
++              <ul
++                v-else
++                class="blocked-list"
++              >
++                <li
++                  v-for="person in blockedUsers"
++                  :key="person.username"
++                >
++                  <ReaderAvatar
++                    :username="person.username"
++                    size="sm"
++                  />
++                  <span class="blocked-name">{{ person.username }}</span>
++                  <AppButton
++                    :label="t('block.unblock')"
++                    class="btn-sm btn-text btn-secondary"
++                    :loading="unblocking === person.username"
++                    @click="unblockUser(person.username)"
++                  />
++                </li>
++              </ul>
++            </div>
+           </div>
+         </section>
  
+@@ -429,7 +463,8 @@
  <script setup>
--import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
--import Calendar from 'primevue/calendar'
-+import { computed, ref } from 'vue'
- import { toApiDate } from '../../utils/dates.js'
- 
- /**
-- * Data com rótulo flutuante. Até 640px usa o seletor nativo do celular
-- * (<input type="date">), mais fácil de usar com o polegar que o calendário
-- * flutuante do PrimeVue.
-+ * Data com rótulo flutuante, no seletor nativo do navegador
-+ * (<input type="date">): calendário do sistema no celular e digitação
-+ * dia/mês/ano no computador.
-  */
- const props = defineProps({
-   modelValue: { type: Date, default: null },
-@@ -77,11 +59,6 @@ const props = defineProps({
- const emit = defineEmits(['update:modelValue'])
- const focused = ref(false)
- 
--const query = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(max-width: 640px)') : null
--const native = ref(Boolean(query?.matches))
--const onChange = event => { native.value = event.matches }
--onMounted(() => query?.addEventListener?.('change', onChange))
--onBeforeUnmount(() => query?.removeEventListener?.('change', onChange))
- 
- const describedBy = computed(() => (props.error ? `${props.id}-error` : undefined))
- 
-@@ -118,8 +95,7 @@ function onNativeInput(event) {
-   border-color: var(--red);
+ import PasswordField from '../components/form/PasswordField.vue'
+ import TextField from '../components/form/TextField.vue'
+-import { ref, reactive, computed, watch } from 'vue'
++import ReaderAvatar from '../components/ReaderAvatar.vue'
++import { ref, reactive, computed, watch, onMounted } from 'vue'
+ import { useRouter } from 'vue-router'
+ import { useI18n } from 'vue-i18n'
+ import { useToast } from '../services/toast.js'
+@@ -511,6 +546,33 @@ async function copyLink() {
+   setTimeout(() => { copied.value = false }, 2000)
  }
  
--.field-control,
--.field-calendar :deep(.p-inputtext) {
-+.field-control {
-   width: 100%;
-   min-height: 3.25rem;
-   background: transparent;
-@@ -133,15 +109,7 @@ function onNativeInput(event) {
-   border-radius: 10px;
- }
- 
--.field-calendar {
--  display: block;
--  width: 100%;
--}
- 
--.field-calendar :deep(.p-inputtext:enabled:focus) {
--  box-shadow: none;
--  border: none;
--}
- 
- /* Vazio e sem foco, o texto do seletor nativo (dd/mm/aaaa) fica escondido atrás do rótulo */
- .date-field:not(.floated) .native {
-diff --git a/frontend/src/components/ui/AppMultiSelect.vue b/frontend/src/components/ui/AppMultiSelect.vue
-new file mode 100644
-index 0000000000000000000000000000000000000000..5d8174e60869f5d76fb8ccb8217dba6db7c1dd9e
---- /dev/null
-+++ b/frontend/src/components/ui/AppMultiSelect.vue
-@@ -0,0 +1,329 @@
-+<template>
-+  <div
-+    class="app-select app-multiselect"
-+    :class="{ open: isOpen }"
-+  >
-+    <button
-+      :id="inputId"
-+      ref="triggerEl"
-+      type="button"
-+      class="app-select-trigger"
-+      role="combobox"
-+      aria-haspopup="listbox"
-+      :aria-expanded="isOpen ? 'true' : 'false'"
-+      :aria-controls="listId"
-+      :aria-label="ariaLabel || undefined"
-+      :popovertarget="panelId"
-+      @keydown="onTriggerKeydown"
-+    >
-+      <span class="app-select-value">
-+        <span :class="{ placeholder: !modelValue.length }">{{ summary }}</span>
-+      </span>
-+      <span
-+        v-if="modelValue.length"
-+        class="count-badge"
-+        aria-hidden="true"
-+      >{{ modelValue.length }}</span>
-+      <i
-+        class="pi pi-chevron-down app-select-chevron"
-+        aria-hidden="true"
-+      ></i>
-+    </button>
++// --- Bloqueados ---
++const blockedUsers = ref([])
++const unblocking = ref('')
 +
-+    <div
-+      :id="panelId"
-+      ref="panelEl"
-+      class="app-select-panel app-multiselect-panel"
-+      popover="auto"
-+      @toggle="onToggle"
-+      @keydown="onPanelKeydown"
-+    >
-+      <div
-+        v-if="filter"
-+        class="ms-search"
-+      >
-+        <i
-+          class="pi pi-search"
-+          aria-hidden="true"
-+        ></i>
-+        <input
-+          ref="searchEl"
-+          v-model="query"
-+          type="search"
-+          :placeholder="t('common.search')"
-+          :aria-label="t('common.search')"
-+          :aria-controls="listId"
-+          autocomplete="off"
-+        />
-+      </div>
-+
-+      <div
-+        :id="listId"
-+        class="ms-list"
-+        role="listbox"
-+        aria-multiselectable="true"
-+        :aria-label="ariaLabel || undefined"
-+      >
-+        <button
-+          v-for="option in visibleOptions"
-+          :key="valueOf(option)"
-+          type="button"
-+          role="option"
-+          class="app-select-option ms-option"
-+          :aria-selected="isSelected(option) ? 'true' : 'false'"
-+          tabindex="-1"
-+          @click="toggleOption(option)"
-+        >
-+          <span
-+            class="ms-check"
-+            :class="{ on: isSelected(option) }"
-+            aria-hidden="true"
-+          ><i class="pi pi-check"></i></span>
-+          <span class="ms-label">{{ labelOf(option) }}</span>
-+        </button>
-+        <p
-+          v-if="!visibleOptions.length"
-+          class="ms-empty"
-+        >{{ t('common.noResults') }}</p>
-+        <p
-+          v-else-if="hiddenCount > 0"
-+          class="ms-empty"
-+        >{{ t('common.typeToSeeMore', { n: hiddenCount }) }}</p>
-+      </div>
-+
-+      <div
-+        v-if="modelValue.length"
-+        class="ms-footer"
-+      >
-+        <button
-+          type="button"
-+          class="ms-clear"
-+          @click="emit('update:modelValue', [])"
-+        >{{ t('common.clearSelection') }}</button>
-+      </div>
-+    </div>
-+  </div>
-+</template>
-+
-+<script setup>
-+import { computed, nextTick, ref } from 'vue'
-+import { useI18n } from 'vue-i18n'
-+import { useFloatingPanel } from '../../composables/useFloatingPanel.js'
-+
-+/**
-+ * Escolha de vários itens com busca (no lugar do MultiSelect do PrimeVue).
-+ * Listas grandes (milhares de autores) mostram só os primeiros resultados;
-+ * os já marcados vêm sempre no topo.
-+ */
-+const props = defineProps({
-+  modelValue: { type: Array, default: () => [] },
-+  options: { type: Array, default: () => [] },
-+  optionLabel: { type: String, default: 'label' },
-+  optionValue: { type: String, default: 'value' },
-+  placeholder: { type: String, default: '' },
-+  // "{n} selecionados" quando passa de maxLabels
-+  selectedLabel: { type: String, default: '' },
-+  maxLabels: { type: Number, default: 2 },
-+  filter: { type: Boolean, default: false },
-+  inputId: { type: String, default: undefined },
-+  ariaLabel: { type: String, default: '' }
-+})
-+
-+const emit = defineEmits(['update:modelValue'])
-+const { t, locale } = useI18n()
-+const uid = Math.random().toString(36).slice(2, 9)
-+const panelId = `app-ms-panel-${uid}`
-+const listId = `app-ms-list-${uid}`
-+const SHOWN = 120
-+
-+const query = ref('')
-+const searchEl = ref(null)
-+
-+const { triggerEl, panelEl, isOpen, open, onToggle } = useFloatingPanel({
-+  onOpen: async () => {
-+    await nextTick()
-+    if (props.filter) searchEl.value?.focus()
-+    else panelEl.value?.querySelector('.ms-option')?.focus()
-+  },
-+  onClose: () => {
-+    query.value = ''
-+    if (panelEl.value?.contains(document.activeElement) || document.activeElement === document.body) triggerEl.value?.focus()
-+  }
-+})
-+
-+const valueOf = option => (option && typeof option === 'object' ? option[props.optionValue] : option)
-+const labelOf = option => (option && typeof option === 'object' ? option[props.optionLabel] : String(option))
-+const selectedSet = computed(() => new Set(props.modelValue))
-+const isSelected = option => selectedSet.value.has(valueOf(option))
-+
-+const normalize = text => String(text).toLocaleLowerCase(locale.value).normalize('NFD').replace(/[̀-ͯ]/g, '')
-+
-+const matches = computed(() => {
-+  const term = normalize(query.value.trim())
-+  const list = term ? props.options.filter(option => normalize(labelOf(option)).includes(term)) : props.options
-+  const chosen = list.filter(isSelected)
-+  const rest = list.filter(option => !isSelected(option))
-+  return [...chosen, ...rest]
-+})
-+
-+const visibleOptions = computed(() => matches.value.slice(0, SHOWN))
-+const hiddenCount = computed(() => Math.max(0, matches.value.length - SHOWN))
-+
-+const summary = computed(() => {
-+  const count = props.modelValue.length
-+  if (!count) return props.placeholder
-+  if (count > props.maxLabels) return props.selectedLabel.replace('{0}', count)
-+  return props.modelValue.join(', ')
-+})
-+
-+function toggleOption(option) {
-+  const value = valueOf(option)
-+  const next = isSelected(option) ? props.modelValue.filter(item => item !== value) : [...props.modelValue, value]
-+  emit('update:modelValue', next)
-+}
-+
-+function onTriggerKeydown(event) {
-+  if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
-+    event.preventDefault()
-+    open()
++async function loadBlocked() {
++  try {
++    blockedUsers.value = (await api.getBlocked()).blocked
++  } catch {
++    // Lista opcional: se falhar, a seção só fica vazia
 +  }
 +}
 +
-+function onPanelKeydown(event) {
-+  const list = [...(panelEl.value?.querySelectorAll('.ms-option') || [])]
-+  const index = list.indexOf(document.activeElement)
-+  if (event.key === 'ArrowDown') {
-+    list[Math.min(index + 1, list.length - 1)]?.focus()
-+  } else if (event.key === 'ArrowUp') {
-+    if (index <= 0 && props.filter) searchEl.value?.focus()
-+    else list[Math.max(index - 1, 0)]?.focus()
-+  } else return
-+  event.preventDefault()
-+}
-+</script>
-+
-+<style>
-+.app-multiselect .count-badge {
-+  flex-shrink: 0;
-+  min-width: 1.4rem;
-+  padding: 0.05rem 0.4rem;
-+  border-radius: 999px;
-+  background: var(--main-solid);
-+  color: var(--on-main);
-+  font-size: var(--fs-xs);
-+  font-weight: 700;
-+  text-align: center;
++async function unblockUser(username) {
++  unblocking.value = username
++  try {
++    await api.unblock(username)
++    blockedUsers.value = blockedUsers.value.filter(person => person.username !== username)
++    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.unblocked', { name: username }), life: 3000 })
++  } catch (error) {
++    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
++  } finally {
++    unblocking.value = ''
++  }
 +}
 +
-+.app-multiselect-panel {
++onMounted(loadBlocked)
++
+ // --- Senha ---
+ // Erros embaixo de cada campo (como no cadastro), em vez de um aviso solto
+ // no canto. Erro do servidor vai para o campo a que se refere.
+@@ -1082,4 +1144,38 @@ async function deleteAccount() {
+     flex-direction: column;
+   }
+ }
++.blocked-block {
++  border-top: 1px solid var(--border-color);
++  padding-top: 1rem;
++}
++
++.blocked-block .sub-title {
++  margin: 0 0 0.5rem;
++  font-size: var(--fs-md);
++  font-weight: 600;
++  color: var(--text-primary);
++}
++
++.blocked-list {
++  list-style: none;
++  margin: 0;
++  padding: 0;
 +  display: flex;
 +  flex-direction: column;
-+  padding: 0;
-+  overflow: hidden;
-+  width: min(22rem, calc(100vw - 2rem));
++  gap: 0.35rem;
 +}
 +
-+.app-multiselect-panel:not(:popover-open) {
-+  display: none;
-+}
-+
-+.ms-search {
-+  position: relative;
-+  padding: 0.5rem;
-+  border-bottom: 1px solid var(--border-color);
-+}
-+
-+.ms-search .pi {
-+  position: absolute;
-+  left: 1.25rem;
-+  top: 50%;
-+  transform: translateY(-50%);
-+  color: var(--text-muted);
-+  font-size: var(--fs-sm);
-+}
-+
-+.ms-search input {
-+  width: 100%;
-+  height: 2.5rem;
-+  padding: 0 0.75rem 0 2.2rem;
-+  border: 1px solid transparent;
-+  border-radius: 8px;
-+  background: var(--bg-input);
-+  color: var(--text-primary);
-+  font: inherit;
-+  font-size: var(--fs-sm);
-+  outline: none;
-+}
-+
-+.ms-search input:focus {
-+  border-color: var(--main-color);
-+}
-+
-+.ms-list {
-+  flex: 1;
-+  min-height: 0;
-+  overflow-y: auto;
-+  padding: 0.35rem;
-+}
-+
-+.app-select-option.ms-option {
-+  justify-content: flex-start;
-+}
-+
-+.ms-label {
-+  min-width: 0;
-+  overflow: hidden;
-+  text-overflow: ellipsis;
-+  white-space: nowrap;
-+}
-+
-+.ms-check {
-+  display: inline-flex;
-+  align-items: center;
-+  justify-content: center;
-+  flex-shrink: 0;
-+  width: 1.15rem;
-+  height: 1.15rem;
-+  border: 2px solid var(--text-muted);
-+  border-radius: 5px;
-+  color: transparent;
-+}
-+
-+.ms-check .pi {
-+  font-size: 0.65rem;
-+}
-+
-+.ms-check.on {
-+  border-color: var(--main-solid);
-+  background: var(--main-solid);
-+  color: var(--on-main);
-+}
-+
-+.ms-empty {
-+  margin: 0;
-+  padding: 0.75rem 0.85rem;
-+  color: var(--text-muted);
-+  font-size: var(--fs-xs);
-+}
-+
-+.ms-footer {
-+  padding: 0.4rem 0.5rem;
-+  border-top: 1px solid var(--border-color);
-+}
-+
-+.ms-clear {
-+  border: none;
-+  background: transparent;
-+  color: var(--main-color);
-+  font: inherit;
-+  font-size: var(--fs-sm);
-+  font-weight: 600;
-+  padding: 0.4rem 0.5rem;
-+  border-radius: 6px;
-+  cursor: pointer;
-+}
-+
-+.ms-clear:hover {
-+  background: rgba(var(--main-color-rgb), 0.1);
-+}
-+</style>
-diff --git a/frontend/src/components/ui/AppSelect.vue b/frontend/src/components/ui/AppSelect.vue
-new file mode 100644
-index 0000000000000000000000000000000000000000..430b545980200762d60bc660bd75520b25dd3ff8
---- /dev/null
-+++ b/frontend/src/components/ui/AppSelect.vue
-@@ -0,0 +1,271 @@
-+<template>
-+  <div
-+    class="app-select"
-+    :class="{ open: isOpen, disabled }"
-+  >
-+    <button
-+      :id="inputId"
-+      ref="triggerEl"
-+      type="button"
-+      class="app-select-trigger"
-+      role="combobox"
-+      aria-haspopup="listbox"
-+      :aria-expanded="isOpen ? 'true' : 'false'"
-+      :aria-controls="listId"
-+      :aria-label="ariaLabel || undefined"
-+      :aria-labelledby="ariaLabelledby || undefined"
-+      :disabled="disabled"
-+      :popovertarget="listId"
-+      @keydown="onTriggerKeydown"
-+    >
-+      <span class="app-select-value">
-+        <slot
-+          name="value"
-+          :option="selected"
-+          :label="selectedLabel"
-+        >
-+          <span :class="{ placeholder: !selected }">{{ selected ? selectedLabel : placeholder }}</span>
-+        </slot>
-+      </span>
-+      <i
-+        class="pi pi-chevron-down app-select-chevron"
-+        aria-hidden="true"
-+      ></i>
-+    </button>
-+
-+    <div
-+      :id="listId"
-+      ref="panelEl"
-+      class="app-select-panel"
-+      :class="panelClass"
-+      popover="auto"
-+      role="listbox"
-+      :aria-label="ariaLabel || undefined"
-+      :aria-labelledby="ariaLabelledby || undefined"
-+      @toggle="onToggle"
-+      @keydown="onListKeydown"
-+    >
-+      <button
-+        v-for="(option, index) in options"
-+        :key="valueOf(option)"
-+        type="button"
-+        role="option"
-+        class="app-select-option"
-+        :class="{ selected: valueOf(option) === modelValue }"
-+        :aria-selected="valueOf(option) === modelValue ? 'true' : 'false'"
-+        :data-index="index"
-+        tabindex="-1"
-+        @click="choose(option)"
-+      >
-+        <span>{{ labelOf(option) }}</span>
-+        <i
-+          v-if="valueOf(option) === modelValue"
-+          class="pi pi-check"
-+          aria-hidden="true"
-+        ></i>
-+      </button>
-+    </div>
-+  </div>
-+</template>
-+
-+<script setup>
-+import { computed, nextTick } from 'vue'
-+import { useFloatingPanel } from '../../composables/useFloatingPanel.js'
-+
-+/**
-+ * Lista de escolha única (no lugar do Dropdown do PrimeVue). Botão com
-+ * role="combobox" e lista num popover: setas, Home/End, Enter e Esc.
-+ *
-+ *   <AppSelect v-model="x" :options="[{ label, value }]" option-label="label" option-value="value" />
-+ */
-+const props = defineProps({
-+  modelValue: { type: [String, Number, Boolean], default: null },
-+  options: { type: Array, default: () => [] },
-+  optionLabel: { type: String, default: 'label' },
-+  optionValue: { type: String, default: 'value' },
-+  placeholder: { type: String, default: '' },
-+  inputId: { type: String, default: undefined },
-+  ariaLabel: { type: String, default: '' },
-+  ariaLabelledby: { type: String, default: '' },
-+  disabled: { type: Boolean, default: false },
-+  panelClass: { type: [String, Array, Object], default: '' }
-+})
-+
-+const emit = defineEmits(['update:modelValue'])
-+const listId = `app-select-${Math.random().toString(36).slice(2, 9)}`
-+
-+const { triggerEl, panelEl, isOpen, open, close, onToggle } = useFloatingPanel({
-+  onOpen: () => focusOption(Math.max(0, selectedIndex.value)),
-+  onClose: () => {
-+    if (panelEl.value?.contains(document.activeElement) || document.activeElement === document.body) triggerEl.value?.focus()
-+  }
-+})
-+
-+const valueOf = option => (option && typeof option === 'object' ? option[props.optionValue] : option)
-+const labelOf = option => (option && typeof option === 'object' ? option[props.optionLabel] : String(option))
-+
-+const selectedIndex = computed(() => props.options.findIndex(option => valueOf(option) === props.modelValue))
-+const selected = computed(() => props.options[selectedIndex.value] ?? null)
-+const selectedLabel = computed(() => (selected.value ? labelOf(selected.value) : ''))
-+
-+function optionEls() {
-+  return [...(panelEl.value?.querySelectorAll('.app-select-option') || [])]
-+}
-+
-+async function focusOption(index) {
-+  await nextTick()
-+  const list = optionEls()
-+  const el = list[Math.min(Math.max(index, 0), list.length - 1)]
-+  el?.focus({ preventScroll: true })
-+  el?.scrollIntoView({ block: 'nearest' })
-+}
-+
-+function choose(option) {
-+  emit('update:modelValue', valueOf(option))
-+  close()
-+}
-+
-+function onTriggerKeydown(event) {
-+  if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
-+    event.preventDefault()
-+    open()
-+  }
-+}
-+
-+function onListKeydown(event) {
-+  const list = optionEls()
-+  const index = list.indexOf(document.activeElement)
-+  if (event.key === 'ArrowDown') focusOption(index + 1)
-+  else if (event.key === 'ArrowUp') focusOption(index - 1)
-+  else if (event.key === 'Home') focusOption(0)
-+  else if (event.key === 'End') focusOption(list.length - 1)
-+  else if (event.key === 'Tab') {
-+    close()
-+    return
-+  } else return
-+  event.preventDefault()
-+}
-+</script>
-+
-+<style>
-+.app-select {
-+  position: relative;
-+  display: inline-flex;
-+  min-width: 0;
-+}
-+
-+.app-select.w-full {
++.blocked-list li {
 +  display: flex;
-+  width: 100%;
-+}
-+
-+.app-select-trigger {
-+  display: inline-flex;
 +  align-items: center;
-+  justify-content: space-between;
 +  gap: 0.6rem;
-+  width: 100%;
-+  min-height: 2.75rem;
-+  padding: 0 0.85rem 0 1rem;
-+  border: 1px solid var(--border-color);
-+  border-radius: 10px;
-+  background: var(--bg-input);
-+  color: var(--text-primary);
-+  font: inherit;
-+  font-size: var(--fs-md);
-+  text-align: left;
-+  cursor: pointer;
 +}
 +
-+.app-select-trigger:hover:not(:disabled) {
-+  border-color: var(--border-hover);
-+}
-+
-+.app-select-trigger:focus-visible,
-+.app-select.open .app-select-trigger {
-+  outline: none;
-+  border-color: var(--main-color);
-+  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
-+}
-+
-+.app-select-trigger:disabled {
-+  opacity: 0.55;
-+  cursor: not-allowed;
-+}
-+
-+.app-select-value {
++.blocked-name {
 +  flex: 1;
 +  min-width: 0;
 +  overflow: hidden;
 +  text-overflow: ellipsis;
 +  white-space: nowrap;
 +}
-+
-+.app-select-value .placeholder {
-+  color: var(--text-muted);
-+}
-+
-+.app-select-chevron {
-+  flex-shrink: 0;
-+  font-size: var(--fs-xs);
-+  color: var(--text-secondary);
-+  transition: transform 0.15s ease;
-+}
-+
-+.app-select.open .app-select-chevron {
-+  transform: rotate(180deg);
-+}
-+
-+.app-select-panel {
-+  position: fixed;
-+  inset: auto;
-+  margin: 0;
-+  max-height: min(22rem, 60vh);
-+  overflow-y: auto;
-+  padding: 0.35rem;
-+  border: 1px solid var(--border-color);
-+  border-radius: 12px;
-+  background: var(--bg-panel);
-+  color: var(--text-primary);
-+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-+}
-+
-+.app-select-option {
-+  display: flex;
-+  align-items: center;
-+  justify-content: space-between;
-+  gap: 0.75rem;
-+  width: 100%;
-+  padding: 0.6rem 0.85rem;
-+  border: none;
-+  border-radius: 8px;
-+  background: transparent;
-+  color: inherit;
-+  font: inherit;
-+  font-size: var(--fs-sm);
-+  text-align: left;
-+  cursor: pointer;
-+}
-+
-+.app-select-option:hover,
-+.app-select-option:focus-visible {
-+  background: var(--bg-hover);
-+  outline: none;
-+}
-+
-+.app-select-option.selected {
-+  color: var(--main-color);
-+  background: rgba(var(--main-color-rgb), 0.1);
-+  font-weight: 600;
-+}
-+
-+.app-select-option .pi {
-+  font-size: var(--fs-xs);
-+}
-+
-+@media (pointer: coarse) {
-+  .app-select-option {
-+    min-height: 2.75rem;
-+  }
-+}
-+</style>
-diff --git a/frontend/src/composables/useFloatingPanel.js b/frontend/src/composables/useFloatingPanel.js
-new file mode 100644
-index 0000000000000000000000000000000000000000..f02eb3dedec8824bff2e6123a5f273d35b02b0f3
---- /dev/null
-+++ b/frontend/src/composables/useFloatingPanel.js
-@@ -0,0 +1,93 @@
-+import { nextTick, onBeforeUnmount, ref } from 'vue'
-+
-+/**
-+ * Painel flutuante preso a um gatilho (listas do AppSelect e do
-+ * AppMultiSelect). Usa a Popover API: o painel vai para a camada superior,
-+ * então não é cortado por overflow nem fica atrás de um diálogo, e o
-+ * navegador fecha com Esc e com clique fora.
-+ *
-+ *   const { triggerEl, panelEl, isOpen, open, close, onToggle } = useFloatingPanel({ matchWidth: true })
-+ *   <button ref="triggerEl" :popovertarget="id">…</button>
-+ *   <div ref="panelEl" :id="id" popover="auto" @toggle="onToggle">…</div>
-+ *
-+ * O gatilho com popovertarget deixa o navegador abrir e fechar no clique
-+ * (sem o "fecha e abre de novo" de quando o clique fora cai no gatilho).
-+ */
-+export function useFloatingPanel({ matchWidth = true, gap = 6, onOpen, onClose } = {}) {
-+  const triggerEl = ref(null)
-+  const panelEl = ref(null)
-+  const isOpen = ref(false)
-+
-+  function place() {
-+    const trigger = triggerEl.value
-+    const panel = panelEl.value
-+    if (!trigger || !panel) return
-+    const rect = trigger.getBoundingClientRect()
-+    if (matchWidth) panel.style.minWidth = `${rect.width}px`
-+    const panelRect = panel.getBoundingClientRect()
-+    const spaceBelow = window.innerHeight - rect.bottom
-+    const openUp = spaceBelow < panelRect.height + gap + 8 && rect.top > spaceBelow
-+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - panelRect.width - 8))
-+    panel.style.left = `${left}px`
-+    // Abrindo para cima, prende pela base: se a lista encolher (busca), continua colada no gatilho
-+    if (openUp) {
-+      panel.style.top = 'auto'
-+      panel.style.bottom = `${window.innerHeight - rect.top + gap}px`
-+    } else {
-+      panel.style.bottom = 'auto'
-+      panel.style.top = `${rect.bottom + gap}px`
-+    }
-+  }
-+
-+  function onScrollOrResize(event) {
-+    // Rolagem dentro do próprio painel não fecha
-+    if (event?.type === 'scroll' && panelEl.value?.contains(event.target)) return
-+    close()
-+  }
-+
-+  function open() {
-+    const panel = panelEl.value
-+    if (!panel || panel.matches(':popover-open')) return
-+    try {
-+      panel.showPopover()
-+    } catch {
-+      // navegador sem Popover API
-+    }
-+  }
-+
-+  function close() {
-+    const panel = panelEl.value
-+    if (panel?.matches(':popover-open')) panel.hidePopover()
-+  }
-+
-+  function toggle() {
-+    if (isOpen.value) close()
-+    else open()
-+  }
-+
-+  // Ligar no @toggle do painel: vale para abrir/fechar por clique, teclado,
-+  // Esc ou clique fora.
-+  async function onToggle(event) {
-+    if (event.newState === 'open') {
-+      isOpen.value = true
-+      place()
-+      window.addEventListener('resize', onScrollOrResize)
-+      window.addEventListener('scroll', onScrollOrResize, true)
-+      await nextTick()
-+      place()
-+      onOpen?.()
-+      return
-+    }
-+    isOpen.value = false
-+    window.removeEventListener('resize', onScrollOrResize)
-+    window.removeEventListener('scroll', onScrollOrResize, true)
-+    onClose?.()
-+  }
-+
-+  onBeforeUnmount(() => {
-+    window.removeEventListener('resize', onScrollOrResize)
-+    window.removeEventListener('scroll', onScrollOrResize, true)
-+  })
-+
-+  return { triggerEl, panelEl, isOpen, open, close, toggle, place, onToggle }
-+}
-diff --git a/frontend/src/locales/en.json b/frontend/src/locales/en.json
-index f6d28e6a72dfe703c9581cef477348e3febf9e57..eb8732daba24fd974fb4c996d5966422640ee59f 100644
---- a/frontend/src/locales/en.json
-+++ b/frontend/src/locales/en.json
-@@ -40,7 +40,10 @@
-     "skipToContent": "Skip to content",
-     "removeItem": "Remove {name}",
-     "decrease": "Decrease",
--    "increase": "Increase"
-+    "increase": "Increase",
-+    "noResults": "Nothing found.",
-+    "typeToSeeMore": "{n} more — type to filter.",
-+    "clearSelection": "Clear selection"
-   },
-   "home": {
-     "morning": "Good morning, {name}",
-diff --git a/frontend/src/locales/pt.json b/frontend/src/locales/pt.json
-index 63bb4f3b3fb2cd87c2ce05858c53e66482b763c6..ee1daca2aa69d9fc8af770a433e3686acac45a37 100644
---- a/frontend/src/locales/pt.json
-+++ b/frontend/src/locales/pt.json
-@@ -77,7 +77,10 @@
-     "skipToContent": "Pular para o conteúdo",
-     "removeItem": "Tirar {name}",
-     "decrease": "Diminuir",
--    "increase": "Aumentar"
-+    "increase": "Aumentar",
-+    "noResults": "Nada encontrado.",
-+    "typeToSeeMore": "Mais {n} — digite para filtrar.",
-+    "clearSelection": "Limpar seleção"
-   },
-   "book": {
-     "new_title": "Novo Livro",
-diff --git a/frontend/src/main.js b/frontend/src/main.js
-index b7be1e84ec25474b7880a62ff7d5cbd3f03c9438..3c2307f6d5a3f1665540eb92cd35b0fd2576b0ca 100644
---- a/frontend/src/main.js
-+++ b/frontend/src/main.js
-@@ -2,15 +2,10 @@ import { createApp } from 'vue'
- import i18n from './i18n'
- import App from './App.vue'
- import router from './router'
--import PrimeVue from 'primevue/config'
- import tooltip from './directives/tooltip.js'
- 
- import '@fontsource-variable/inter'
- import '@fontsource-variable/source-serif-4'
--// Os dois temas convivem: o plugin vite/primevueTheme.js prefixa cada um com
--// [data-theme] e troca o azul do Aura pela cor de destaque do app.
--import 'primevue/resources/themes/aura-dark-blue/theme.css'
--import 'primevue/resources/themes/aura-light-blue/theme.css'
- import 'primeicons/primeicons.css'
- import './assets/main.css'
- 
-@@ -24,7 +19,6 @@ const app = createApp(App)
- 
- app.use(router)
- app.use(i18n)
--app.use(PrimeVue, { ripple: true })
- app.directive('tooltip', tooltip)
- 
- app.mount('#app')
-diff --git a/frontend/src/router/index.js b/frontend/src/router/index.js
-index 7a3f4f536eb30293ea9fc5c7ff66d63b443f58b2..aef3159ea1247e6a12661c5434d0301e2d8be974 100644
---- a/frontend/src/router/index.js
-+++ b/frontend/src/router/index.js
-@@ -10,8 +10,8 @@ import { setRouteTitle } from '../services/pageTitle.js'
-  *   public       — acessível com ou sem sessão (mostra o menu se houver sessão)
-  *   title        — chave de pageTitle.* para o título da aba (services/pageTitle.js)
-  *
-- * Views carregadas sob demanda: o chart.js do Dashboard e o PrimeVue pesado
-- * das telas internas não entram no bundle do login.
-+ * Views carregadas sob demanda: o chart.js do Dashboard e as telas internas
-+ * não entram no bundle do login.
-  */
- const router = createRouter({
-   history: createWebHistory(import.meta.env.BASE_URL),
-diff --git a/frontend/src/views/Dashboard.vue b/frontend/src/views/Dashboard.vue
-index 34150b7a088f4ae7ed10c20ac328c0dcac041064..4030f6de135a0aa3a909f00d6b20bbef579d25e7 100644
---- a/frontend/src/views/Dashboard.vue
-+++ b/frontend/src/views/Dashboard.vue
-@@ -10,12 +10,11 @@
-           class="sr-only"
-           for="dashboard-year"
-         >{{ t('dashboard.yearLabel') }}</label>
--        <Dropdown
-+        <AppSelect
-           inputId="dashboard-year"
-           :modelValue="year"
-           :options="yearOptions"
-           class="year-dropdown"
--          panelClass="custom-panel"
-           @update:modelValue="changeYear"
-         />
-         <div class="date-display">{{ currentDate }}</div>
-@@ -385,7 +384,7 @@ import { useToast } from '../services/toast.js'
- import ChartCanvas from '../components/ui/ChartCanvas.vue'
- import AppSkeleton from '../components/ui/AppSkeleton.vue'
- import AppButton from '../components/ui/AppButton.vue'
--import Dropdown from 'primevue/dropdown'
-+import AppSelect from '../components/ui/AppSelect.vue'
- import NumberField from '../components/ui/NumberField.vue'
- import api from '../services/api.js'
- import { useTheme, cssVar } from '../composables/useTheme.js'
-@@ -1014,10 +1013,6 @@ a.author-row:focus-visible {
-   flex-wrap: wrap;
- }
- 
--.goal-input :deep(.p-inputnumber-input) {
--  width: 6rem;
--}
--
- .chart-hint {
-   margin: -1rem 0 1rem;
-   color: var(--text-secondary);
-@@ -1058,7 +1053,7 @@ a.author-row:focus-visible {
-   min-height: 0;
- }
- 
--.chart-wrapper > :deep(.p-chart) {
-+.chart-wrapper > .chart-canvas {
-   position: relative;
-   width: 100%;
-   height: 100%;
-@@ -1107,9 +1102,8 @@ a.author-row:hover {
- }
- 
- .author-row .rank {
--  color: var(--author-color) !important;
-+  color: var(--author-color);
-   font-weight: bold;
--  color: var(--text-secondary);
-   width: 20px;
- }
- 
-diff --git a/frontend/src/views/Library.vue b/frontend/src/views/Library.vue
-index 1ae8db0d35568b6d97f35be203b52d2ec9270e69..8e07631958ea6ab448a5d9aaa4b0811bcf5e47bf 100644
---- a/frontend/src/views/Library.vue
-+++ b/frontend/src/views/Library.vue
-@@ -281,7 +281,7 @@ function afterBatch() {
- }
- 
- function onKeydown(event) {
--  if (event.key === 'Escape' && selecting.value && !document.querySelector('.p-dialog-mask')) toggleSelecting()
-+  if (event.key === 'Escape' && selecting.value && !document.querySelector('dialog[open]')) toggleSelecting()
- }
- 
- // Grade ou lista: vem da URL (?view=list); sem ela, a última escolha neste navegador.
-@@ -383,16 +383,8 @@ onUnmounted(() => {
-   aspect-ratio: 2/3.5;
- }
- 
--:deep(.p-skeleton) {
--  background-color: rgba(255, 255, 255, 0.05) !important;
--}
--
--:deep(.p-skeleton)::after {
--  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
--}
--
- .cover-skeleton {
--  border-radius: 12px !important;
-+  border-radius: 12px;
-   flex: 1;
- }
- 
-diff --git a/frontend/vite.config.js b/frontend/vite.config.js
-index 1f6aabf6d6eee4b0379557e1ab1a4309442da0e9..f89b84dd89a67071ff40fb13d2949e051efb22fd 100644
---- a/frontend/vite.config.js
-+++ b/frontend/vite.config.js
-@@ -1,7 +1,6 @@
- import { fileURLToPath, URL } from 'node:url'
- import { defineConfig, loadEnv } from 'vite'
- import vue from '@vitejs/plugin-vue'
--import primevueTheme from './vite/primevueTheme.js'
- import preloadIconFont from './vite/preloadIconFont.js'
- 
- export default defineConfig(({ mode }) => {
-@@ -10,7 +9,7 @@ export default defineConfig(({ mode }) => {
-   const apiTarget = env.VITE_DEV_API_TARGET || 'http://localhost:3050'
- 
-   return {
--    plugins: [primevueTheme(), vue(), preloadIconFont()],
-+    plugins: [vue(), preloadIconFont()],
-     resolve: {
-       alias: {
-         '@': fileURLToPath(new URL('./src', import.meta.url))
-diff --git a/frontend/vite/primevueTheme.js b/frontend/vite/primevueTheme.js
-deleted file mode 100644
-index ecaf3e82280d7b4d49fe8cb3c1db1120db3a4323..0000000000000000000000000000000000000000
---- a/frontend/vite/primevueTheme.js
-+++ /dev/null
-@@ -1,110 +0,0 @@
--import postcss from 'postcss'
--
--/**
-- * Tema do PrimeVue ligado aos tokens do app.
-- *
-- * O PrimeVue 3 traz o tema Aura em arquivos prontos, com as cores escritas
-- * direto em cada regra (o azul do tema aparece mais de 100 vezes). Este plugin
-- * carrega o Aura claro e o escuro e, no build:
-- *
-- *   1. prefixa cada regra com :where([data-theme="dark"|"light"]) — os dois
-- *      convivem no mesmo CSS e vale o tema escolhido no app (o :where não
-- *      soma especificidade, então o CSS do app continua vencendo como antes);
-- *   2. troca o azul do Aura pela cor de destaque do app (--main-color para
-- *      texto e borda, --main-solid para fundo com texto branco);
-- *   3. tira os @font-face (o app usa a própria Inter).
-- *
-- * Uso: import 'primevue/resources/themes/aura-dark-blue/theme.css' e
-- * '.../aura-light-blue/theme.css' no main.js.
-- */
--
--const THEME_FILE = /primevue\/resources\/themes\/aura-(dark|light)-blue\/theme\.css$/
--
--const solid = 'var(--main-solid)'
--const accent = 'var(--main-color)'
--const onAccent = 'var(--on-main)'
--const darker = pct => `color-mix(in srgb, var(--main-solid) ${pct}%, black)`
--const tint = alpha => `rgba(var(--main-color-rgb), ${alpha})`
--
--// cor do Aura → [valor quando é fundo, valor nos outros usos (texto, borda, sombra)]
--const PALETTE = {
--  dark: {
--    '#60a5fa': [solid, accent],
--    '#3b82f6': [solid, accent],
--    '#93c5fd': [darker(88), accent],
--    '#bfdbfe': [darker(78), accent],
--    '#020617': [onAccent, onAccent]
--  },
--  light: {
--    '#3b82f6': [solid, accent],
--    '#2563eb': [darker(88), accent],
--    '#1d4ed8': [darker(78), accent],
--    '#eff6ff': [tint(0.1), tint(0.5)],
--    '#dbeafe': [tint(0.16), tint(0.5)],
--    '#bfdbfe': [tint(0.24), tint(0.5)],
--    // cinzas "slate" do Aura claro → "zinc", os mesmos cinzas do app
--    '#f8fafc': ['#fafafa', '#fafafa'],
--    '#f1f5f9': ['#f4f4f5', '#f4f4f5'],
--    '#e2e8f0': ['#e4e4e7', '#e4e4e7'],
--    '#cbd5e1': ['#d4d4d8', '#d4d4d8'],
--    '#94a3b8': ['#a1a1aa', '#a1a1aa'],
--    '#64748b': ['#71717a', 'var(--text-secondary)'],
--    '#475569': ['#52525b', '#52525b'],
--    '#334155': ['#3f3f46', 'var(--text-primary)'],
--    '#1e293b': ['#27272a', '#27272a'],
--    '#0f172a': ['#18181b', '#18181b']
--  }
--}
--const BLUE_RGBA = /rgba\(\s*(?:96,\s*165,\s*250|59,\s*130,\s*246)\s*,\s*([\d.]+)\s*\)/gi
--const HEX = /#[0-9a-f]{6}\b/gi
--
--function isBackground(prop) {
--  return prop === 'background' || prop === 'background-color' || /^--.*(bg|background)/.test(prop)
--}
--
--function recolor(value, prop, palette) {
--  const bg = isBackground(prop)
--  return value
--    .replace(BLUE_RGBA, (_, alpha) => tint(alpha))
--    .replace(HEX, hex => {
--      const entry = palette[hex.toLowerCase()]
--      return entry ? entry[bg ? 0 : 1] : hex
--    })
--}
--
--function scopeSelector(selector, scope) {
--  if (selector.startsWith(':root')) return `:where(:root${scope})${selector.slice(5)}`
--  return `:where(${scope}) ${selector}`
--}
--
--export function transformTheme(css, mode) {
--  const scope = `[data-theme="${mode}"]`
--  const palette = PALETTE[mode]
--  const root = postcss.parse(css)
--
--  root.walkAtRules('font-face', rule => rule.remove())
--  root.walkRules(rule => {
--    if (rule.parent?.type === 'atrule' && /keyframes$/i.test(rule.parent.name)) return
--    rule.selectors = rule.selectors.map(sel => scopeSelector(sel, scope))
--  })
--  root.walkDecls(decl => {
--    if (decl.prop === 'font-family' || decl.prop === '--font-family') {
--      decl.remove()
--      return
--    }
--    decl.value = recolor(decl.value, decl.prop, palette)
--  })
--  return root.toString()
--}
--
--export default function primevueTheme() {
--  return {
--    name: 'librishelf:primevue-theme',
--    enforce: 'pre',
--    transform(code, id) {
--      const match = id.split('?')[0].match(THEME_FILE)
--      if (!match) return null
--      return { code: transformTheme(code, match[1]), map: null }
--    }
--  }
--}
+ </style>
+\ No newline at end of file
 __LIBRISHELF_PATCH__
 
 echo "→ Aplicando o patch…"
@@ -1995,8 +2678,7 @@ fi
 # ainda encontra a base certa.
 git hash-object -w -- "${FILES[@]}" 2>/dev/null >/dev/null || true
 
-echo "→ Instalando dependências novas do frontend…"
-(cd frontend && npm install --no-audit --no-fund)
+[ -d frontend/node_modules ] || (cd frontend && npm ci --no-audit --no-fund)
 [ -d backend/node_modules ] || (cd backend && npm ci --no-audit --no-fund)
 
 echo "→ Testes unitários do backend…"
@@ -2009,17 +2691,20 @@ echo
 echo "✓ Tudo certo. Mensagem de commit sugerida:"
 echo "────────────────────────────────────────────"
 cat <<'__MSG__'
-refactor: remove o PrimeVue (3/3)
+feat: base para o lançamento (pacote 9)
 
-- AppSelect e AppMultiSelect (Popover API, teclado, busca com acento
-  ou sem) no lugar de Dropdown e MultiSelect
-- DateField sempre com o seletor de data nativo; AuthorsInput com
-  etiquetas próprias no lugar do Chips
-- sai o pacote primevue, os temas Aura, o plugin vite/primevueTheme.js
-  e o postcss que só ele usava
-- CSS de override do PrimeVue removido; !important só no
-  prefers-reduced-motion
-- CSS do app: 689 kB → 34 kB (gzip 67 kB → 8 kB); JS inicial
-  161 kB → 105 kB
+- Erros da API com código estável e parâmetros ({ error, code, params });
+  o frontend traduz pelo código (pt/en), inclusive rede fora e sessão
+  expirada. Formulários de livro e cadastro põem o erro no campo certo
+- Nomes de usuário reservados (admin, suporte, librishelf..., rotas do
+  app), ignorando maiúsculas, acentos e . _ -; vale no cadastro e na troca
+- Bloquear leitor (migration 007): apaga o seguir nos dois sentidos, some
+  na comunidade, busca, recomendações e "quem tem este livro"; o bloqueado
+  não pode pedir para seguir e não é avisado. Menu ⋯ na biblioteca pública
+  e lista de bloqueados na Conta
+- Bibliotecas públicas fora de buscadores: X-Robots-Tag noindex no nginx
+  (/u/ e /api/), meta robots na rota e robots.txt
+- Cadastro com erros embaixo de cada campo
+- Testes: códigos de erro, nomes reservados e bloqueio
 __MSG__
 echo "────────────────────────────────────────────"

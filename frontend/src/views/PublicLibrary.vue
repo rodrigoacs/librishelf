@@ -19,11 +19,17 @@
         class="header-row"
       >
         <div class="header-content">
-          <h1>{{ t('publicLibrary.title', { ownerName: ownerName || username }) }}</h1>
-          <p>
-            {{ t('publicLibrary.subtitle') }}
-            <span v-if="total > 0"> · {{ t('publicLibrary.count', { count: total }, total) }}</span>
-          </p>
+          <ReaderAvatar
+            :username="ownerName || username"
+            size="lg"
+          />
+          <div class="header-text">
+            <h1>{{ t('publicLibrary.title', { ownerName: ownerName || username }) }}</h1>
+            <p>
+              <span class="handle">@{{ username }}</span>
+              <span v-if="total > 0"> · {{ t('publicLibrary.count', { count: total }, total) }}</span>
+            </p>
+          </div>
         </div>
 
         <div
@@ -65,11 +71,19 @@
             />
           </template>
 
+          <!-- Sem sessão: o mesmo botão Seguir, que leva ao login e volta para cá -->
           <router-link
             v-else-if="profile.acceptsFollowers"
             :to="{ name: 'login', query: { redirect: route.fullPath } }"
-            class="owner-link"
-          >{{ t('profile.login_to_follow') }}</router-link>
+            class="btn btn-primary"
+            :title="t('profile.login_to_follow')"
+          >
+            <i
+              class="pi pi-user-plus"
+              aria-hidden="true"
+            ></i>
+            <span>{{ t('profile.follow') }}</span>
+          </router-link>
         </div>
       </div>
     </header>
@@ -302,17 +316,17 @@
         />
       </div>
 
+      <!-- Mesma paginação da biblioteca do dono: carrega ao chegar perto do fim -->
       <div
         v-if="books.length < total"
-        class="load-more"
+        ref="sentinel"
+        class="sentinel"
       >
-        <AppButton
-          :label="t('publicLibrary.loadMore')"
-          icon="pi pi-angle-down"
-          class="btn-outlined btn-secondary"
-          :loading="loading"
-          @click="loadLibrary({ append: true })"
-        />
+        <i
+          v-if="loading"
+          class="pi pi-spin pi-spinner loading-more-icon"
+          :aria-label="t('common.loading')"
+        ></i>
       </div>
     </template>
 
@@ -334,7 +348,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
@@ -343,10 +357,11 @@ import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import BookDialog from '../components/BookDialog.vue'
 import StarRating from '../components/StarRating.vue'
+import ReaderAvatar from '../components/ReaderAvatar.vue'
 import { tagColor, colorFor } from '../utils/tagColors.js'
 import { fromApiDate } from '../utils/dates.js'
 
-const PAGE_SIZE = 40
+const PAGE_SIZE = 20
 
 const MAX_YEARS = 10
 
@@ -455,6 +470,7 @@ async function loadLibrary({ append = false } = {}) {
     ownerName.value = response.owner || requestedFor
     total.value = response.total || 0
     page.value = nextPage
+    observeSentinel()
   } catch (err) {
     if (requestedFor !== username.value) return
     if (err.status === 404) {
@@ -467,6 +483,27 @@ async function loadLibrary({ append = false } = {}) {
     loading.value = false
   }
 }
+
+// Rolagem infinita, como na biblioteca do dono. Depois de cada página o
+// sentinela é observado de novo: se ainda estiver à vista (tela alta), a
+// próxima página vem sem precisar rolar.
+const sentinel = ref(null)
+let observer = null
+
+async function observeSentinel() {
+  await nextTick()
+  if (!observer) {
+    observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting && !loading.value && books.value.length < total.value) {
+        loadLibrary({ append: true })
+      }
+    }, { rootMargin: '400px' })
+  }
+  observer.disconnect()
+  if (sentinel.value) observer.observe(sentinel.value)
+}
+
+onBeforeUnmount(() => observer?.disconnect())
 
 // /u/a → /u/b reaproveita o componente; recarrega quando o usuário da URL muda.
 watch(username, () => {
@@ -753,6 +790,21 @@ watch(username, () => {
   margin: 0.5rem 0 0;
 }
 
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.header-text {
+  min-width: 0;
+}
+
+.handle {
+  font-weight: 600;
+}
+
 .header-content h1 {
   font-family: var(--font-display);
   font-size: var(--fs-2xl);
@@ -762,7 +814,7 @@ watch(username, () => {
 
 .header-content p {
   color: var(--text-secondary);
-  margin-top: 0.5rem;
+  margin: 0.25rem 0 0;
 }
 
 .books-grid {
@@ -772,10 +824,17 @@ watch(username, () => {
   justify-content: center;
 }
 
-.load-more {
+.sentinel {
+  height: 80px;
   display: flex;
   justify-content: center;
-  margin-top: 2rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.loading-more-icon {
+  font-size: var(--fs-xl);
+  color: var(--main-color);
 }
 
 .loading-state,
@@ -819,7 +878,13 @@ watch(username, () => {
 
   .books-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 1.25rem;
+    gap: 1rem;
+  }
+
+  /* Botão Seguir na largura toda, embaixo do nome */
+  .follow-area,
+  .follow-area .btn {
+    width: 100%;
   }
 }
 </style>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Estante do Librishelf simplificada para ficar legível em 16px: dois livros num porta-livros -->
+  <rect x="16" y="2" width="11" height="23" rx="1.5" fill="#5cc04f"/>
+  <rect x="23.5" y="2" width="3.5" height="23" rx="1" fill="#3f9a37"/>
+  <rect x="7" y="4" width="12" height="23" rx="1.5" fill="#3d8fe0"/>
+  <rect x="7" y="4" width="3.5" height="23" rx="1" fill="#2a6fb8"/>
+  <path d="M2 12h7v10.5A2.5 2.5 0 0 0 11.5 25H30v5H4a2 2 0 0 1-2-2z" fill="#b5713b"/>
+  <path d="M2 12h2.2v16.2c0 .9.6 1.8 1.6 1.8H4a2 2 0 0 1-2-2z" fill="#8a5129"/>
+  <path d="M5.6 17.6l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z" fill="#fff"/>
+</svg>

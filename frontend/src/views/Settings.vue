@@ -190,26 +190,32 @@
             <div class="field">
               <PasswordField
                 id="settings-current-password"
+                ref="currentPasswordField"
                 v-model="passwordForm.current"
                 :label="t('settings.password.current')"
                 autocomplete="current-password"
+                :error="passwordErrors.current"
               />
             </div>
             <div class="field">
               <PasswordField
                 id="settings-new-password"
+                ref="newPasswordField"
                 v-model="passwordForm.next"
                 :label="t('settings.password.new')"
                 autocomplete="new-password"
                 strength
+                :error="passwordErrors.next"
               />
             </div>
             <div class="field">
               <PasswordField
                 id="settings-confirm-password"
+                ref="confirmPasswordField"
                 v-model="passwordForm.confirm"
                 :label="t('settings.password.confirm')"
                 autocomplete="new-password"
+                :error="passwordErrors.confirm"
               />
             </div>
 
@@ -349,9 +355,11 @@
         <div class="field">
           <PasswordField
             id="settings-delete-password"
+            ref="deletePasswordField"
             v-model="deletePassword"
             :label="t('settings.delete.password')"
             autocomplete="current-password"
+            :error="deleteError"
           />
         </div>
         <div class="dialog-actions">
@@ -368,7 +376,6 @@
             icon="pi pi-trash"
             class="btn-danger"
             :loading="deleting"
-            :disabled="!deletePassword"
           />
         </div>
       </form>
@@ -386,22 +393,26 @@
       >
         <p class="dialog-hint">{{ accountDialog.field === 'email' ? t('settings.account.emailHint') : t('settings.account.usernameHint') }}</p>
         <div class="field">
-          <label for="settings-account-value">{{ accountDialog.field === 'email' ? t('settings.account.newEmail') : t('settings.account.newUsername') }}</label>
-          <input
+          <TextField
             id="settings-account-value"
+            ref="accountValueField"
             v-model="accountDialog.value"
-            class="plain-input"
+            :label="accountDialog.field === 'email' ? t('settings.account.newEmail') : t('settings.account.newUsername')"
             :type="accountDialog.field === 'email' ? 'email' : 'text'"
             :autocomplete="accountDialog.field === 'email' ? 'email' : 'username'"
             maxlength="254"
+            :input-attrs="{ autocapitalize: 'none', spellcheck: 'false' }"
+            :error="accountDialog.errors.value"
           />
         </div>
         <div class="field">
           <PasswordField
             id="settings-account-password"
+            ref="accountPasswordField"
             v-model="accountDialog.password"
             :label="t('settings.password.current')"
             autocomplete="current-password"
+            :error="accountDialog.errors.password"
           />
         </div>
         <AppButton
@@ -409,7 +420,6 @@
           :label="t('common.save')"
           class="btn-primary"
           :loading="accountDialog.saving"
-          :disabled="!accountDialog.value.trim() || !accountDialog.password"
         />
       </form>
     </AppDialog>
@@ -418,7 +428,8 @@
 
 <script setup>
 import PasswordField from '../components/form/PasswordField.vue'
-import { ref, reactive, computed } from 'vue'
+import TextField from '../components/form/TextField.vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
@@ -427,6 +438,11 @@ import AppDialog from '../components/ui/AppDialog.vue'
 import AppSwitch from '../components/ui/AppSwitch.vue'
 import api from '../services/api.js'
 import { currentUser, updateUser, setUser, clearSession } from '../services/session.js'
+import { isWeakPassword } from '../utils/password.js'
+
+// Espelha a regra do backend para nome de usuário (a mesma do cadastro)
+const USERNAME_PATTERN = /^[\p{L}\p{N}._-]+$/u
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const { t, locale } = useI18n()
 
@@ -496,17 +512,38 @@ async function copyLink() {
 }
 
 // --- Senha ---
+// Erros embaixo de cada campo (como no cadastro), em vez de um aviso solto
+// no canto. Erro do servidor vai para o campo a que se refere.
 const passwordForm = reactive({ current: '', next: '', confirm: '' })
+const passwordErrors = reactive({ current: '', next: '', confirm: '' })
 const savingPassword = ref(false)
+const currentPasswordField = ref(null)
+const newPasswordField = ref(null)
+const confirmPasswordField = ref(null)
+
+// Digitou de novo no campo: o erro dele some
+for (const key of ['current', 'next', 'confirm']) {
+  watch(() => passwordForm[key], () => { passwordErrors[key] = '' })
+}
+
+function focusFirstError(errors, fields) {
+  const key = Object.keys(fields).find(k => errors[k])
+  if (key) fields[key].value?.focus()
+}
 
 async function changePassword() {
-  if (!passwordForm.current || !passwordForm.next || !passwordForm.confirm) {
-    toast.add({ severity: 'warn', summary: t('register.attention'), detail: t('settings.password.fill'), life: 3000 })
-    return
-  }
+  const required = t('settings.errors.required')
+  passwordErrors.current = passwordForm.current ? '' : required
+  passwordErrors.next = !passwordForm.next
+    ? required
+    : (isWeakPassword(passwordForm.next) ? t('register.passwordTooWeak') : '')
+  passwordErrors.confirm = !passwordForm.confirm
+    ? required
+    : (passwordForm.next !== passwordForm.confirm ? t('settings.password.mismatch') : '')
 
-  if (passwordForm.next !== passwordForm.confirm) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: t('settings.password.mismatch'), life: 3000 })
+  const fields = { current: currentPasswordField, next: newPasswordField, confirm: confirmPasswordField }
+  if (Object.values(passwordErrors).some(Boolean)) {
+    focusFirstError(passwordErrors, fields)
     return
   }
 
@@ -516,15 +553,24 @@ async function changePassword() {
     setUser(result.user)
     Object.assign(passwordForm, { current: '', next: '', confirm: '' })
     toast.add({ severity: 'success', summary: t('common.success'), detail: t('settings.password.success'), life: 3000 })
+    // Os watchers limpam os erros no próximo tick; o formulário volta vazio e sem erro
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    if (error.status === 401) passwordErrors.current = error.message
+    else if (error.status === 400) passwordErrors.next = error.message
+    else toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    focusFirstError(passwordErrors, fields)
   } finally {
     savingPassword.value = false
   }
 }
 
 // --- Conta: nome de usuário e e-mail ---
-const accountDialog = reactive({ visible: false, field: 'username', value: '', password: '', saving: false })
+const accountDialog = reactive({ visible: false, field: 'username', value: '', password: '', saving: false, errors: { value: '', password: '' } })
+const accountValueField = ref(null)
+const accountPasswordField = ref(null)
+
+watch(() => accountDialog.value, () => { accountDialog.errors.value = '' })
+watch(() => accountDialog.password, () => { accountDialog.errors.password = '' })
 
 function openAccountDialog(field) {
   Object.assign(accountDialog, {
@@ -532,11 +578,28 @@ function openAccountDialog(field) {
     field,
     value: field === 'email' ? user.value?.email || '' : user.value?.name || '',
     password: '',
-    saving: false
+    saving: false,
+    errors: { value: '', password: '' }
   })
 }
 
+function validateAccount() {
+  const value = accountDialog.value.trim()
+  const errors = accountDialog.errors
+  const required = t('settings.errors.required')
+  if (!value) errors.value = required
+  else if (accountDialog.field === 'email' && !EMAIL_PATTERN.test(value)) errors.value = t('settings.errors.email')
+  else if (accountDialog.field === 'username' && !USERNAME_PATTERN.test(value)) errors.value = t('register.invalidUsername')
+  else errors.value = ''
+  errors.password = accountDialog.password ? '' : required
+  return !errors.value && !errors.password
+}
+
 async function saveAccount() {
+  if (!validateAccount()) {
+    focusFirstError(accountDialog.errors, { value: accountValueField, password: accountPasswordField })
+    return
+  }
   accountDialog.saving = true
   try {
     const value = accountDialog.value.trim()
@@ -552,7 +615,11 @@ async function saveAccount() {
       life: 5000
     })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    // 401: senha errada; 400/409: valor inválido ou já em uso
+    if (error.status === 401) accountDialog.errors.password = error.message
+    else if (error.status === 400 || error.status === 409) accountDialog.errors.value = error.message
+    else toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    focusFirstError(accountDialog.errors, { value: accountValueField, password: accountPasswordField })
   } finally {
     accountDialog.saving = false
   }
@@ -602,14 +669,23 @@ async function importFile(event) {
 const deleteDialogVisible = ref(false)
 const deletePassword = ref('')
 const deleting = ref(false)
+const deleteError = ref('')
+const deletePasswordField = ref(null)
+
+watch(deletePassword, () => { deleteError.value = '' })
 
 function openDeleteDialog() {
   deletePassword.value = ''
+  deleteError.value = ''
   deleteDialogVisible.value = true
 }
 
 async function deleteAccount() {
-  if (!deletePassword.value) return
+  if (!deletePassword.value) {
+    deleteError.value = t('settings.errors.required')
+    deletePasswordField.value?.focus()
+    return
+  }
 
   deleting.value = true
   try {
@@ -619,10 +695,14 @@ async function deleteAccount() {
     toast.add({ severity: 'success', summary: t('common.success'), detail: t('settings.delete.success'), life: 5000 })
     router.replace({ name: 'login' })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    if (error.status === 401) {
+      deleteError.value = error.message
+      deletePasswordField.value?.focus()
+    } else {
+      toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    }
   } finally {
     deleting.value = false
-    deletePassword.value = ''
   }
 }
 </script>

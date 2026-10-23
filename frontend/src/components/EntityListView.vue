@@ -102,15 +102,57 @@
         />
       </div>
 
+      <!-- Nenhum item ainda: explica de onde eles vêm e oferece o próximo passo -->
+      <div
+        v-else-if="items.length === 0"
+        class="empty-state"
+      >
+        <span class="empty-icon-circle">
+          <i
+            :class="['pi', icon]"
+            aria-hidden="true"
+          ></i>
+        </span>
+        <h2>{{ t(`entities.empty.${i18nKey}.title`) }}</h2>
+        <p>{{ t(`entities.empty.${i18nKey}.text`) }}</p>
+        <router-link
+          v-if="i18nKey === 'tags'"
+          :to="{ name: 'library' }"
+          class="btn btn-primary"
+        >
+          <i
+            class="pi pi-book"
+            aria-hidden="true"
+          ></i>
+          <span>{{ t('entities.empty.openLibrary') }}</span>
+        </router-link>
+        <AppButton
+          v-else
+          :label="t('home.addBook')"
+          icon="pi pi-plus"
+          class="btn-primary"
+          @click="addBookVisible = true"
+        />
+      </div>
+
+      <!-- A busca não achou nada -->
       <div
         v-else-if="filteredItems.length === 0"
         class="empty-state"
       >
-        <i
-          :class="['pi', icon]"
-          aria-hidden="true"
-        ></i>
+        <span class="empty-icon-circle">
+          <i
+            class="pi pi-search"
+            aria-hidden="true"
+          ></i>
+        </span>
         <p>{{ t(emptyKey) }}</p>
+        <AppButton
+          :label="t('entities.empty.clearSearch')"
+          icon="pi pi-times"
+          class="btn-outlined btn-secondary"
+          @click="search = ''"
+        />
       </div>
 
       <ul
@@ -273,6 +315,12 @@
         </div>
       </form>
     </AppDialog>
+
+    <AddBookDialog
+      v-if="i18nKey !== 'tags'"
+      v-model:visible="addBookVisible"
+      @save="load"
+    />
   </div>
 </template>
 
@@ -283,6 +331,7 @@ import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
 import AppButton from './ui/AppButton.vue'
 import AppDialog from './ui/AppDialog.vue'
+import AddBookDialog from './AddBookDialog.vue'
 import api from '../services/api.js'
 
 /**
@@ -306,6 +355,7 @@ const toast = useToast()
 
 const items = ref([])
 const loading = ref(true)
+const addBookVisible = ref(false)
 const loadError = ref(false)
 const search = ref('')
 
@@ -825,8 +875,32 @@ button.entity-card {
   text-align: center;
 }
 
-.empty-state>i {
-  font-size: var(--fs-3xl);
+.empty-state h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--text-secondary);
+}
+
+.empty-icon-circle {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--main-color-rgb), 0.12);
+  color: var(--main-color);
+}
+
+.empty-icon-circle .pi {
+  font-size: var(--fs-2xl);
 }
 
 @keyframes pulse {

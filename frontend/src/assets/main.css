@@ -111,6 +111,18 @@ img {
   user-select: none;
 }
 
+/* Título que recebe o foco ao trocar de página (services/routeFocus.js):
+   contorno só para quem navega pelo teclado */
+h1[tabindex="-1"]:focus {
+  outline: none;
+}
+
+h1[tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

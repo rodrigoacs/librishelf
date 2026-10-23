@@ -202,7 +202,8 @@
     "view_list": "Lista",
     "row_rating": "Nota {n} de 5",
     "read_month_chip": "Lidos em {period}",
-    "sort_short": "Ordenar:"
+    "sort_short": "Ordenar:",
+    "count_of": "{shown} de {total}"
   },
   "bookDialog": {
     "bookCover": "Capa do Livro",
@@ -251,7 +252,8 @@
     "publishedOn": "Publicado em {date}",
     "editShort": "Editar",
     "deleteShort": "Excluir",
-    "saveShort": "Salvar alterações"
+    "saveShort": "Salvar alterações",
+    "editShortcut": "Editar (atalho: E)"
   },
   "authors": {
     "title": "Autores",
@@ -475,6 +477,10 @@
       "password": "Senha",
       "data": "Dados",
       "delete": "Excluir"
+    },
+    "errors": {
+      "required": "Preencha este campo.",
+      "email": "Digite um e-mail válido, como nome{'@'}exemplo.com."
     }
   },
   "discover": {
@@ -571,7 +577,12 @@
   "notFound": {
     "title": "Página não encontrada",
     "message": "O endereço que você abriu não existe ou foi movido.",
-    "goHome": "Ir para o início"
+    "goHome": "Ir para o início",
+    "searchLabel": "Buscar na sua biblioteca",
+    "searchPh": "Buscar título, autor ou ISBN",
+    "searchButton": "Buscar",
+    "goLibrary": "Ir para a biblioteca",
+    "linksLabel": "Para onde ir"
   },
   "rating": {
     "label": "Sua nota",
@@ -770,7 +781,23 @@
     "finalName": "Nome final",
     "willMerge": "\"{name}\" já existe: os livros serão juntados nele.",
     "mergedToast": "Agora tudo está em \"{name}\".",
-    "renamedToast": "Renomeado para \"{name}\"."
+    "renamedToast": "Renomeado para \"{name}\".",
+    "empty": {
+      "authors": {
+        "title": "Nenhum autor ainda",
+        "text": "Os autores aparecem aqui conforme você cadastra livros."
+      },
+      "publishers": {
+        "title": "Nenhuma editora ainda",
+        "text": "As editoras aparecem aqui conforme você cadastra livros (com o ISBN, elas vêm sozinhas)."
+      },
+      "tags": {
+        "title": "Nenhuma categoria ainda",
+        "text": "Abra um livro, toque em Editar e dê a ele categorias como “ficção” ou “para reler”. Elas aparecem aqui."
+      },
+      "openLibrary": "Abrir a biblioteca",
+      "clearSearch": "Limpar busca"
+    }
   },
   "pageTitle": {
     "home": "Início",

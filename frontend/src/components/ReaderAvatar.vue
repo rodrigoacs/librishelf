@@ -54,6 +54,13 @@ const initial = computed(() => props.username.replace(/^[^\p{L}\p{N}]+/u, '').ch
   font-size: var(--fs-md);
 }
 
+.size-lg {
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: var(--fs-xl);
+  font-family: var(--font-display);
+}
+
 .badge {
   position: absolute;
   right: -3px;

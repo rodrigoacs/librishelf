@@ -59,6 +59,18 @@ function buildParams(filters) {
   return params
 }
 
+/** Algum filtro ou busca ativo? (a ordenação não conta) */
+export function isFiltered(f) {
+  return Boolean(f.search) ||
+    f.readState !== 'all' ||
+    (Boolean(f.readYear) && f.readYear !== 'all') ||
+    f.isbnStatus === 'invalid' ||
+    Boolean(f.series) ||
+    f.author?.length > 0 ||
+    f.publisher?.length > 0 ||
+    f.tags?.length > 0
+}
+
 export function useLibrary() {
   const books = ref([])
   const loading = ref(false)
@@ -66,6 +78,23 @@ export function useLibrary() {
   const error = ref(null)
 
   const totalRecords = ref(0)
+  // Total da biblioteca sem filtro, para o "12 de 150". Vem de graça quando a
+  // lista está sem filtro; com filtro, uma consulta de 1 item busca o número.
+  const libraryTotal = ref(null)
+  let countingTotal = false
+
+  async function fetchLibraryTotal() {
+    if (countingTotal) return
+    countingTotal = true
+    try {
+      const response = await api.getBooks({ page: 1, limit: 1 })
+      libraryTotal.value = response.total ?? null
+    } catch {
+      // Sem o total o selo mostra só o número filtrado
+    } finally {
+      countingTotal = false
+    }
+  }
 
   const filters = ref(defaultFilters())
 
@@ -108,6 +137,9 @@ export function useLibrary() {
 
       filters.value.page = nextPage
       totalRecords.value = response.total || 0
+
+      if (!isFiltered(filters.value)) libraryTotal.value = totalRecords.value
+      else if (libraryTotal.value === null) fetchLibraryTotal()
 
       if (isLoadMore) {
         if (response.result?.length > 0) {
@@ -193,18 +225,26 @@ export function useLibrary() {
   function removeBookFromList(id) {
     const before = books.value.length
     books.value = books.value.filter(book => (book.book_id ?? book.id) !== id)
-    if (books.value.length < before) totalRecords.value = Math.max(0, totalRecords.value - 1)
+    if (books.value.length < before) {
+      totalRecords.value = Math.max(0, totalRecords.value - 1)
+      if (libraryTotal.value !== null) libraryTotal.value = Math.max(0, libraryTotal.value - 1)
+    }
   }
 
   return {
     books,
     coverVersions,
     totalRecords,
+    libraryTotal,
     loading,
     loadingMore,
     error,
     filters,
-    fetchBooks: () => fetchBooks(false),
+    // Recarga explícita (livro criado, ação em lote): o total geral pode ter mudado
+    fetchBooks: () => {
+      libraryTotal.value = null
+      fetchBooks(false)
+    },
     loadMore,
     setFilter,
     setFilters,

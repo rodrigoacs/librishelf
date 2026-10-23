@@ -265,7 +265,7 @@ onMounted(async () => {
   }
 
   .visual-side {
-    flex: 0 0 200px;
+    flex: 0 0 140px;
   }
 
   .mosaic-grid {
@@ -282,11 +282,19 @@ onMounted(async () => {
     display: none;
   }
 
+  /* Formulário no meio do espaço que sobra, em vez de grudado no topo */
   .form-side {
     flex: 1;
-    min-width: 100%;
-    padding-top: 2rem;
-    align-items: flex-start;
+    min-width: 0;
+    width: 100%;
+    padding: 2rem 1.25rem;
+    align-items: center;
+    box-shadow: none;
+  }
+
+  .form-wrapper :deep(.header) {
+    margin-bottom: 1.75rem;
+    text-align: center;
   }
 }
 </style>

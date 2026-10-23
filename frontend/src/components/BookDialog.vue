@@ -3,11 +3,13 @@
     v-model:visible="visible"
     :size="isEditing ? 'xl' : 'lg'"
     :dismissable="!isEditing"
+    :close-on-escape="!isEditing"
     dialog-class="book-form-dialog"
     :aria-label="book.title || t('bookDialog.dialog_label')"
     @hide="closeDialog"
   >
     <div
+      ref="shell"
       class="dialog-shell"
       :class="{ viewing: !isEditing }"
     >
@@ -77,7 +79,26 @@
             @change-status="changeStatus"
             @rate="quickRate"
             @navigate="visible = false"
-          />
+          >
+            <template #cover>
+              <span
+                class="mini-cover"
+                aria-hidden="true"
+              >
+                <img
+                  v-if="!coverMissing"
+                  :src="displayCoverUrl"
+                  alt=""
+                  @error="onCoverError"
+                />
+                <GeneratedCover
+                  v-else
+                  :title="book.title"
+                  :author="book.authors"
+                />
+              </span>
+            </template>
+          </BookView>
 
           <BookCommunity
             v-if="!isReadOnly && !loading && !loadFailed"
@@ -96,9 +117,11 @@
               @click="deleteBook"
             />
             <AppButton
+              v-tooltip.top="t('bookDialog.editShortcut')"
               :label="t('bookDialog.editShort')"
               icon="pi pi-pencil"
               class="btn-outlined btn-secondary btn-sm footer-edit"
+              aria-keyshortcuts="E"
               @click="editMode"
             />
           </div>
@@ -301,11 +324,49 @@ watch([visible, () => book.value.title], ([open, title]) => {
   setOverlayTitle(open && title ? title : '')
 })
 
+/**
+ * Atalhos com o livro aberto: E edita; Esc na edição volta para a
+ * visualização (fora dela, o próprio <dialog> fecha). Só vale se este for o
+ * diálogo de cima (uma confirmação aberta por cima tem a vez) e não se a
+ * pessoa estiver digitando.
+ */
+const shell = ref(null)
+
+function isTyping(target) {
+  return Boolean(target?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'))
+}
+
+function isTopDialog() {
+  const open = document.querySelectorAll('dialog[open]')
+  return open.length > 0 && open[open.length - 1] === shell.value?.closest('dialog')
+}
+
+function onKeydown(event) {
+  if (!visible.value || event.defaultPrevented || !isTopDialog()) return
+  if (event.ctrlKey || event.metaKey || event.altKey) return
+
+  // Esc com uma lista aberta (seletor, menu) fecha só a lista
+  if (event.key === 'Escape' && isEditing.value && !document.querySelector('[popover="auto"]:popover-open')) {
+    event.preventDefault()
+    isEditing.value = false
+    return
+  }
+
+  if ((event.key === 'e' || event.key === 'E') && !isEditing.value && !props.isReadOnly && !isTyping(event.target)) {
+    event.preventDefault()
+    editMode()
+  }
+}
+
 onMounted(() => {
   if (visible.value) loadBookData()
+  window.addEventListener('keydown', onKeydown)
 })
 
-onBeforeUnmount(() => setOverlayTitle(''))
+onBeforeUnmount(() => {
+  setOverlayTitle('')
+  window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <style scoped>
@@ -414,6 +475,10 @@ onBeforeUnmount(() => setOverlayTitle(''))
   border-radius: 8px;
 }
 
+.mini-cover {
+  display: none;
+}
+
 @media (max-width: 768px) {
   /* Celular/tablet em pé: capa compacta em cima e só os detalhes rolam,
      para o botão de fechar e o título ficarem sempre à vista. */
@@ -463,6 +528,37 @@ onBeforeUnmount(() => setOverlayTitle(''))
     width: auto;
     height: 100%;
     max-width: none;
+  }
+}
+
+/* Celular: em vez da faixa de 190px em cima, uma capa pequena ao lado do
+   título; sobra altura para o que importa (status, nota, notas). */
+@media (max-width: 600px) {
+  .cover-section {
+    display: none;
+  }
+
+  .viewing .close-btn {
+    background: transparent;
+    color: inherit;
+  }
+
+  .mini-cover {
+    display: block;
+    flex: none;
+    width: 76px;
+    aspect-ratio: 2 / 3;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg-hover);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  .mini-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 </style>
