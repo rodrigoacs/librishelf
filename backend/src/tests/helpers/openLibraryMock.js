@@ -59,6 +59,54 @@ export const FIXTURES = {
   '/authors/OL7115219A.json': { name: 'Sarah J. Maas', key: '/authors/OL7115219A' }
 }
 
+// /search.json: formato das respostas reais com fields=...,editions,editions.*
+// (o Open Library junta à obra a edição que melhor casa com a busca e o idioma).
+export const SEARCH_FIXTURES = {
+  'dom casmurro': {
+    numFound: 3,
+    start: 0,
+    docs: [
+      {
+        key: '/works/OL1W',
+        title: 'Dom Casmurro',
+        author_name: ['Machado de Assis'],
+        first_publish_year: 1899,
+        cover_i: 111,
+        number_of_pages_median: 256,
+        edition_count: 120,
+        editions: {
+          numFound: 45,
+          start: 0,
+          numFoundExact: true,
+          docs: [{
+            key: '/books/OL10M',
+            title: 'Dom Casmurro',
+            isbn: ['8508099990', '9788508099993'],
+            publisher: ['Ática'],
+            publish_date: ['2008'],
+            cover_i: 222,
+            language: ['por']
+          }]
+        }
+      },
+      // Mesma obra repetida (não aparece duas vezes)
+      { key: '/works/OL1W', title: 'Dom Casmurro', author_name: ['Machado de Assis'] },
+      // Sem edição, autor "de mentira" e ISBN só na obra: fica sem ISBN
+      {
+        key: '/works/OL2W',
+        title: 'Dom Casmurro',
+        subtitle: 'edição comentada',
+        author_name: ['Machado de Assis', 'unknown', 'Machado de Assis'],
+        first_publish_year: 2015,
+        editions: { numFound: 0, start: 0, docs: [] }
+      },
+      // Sem título: ignorado
+      { key: '/works/OL3W', author_name: ['Alguém'] }
+    ]
+  },
+  'livro inexistente': { numFound: 0, start: 0, docs: [] }
+}
+
 // JPEG 1×1 válido (o sharp precisa conseguir ler).
 export const TINY_JPEG = Buffer.from(
   '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=',
@@ -75,9 +123,15 @@ export function createOpenLibraryMock({ down = false } = {}) {
     const { pathname } = new URL(url)
 
     if (url.startsWith('https://covers.openlibrary.org/')) {
-      return pathname === '/b/id/15152634-L.jpg'
+      return pathname === '/b/id/15152634-L.jpg' || pathname === '/b/id/15152634-M.jpg'
         ? new Response(TINY_JPEG, { status: 200, headers: { 'content-type': 'image/jpeg' } })
         : new Response('not found', { status: 404 })
+    }
+
+    if (pathname === '/search.json') {
+      const q = new URL(url).searchParams.get('q')?.toLowerCase()
+      const found = SEARCH_FIXTURES[q] ?? { numFound: 0, start: 0, docs: [] }
+      return new Response(JSON.stringify(found), { status: 200, headers: { 'content-type': 'application/json' } })
     }
 
     const body = FIXTURES[pathname]

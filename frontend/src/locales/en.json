@@ -118,7 +118,7 @@
   "bookForm": {
     "newTitle": "New book",
     "editTitle": "Edit book",
-    "newSubtitle": "Look it up by ISBN or fill it in by hand.",
+    "newSubtitle": "Search by ISBN, camera or title — or fill it in by hand.",
     "isbn": "ISBN",
     "title": "Title",
     "authors": "Authors",
@@ -141,7 +141,7 @@
       "drop": "Drag an image here or click",
       "dropNow": "Drop the image here",
       "hint": "Image up to {mb} MB",
-      "fromIsbn": "Cover found by ISBN"
+      "fromIsbn": "Cover found on Open Library"
     },
     "errors": {
       "titleRequired": "Enter the title.",
@@ -608,6 +608,35 @@
     "error": "Lookup is unavailable right now. Fill in the details by hand or try later.",
     "invalid": "This ISBN isn't valid. Check the digits."
   },
+  "scanner": {
+    "open": "Scan the barcode with the camera",
+    "title": "Scan barcode",
+    "starting": "Opening the camera…",
+    "hint": "Point at the barcode on the back of the book (the one starting with 978 or 979).",
+    "notIsbn": "That code isn't an ISBN. Look for the one starting with 978 or 979.",
+    "retry": "Try again",
+    "typeInstead": "Type the ISBN",
+    "errors": {
+      "denied": "Camera access was denied. Allow the camera for this site in your browser settings and try again.",
+      "noCamera": "No camera found on this device.",
+      "busy": "The camera is being used by another app. Close it and try again.",
+      "reader": "Could not load the barcode reader. Check your connection and try again.",
+      "generic": "Could not open the camera."
+    }
+  },
+  "bookSearch": {
+    "modeLabel": "How to find the book",
+    "byIsbn": "ISBN",
+    "byTitle": "Title or author",
+    "label": "Title or author",
+    "hint": "E.g. Dune, or Frank Herbert. Pick a result to fill in the form.",
+    "searching": "Searching…",
+    "found": "No results | 1 result | {n} results",
+    "empty": "Nothing found for “{q}”. Try other words or fill it in by hand.",
+    "error": "Search is unavailable right now. Try again or fill it in by hand.",
+    "noIsbn": "no ISBN",
+    "source": "Results from Open Library"
+  },
   "community": {
     "book_title": "Community",
     "load_error": "Couldn't load the community.",
@@ -930,7 +959,10 @@
       "isPublic": "public library",
       "showInCommunity": "community",
       "showActivity": "activity"
-    }
+    },
+    "OPENLIBRARY_UNAVAILABLE": "Open Library is unavailable right now. Try again later.",
+    "SEARCH_QUERY_INVALID": "Type {min} to {max} characters to search.",
+    "RATE_LIMIT_SEARCH": "Too many searches in a short time. Wait a minute."
   },
   "block": {
     "block": "Block {name}",

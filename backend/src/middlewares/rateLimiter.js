@@ -60,6 +60,26 @@ const publicLimiter = buildLimiter({
   code: 'RATE_LIMIT'
 })
 
+// Busca por título no Novo livro: o frontend já espera a pessoa parar de
+// digitar, mas cada busca nova é uma chamada ao Open Library.
+const bookSearchLimiter = buildLimiter({
+  windowMs: 60 * 1000,
+  max: 20,
+  perUser: true,
+  message: 'Muitas buscas em pouco tempo. Aguarde um minuto.',
+  code: 'RATE_LIMIT_SEARCH'
+})
+
+// Capas do Open Library pelo proxy (miniaturas da busca e a capa do ISBN).
+// Capa por ID não tem limite lá; aqui é só contra abuso.
+const coverProxyLimiter = buildLimiter({
+  windowMs: 60 * 1000,
+  max: 150,
+  perUser: true,
+  message: 'Muitas requisições. Tente novamente em instantes.',
+  code: 'RATE_LIMIT'
+})
+
 // Trecho de <head> das bibliotecas públicas, pedido pelo nginx a cada
 // abertura de /u/<usuário>. Generoso: em 429 o nginx cai no noindex padrão.
 const metaLimiter = buildLimiter({
@@ -103,4 +123,4 @@ const tokenLimiter = buildLimiter({
   code: 'RATE_LIMIT_ATTEMPTS'
 })
 
-export { mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, metaLimiter, isbnLimiter, socialLimiter }
+export { mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, metaLimiter, isbnLimiter, bookSearchLimiter, coverProxyLimiter, socialLimiter }

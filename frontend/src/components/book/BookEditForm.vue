@@ -22,7 +22,37 @@
       </aside>
 
       <div class="fields-column">
+        <!-- Novo livro: achar os dados pelo ISBN (digitado ou lido pela câmera) ou pelo título -->
         <div
+          v-if="isCreate"
+          class="finder-tabs"
+          role="group"
+          :aria-label="t('bookSearch.modeLabel')"
+        >
+          <PillButton
+            icon="pi pi-barcode"
+            :label="t('bookSearch.byIsbn')"
+            :active="findMode === 'isbn'"
+            @click="setFindMode('isbn')"
+          />
+          <PillButton
+            icon="pi pi-search"
+            :label="t('bookSearch.byTitle')"
+            :active="findMode === 'title'"
+            @click="setFindMode('title')"
+          />
+        </div>
+
+        <BookSearch
+          v-if="isCreate && findMode === 'title'"
+          ref="bookSearch"
+          :id-prefix="idPrefix"
+          :initial-query="form.title"
+          @select="applySearchResult"
+        />
+
+        <div
+          v-else
           class="isbn-row"
           :class="{ single: !isCreate }"
         >
@@ -35,8 +65,22 @@
             :error="errors.isbn"
             :hint="isCreate ? lookupMessage : ''"
             hint-live
-            :input-attrs="isCreate ? { onKeydown: onIsbnKeydown } : {}"
-          />
+            :input-attrs="isCreate ? { onKeydown: onIsbnKeydown, enterkeyhint: 'search' } : {}"
+          >
+            <template
+              v-if="isCreate && canScan"
+              #suffix
+            >
+              <span class="scan-btn">
+                <IconButton
+                  icon="pi pi-camera"
+                  :label="t('scanner.open')"
+                  title
+                  @click="scannerOpen = true"
+                />
+              </span>
+            </template>
+          </TextField>
           <AppButton
             v-if="isCreate"
             type="button"
@@ -48,6 +92,12 @@
             @click="lookupIsbn"
           />
         </div>
+
+        <BarcodeScanner
+          v-if="isCreate && canScan"
+          v-model:visible="scannerOpen"
+          @detected="onScanned"
+        />
 
         <TextField
           :id="`${idPrefix}-title`"
@@ -198,7 +248,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, reactive, ref, watch, onBeforeUnmount } from 'vue'
+import { computed, nextTick, reactive, ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
 import { useToast } from '../../services/toast.js'
@@ -211,6 +261,10 @@ import DateField from '../form/DateField.vue'
 import FieldLabel from '../form/FieldLabel.vue'
 import PillButton from '../form/PillButton.vue'
 import CoverDrop from '../form/CoverDrop.vue'
+import IconButton from '../form/IconButton.vue'
+import BookSearch from './BookSearch.vue'
+import BarcodeScanner from './BarcodeScanner.vue'
+import { hasCamera } from '../../services/barcode.js'
 import { toApiDate } from '../../utils/dates.js'
 import { statusOf, STATUS_OPTIONS, STATUS_ICONS } from '../../utils/readingStatus.js'
 import { validateImageFile, createPreviewHandle } from '../../utils/files.js'
@@ -355,16 +409,19 @@ async function loadSeriesOptions() {
 
 // ---------------------------------------------------------------- ISBN
 
-// As chaves do Open Library só valem para o ISBN buscado; se a pessoa trocar
-// o ISBN depois, elas não são enviadas.
-const lookup = reactive({ isbn: null, olWorkKey: null, olEditionKey: null, coverId: null })
+// As chaves do Open Library só valem para o ISBN com que foram achadas (o
+// buscado, ou o do resultado da busca por título — que pode não ter ISBN);
+// se a pessoa trocar o ISBN depois, elas não são enviadas.
+const lookup = reactive({ active: false, isbn: '', olWorkKey: null, olEditionKey: null, coverId: null })
 const lookingUp = ref(false)
 const lookupState = ref('idle') // idle | found | missing | error
 
 function resetLookup() {
-  Object.assign(lookup, { isbn: null, olWorkKey: null, olEditionKey: null, coverId: null })
+  Object.assign(lookup, { active: false, isbn: '', olWorkKey: null, olEditionKey: null, coverId: null })
   lookupState.value = 'idle'
 }
+
+const lookupMatchesForm = () => lookup.active && lookup.isbn === form.isbn.trim()
 
 const lookupMessage = computed(() => {
   if (lookupState.value === 'found') return t('isbn.found')
@@ -373,9 +430,9 @@ const lookupMessage = computed(() => {
   return t('isbn.hint')
 })
 
-watch(() => form.isbn, value => {
+watch(() => form.isbn, () => {
   delete errors.isbn
-  if (lookup.isbn && value.trim() !== lookup.isbn) resetLookup()
+  if (lookup.active && !lookupMatchesForm()) resetLookup()
 })
 
 function onIsbnKeydown(event) {
@@ -406,6 +463,7 @@ async function lookupIsbn() {
     if (!form.pubdate && found.pubDate) form.pubdate = parseApiDate(found.pubDate)
 
     Object.assign(lookup, {
+      active: true,
       isbn,
       olWorkKey: found.olWorkKey,
       olEditionKey: found.olEditionKey,
@@ -420,6 +478,64 @@ async function lookupIsbn() {
   } finally {
     lookingUp.value = false
   }
+}
+
+// ---------------------------------------------------------------- câmera e título
+
+const findMode = ref('isbn') // isbn | title
+const bookSearch = ref(null)
+const scannerOpen = ref(false)
+const canScan = ref(false)
+
+onMounted(async () => {
+  if (isCreate.value) canScan.value = await hasCamera()
+})
+
+async function setFindMode(mode) {
+  if (findMode.value === mode) return
+  findMode.value = mode
+  await nextTick()
+  if (mode === 'title') bookSearch.value?.focus()
+  else isbnField.value?.focus()
+}
+
+// Erro no ISBN (ex.: já cadastrado) com a busca por título aberta: mostra o campo
+watch(() => errors.isbn, value => {
+  if (value) findMode.value = 'isbn'
+})
+
+function onScanned(isbn) {
+  form.isbn = isbn
+  lookupIsbn()
+}
+
+// Resultado da busca por título: mesma regra do ISBN (só campos vazios)
+async function applySearchResult(item) {
+  if (!form.title.trim() && item.title) form.title = item.title
+  if (form.authorNames.length === 0 && item.authors?.length) form.authorNames = [...item.authors]
+  if (!form.publisher.trim() && item.publisher) form.publisher = item.publisher
+  if (!form.pubdate && item.pubDate) form.pubdate = parseApiDate(item.pubDate)
+  if (!form.isbn.trim() && item.isbn13) form.isbn = item.isbn13
+
+  delete errors.isbn
+  const sameIsbn = (item.isbn13 || '') === form.isbn.trim()
+  if (sameIsbn) {
+    Object.assign(lookup, {
+      active: true,
+      isbn: item.isbn13 || '',
+      olWorkKey: item.olWorkKey,
+      olEditionKey: item.olEditionKey,
+      coverId: selectedFile.value ? null : item.coverId
+    })
+    lookupState.value = 'found'
+  } else {
+    resetLookup()
+    lookupState.value = 'found'
+  }
+
+  findMode.value = 'isbn'
+  await nextTick()
+  isbnField.value?.focus()
 }
 
 // ---------------------------------------------------------------- validação
@@ -548,7 +664,7 @@ async function create() {
   if (String(form.series_index ?? '').trim()) data.append('seriesIndex', String(form.series_index).trim())
   if (form.notes?.trim()) data.append('notes', form.notes)
 
-  if (lookup.isbn && lookup.isbn === form.isbn.trim()) {
+  if (lookupMatchesForm()) {
     if (lookup.olWorkKey) data.append('olWorkKey', lookup.olWorkKey)
     if (lookup.olEditionKey) data.append('olEditionKey', lookup.olEditionKey)
     if (!selectedFile.value && lookup.coverId) data.append('olCoverId', String(lookup.coverId))
@@ -678,6 +794,18 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus() })
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.5rem;
   align-items: start;
+}
+
+.finder-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: -0.35rem;
+}
+
+.scan-btn {
+  display: inline-flex;
+  margin-right: 0.35rem;
 }
 
 .isbn-row.single {

@@ -164,6 +164,22 @@ describe('Busca por ISBN (Open Library)', () => {
     expect((await request(app).get('/isbn/12345').set(auth('ana'))).statusCode).toBe(400)
   })
 
+  it('busca por título: rota antes de /:isbn, com login e validação', async () => {
+    expect((await request(app).get('/isbn/search?q=dom+casmurro')).statusCode).toBe(401)
+    const res = await request(app).get('/isbn/search').query({ q: 'Dom Casmurro', lang: 'pt' }).set(auth('ana'))
+    expect(res.statusCode).toBe(200)
+    expect(res.body.results[0]).toMatchObject({ title: 'Dom Casmurro', isbn13: '9788508099993', olWorkKey: '/works/OL1W' })
+    const short = await request(app).get('/isbn/search?q=a').set(auth('ana'))
+    expect(short.statusCode).toBe(400)
+    expect(short.body.code).toBe('SEARCH_QUERY_INVALID')
+  })
+
+  it('miniatura da capa com ?size=M', async () => {
+    const res = await request(app).get('/isbn/cover/15152634?size=M').set(auth('ana'))
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toMatch(/image\/jpeg/)
+  })
+
   it('serve a capa pelo próprio servidor', async () => {
     const res = await request(app).get('/isbn/cover/15152634').set(auth('ana'))
     expect(res.statusCode).toBe(200)

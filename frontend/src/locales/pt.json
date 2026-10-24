@@ -118,7 +118,7 @@
   "bookForm": {
     "newTitle": "Novo livro",
     "editTitle": "Editar livro",
-    "newSubtitle": "Busque pelo ISBN ou preencha à mão.",
+    "newSubtitle": "Busque pelo ISBN, pela câmera ou pelo título — ou preencha à mão.",
     "isbn": "ISBN",
     "title": "Título",
     "authors": "Autores",
@@ -141,7 +141,7 @@
       "drop": "Arraste uma imagem ou clique",
       "dropNow": "Solte a imagem aqui",
       "hint": "Imagem de até {mb} MB",
-      "fromIsbn": "Capa encontrada pelo ISBN"
+      "fromIsbn": "Capa encontrada no Open Library"
     },
     "errors": {
       "titleRequired": "Informe o título.",
@@ -608,6 +608,35 @@
     "error": "A busca está indisponível agora. Preencha os dados à mão ou tente mais tarde.",
     "invalid": "Este ISBN não é válido. Confira os dígitos."
   },
+  "scanner": {
+    "open": "Ler o código de barras com a câmera",
+    "title": "Ler código de barras",
+    "starting": "Abrindo a câmera…",
+    "hint": "Aponte para o código de barras atrás do livro (o que começa com 978 ou 979).",
+    "notIsbn": "Esse código não é um ISBN. Procure o que começa com 978 ou 979.",
+    "retry": "Tentar de novo",
+    "typeInstead": "Digitar o ISBN",
+    "errors": {
+      "denied": "O acesso à câmera foi negado. Libere a câmera para este site nas configurações do navegador e tente de novo.",
+      "noCamera": "Nenhuma câmera encontrada neste aparelho.",
+      "busy": "A câmera está sendo usada por outro app. Feche-o e tente de novo.",
+      "reader": "Não foi possível carregar o leitor de código de barras. Confira sua conexão e tente de novo.",
+      "generic": "Não foi possível abrir a câmera."
+    }
+  },
+  "bookSearch": {
+    "modeLabel": "Como encontrar o livro",
+    "byIsbn": "ISBN",
+    "byTitle": "Título ou autor",
+    "label": "Título ou autor",
+    "hint": "Ex.: Dom Casmurro, ou Machado de Assis. Escolha um resultado para preencher o formulário.",
+    "searching": "Buscando…",
+    "found": "Nenhum resultado | 1 resultado | {n} resultados",
+    "empty": "Nada encontrado para “{q}”. Tente outras palavras ou preencha à mão.",
+    "error": "A busca está indisponível agora. Tente de novo ou preencha à mão.",
+    "noIsbn": "sem ISBN",
+    "source": "Resultados do Open Library"
+  },
   "community": {
     "book_title": "Comunidade",
     "load_error": "Não foi possível carregar a comunidade.",
@@ -930,7 +959,10 @@
       "isPublic": "biblioteca pública",
       "showInCommunity": "comunidade",
       "showActivity": "atividade"
-    }
+    },
+    "OPENLIBRARY_UNAVAILABLE": "O Open Library está indisponível agora. Tente de novo mais tarde.",
+    "SEARCH_QUERY_INVALID": "Digite de {min} a {max} caracteres para buscar.",
+    "RATE_LIMIT_SEARCH": "Muitas buscas em pouco tempo. Aguarde um minuto."
   },
   "block": {
     "block": "Bloquear {name}",

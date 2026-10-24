@@ -160,8 +160,15 @@ export default {
     return client.get(`/isbn/${enc(isbn)}`)
   },
 
-  isbnCoverUrl(coverId) {
-    return `${API_URL}/isbn/cover/${coverId}`
+  /** size 'M' = miniatura (lista da busca por título). */
+  isbnCoverUrl(coverId, size) {
+    return `${API_URL}/isbn/cover/${coverId}${size === 'M' ? '?size=M' : ''}`
+  },
+
+  /** Busca por título/autor no Open Library → { results, total }. */
+  searchBooks(query, lang, { signal } = {}) {
+    const params = new URLSearchParams({ q: query, lang: lang || 'pt' })
+    return client.get(`/isbn/search?${params}`, { signal })
   },
 
   // --- Comunidade ---
