@@ -1,4 +1,5 @@
 import { API_URL } from '../config/site.js'
+import i18n from '../i18n.js'
 
 // Rotas de auth respondem 401 por credencial errada (login, senha atual
 // incorreta), não por sessão expirada.
@@ -18,7 +19,21 @@ export class ApiError extends Error {
     this.name = 'ApiError'
     this.status = status
     this.body = body
+    this.code = body?.code ?? null
   }
+}
+
+/**
+ * Mensagem no idioma da pessoa: a API manda um código estável (ISBN_TAKEN,
+ * USERNAME_RESERVED...) e, às vezes, parâmetros ({ max: 200 }). Sem tradução
+ * para o código, fica a mensagem que veio do servidor.
+ */
+export function translateApiError(code, params, fallback) {
+  const { t, te } = i18n.global
+  if (!code || !te(`errors.${code}`)) return fallback
+  const values = { ...(params || {}) }
+  if (values.field && te(`errors.fields.${values.field}`)) values.field = t(`errors.fields.${values.field}`)
+  return t(`errors.${code}`, values)
 }
 
 async function parseError(response) {
@@ -26,9 +41,11 @@ async function parseError(response) {
 
   try {
     const json = JSON.parse(text)
-    return new ApiError(json.error || json.message || 'Erro desconhecido', response.status, json)
+    const raw = json.error || json.message || i18n.global.t('errors.UNKNOWN')
+    return new ApiError(translateApiError(json.code, json.params, raw), response.status, json)
   } catch {
-    return new ApiError(text || 'Erro na requisição', response.status, null)
+    const fallback = response.status >= 500 ? i18n.global.t('errors.INTERNAL_ERROR') : i18n.global.t('errors.UNKNOWN')
+    return new ApiError(text && text.length < 200 && !text.startsWith('<') ? text : fallback, response.status, null)
   }
 }
 
@@ -52,7 +69,14 @@ async function client(endpoint, { body, ...customConfig } = {}) {
     }
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, config)
+  let response
+  try {
+    response = await fetch(`${API_URL}${endpoint}`, config)
+  } catch (error) {
+    // Cancelada de propósito: quem chamou trata. Senão é rede (sem internet, servidor fora).
+    if (error.name === 'AbortError') throw error
+    throw new ApiError(i18n.global.t('errors.NETWORK'), 0, null)
+  }
 
   if (response.status === 401) {
     const isSessionCheck = endpoint === SESSION_ENDPOINT
@@ -60,7 +84,7 @@ async function client(endpoint, { body, ...customConfig } = {}) {
 
     if (!isCredentialCheck) {
       onSessionExpired({ silent: isSessionCheck })
-      throw new ApiError('Sessão expirada. Faça login novamente.', 401, null)
+      throw new ApiError(i18n.global.t('errors.SESSION_EXPIRED'), 401, null)
     }
   }
 

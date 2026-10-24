@@ -5,19 +5,19 @@ const MAX_BYTES = 72
 
 function validatePassword(password) {
   if (typeof password !== 'string' || password.length < MIN_LENGTH) {
-    return { valid: false, reason: `A senha precisa ter pelo menos ${MIN_LENGTH} caracteres.` }
+    return { valid: false, reason: `A senha precisa ter pelo menos ${MIN_LENGTH} caracteres.`, code: 'PASSWORD_TOO_SHORT', params: { min: MIN_LENGTH } }
   }
 
   if (Buffer.byteLength(password, 'utf8') > MAX_BYTES) {
-    return { valid: false, reason: `A senha pode ter no máximo ${MAX_BYTES} bytes.` }
+    return { valid: false, reason: `A senha pode ter no máximo ${MAX_BYTES} bytes.`, code: 'PASSWORD_TOO_LONG', params: { max: MAX_BYTES } }
   }
 
   if (!/[a-zA-Z]/.test(password)) {
-    return { valid: false, reason: 'A senha precisa conter pelo menos uma letra.' }
+    return { valid: false, reason: 'A senha precisa conter pelo menos uma letra.', code: 'PASSWORD_NEEDS_LETTER' }
   }
 
   if (!/[0-9]/.test(password)) {
-    return { valid: false, reason: 'A senha precisa conter pelo menos um número.' }
+    return { valid: false, reason: 'A senha precisa conter pelo menos um número.', code: 'PASSWORD_NEEDS_NUMBER' }
   }
 
   return { valid: true }

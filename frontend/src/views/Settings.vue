@@ -53,6 +53,26 @@
 
           <div
             v-if="isPublic"
+            class="toggle-block"
+          >
+            <div class="toggle-row">
+              <AppSwitch
+                inputId="settings-indexing-toggle"
+                :modelValue="allowIndexing"
+                :disabled="savingVisibility || (!emailVerified && !allowIndexing)"
+                aria-describedby="settings-indexing-help"
+                @update:modelValue="value => savePrivacy('allowIndexing', value)"
+              />
+              <label for="settings-indexing-toggle">{{ t('settings.indexing.toggle') }}</label>
+            </div>
+            <small
+              id="settings-indexing-help"
+              class="toggle-help"
+            >{{ t('settings.indexing.help') }}</small>
+          </div>
+
+          <div
+            v-if="isPublic"
             class="public-link"
           >
             <label for="settings-public-link">{{ t('settings.public.link') }}</label>
@@ -115,6 +135,40 @@
                 id="settings-activity-help"
                 class="toggle-help"
               >{{ t('settings.activity.help') }}</small>
+            </div>
+
+            <!-- Leitores bloqueados: não veem você na comunidade nem pedem para seguir -->
+            <div
+              class="blocked-block"
+              id="settings-blocked"
+              tabindex="-1"
+            >
+              <h3 class="sub-title">{{ t('block.listTitle') }}</h3>
+              <p
+                v-if="blockedUsers.length === 0"
+                class="toggle-help"
+              >{{ t('block.listEmpty') }}</p>
+              <ul
+                v-else
+                class="blocked-list"
+              >
+                <li
+                  v-for="person in blockedUsers"
+                  :key="person.username"
+                >
+                  <ReaderAvatar
+                    :username="person.username"
+                    size="sm"
+                  />
+                  <span class="blocked-name">{{ person.username }}</span>
+                  <AppButton
+                    :label="t('block.unblock')"
+                    class="btn-sm btn-text btn-secondary"
+                    :loading="unblocking === person.username"
+                    @click="unblockUser(person.username)"
+                  />
+                </li>
+              </ul>
             </div>
           </div>
         </section>
@@ -429,7 +483,8 @@
 <script setup>
 import PasswordField from '../components/form/PasswordField.vue'
 import TextField from '../components/form/TextField.vue'
-import { ref, reactive, computed, watch } from 'vue'
+import ReaderAvatar from '../components/ReaderAvatar.vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
@@ -470,6 +525,7 @@ const isPublic = computed(() => Boolean(user.value?.isPublic))
 const emailVerified = computed(() => user.value?.emailVerified !== false)
 const showInCommunity = computed(() => Boolean(user.value?.showInCommunity))
 const showActivity = computed(() => Boolean(user.value?.showActivity))
+const allowIndexing = computed(() => Boolean(user.value?.allowIndexing))
 const publicUrl = computed(() => `${window.location.origin}/u/${encodeURIComponent(user.value?.name || '')}`)
 
 const savingVisibility = ref(false)
@@ -478,7 +534,8 @@ const copied = ref(false)
 const PRIVACY_MESSAGES = {
   isPublic: ['settings.public.on', 'settings.public.off'],
   showInCommunity: ['settings.community.on', 'settings.community.off'],
-  showActivity: ['settings.activity.on', 'settings.activity.off']
+  showActivity: ['settings.activity.on', 'settings.activity.off'],
+  allowIndexing: ['settings.indexing.on', 'settings.indexing.off']
 }
 
 async function savePrivacy(field, value) {
@@ -488,7 +545,8 @@ async function savePrivacy(field, value) {
     updateUser({
       isPublic: result.isPublic,
       showInCommunity: result.showInCommunity,
-      showActivity: result.showActivity
+      showActivity: result.showActivity,
+      allowIndexing: result.allowIndexing
     })
     const [onKey, offKey] = PRIVACY_MESSAGES[field]
     toast.add({ severity: 'success', summary: t('common.success'), detail: result[field] ? t(onKey) : t(offKey), life: 3000 })
@@ -510,6 +568,33 @@ async function copyLink() {
   copied.value = true
   setTimeout(() => { copied.value = false }, 2000)
 }
+
+// --- Bloqueados ---
+const blockedUsers = ref([])
+const unblocking = ref('')
+
+async function loadBlocked() {
+  try {
+    blockedUsers.value = (await api.getBlocked()).blocked
+  } catch {
+    // Lista opcional: se falhar, a seção só fica vazia
+  }
+}
+
+async function unblockUser(username) {
+  unblocking.value = username
+  try {
+    await api.unblock(username)
+    blockedUsers.value = blockedUsers.value.filter(person => person.username !== username)
+    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.unblocked', { name: username }), life: 3000 })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    unblocking.value = ''
+  }
+}
+
+onMounted(loadBlocked)
 
 // --- Senha ---
 // Erros embaixo de cada campo (como no cadastro), em vez de um aviso solto
@@ -832,6 +917,14 @@ async function deleteAccount() {
   gap: 0.4rem;
 }
 
+.blocked-block .toggle-help {
+  padding-left: 0;
+}
+
+.toggle-row + .toggle-block {
+  margin-top: 1rem;
+}
+
 .toggle-help {
   color: var(--text-secondary);
   font-size: var(--fs-sm);
@@ -1081,5 +1174,39 @@ async function deleteAccount() {
   .link-row {
     flex-direction: column;
   }
+}
+.blocked-block {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+
+.blocked-block .sub-title {
+  margin: 0 0 0.5rem;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.blocked-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.blocked-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.blocked-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

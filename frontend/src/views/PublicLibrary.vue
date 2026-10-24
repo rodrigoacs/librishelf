@@ -45,8 +45,17 @@
           </template>
 
           <template v-else-if="viewer">
+            <!-- Bloqueado por mim: só o desbloquear -->
             <AppButton
-              v-if="followStatus === 'accepted'"
+              v-if="viewer.blockedByMe"
+              :label="t('block.unblock')"
+              icon="pi pi-lock-open"
+              class="btn-outlined btn-secondary"
+              :loading="blockBusy"
+              @click="unblock"
+            />
+            <AppButton
+              v-else-if="followStatus === 'accepted'"
               :label="t('profile.following')"
               icon="pi pi-check"
               class="btn-outlined btn-secondary"
@@ -68,6 +77,20 @@
               class="btn-primary"
               :loading="followBusy"
               @click="follow"
+            />
+            <IconButton
+              v-if="!viewer.blockedByMe"
+              icon="pi pi-ellipsis-h"
+              :label="t('block.moreActions')"
+              class="more-btn"
+              aria-haspopup="true"
+              aria-controls="profile-more-menu"
+              @click="event => moreMenu.toggle(event)"
+            />
+            <PopupMenu
+              id="profile-more-menu"
+              ref="moreMenu"
+              :items="moreItems"
             />
           </template>
 
@@ -358,8 +381,12 @@ import BookItem from '../components/BookItem.vue'
 import BookDialog from '../components/BookDialog.vue'
 import StarRating from '../components/StarRating.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
+import IconButton from '../components/form/IconButton.vue'
+import PopupMenu from '../components/ui/PopupMenu.vue'
+import { useConfirm } from '../services/confirm.js'
 import { tagColor, colorFor } from '../utils/tagColors.js'
 import { fromApiDate } from '../utils/dates.js'
+import { setRobots } from '../services/pageTitle.js'
 
 const PAGE_SIZE = 20
 
@@ -411,9 +438,16 @@ async function loadProfile() {
   const requestedFor = username.value
   try {
     const result = await api.getPublicProfile(requestedFor)
-    if (requestedFor === username.value) profile.value = result
+    if (requestedFor === username.value) {
+      profile.value = result
+      // Mesma decisão que o servidor já pôs no HTML (aparecer em buscadores)
+      setRobots(!result?.indexable)
+    }
   } catch {
-    if (requestedFor === username.value) profile.value = null
+    if (requestedFor === username.value) {
+      profile.value = null
+      setRobots(true)
+    }
   }
 }
 
@@ -427,6 +461,57 @@ async function follow() {
     toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
   } finally {
     followBusy.value = false
+  }
+}
+
+// --- Bloquear ---
+const confirm = useConfirm()
+const moreMenu = ref(null)
+const blockBusy = ref(false)
+
+const moreItems = computed(() => [
+  { label: t('block.block', { name: username.value }), icon: 'pi pi-ban', command: askBlock }
+])
+
+function askBlock() {
+  confirm.require({
+    header: t('block.confirmTitle', { name: username.value }),
+    message: t('block.confirmText'),
+    icon: 'pi pi-ban',
+    acceptLabel: t('block.confirmButton'),
+    rejectLabel: t('common.cancel'),
+    acceptClass: 'btn-rounded btn-danger',
+    rejectClass: 'btn-text btn-secondary',
+    accept: block
+  })
+}
+
+async function block() {
+  blockBusy.value = true
+  try {
+    await api.block(username.value)
+    profile.value.viewer.blockedByMe = true
+    profile.value.viewer.followStatus = null
+    profile.value.viewer.commonCount = null
+    profile.value.viewer.commonBooks = []
+    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.blocked', { name: username.value }), life: 4000 })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    blockBusy.value = false
+  }
+}
+
+async function unblock() {
+  blockBusy.value = true
+  try {
+    await api.unblock(username.value)
+    await loadProfile()
+    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.unblocked', { name: username.value }), life: 3000 })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    blockBusy.value = false
   }
 }
 
@@ -881,10 +966,14 @@ watch(username, () => {
     gap: 1rem;
   }
 
-  /* Botão Seguir na largura toda, embaixo do nome */
-  .follow-area,
-  .follow-area .btn {
+  /* Botão Seguir na largura toda, embaixo do nome (o ⋯ fica ao lado) */
+  .follow-area {
     width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .follow-area .btn {
+    flex: 1;
   }
 }
 </style>

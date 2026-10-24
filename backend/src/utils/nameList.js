@@ -57,10 +57,22 @@ export function parseTagList(value) {
   return dedupe(toArray(value).flatMap(item => (typeof item === 'string' ? item.split(',') : [])))
 }
 
-/** Erro de validação (status 400) ou null. */
-export function validateNameList(names, label) {
-  if (names.length > MAX_NAMES) return `No máximo ${MAX_NAMES} ${label}.`
+/**
+ * Erro de validação da lista ou null: { message, code, params } — o código
+ * vai para o cliente traduzir (utils/httpError.js).
+ */
+export function nameListError(names, label) {
+  if (names.length > MAX_NAMES) {
+    return { message: `No máximo ${MAX_NAMES} ${label}.`, code: 'NAMES_TOO_MANY', params: { max: MAX_NAMES } }
+  }
   const tooLong = names.find(name => name.length > MAX_NAME_LENGTH)
-  if (tooLong) return `Nome muito longo em ${label} (máximo ${MAX_NAME_LENGTH} caracteres).`
+  if (tooLong) {
+    return { message: `Nome muito longo em ${label} (máximo ${MAX_NAME_LENGTH} caracteres).`, code: 'NAME_TOO_LONG', params: { max: MAX_NAME_LENGTH } }
+  }
   return null
+}
+
+/** Só a mensagem do erro (ou null). */
+export function validateNameList(names, label) {
+  return nameListError(names, label)?.message ?? null
 }

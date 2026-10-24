@@ -11,7 +11,7 @@ const ISBN_CONSTRAINT = 'idx_books_isbn_user'
 // 23505 (ex.: tag repetida no mesmo livro) aparecia como conflito de ISBN.
 function toIsbnConflictError(err) {
   if (err.code === UNIQUE_VIOLATION && err.constraint === ISBN_CONSTRAINT) {
-    const conflictError = new Error('ISBN already exists for this user.')
+    const conflictError = new Error('Você já tem um livro com este ISBN.')
     conflictError.status = STATUS.CONFLICT
     return conflictError
   }

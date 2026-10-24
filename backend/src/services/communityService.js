@@ -3,6 +3,7 @@ import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import * as socialRepository from '../repositories/socialRepository.js'
 import STATUS from '../utils/statusCodes.js'
+import { httpError } from '../utils/httpError.js'
 
 const MAX_READERS_LISTED = 20
 const FIND_LIMIT = 24
@@ -10,19 +11,13 @@ const RECOMMENDATION_LIMIT = 6
 const ALSO_HAVE_LIMIT = 5
 const COMMON_LIMIT = 24
 
-function httpError(message, status) {
-  const error = new Error(message)
-  error.status = status
-  return error
-}
-
 /**
  * Painel "comunidade" de um livro do próprio usuário: outros leitores
  * (só quem optou por aparecer), nota média deles e "também têm".
  */
 export async function bookCommunity(bookId, userId) {
   const owner = await libraryRepository.getBookOwner(bookId)
-  if (!owner || owner.user_id !== userId) throw httpError('Book not found.', STATUS.NOT_FOUND)
+  if (!owner || owner.user_id !== userId) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
 
   const readers = await communityRepository.readersOfBook(bookId, userId)
   const ratings = readers.map(r => r.rating).filter(r => r !== null)
@@ -55,7 +50,7 @@ export async function bookCommunity(bookId, userId) {
  */
 export async function publicProfile(username, viewerId) {
   const user = await authRepository.getUserByName(username)
-  if (!user || !user.is_public) throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND)
+  if (!user || !user.is_public) throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND, 'LIBRARY_NOT_FOUND')
 
   const stats = await communityRepository.profileStats(user.id)
 
@@ -63,6 +58,7 @@ export async function publicProfile(username, viewerId) {
     username: user.name,
     acceptsFollowers: Boolean(user.show_activity),
     inCommunity: Boolean(user.show_in_community),
+    indexable: Boolean(user.allow_indexing),
     stats: {
       totalBooks: stats.total_books,
       readBooks: stats.read_books,
@@ -80,13 +76,20 @@ export async function publicProfile(username, viewerId) {
     if (viewerId === user.id) {
       profile.viewer = { isOwner: true }
     } else {
-      const common = user.show_in_community
+      const { blockedByMe, blockedMe } = await socialRepository.blockState(viewerId, user.id)
+      const blocked = blockedByMe || blockedMe
+      const common = user.show_in_community && !blocked
         ? await communityRepository.commonBooks(viewerId, user.id, COMMON_LIMIT)
         : null
 
+      // Quem foi bloqueado vê o perfil como qualquer visitante (é público),
+      // mas sem "seguir" nem livros em comum. Não é avisado do bloqueio.
+      if (blockedMe) profile.acceptsFollowers = false
+
       profile.viewer = {
         isOwner: false,
-        followStatus: await socialRepository.followStatus(viewerId, user.id),
+        followStatus: blocked ? null : await socialRepository.followStatus(viewerId, user.id),
+        blockedByMe,
         commonCount: common ? common.total : null,
         commonBooks: common ? common.books : []
       }
@@ -130,8 +133,8 @@ export async function recommendations(userId) {
 /** Copia um livro da comunidade para a estante de quem pediu, como "Quero ler". */
 export async function addToWantList(sourceId, userId) {
   const source = await communityRepository.sourceBook(sourceId, userId)
-  if (!source) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND)
-  if (source.already_have) throw httpError('Este livro já está na sua estante.', STATUS.CONFLICT)
+  if (!source) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
+  if (source.already_have) throw httpError('Este livro já está na sua estante.', STATUS.CONFLICT, 'BOOK_ALREADY_ON_SHELF')
 
   const bookId = await libraryRepository.createBook({
     title: source.title,

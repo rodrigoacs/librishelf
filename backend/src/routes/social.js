@@ -25,6 +25,30 @@ router.get('/connections', async (req, res) => {
   }
 })
 
+router.get('/blocks', async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await socialService.blockedUsers(req.user.id))
+  } catch (error) {
+    sendError(res, error, 'Erro ao listar bloqueados')
+  }
+})
+
+router.post('/blocks/:username', socialLimiter, async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await socialService.blockUser(req.user.id, req.params.username))
+  } catch (error) {
+    sendError(res, error, 'Erro ao bloquear')
+  }
+})
+
+router.delete('/blocks/:username', socialLimiter, async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await socialService.unblockUser(req.user.id, req.params.username))
+  } catch (error) {
+    sendError(res, error, 'Erro ao desbloquear')
+  }
+})
+
 router.get('/requests/count', async (req, res) => {
   try {
     res.status(STATUS.OK).json(await socialService.pendingCount(req.user.id))

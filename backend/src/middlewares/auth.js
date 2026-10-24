@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { AUTH_COOKIE_NAME } from '../config/cookieOptions.js'
+import { errorBody } from '../utils/httpError.js'
 import STATUS from '../utils/statusCodes.js'
 import * as authRepository from '../repositories/authRepository.js'
 
@@ -24,22 +25,24 @@ function extractToken(req) {
  */
 export async function resolveSession(req) {
   const token = extractToken(req)
-  if (!token) return { error: 'Token is required or invalid format' }
+  if (!token) return { error: 'Faça login para continuar.', code: 'AUTH_REQUIRED' }
 
   let decoded
   try {
     decoded = jwt.verify(token, SECRET_KEY)
   } catch (err) {
-    return { error: err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token' }
+    return err.name === 'TokenExpiredError'
+      ? { error: 'Sua sessão expirou. Entre de novo.', code: 'SESSION_EXPIRED' }
+      : { error: 'Sessão inválida. Entre de novo.', code: 'SESSION_INVALID' }
   }
 
   const session = await authRepository.getSessionById(decoded.id)
-  if (!session) return { error: 'Session no longer valid' }
+  if (!session) return { error: 'Sua sessão foi encerrada. Entre de novo.', code: 'SESSION_REVOKED' }
 
   if (session.password_changed_at) {
     // iat tem resolução de segundos; compara no mesmo grão.
     const changedAtSeconds = Math.floor(new Date(session.password_changed_at).getTime() / 1000)
-    if (decoded.iat < changedAtSeconds) return { error: 'Session no longer valid' }
+    if (decoded.iat < changedAtSeconds) return { error: 'Sua sessão foi encerrada. Entre de novo.', code: 'SESSION_REVOKED' }
   }
 
   return { user: decoded }
@@ -48,8 +51,8 @@ export async function resolveSession(req) {
 /** Exige sessão válida: 401 caso contrário (403 fica para "sem permissão"). */
 export async function authenticateToken(req, res, next) {
   try {
-    const { user, error } = await resolveSession(req)
-    if (!user) return res.status(STATUS.UNAUTHORIZED).json({ error })
+    const { user, error, code } = await resolveSession(req)
+    if (!user) return res.status(STATUS.UNAUTHORIZED).json(errorBody(error, code))
     req.user = user
     next()
   } catch (err) {

@@ -1,5 +1,6 @@
 import STATUS from './statusCodes.js'
 import logger from './logger.js'
+import { errorBody } from './httpError.js'
 
 const GENERIC_MESSAGE = 'Erro interno do servidor.'
 
@@ -12,7 +13,9 @@ function sendError(res, error, context) {
     logger.error(context || 'Erro não tratado', { message: error.message, stack: error.stack })
   }
 
-  return res.status(status).json({ error: message })
+  return res.status(status).json(isControlled
+    ? errorBody(message, error.errorCode, error.params)
+    : errorBody(message))
 }
 
 export default sendError

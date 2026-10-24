@@ -6,17 +6,12 @@ import { csvToObjects, toCsv } from '../utils/csv.js'
 import { normalizeIsbn13 } from '../utils/isbn.js'
 import STATUS from '../utils/statusCodes.js'
 import logger from '../utils/logger.js'
+import { httpError } from '../utils/httpError.js'
 
 /**
  * Seus dados: exportar tudo (JSON ou CSV) e importar livros de um CSV — do
  * Goodreads ou o próprio CSV exportado pelo Librishelf.
  */
-
-function httpError(message, status) {
-  const error = new Error(message)
-  error.status = status
-  return error
-}
 
 // ---------------------------------------------------------------------------
 // Exportar
@@ -37,7 +32,7 @@ async function loadExport(userId) {
     db.query(q.EXPORT_GOALS, [userId]),
     db.query(q.EXPORT_BOOKS, [userId])
   ])
-  if (!user.rows[0]) throw httpError('User not found.', STATUS.NOT_FOUND)
+  if (!user.rows[0]) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
   return { user: user.rows[0], goals: goals.rows, books: books.rows }
 }
 
@@ -54,7 +49,8 @@ export async function exportJson(userId) {
       createdAt: user.created_at,
       isPublic: user.is_public,
       showInCommunity: user.show_in_community,
-      showActivity: user.show_activity
+      showActivity: user.show_activity,
+      allowIndexing: user.allow_indexing
     },
     readingGoals: goals,
     books: books.map(book => ({
@@ -217,16 +213,16 @@ const keyOf = (title, author) => `${String(title).toLocaleLowerCase()}\u0000${St
  * título + primeiro autor) e devolve o resumo com o motivo de cada linha pulada.
  */
 export async function importCsv(userId, buffer) {
-  if (!buffer?.length) throw httpError('Envie o arquivo CSV.', STATUS.BAD_REQUEST)
+  if (!buffer?.length) throw httpError('Envie o arquivo CSV.', STATUS.BAD_REQUEST, 'CSV_REQUIRED')
 
   const { headers, records } = csvToObjects(buffer.toString('utf8'))
   const format = detectFormat(headers)
   if (!format) {
-    throw httpError('Formato não reconhecido: envie o CSV exportado do Goodreads ou do Librishelf.', STATUS.BAD_REQUEST)
+    throw httpError('Formato não reconhecido: envie o CSV exportado do Goodreads ou do Librishelf.', STATUS.BAD_REQUEST, 'CSV_FORMAT')
   }
-  if (records.length === 0) throw httpError('O arquivo não tem nenhum livro.', STATUS.BAD_REQUEST)
+  if (records.length === 0) throw httpError('O arquivo não tem nenhum livro.', STATUS.BAD_REQUEST, 'CSV_EMPTY')
   if (records.length > MAX_IMPORT_ROWS) {
-    throw httpError(`O arquivo tem ${records.length} livros; o limite por importação é ${MAX_IMPORT_ROWS}.`, STATUS.BAD_REQUEST)
+    throw httpError(`O arquivo tem ${records.length} livros; o limite por importação é ${MAX_IMPORT_ROWS}.`, STATUS.BAD_REQUEST, 'CSV_TOO_MANY', { count: records.length, max: MAX_IMPORT_ROWS })
   }
 
   const { rows: existing } = await db.query(q.EXISTING_KEYS, [userId])

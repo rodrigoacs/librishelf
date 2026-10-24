@@ -1,6 +1,7 @@
 import { db } from '../database/connection.js'
 import STATUS from '../utils/statusCodes.js'
-import { parseNameList, parseTagList, validateNameList } from '../utils/nameList.js'
+import { parseNameList, parseTagList, nameListError } from '../utils/nameList.js'
+import { httpError } from '../utils/httpError.js'
 
 /**
  * Renomear e mesclar autores, editoras e categorias (sempre do próprio usuário).
@@ -15,12 +16,6 @@ const KINDS = {
   author: { table: 'authors', link: 'books_authors_link', column: 'author_id', label: 'autores', parse: parseNameList },
   tag: { table: 'tags', link: 'books_tags_link', column: 'tag_id', label: 'tags', parse: parseTagList },
   publisher: { table: 'publishers', label: 'editoras', parse: parseNameList }
-}
-
-function httpError(message, status) {
-  const error = new Error(message)
-  error.status = status
-  return error
 }
 
 async function moveBooks(client, kind, fromId, toId, userId) {
@@ -50,10 +45,10 @@ export async function mergeNames(kind, userId, body = {}) {
   const [to] = config.parse(body.to)
 
   if (from.length === 0 || !to) {
-    throw httpError('Informe os nomes de origem (from) e o nome final (to).', STATUS.BAD_REQUEST)
+    throw httpError('Informe os nomes de origem (from) e o nome final (to).', STATUS.BAD_REQUEST, 'MERGE_FIELDS_REQUIRED')
   }
-  const listError = validateNameList(from, config.label) || validateNameList([to], config.label)
-  if (listError) throw httpError(listError, STATUS.BAD_REQUEST)
+  const listError = nameListError(from, config.label) || nameListError([to], config.label)
+  if (listError) throw httpError(listError.message, STATUS.BAD_REQUEST, listError.code, listError.params)
 
   const client = await db.connect()
   try {
@@ -65,7 +60,7 @@ export async function mergeNames(kind, userId, body = {}) {
       [userId, from.map(name => name.toLocaleLowerCase())]
     )
     if (sources.length !== from.length) {
-      throw httpError('Algum dos nomes não existe na sua biblioteca.', STATUS.NOT_FOUND)
+      throw httpError('Algum dos nomes não existe na sua biblioteca.', STATUS.NOT_FOUND, 'NAMES_NOT_FOUND')
     }
 
     const { rows: [existing] } = await client.query(

@@ -1,5 +1,6 @@
 import logger from '../utils/logger.js'
 import STATUS from '../utils/statusCodes.js'
+import { errorBody } from '../utils/httpError.js'
 
 const GENERIC_MESSAGE = 'Erro interno do servidor.'
 
@@ -24,6 +25,8 @@ export default (err, req, res, next) => {
 
   res.status(statusCode).json({
     status: 'error',
-    error: isControlled ? err.message : GENERIC_MESSAGE
+    ...(isControlled
+      ? errorBody(err.message, err.errorCode, err.params)
+      : errorBody(GENERIC_MESSAGE))
   })
 }

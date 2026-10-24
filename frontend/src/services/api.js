@@ -207,6 +207,18 @@ export default {
     return client.delete(`/social/follow/${enc(username)}`)
   },
 
+  getBlocked() {
+    return client.get('/social/blocks')
+  },
+
+  block(username) {
+    return client.post(`/social/blocks/${enc(username)}`)
+  },
+
+  unblock(username) {
+    return client.delete(`/social/blocks/${enc(username)}`)
+  },
+
   acceptRequest(username) {
     return client.post(`/social/requests/${enc(username)}/accept`)
   },

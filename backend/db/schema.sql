@@ -1247,3 +1247,37 @@ CREATE INDEX IF NOT EXISTS idx_books_user_series
 INSERT INTO librishelf.schema_migrations (version)
 VALUES ('006_series_and_notes')
 ON CONFLICT (version) DO NOTHING;
+
+-- ===========================================================================
+-- 007 — bloquear leitores
+-- ===========================================================================
+--
+-- Quem bloqueia some para o bloqueado (e vice-versa) na comunidade: "quem tem
+-- este livro", busca de leitores, recomendações e pedidos para seguir. Ao
+-- bloquear, os vínculos de seguir entre os dois são apagados.
+CREATE TABLE IF NOT EXISTS librishelf.blocks (
+  blocker_id integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  blocked_id integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  PRIMARY KEY (blocker_id, blocked_id),
+  CONSTRAINT blocks_not_self CHECK (blocker_id <> blocked_id)
+);
+
+-- A checagem é nos dois sentidos: o índice cobre a busca por quem foi bloqueado.
+CREATE INDEX IF NOT EXISTS idx_blocks_blocked ON librishelf.blocks (blocked_id, blocker_id);
+
+INSERT INTO librishelf.schema_migrations (version)
+VALUES ('007_blocks')
+ON CONFLICT (version) DO NOTHING;
+
+-- ===========================================================================
+-- 008 — aparecer em buscadores
+-- ===========================================================================
+--
+-- Bibliotecas públicas ficam fora dos buscadores (noindex) a menos que o dono
+-- ligue esta opção na Conta. Só vale enquanto a biblioteca for pública.
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS allow_indexing boolean NOT NULL DEFAULT false;
+
+INSERT INTO librishelf.schema_migrations (version)
+VALUES ('008_search_indexing')
+ON CONFLICT (version) DO NOTHING;

@@ -1,6 +1,5 @@
 import { ref, computed } from 'vue'
 import api from './api.js'
-import { setSessionExpiredHandler } from './fetchClient.js'
 
 /**
  * Estado da sessão em memória. O cookie httpOnly é a fonte da verdade; aqui só
@@ -54,17 +53,3 @@ export async function loadSession({ force = false } = {}) {
 export function updateUser(patch) {
   if (user.value) user.value = { ...user.value, ...patch }
 }
-
-// 401 em qualquer chamada autenticada: limpa a sessão e manda para o login,
-// guardando onde a pessoa estava. Import dinâmico evita ciclo com o router.
-setSessionExpiredHandler(async ({ silent }) => {
-  clearSession()
-  if (silent) return
-
-  const { default: router } = await import('../router/index.js')
-  const current = router.currentRoute.value
-
-  if (current.meta.requiresAuth) {
-    router.replace({ name: 'login', query: { redirect: current.fullPath } })
-  }
-})

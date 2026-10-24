@@ -24,11 +24,33 @@ function render() {
   document.title = [overlay, routeTitle(currentRoute), APP_NAME].filter(Boolean).join(' · ')
 }
 
+/**
+ * <meta name="robots" content="noindex"> nas rotas com meta.noindex.
+ *
+ * meta.noindex === 'server': quem decide é o servidor (o nginx injeta a tag
+ * no index.html de /u/<usuário> conforme a opção "aparecer em buscadores").
+ * A troca de rota não mexe na tag; a página chama setRobots() quando souber.
+ */
+export function setRobots(noindex) {
+  let tag = document.head.querySelector('meta[name="robots"]')
+  if (!noindex) {
+    tag?.remove()
+    return
+  }
+  if (!tag) {
+    tag = document.createElement('meta')
+    tag.name = 'robots'
+    document.head.appendChild(tag)
+  }
+  tag.content = 'noindex, nofollow'
+}
+
 /** Chamado pelo router.afterEach. */
 export function setRouteTitle(route) {
   currentRoute = route
   overlay = ''
   render()
+  if (route?.meta?.noindex !== 'server') setRobots(Boolean(route?.meta?.noindex))
 }
 
 /** Algo aberto por cima da página (o livro); '' tira. */

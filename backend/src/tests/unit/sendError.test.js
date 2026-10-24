@@ -27,13 +27,13 @@ describe('sendError', () => {
 
   it('erro controlado (com .status): usa o status e a mensagem originais, sem logar', () => {
     const res = buildRes()
-    const error = new Error('Permission denied.')
+    const error = new Error('Sem permissão.')
     error.status = STATUS.FORBIDDEN
 
     sendError(res, error, 'Erro ao deletar livro')
 
     expect(res.status).toHaveBeenCalledWith(STATUS.FORBIDDEN)
-    expect(res.json).toHaveBeenCalledWith({ error: 'Permission denied.' })
+    expect(res.json).toHaveBeenCalledWith({ error: 'Sem permissão.' })
     expect(consoleErrorSpy).not.toHaveBeenCalled()
   })
 

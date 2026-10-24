@@ -12,6 +12,7 @@ import isbnRoutes from './routes/isbn.js'
 import communityRoutes from './routes/community.js'
 import socialRoutes from './routes/social.js'
 import uploadsRoutes from './routes/uploads.js'
+import metaRoutes from './routes/meta.js'
 import errorHandler from './middlewares/errorHandler.js'
 import corsOptions from './config/corsOptions.js'
 import trustProxy from './config/trustProxy.js'
@@ -37,6 +38,7 @@ app.use('/dashboard', dashboardRoutes)
 app.use('/isbn', isbnRoutes)
 app.use('/community', communityRoutes)
 app.use('/social', socialRoutes)
+app.use('/meta', metaRoutes)
 app.get('/ping', (req, res) => { res.json({ message: 'pong' }) })
 
 app.use(errorHandler)

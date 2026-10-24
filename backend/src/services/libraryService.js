@@ -3,15 +3,10 @@ import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { deleteBookCover } from '../utils/imageProcessor.js'
 import logger from '../utils/logger.js'
-import { parseNameList, parseTagList, validateNameList } from '../utils/nameList.js'
+import { parseNameList, parseTagList, nameListError } from '../utils/nameList.js'
+import { httpError } from '../utils/httpError.js'
 
 const READ_YEAR_PATTERN = /^\d{4}$/
-
-function httpError(message, status) {
-  const error = new Error(message)
-  error.status = status
-  return error
-}
 
 function normalizeIsbn(isbn) {
   if (typeof isbn !== 'string') return isbn ?? null
@@ -29,7 +24,7 @@ function normalizeDate(value, fieldName) {
   const parsed = new Date(value)
 
   if (Number.isNaN(parsed.getTime())) {
-    throw httpError(`Data inválida em '${fieldName}'.`, STATUS.BAD_REQUEST)
+    throw httpError(`Data inválida em '${fieldName}'.`, STATUS.BAD_REQUEST, 'DATE_INVALID', { field: fieldName })
   }
 
   return parsed.toISOString().split('T')[0]
@@ -44,7 +39,7 @@ function normalizeReadDate(value) {
   if (!date) return date
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   if (date > tomorrow) {
-    throw httpError('A data de leitura não pode estar no futuro.', STATUS.BAD_REQUEST)
+    throw httpError('A data de leitura não pode estar no futuro.', STATUS.BAD_REQUEST, 'READ_DATE_FUTURE')
   }
   return date
 }
@@ -55,7 +50,7 @@ export const READING_STATUSES = ['none', 'want', 'reading', 'read']
 function normalizeReadState(value) {
   if (value === undefined || value === null || value === '') return 'all'
   if (!READ_STATES.includes(String(value))) {
-    throw httpError("Parâmetro 'readState' inválido.", STATUS.BAD_REQUEST)
+    throw httpError("Parâmetro 'readState' inválido.", STATUS.BAD_REQUEST, 'PARAM_INVALID', { param: 'readState' })
   }
   return String(value)
 }
@@ -64,7 +59,7 @@ function normalizeReadMonth(value) {
   if (value === undefined || value === null || value === '') return undefined
   const month = Number(value)
   if (!Number.isInteger(month) || month < 1 || month > 12) {
-    throw httpError("Parâmetro 'readMonth' inválido: use um número de 1 a 12.", STATUS.BAD_REQUEST)
+    throw httpError("Parâmetro 'readMonth' inválido: use um número de 1 a 12.", STATUS.BAD_REQUEST, 'PARAM_INVALID', { param: 'readMonth' })
   }
   return month
 }
@@ -74,10 +69,10 @@ const MAX_NOTES_LENGTH = 5000
 
 function normalizeSeries(value) {
   if (value === undefined || value === null) return null
-  if (typeof value !== 'string') throw httpError("'series' precisa ser texto.", STATUS.BAD_REQUEST)
+  if (typeof value !== 'string') throw httpError("'series' precisa ser texto.", STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: 'series' })
   const series = value.trim().replace(/\s+/g, ' ')
   if (series.length > MAX_SERIES_LENGTH) {
-    throw httpError(`O nome da série pode ter até ${MAX_SERIES_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
+    throw httpError(`O nome da série pode ter até ${MAX_SERIES_LENGTH} caracteres.`, STATUS.BAD_REQUEST, 'SERIES_TOO_LONG', { max: MAX_SERIES_LENGTH })
   }
   return series || null
 }
@@ -87,17 +82,17 @@ function normalizeSeriesIndex(value) {
   if (value === undefined || value === null || value === '') return null
   const number = Number(String(value).replace(',', '.'))
   if (!Number.isFinite(number) || number < 0 || number > 9999) {
-    throw httpError('O volume precisa ser um número de 0 a 9999.', STATUS.BAD_REQUEST)
+    throw httpError('O volume precisa ser um número de 0 a 9999.', STATUS.BAD_REQUEST, 'VOLUME_INVALID')
   }
   return Math.round(number * 100) / 100
 }
 
 function normalizeNotes(value) {
   if (value === undefined || value === null) return null
-  if (typeof value !== 'string') throw httpError("'notes' precisa ser texto.", STATUS.BAD_REQUEST)
+  if (typeof value !== 'string') throw httpError("'notes' precisa ser texto.", STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: 'notes' })
   const notes = value.replace(/\r\n/g, '\n').trim()
   if (notes.length > MAX_NOTES_LENGTH) {
-    throw httpError(`A anotação pode ter até ${MAX_NOTES_LENGTH} caracteres.`, STATUS.BAD_REQUEST)
+    throw httpError(`A anotação pode ter até ${MAX_NOTES_LENGTH} caracteres.`, STATUS.BAD_REQUEST, 'NOTES_TOO_LONG', { max: MAX_NOTES_LENGTH })
   }
   return notes || null
 }
@@ -106,7 +101,7 @@ function normalizeReadYear(readYear) {
   if (readYear === undefined || readYear === null || readYear === '' || readYear === 'all') return 'all'
 
   if (!READ_YEAR_PATTERN.test(String(readYear))) {
-    throw httpError("Parâmetro 'readYear' inválido: use um ano com 4 dígitos.", STATUS.BAD_REQUEST)
+    throw httpError("Parâmetro 'readYear' inválido: use um ano com 4 dígitos.", STATUS.BAD_REQUEST, 'PARAM_INVALID', { param: 'readYear' })
   }
 
   return String(readYear)
@@ -117,7 +112,7 @@ async function getPublicLibraryByUsername(username, query) {
 
   // Biblioteca privada responde igual a usuário inexistente: não confirma que a conta existe.
   if (!user || !user.is_public) {
-    throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND)
+    throw httpError('Biblioteca não encontrada.', STATUS.NOT_FOUND, 'LIBRARY_NOT_FOUND')
   }
 
   const booksData = await getAllBooksByUser(user.id, query)
@@ -168,9 +163,11 @@ async function getRandomPublicBookIds(limit) {
   return await libraryRepository.getRandomPublicBookIds(limit)
 }
 
+const FIELD_LABELS = { Title: 'título' }
+
 function requireText(value, fieldName) {
   if (typeof value !== 'string' || !value.trim()) {
-    throw httpError(`${fieldName} is required.`, STATUS.BAD_REQUEST)
+    throw httpError(`Informe o campo ${FIELD_LABELS[fieldName] || fieldName}.`, STATUS.BAD_REQUEST, 'FIELD_REQUIRED', { field: fieldName.toLowerCase() })
   }
   return value.trim()
 }
@@ -190,7 +187,7 @@ function normalizeRating(value) {
   if (value === undefined || value === null || value === '' || value === 'null') return null
   const rating = Number(value)
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    throw httpError('A nota precisa ser um número inteiro de 1 a 5.', STATUS.BAD_REQUEST)
+    throw httpError('A nota precisa ser um número inteiro de 1 a 5.', STATUS.BAD_REQUEST, 'RATING_INVALID')
   }
   return rating
 }
@@ -198,19 +195,19 @@ function normalizeRating(value) {
 function normalizeOlKey(value, pattern, field) {
   if (value === undefined || value === null || value === '') return null
   if (typeof value !== 'string' || !pattern.test(value)) {
-    throw httpError(`Campo '${field}' inválido.`, STATUS.BAD_REQUEST)
+    throw httpError(`Campo '${field}' inválido.`, STATUS.BAD_REQUEST, 'FIELD_INVALID', { field })
   }
   return value
 }
 
 function normalizeBookInput(raw = {}) {
   const authors = parseNameList(raw.authors)
-  if (authors.length === 0) throw httpError('Authors is required.', STATUS.BAD_REQUEST)
+  if (authors.length === 0) throw httpError('Informe pelo menos um autor.', STATUS.BAD_REQUEST, 'AUTHORS_REQUIRED')
 
   const tags = parseTagList(raw.tags)
 
-  const listError = validateNameList(authors, 'autores') || validateNameList(tags, 'tags')
-  if (listError) throw httpError(listError, STATUS.BAD_REQUEST)
+  const listError = nameListError(authors, 'autores') || nameListError(tags, 'tags')
+  if (listError) throw httpError(listError.message, STATUS.BAD_REQUEST, listError.code, listError.params)
 
   const publisher = typeof raw.publisher === 'string' ? raw.publisher.trim() : ''
 
@@ -240,7 +237,7 @@ async function addNewBook(bookData) {
     const existingBook = await libraryRepository.findBookByIsbn(bookData.isbn, bookData.user_id)
 
     if (existingBook) {
-      throw httpError('ISBN already exists for this user.', STATUS.CONFLICT)
+      throw httpError('Você já tem um livro com este ISBN.', STATUS.CONFLICT, 'ISBN_TAKEN')
     }
   }
 
@@ -281,11 +278,11 @@ async function checkBookOwnership(bookId, userId) {
   const bookOwner = await libraryRepository.getBookOwner(bookId)
 
   if (!bookOwner) {
-    throw httpError('Book not found.', STATUS.NOT_FOUND)
+    throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
   }
 
   if (bookOwner.user_id !== userId) {
-    throw httpError('Permission denied.', STATUS.FORBIDDEN)
+    throw httpError('Sem permissão.', STATUS.FORBIDDEN, 'PERMISSION_DENIED')
   }
 
   return true
@@ -335,7 +332,7 @@ async function setReadingStatus(bookId, userId, rawStatus, rawDate) {
   const status = String(rawStatus ?? '')
 
   if (!READING_STATUSES.includes(status)) {
-    throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST)
+    throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST, 'STATUS_INVALID')
   }
 
   if (status === 'read') {
@@ -382,23 +379,23 @@ const BATCH_ACTIONS = ['status', 'addTag', 'removeTag', 'delete']
 async function batchUpdate(userId, body = {}) {
   const { action } = body
   if (!BATCH_ACTIONS.includes(action)) {
-    throw httpError("Ação inválida: use 'status', 'addTag', 'removeTag' ou 'delete'.", STATUS.BAD_REQUEST)
+    throw httpError("Ação inválida: use 'status', 'addTag', 'removeTag' ou 'delete'.", STATUS.BAD_REQUEST, 'BATCH_ACTION_INVALID')
   }
 
   const ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(Number))]
   if (ids.length === 0 || ids.length > MAX_BATCH || !ids.every(id => Number.isInteger(id) && id > 0 && id <= 2147483647)) {
-    throw httpError(`Envie de 1 a ${MAX_BATCH} ids de livros válidos.`, STATUS.BAD_REQUEST)
+    throw httpError(`Envie de 1 a ${MAX_BATCH} ids de livros válidos.`, STATUS.BAD_REQUEST, 'BATCH_IDS_INVALID', { max: MAX_BATCH })
   }
 
   const owned = await libraryRepository.filterOwnedIds(userId, ids)
   if (owned.length !== ids.length) {
-    throw httpError('Alguns livros não foram encontrados na sua biblioteca.', STATUS.FORBIDDEN)
+    throw httpError('Alguns livros não foram encontrados na sua biblioteca.', STATUS.FORBIDDEN, 'BATCH_BOOKS_NOT_FOUND')
   }
 
   if (action === 'status') {
     const status = String(body.status ?? '')
     if (!READING_STATUSES.includes(status)) {
-      throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST)
+      throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST, 'STATUS_INVALID')
     }
     const date = normalizeReadDate(body.date) ?? new Date().toISOString().slice(0, 10)
     return { updated: await libraryRepository.batchSetStatus(ids, status, date) }
@@ -406,8 +403,9 @@ async function batchUpdate(userId, body = {}) {
 
   if (action === 'addTag' || action === 'removeTag') {
     const [tag] = parseTagList(body.tag)
-    const tagError = tag ? validateNameList([tag], 'tags') : 'Informe a categoria.'
-    if (tagError) throw httpError(tagError, STATUS.BAD_REQUEST)
+    if (!tag) throw httpError('Informe a categoria.', STATUS.BAD_REQUEST, 'TAG_REQUIRED')
+    const tagError = nameListError([tag], 'tags')
+    if (tagError) throw httpError(tagError.message, STATUS.BAD_REQUEST, tagError.code, tagError.params)
 
     if (action === 'addTag') {
       return { updated: await libraryRepository.batchAddTag(userId, ids, tag) }

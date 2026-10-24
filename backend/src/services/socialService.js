@@ -1,33 +1,34 @@
 import * as socialRepository from '../repositories/socialRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
+import { httpError } from '../utils/httpError.js'
 
 const FEED_PAGE_SIZE = 30
-
-function httpError(message, status) {
-  const error = new Error(message)
-  error.status = status
-  return error
-}
 
 // Mesmo erro para "não existe" e "não aceita seguidores": não confirma contas.
 const NOT_AVAILABLE = 'Leitor não encontrado ou não aceita seguidores.'
 
 async function findUser(username) {
-  if (typeof username !== 'string' || !username.trim()) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND)
+  if (typeof username !== 'string' || !username.trim()) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND, 'READER_NOT_AVAILABLE')
   const user = await authRepository.getUserByName(username.trim())
-  if (!user) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND)
+  if (!user) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND, 'READER_NOT_AVAILABLE')
   return user
 }
 
 export async function requestFollow(viewerId, username) {
   const target = await findUser(username)
-  if (target.id === viewerId) throw httpError('Você não pode seguir a si mesmo.', STATUS.BAD_REQUEST)
-  if (!target.show_activity) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND)
+  if (target.id === viewerId) throw httpError('Você não pode seguir a si mesmo.', STATUS.BAD_REQUEST, 'FOLLOW_SELF')
+  if (!target.show_activity) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND, 'READER_NOT_AVAILABLE')
+
+  // Bloqueado por ele: mesma resposta de "não aceita seguidores" (não revela o bloqueio).
+  // Bloqueado por mim: aviso claro, para a pessoa saber que precisa desbloquear.
+  const { blockedByMe, blockedMe } = await socialRepository.blockState(viewerId, target.id)
+  if (blockedMe) throw httpError(NOT_AVAILABLE, STATUS.NOT_FOUND, 'READER_NOT_AVAILABLE')
+  if (blockedByMe) throw httpError('Você bloqueou este leitor. Desbloqueie para seguir.', STATUS.CONFLICT, 'READER_BLOCKED_BY_YOU')
 
   const viewer = await authRepository.getUserById(viewerId)
   if (!viewer?.email_verified_at) {
-    throw httpError('Confirme seu e-mail para seguir outros leitores.', STATUS.FORBIDDEN)
+    throw httpError('Confirme seu e-mail para seguir outros leitores.', STATUS.FORBIDDEN, 'EMAIL_NOT_VERIFIED_FOLLOW')
   }
 
   const status = await socialRepository.requestFollow(viewerId, target.id)
@@ -44,20 +45,43 @@ export async function unfollow(viewerId, username) {
 export async function acceptRequest(viewerId, username) {
   const follower = await findUser(username)
   const accepted = await socialRepository.acceptFollow(follower.id, viewerId)
-  if (!accepted) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND)
+  if (!accepted) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND, 'REQUEST_NOT_FOUND')
   return { username: follower.name, status: 'accepted' }
 }
 
 export async function rejectRequest(viewerId, username) {
   const follower = await findUser(username)
   const removed = await socialRepository.deleteFollow(follower.id, viewerId, ['pending'])
-  if (!removed) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND)
+  if (!removed) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND, 'REQUEST_NOT_FOUND')
 }
 
 export async function removeFollower(viewerId, username) {
   const follower = await findUser(username)
   const removed = await socialRepository.deleteFollow(follower.id, viewerId, ['accepted'])
-  if (!removed) throw httpError('Seguidor não encontrado.', STATUS.NOT_FOUND)
+  if (!removed) throw httpError('Seguidor não encontrado.', STATUS.NOT_FOUND, 'FOLLOWER_NOT_FOUND')
+}
+
+/**
+ * Bloquear: o outro deixa de ver você na comunidade (e você a ele), os
+ * vínculos de seguir somem e ele não consegue pedir para seguir de novo.
+ * Ele não é avisado.
+ */
+export async function blockUser(viewerId, username) {
+  const target = await findUser(username)
+  if (target.id === viewerId) throw httpError('Você não pode bloquear a si mesmo.', STATUS.BAD_REQUEST, 'BLOCK_SELF')
+  await socialRepository.block(viewerId, target.id)
+  return { username: target.name, blocked: true }
+}
+
+export async function unblockUser(viewerId, username) {
+  const target = await findUser(username)
+  await socialRepository.unblock(viewerId, target.id)
+  return { username: target.name, blocked: false }
+}
+
+export async function blockedUsers(viewerId) {
+  const rows = await socialRepository.blockedList(viewerId)
+  return { blocked: rows.map(row => ({ username: row.username, since: row.created_at })) }
 }
 
 export async function connections(viewerId) {

@@ -48,8 +48,8 @@ async function updatePassword(id, hashedPassword) {
   return result.rows[0] || null
 }
 
-async function setPrivacy(id, { isPublic, showInCommunity, showActivity }) {
-  const result = await db.query(q.SET_PRIVACY, [id, isPublic, showInCommunity, showActivity])
+async function setPrivacy(id, { isPublic, showInCommunity, showActivity, allowIndexing }) {
+  const result = await db.query(q.SET_PRIVACY, [id, isPublic, showInCommunity, showActivity, allowIndexing])
   return result.rows[0] || null
 }
 

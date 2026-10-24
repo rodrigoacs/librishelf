@@ -198,12 +198,12 @@ export const AUTH_QUERIES = {
   `,
   // Só por nome (sem e-mail), usado nas rotas públicas.
   FIND_USER_BY_NAME: `
-    SELECT id, name, is_public, show_in_community, show_activity
+    SELECT id, name, is_public, show_in_community, show_activity, allow_indexing, is_active
     FROM librishelf.users
     WHERE name = $1
   `,
   FIND_USER_BY_ID: `
-    SELECT id, name, email, is_public, show_in_community, show_activity, email_verified_at
+    SELECT id, name, email, is_public, show_in_community, show_activity, allow_indexing, email_verified_at
     FROM librishelf.users
     WHERE id = $1
   `,
@@ -219,12 +219,12 @@ export const AUTH_QUERIES = {
   UPDATE_EMAIL: `
     UPDATE librishelf.users SET email = $2, email_verified_at = NULL, updated_at = now()
     WHERE id = $1
-    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity
+    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity, allow_indexing
   `,
   UPDATE_NAME: `
     UPDATE librishelf.users SET name = $2, updated_at = now()
     WHERE id = $1
-    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity
+    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity, allow_indexing
   `,
   MARK_EMAIL_VERIFIED: `
     UPDATE librishelf.users
@@ -246,7 +246,7 @@ export const AUTH_QUERIES = {
   CREATE_USER: `
     INSERT INTO librishelf.users (name, password_hash, email)
     VALUES ($1, $2, $3)
-    RETURNING id, name, email, is_public, show_in_community, show_activity, email_verified_at
+    RETURNING id, name, email, is_public, show_in_community, show_activity, allow_indexing, email_verified_at
   `,
   UPDATE_PASSWORD: `
     UPDATE librishelf.users
@@ -260,9 +260,10 @@ export const AUTH_QUERIES = {
     SET is_public = COALESCE($2, is_public),
         show_in_community = COALESCE($3, show_in_community),
         show_activity = COALESCE($4, show_activity),
+        allow_indexing = COALESCE($5, allow_indexing),
         updated_at = now()
     WHERE id = $1
-    RETURNING is_public, show_in_community, show_activity
+    RETURNING is_public, show_in_community, show_activity, allow_indexing
   `,
   // books.user_id tem ON DELETE CASCADE: livros e vínculos vão junto.
   DELETE_USER: 'DELETE FROM librishelf.users WHERE id = $1',
@@ -406,6 +407,12 @@ const SAME_BOOK = (a, b) => `(
   OR (${a}.isbn13 IS NOT NULL AND ${b}.isbn13 = ${a}.isbn13)
 )`
 
+// Nenhum dos dois bloqueou o outro (tabela librishelf.blocks, migration 007).
+const NOT_BLOCKED = (a, b) => `NOT EXISTS (
+  SELECT 1 FROM librishelf.blocks bl
+  WHERE (bl.blocker_id = ${a} AND bl.blocked_id = ${b}) OR (bl.blocker_id = ${b} AND bl.blocked_id = ${a})
+)`
+
 const AUTHORS_OF = (bookExpr) => `(
   SELECT string_agg(a.name, ', ' ORDER BY bal.position, a.id)
   FROM librishelf.books_authors_link bal
@@ -426,7 +433,7 @@ export const COMMUNITY_QUERIES = {
     FROM me
     JOIN librishelf.books b ON ${SAME_BOOK('me', 'b')}
     JOIN librishelf.users u ON u.id = b.user_id
-    WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community
+    WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
     ORDER BY u.id, b.rating DESC NULLS LAST
   `,
 
@@ -441,7 +448,7 @@ export const COMMUNITY_QUERIES = {
       FROM me
       JOIN librishelf.books b ON ${SAME_BOOK('me', 'b')}
       JOIN librishelf.users u ON u.id = b.user_id
-      WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community
+      WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
     ),
     candidates AS (
       SELECT b.id, b.title, b.user_id, COALESCE(b.ol_work_key, 'isbn:' || b.isbn13) AS book_key
@@ -484,6 +491,7 @@ export const COMMUNITY_QUERIES = {
           WHERE b.user_id = u.id AND EXISTS (SELECT 1 FROM mine m WHERE ${SAME_BOOK('m', 'b')})) AS common_books
       FROM librishelf.users u
       WHERE u.id <> $1 AND u.is_public AND u.show_in_community AND u.is_active IS NOT FALSE
+        AND ${NOT_BLOCKED('u.id', '$1')}
         AND ($2 = '' OR u.name ILIKE $3)
     )
     SELECT r.name AS username, r.show_activity AS accepts_followers, r.total_books, r.read_books,
@@ -505,6 +513,7 @@ export const COMMUNITY_QUERIES = {
     community AS (
       SELECT id FROM librishelf.users
       WHERE is_public AND show_in_community AND id <> $1 AND is_active IS NOT FALSE
+        AND ${NOT_BLOCKED('id', '$1')}
     ),
     peers AS (
       SELECT b.user_id, count(*)::int AS shared
@@ -553,7 +562,7 @@ export const COMMUNITY_QUERIES = {
     FROM librishelf.books b
     JOIN librishelf.users u ON u.id = b.user_id
     LEFT JOIN librishelf.publishers p ON p.id = b.publisher_id
-    WHERE b.id = $1 AND b.user_id <> $2 AND u.is_public AND u.show_in_community
+    WHERE b.id = $1 AND b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
   `,
 
   // Livros de $2 que $1 também tem.
@@ -571,7 +580,7 @@ export const COMMUNITY_QUERIES = {
 export const DATA_QUERIES = {
   EXPORT_USER: `
     SELECT name, email, to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at,
-           is_public, show_in_community, show_activity,
+           is_public, show_in_community, show_activity, allow_indexing,
            email_verified_at IS NOT NULL AS email_verified
     FROM librishelf.users WHERE id = $1
   `,
@@ -687,6 +696,27 @@ export const SOCIAL_QUERIES = {
     UPDATE librishelf.follows SET status = 'accepted', accepted_at = now()
     WHERE follower_id = $1 AND followee_id = $2 AND status = 'pending'
     RETURNING status
+  `,
+  // Bloqueios (migration 007)
+  IS_BLOCKED: `
+    SELECT
+      EXISTS (SELECT 1 FROM librishelf.blocks WHERE blocker_id = $1 AND blocked_id = $2) AS blocked_by_me,
+      EXISTS (SELECT 1 FROM librishelf.blocks WHERE blocker_id = $2 AND blocked_id = $1) AS blocked_me
+  `,
+  BLOCK: `
+    INSERT INTO librishelf.blocks (blocker_id, blocked_id) VALUES ($1, $2)
+    ON CONFLICT (blocker_id, blocked_id) DO NOTHING
+  `,
+  DELETE_FOLLOWS_BETWEEN: `
+    DELETE FROM librishelf.follows
+    WHERE (follower_id = $1 AND followee_id = $2) OR (follower_id = $2 AND followee_id = $1)
+  `,
+  UNBLOCK: 'DELETE FROM librishelf.blocks WHERE blocker_id = $1 AND blocked_id = $2 RETURNING blocked_id',
+  BLOCKED_LIST: `
+    SELECT u.name AS username, bl.created_at
+    FROM librishelf.blocks bl JOIN librishelf.users u ON u.id = bl.blocked_id
+    WHERE bl.blocker_id = $1
+    ORDER BY bl.created_at DESC
   `,
   PENDING_COUNT: `SELECT count(*)::int AS count FROM librishelf.follows WHERE followee_id = $1 AND status = 'pending'`,
   CONNECTIONS: `

@@ -1,6 +1,7 @@
 import logger from '../utils/logger.js'
 import STATUS from '../utils/statusCodes.js'
 import { normalizeIsbn13 } from '../utils/isbn.js'
+import { httpError } from '../utils/httpError.js'
 
 /**
  * Busca de livros por ISBN no Open Library, feita sempre pelo servidor (o
@@ -49,12 +50,6 @@ function unavailable(cause) {
   const error = new Error('A busca por ISBN está indisponível no momento. Tente de novo mais tarde.')
   error.status = 502
   error.cause = cause
-  return error
-}
-
-function httpError(message, status) {
-  const error = new Error(message)
-  error.status = status
   return error
 }
 
@@ -209,7 +204,7 @@ async function authorNames(keys) {
  */
 export async function lookupIsbn(rawIsbn) {
   const isbn13 = normalizeIsbn13(rawIsbn)
-  if (!isbn13) throw httpError('ISBN inválido.', STATUS.BAD_REQUEST)
+  if (!isbn13) throw httpError('ISBN inválido.', STATUS.BAD_REQUEST, 'ISBN_INVALID')
 
   const cached = cacheGet(lookupCache, isbn13)
   if (cached !== undefined) return cached
@@ -260,7 +255,7 @@ export async function lookupIsbn(rawIsbn) {
 /** Capa grande pelo ID (sem limite de requisições no Open Library). */
 export async function fetchCover(coverId) {
   const id = Number(coverId)
-  if (!Number.isInteger(id) || id <= 0) throw httpError('Capa inválida.', STATUS.BAD_REQUEST)
+  if (!Number.isInteger(id) || id <= 0) throw httpError('Capa inválida.', STATUS.BAD_REQUEST, 'COVER_INVALID')
 
   const cached = cacheGet(coverCache, id)
   if (cached !== undefined) return cached
@@ -280,10 +275,10 @@ export async function fetchCover(coverId) {
   if (!response.ok) throw unavailable(new Error(`HTTP ${response.status} na capa ${id}`))
 
   const declared = Number(response.headers.get('content-length'))
-  if (declared > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502)
+  if (declared > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502, 'COVER_TOO_LARGE')
 
   const buffer = Buffer.from(await response.arrayBuffer())
-  if (buffer.length > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502)
+  if (buffer.length > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502, 'COVER_TOO_LARGE')
 
   cacheSet(coverCache, id, buffer, CACHE_TTL_MS, COVER_CACHE_MAX)
   return buffer

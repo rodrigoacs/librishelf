@@ -16,7 +16,9 @@
       <div class="field">
         <TextField
           id="register-name"
+          ref="nameField"
           v-model="name"
+          :error="errors.name"
           :label="t('register.user')"
           autocomplete="username"
           maxlength="50"
@@ -28,7 +30,9 @@
       <div class="field">
         <TextField
           id="register-email"
+          ref="emailField"
           v-model="email"
+          :error="errors.email"
           :label="t('register.email')"
           type="email"
           autocomplete="email"
@@ -38,7 +42,9 @@
       <div class="field">
         <PasswordField
           id="register-password"
+          ref="passwordField"
           v-model="password"
+          :error="errors.password"
           :label="t('register.password')"
           autocomplete="new-password"
           strength
@@ -48,7 +54,9 @@
       <div class="field">
         <PasswordField
           id="register-confirm-password"
+          ref="confirmField"
           v-model="confirmPassword"
+          :error="errors.confirm"
           :label="t('register.confirmPassword')"
           autocomplete="new-password"
         />
@@ -79,7 +87,7 @@
 import PasswordField from '../components/form/PasswordField.vue'
 import TextField from '../components/form/TextField.vue'
 import { isWeakPassword } from '../utils/password.js'
-import { ref } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from '../services/toast.js'
 import AppButton from '../components/ui/AppButton.vue'
@@ -102,20 +110,56 @@ const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 
-function fail(detail) {
-  toast.add({ severity: 'error', summary: t('register.error'), detail, life: 4000 })
+// Erros embaixo de cada campo (como na Conta); toast só para o que não é de campo.
+const errors = reactive({ name: '', email: '', password: '', confirm: '' })
+const nameField = ref(null)
+const emailField = ref(null)
+const passwordField = ref(null)
+const confirmField = ref(null)
+const FIELDS = { name: nameField, email: emailField, password: passwordField, confirm: confirmField }
+
+watch(name, () => { errors.name = '' })
+watch(email, () => { errors.email = '' })
+watch(password, () => { errors.password = '' })
+watch(confirmPassword, () => { errors.confirm = '' })
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Código da API → campo
+const CODE_FIELDS = {
+  USERNAME_TAKEN: 'name',
+  USERNAME_OR_EMAIL_TAKEN: 'name',
+  USERNAME_INVALID: 'name',
+  USERNAME_RESERVED: 'name',
+  USERNAME_TOO_LONG: 'name',
+  EMAIL_INVALID: 'email',
+  EMAIL_TAKEN: 'email',
+  PASSWORD_TOO_SHORT: 'password',
+  PASSWORD_TOO_LONG: 'password',
+  PASSWORD_NEEDS_LETTER: 'password',
+  PASSWORD_NEEDS_NUMBER: 'password'
+}
+
+function focusFirstError() {
+  const key = Object.keys(FIELDS).find(k => errors[k])
+  if (key) FIELDS[key].value?.focus()
+}
+
+function validate() {
+  const required = t('settings.errors.required')
+  const cleanName = name.value.trim()
+  errors.name = !cleanName ? required : (USERNAME_PATTERN.test(cleanName) ? '' : t('register.invalidUsername'))
+  errors.email = !email.value.trim() ? required : (EMAIL_PATTERN.test(email.value.trim()) ? '' : t('settings.errors.email'))
+  errors.password = !password.value ? required : (isWeakPassword(password.value) ? t('register.passwordTooWeak') : '')
+  errors.confirm = !confirmPassword.value ? required : (password.value !== confirmPassword.value ? t('register.passwordMismatch') : '')
+  return !Object.values(errors).some(Boolean)
 }
 
 async function handleRegister() {
-  if (!name.value.trim() || !email.value.trim() || !password.value) {
-    toast.add({ severity: 'warn', summary: t('register.attention'), detail: t('register.fillFields'), life: 3000 })
+  if (!validate()) {
+    focusFirstError()
     return
   }
-
-  if (!USERNAME_PATTERN.test(name.value.trim())) return fail(t('register.invalidUsername'))
-  if (password.value !== confirmPassword.value) return fail(t('register.passwordMismatch'))
-
-  if (isWeakPassword(password.value)) return fail(t('register.passwordTooWeak'))
 
   loading.value = true
   try {
@@ -129,7 +173,13 @@ async function handleRegister() {
     toast.add({ severity: 'success', summary: t('register.success'), detail: t('register.accountCreatedVerify'), life: 7000 })
     router.push({ name: 'login', query: route.query })
   } catch (error) {
-    fail(error.message || t('register.errorCreating'))
+    const field = CODE_FIELDS[error.code]
+    if (field) {
+      errors[field] = error.message
+      focusFirstError()
+    } else {
+      toast.add({ severity: 'error', summary: t('register.error'), detail: error.message || t('register.errorCreating'), life: 4000 })
+    }
   } finally {
     loading.value = false
   }

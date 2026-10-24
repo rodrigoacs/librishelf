@@ -210,7 +210,7 @@ describe('Privacidade', () => {
     expect((await privacy('bia', { showActivity: 'sim' })).statusCode).toBe(400)
 
     const res = await privacy('bia', { showActivity: true })
-    expect(res.body).toEqual({ isPublic: false, showInCommunity: false, showActivity: true })
+    expect(res.body).toEqual({ isPublic: false, showInCommunity: false, showActivity: true, allowIndexing: false })
     await privacy('bia', { showActivity: false })
   })
 })

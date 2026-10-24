@@ -1,9 +1,9 @@
 /**
  * Erros do servidor no formulário de livro → campo e mensagem traduzida.
- * O backend responde { error: 'texto' } com o status HTTP; aqui o texto é
- * reconhecido para mostrar o erro embaixo do campo certo (e não num toast
- * que some em poucos segundos). O que não for reconhecido volta null e vira
- * toast, como antes.
+ * O backend responde { error, code, params }: pelo código o erro vai para
+ * embaixo do campo certo (e não num toast que some em poucos segundos). Sem
+ * código (servidor antigo), o texto original ainda é reconhecido. O que não
+ * for reconhecido volta null e vira toast, como antes.
  */
 
 /** Ordem dos campos na tela: o primeiro com erro recebe o foco. */
@@ -23,10 +23,44 @@ const RULES = [
   { field: 'cover', test: msg => /imagem|image|arquivo/i.test(msg), key: () => 'bookForm.errors.coverInvalid' }
 ]
 
+// Código da API → campo do formulário (null: o campo vem em params.field)
+const CODE_FIELDS = {
+  ISBN_TAKEN: 'isbn',
+  ISBN_INVALID: 'isbn',
+  AUTHORS_REQUIRED: 'authors',
+  NAMES_TOO_MANY: 'authors',
+  NAME_TOO_LONG: 'authors',
+  READ_DATE_FUTURE: 'statusDate',
+  VOLUME_INVALID: 'seriesIndex',
+  SERIES_TOO_LONG: 'series',
+  NOTES_TOO_LONG: 'notes',
+  RATING_INVALID: 'rating',
+  IMAGE_INVALID: 'cover',
+  IMAGE_ONLY: 'cover',
+  IMAGE_TOO_LARGE: 'cover'
+}
+
+// params.field da API → campo do formulário
+const PARAM_FIELDS = { title: 'title', isbn: 'isbn', pubDate: 'pubDate', publicationDate: 'pubDate', readDate: 'statusDate', startedAt: 'statusDate', series: 'series', notes: 'notes' }
+
+function fieldFromCode(error) {
+  const code = error?.code
+  if (!code) return null
+  if (CODE_FIELDS[code]) return CODE_FIELDS[code]
+  const param = error.body?.params?.field
+  if (['FIELD_REQUIRED', 'FIELD_INVALID', 'DATE_INVALID'].includes(code) && PARAM_FIELDS[param]) return PARAM_FIELDS[param]
+  return null
+}
+
 export function fieldErrorFromApi(error, t) {
   const status = error?.status
   if (status !== 400 && status !== 409) return null
-  const message = String(error?.message || '')
+
+  // Já traduzida pelo fetchClient a partir do código
+  const byCode = fieldFromCode(error)
+  if (byCode) return { field: byCode, message: error.message }
+
+  const message = String(error?.body?.error || error?.message || '')
   const rule = RULES.find(item => item.test(message, status))
   if (!rule) return null
   return { field: rule.field, message: rule.key ? t(rule.key(status)) : message }

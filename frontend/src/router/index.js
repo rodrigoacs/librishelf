@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { loadSession, isAuthenticated } from '../services/session.js'
+import { loadSession, isAuthenticated, clearSession } from '../services/session.js'
+import { setSessionExpiredHandler } from '../services/fetchClient.js'
 import { setRouteTitle } from '../services/pageTitle.js'
 import { installRouteFocus } from '../services/routeFocus.js'
 
@@ -10,6 +11,7 @@ import { installRouteFocus } from '../services/routeFocus.js'
  *   standalone   — tela cheia, sem o menu lateral
  *   public       — acessível com ou sem sessão (mostra o menu se houver sessão)
  *   title        — chave de pageTitle.* para o título da aba (services/pageTitle.js)
+ *   noindex      — fora de buscadores; 'server' = o nginx decide (ver pageTitle.js)
  *
  * Views carregadas sob demanda: o chart.js do Dashboard e as telas internas
  * não entram no bundle do login.
@@ -33,7 +35,7 @@ const router = createRouter({
     { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPassword.vue'), meta: { standalone: true, title: 'resetPassword' } },
     { path: '/verify-email', name: 'verify-email', component: () => import('../views/VerifyEmail.vue'), meta: { standalone: true, title: 'verifyEmail' } },
 
-    { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, title: 'publicLibrary' } },
+    { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, title: 'publicLibrary', noindex: 'server' } },
     { path: '/privacy', name: 'privacy', component: () => import('../views/Privacy.vue'), meta: { public: true, title: 'privacy' } },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFound.vue'), meta: { public: true, title: 'notFound' } }
@@ -72,6 +74,20 @@ router.beforeEach(async (to) => {
 })
 
 router.afterEach(to => setRouteTitle(to))
+
+// 401 em qualquer chamada autenticada: limpa a sessão e manda para o login,
+// guardando onde a pessoa estava. Fica aqui (e não em session.js) para o
+// session.js não precisar importar o router — antes era um import dinâmico
+// que o Vite avisava ser inútil (INEFFECTIVE_DYNAMIC_IMPORT).
+setSessionExpiredHandler(({ silent }) => {
+  clearSession()
+  if (silent) return
+
+  const current = router.currentRoute.value
+  if (current.meta.requiresAuth) {
+    router.replace({ name: 'login', query: { redirect: current.fullPath } })
+  }
+})
 installRouteFocus(router)
 
 export { safeRedirect }

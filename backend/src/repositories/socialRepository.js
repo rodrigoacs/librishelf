@@ -36,3 +36,35 @@ export async function feed(userId, limit, offset) {
   const { rows } = await db.query(q.FEED, [userId, limit, offset])
   return rows
 }
+
+/** { blockedByMe, blockedMe } entre $viewer e $other. */
+export async function blockState(viewerId, otherId) {
+  const { rows } = await db.query(q.IS_BLOCKED, [viewerId, otherId])
+  return { blockedByMe: rows[0].blocked_by_me, blockedMe: rows[0].blocked_me }
+}
+
+/** Bloqueia e apaga os vínculos de seguir entre os dois, numa transação. */
+export async function block(blockerId, blockedId) {
+  const client = await db.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query(q.BLOCK, [blockerId, blockedId])
+    await client.query(q.DELETE_FOLLOWS_BETWEEN, [blockerId, blockedId])
+    await client.query('COMMIT')
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
+}
+
+export async function unblock(blockerId, blockedId) {
+  const { rows } = await db.query(q.UNBLOCK, [blockerId, blockedId])
+  return rows.length > 0
+}
+
+export async function blockedList(userId) {
+  const { rows } = await db.query(q.BLOCKED_LIST, [userId])
+  return rows
+}

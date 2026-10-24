@@ -1,4 +1,5 @@
 import STATUS from '../utils/statusCodes.js'
+import { errorBody } from '../utils/httpError.js'
 
 const NUMERIC_ID_PATTERN = /^\d+$/
 // Teto do tipo `integer` do Postgres. Acima disso a query estoura com 500.
@@ -16,9 +17,11 @@ function validateNumericId(paramName = 'id') {
     const value = req.params[paramName]
 
     if (!isValidId(value)) {
-      return res.status(STATUS.BAD_REQUEST).json({
-        error: `Parâmetro '${paramName}' inválido: deve ser um número inteiro positivo.`
-      })
+      return res.status(STATUS.BAD_REQUEST).json(errorBody(
+        `Parâmetro '${paramName}' inválido: deve ser um número inteiro positivo.`,
+        'PARAM_INVALID',
+        { param: paramName }
+      ))
     }
 
     next()

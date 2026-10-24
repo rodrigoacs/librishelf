@@ -1,0 +1,9 @@
+# Bibliotecas públicas (/u/...) só entram em buscadores se o dono ligar
+# "aparecer em buscadores" na Conta. A decisão vai numa tag robots que o nginx
+# põe no HTML de cada uma (ver nginx.conf), então /u/ precisa continuar
+# rastreável — um Disallow aqui esconderia o noindex das que não querem.
+User-agent: *
+Disallow: /api/
+Disallow: /reset-password
+Disallow: /verify-email
+Allow: /

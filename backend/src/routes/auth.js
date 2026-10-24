@@ -33,7 +33,7 @@ router.get('/me', authenticateToken, async (req, res) => {
     const user = await authService.getUserProfile(req.user.id)
 
     if (!user) {
-      const error = new Error('User not found.')
+      const error = new Error('Usuário não encontrado.')
       error.status = STATUS.NOT_FOUND
       throw error
     }
@@ -49,7 +49,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     const { username, password, email, locale } = req.body ?? {}
 
     if (!username || !password || !email) {
-      const error = new Error('Username, password, and email are required.')
+      const error = new Error('Informe usuário, senha e e-mail.')
       error.status = STATUS.BAD_REQUEST
       throw error
     }
