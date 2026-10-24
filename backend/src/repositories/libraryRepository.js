@@ -52,16 +52,17 @@ async function getAllBooksByUser(userId, filters = {}) {
   }
 
   if (readYear && readYear !== 'all') {
-    query += ` AND EXTRACT(YEAR FROM b.read_date) = $${paramIndex}`
+    // Lido no ano (e mês) em qualquer leitura — releituras incluídas.
+    // Mês só vale junto com o ano (gráfico mensal do painel → biblioteca).
+    let readingFilter = `EXTRACT(YEAR FROM r.finished_on) = $${paramIndex}`
     params.push(readYear)
     paramIndex++
-
-    // Mês só vale junto com o ano (gráfico mensal do painel → biblioteca).
     if (readMonth) {
-      query += ` AND EXTRACT(MONTH FROM b.read_date) = $${paramIndex}`
+      readingFilter += ` AND EXTRACT(MONTH FROM r.finished_on) = $${paramIndex}`
       params.push(readMonth)
       paramIndex++
     }
+    query += ` AND EXISTS (SELECT 1 FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NOT NULL AND ${readingFilter})`
   }
 
   // Busca por título, ISBN ou nome de qualquer autor do livro. % e _ digitados
@@ -242,17 +243,10 @@ async function updateRating(bookId, rating) {
   return result.rows[0]?.rating ?? null
 }
 
-async function setReadingStatus(bookId, { status, startedAt, clearRead }) {
-  const result = await db.query(q.SET_READING_STATUS, [status, startedAt, clearRead, bookId])
-  return result.rows[0] ?? null
-}
 
-async function clearWantIfRead(bookId) {
-  await db.query(q.CLEAR_WANT_IF_READ, [bookId])
-}
 
-async function updateExtras(bookId, { series, seriesIndex, notes }) {
-  await db.query(q.UPDATE_EXTRAS, [series, seriesIndex, notes, bookId])
+async function updateExtras(bookId, { series, seriesIndex, notes, pageCount = null }) {
+  await db.query(q.UPDATE_EXTRAS, [series, seriesIndex, notes, pageCount, bookId])
 }
 
 async function getExtras(bookId) {
@@ -270,19 +264,7 @@ async function filterOwnedIds(userId, ids) {
   return result.rows.map(row => row.id)
 }
 
-const BATCH_STATUS_QUERY = {
-  read: q.BATCH_STATUS_READ,
-  reading: q.BATCH_STATUS_READING,
-  want: q.BATCH_STATUS_WANT,
-  none: q.BATCH_STATUS_NONE
-}
 
-async function batchSetStatus(ids, status, date) {
-  const sql = BATCH_STATUS_QUERY[status]
-  const params = status === 'read' || status === 'reading' ? [ids, date] : [ids]
-  const result = await db.query(sql, params)
-  return result.rowCount
-}
 
 async function batchAddTag(userId, ids, tagName) {
   const { rows } = await db.query(q.ENSURE_TAG, [tagName, userId])
@@ -304,10 +286,6 @@ async function pruneUserNames(userId) {
   await db.query(q.PRUNE_USER_NAMES, [userId])
 }
 
-async function updateReadDate(bookId, readDate) {
-  await db.query(q.UPDATE_READ_DATE, [readDate, bookId])
-  return true
-}
 
 export {
   getAllBooksByUser,
@@ -319,15 +297,11 @@ export {
   getCoverAccess,
   updateBook,
   deleteBookById,
-  updateReadDate,
   updateRating,
-  setReadingStatus,
-  clearWantIfRead,
   updateExtras,
   getExtras,
   getSeriesByUser,
   filterOwnedIds,
-  batchSetStatus,
   batchAddTag,
   batchRemoveTag,
   batchDelete,

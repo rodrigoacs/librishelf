@@ -248,7 +248,7 @@
                 :username="event.username"
                 :is-public="event.isPublic"
               />
-            {{ event.type === 'read' ? t('communityView.event_read') : t('communityView.event_added') }}
+            {{ event.type === 'read' ? t(event.reread ? 'communityView.event_reread' : 'communityView.event_read') : t('communityView.event_added') }}
               <strong>{{ event.title }}</strong>
             </span>
           </li>

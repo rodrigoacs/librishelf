@@ -2,6 +2,7 @@ import express from 'express'
 import fs from 'fs/promises'
 import path from 'path'
 import multer from 'multer'
+import * as readingService from '../services/readingService.js'
 import * as libraryService from '../services/libraryService.js'
 import * as dataService from '../services/dataService.js'
 import { authenticateToken, optionalAuth } from '../middlewares/auth.js'
@@ -285,8 +286,8 @@ router.patch('/:id/rating', validateNumericId(), async (req, res) => {
 router.patch('/:id/read', validateNumericId(), async (req, res) => {
   try {
     const userId = req.user.id
-    await libraryService.markBookAsRead(req.params.id, userId, req.body?.readDate)
-    res.status(STATUS.OK).json({ message: 'Livro marcado como lido.' })
+    const state = await libraryService.markBookAsRead(req.params.id, userId, req.body?.readDate)
+    res.status(STATUS.OK).json({ message: 'Livro marcado como lido.', ...state })
   } catch (error) {
     sendError(res, error, 'Erro ao marcar livro como lido')
   }
@@ -295,8 +296,8 @@ router.patch('/:id/read', validateNumericId(), async (req, res) => {
 router.delete('/:id/read', validateNumericId(), async (req, res) => {
   try {
     const userId = req.user.id
-    await libraryService.markBookAsUnread(req.params.id, userId)
-    res.status(STATUS.OK).json({ message: 'Livro marcado como não lido.' })
+    const state = await libraryService.markBookAsUnread(req.params.id, userId)
+    res.status(STATUS.OK).json({ message: 'Livro marcado como não lido.', ...state })
   } catch (error) {
     sendError(res, error, 'Erro ao marcar livro como não lido')
   }
@@ -309,6 +310,50 @@ router.patch('/:id/status', validateNumericId(), async (req, res) => {
     res.status(STATUS.OK).json(result)
   } catch (error) {
     sendError(res, error, 'Erro ao mudar o status de leitura')
+  }
+})
+
+// --- Leituras (histórico, releituras) e progresso ---
+
+router.get('/:id/readings', validateNumericId(), async (req, res) => {
+  try {
+    res.status(STATUS.OK).json({ readings: await readingService.listReadings(Number(req.params.id), req.user.id) })
+  } catch (error) {
+    sendError(res, error, 'Erro ao listar leituras')
+  }
+})
+
+// { startedOn?, finishedOn?, rating? } — sem finishedOn = leitura em andamento
+router.post('/:id/readings', validateNumericId(), async (req, res) => {
+  try {
+    res.status(STATUS.CREATED).json(await readingService.addReading(Number(req.params.id), req.user.id, req.body ?? {}))
+  } catch (error) {
+    sendError(res, error, 'Erro ao registrar leitura')
+  }
+})
+
+router.patch('/:id/readings/:readingId', validateNumericId(), validateNumericId('readingId'), async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await readingService.updateReading(Number(req.params.id), req.user.id, Number(req.params.readingId), req.body ?? {}))
+  } catch (error) {
+    sendError(res, error, 'Erro ao alterar leitura')
+  }
+})
+
+router.delete('/:id/readings/:readingId', validateNumericId(), validateNumericId('readingId'), async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await readingService.deleteReading(Number(req.params.id), req.user.id, Number(req.params.readingId)))
+  } catch (error) {
+    sendError(res, error, 'Erro ao apagar leitura')
+  }
+})
+
+// { page?, percent?, totalPages? } na leitura em andamento
+router.patch('/:id/progress', validateNumericId(), async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await readingService.setProgress(Number(req.params.id), req.user.id, req.body ?? {}))
+  } catch (error) {
+    sendError(res, error, 'Erro ao salvar o progresso')
   }
 })
 

@@ -32,6 +32,16 @@
         ></i>
         {{ since }}
       </p>
+      <ReadingProgress
+        class="progress"
+        :book-id="book.book_id"
+        :title="book.title"
+        :page-count="progress.pageCount"
+        :current-page="progress.currentPage"
+        :progress-percent="progress.percent"
+        compact
+        @saved="onProgressSaved"
+      />
       <AppButton
         :label="t('home.finished')"
         icon="pi pi-check"
@@ -53,16 +63,17 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from './ui/AppButton.vue'
 import { useToast } from '../services/toast.js'
 import api from '../services/api.js'
 import BookCover from './BookCover.vue'
 import BookDialog from './BookDialog.vue'
+import ReadingProgress from './book/ReadingProgress.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 
-/** Livro em "Lendo agora" no Início: capa maior, desde quando e "Terminei". */
+/** Livro em "Lendo agora" no Início: capa maior, desde quando, progresso e "Terminei". */
 const props = defineProps({
   book: { type: Object, required: true }
 })
@@ -73,6 +84,20 @@ const toast = useToast()
 
 const dialogOpen = ref(false)
 const saving = ref(false)
+
+// Progresso atualizado aqui mesmo, sem recarregar o Início
+const progress = ref({})
+watch(() => props.book, book => {
+  progress.value = {
+    pageCount: book.page_count ?? null,
+    currentPage: book.current_page ?? null,
+    percent: book.progress_percent ?? null
+  }
+}, { immediate: true })
+
+function onProgressSaved({ reading, pageCount }) {
+  progress.value = { pageCount, currentPage: reading.currentPage, percent: reading.progressPercent }
+}
 
 const since = computed(() => {
   const date = fromApiDate(props.book.started_at)
@@ -162,6 +187,10 @@ async function finish() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.progress {
+  margin-top: 0.45rem;
 }
 
 .reading-since {

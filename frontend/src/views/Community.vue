@@ -116,7 +116,7 @@
                       :is-public="item.isPublic"
                     />
                     <template v-if="item.books.length === 1">
-                      {{ ' ' + (item.type === 'read' ? t('communityView.event_read') : t('communityView.event_added')) + ' ' }}
+                      {{ ' ' + (item.type === 'read' ? t(item.books[0].reread ? 'communityView.event_reread' : 'communityView.event_read') : t('communityView.event_added')) + ' ' }}
                       <router-link
                         v-if="item.isPublic"
                         :to="bookLink(item, item.books[0])"

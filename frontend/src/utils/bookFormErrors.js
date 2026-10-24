@@ -7,7 +7,7 @@
  */
 
 /** Ordem dos campos na tela: o primeiro com erro recebe o foco. */
-export const FIELD_ORDER = ['cover', 'isbn', 'title', 'authors', 'publisher', 'pubDate', 'series', 'seriesIndex', 'tags', 'statusDate', 'rating', 'notes']
+export const FIELD_ORDER = ['cover', 'isbn', 'title', 'authors', 'publisher', 'pubDate', 'series', 'seriesIndex', 'pageCount', 'tags', 'statusDate', 'rating', 'notes']
 
 const RULES = [
   { field: 'isbn', test: (msg, status) => status === 409 || /isbn/i.test(msg), key: status => (status === 409 ? 'bookForm.errors.isbnDuplicate' : 'isbn.invalid') },
@@ -32,6 +32,8 @@ const CODE_FIELDS = {
   NAME_TOO_LONG: 'authors',
   READ_DATE_FUTURE: 'statusDate',
   VOLUME_INVALID: 'seriesIndex',
+  PAGE_COUNT_INVALID: 'pageCount',
+  READING_DATES_ORDER: 'statusDate',
   SERIES_TOO_LONG: 'series',
   NOTES_TOO_LONG: 'notes',
   RATING_INVALID: 'rating',

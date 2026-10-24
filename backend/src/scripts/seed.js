@@ -586,6 +586,49 @@ async function generateCovers(catalog) {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Leituras (migration 009): uma por livro lido/lendo, releituras antigas em
+ * ~1 de 12 lidos, total de páginas na maioria e progresso em quem está "Lendo".
+ */
+async function insertReadings() {
+  await db.query(`
+    UPDATE librishelf.books
+    SET page_count = 90 + (id * 37) % 760
+    WHERE id % 7 <> 0
+  `)
+  await db.query(`
+    WITH src AS (
+      SELECT b.id, b.read_date, b.started_at, b.reading_status
+        FROM librishelf.books b
+       WHERE (b.read_date IS NOT NULL OR b.reading_status = 'reading')
+         AND NOT EXISTS (SELECT 1 FROM librishelf.readings r WHERE r.book_id = b.id)
+    )
+    INSERT INTO librishelf.readings (book_id, started_on, finished_on)
+    SELECT id, (read_date::date - (5 + id % 40)), read_date::date FROM src WHERE read_date IS NOT NULL
+    UNION ALL
+    SELECT id, started_at::date, NULL FROM src WHERE reading_status = 'reading'
+  `)
+  // Releituras: uma leitura anterior, 1 a 4 anos antes da última
+  await db.query(`
+    INSERT INTO librishelf.readings (book_id, started_on, finished_on, rating)
+    SELECT b.id,
+           b.read_date::date - (365 * (1 + b.id % 4) + 20),
+           b.read_date::date - (365 * (1 + b.id % 4)),
+           CASE WHEN b.id % 3 = 0 THEN 1 + b.id % 5 END
+      FROM librishelf.books b
+     WHERE b.read_date IS NOT NULL AND b.id % 12 = 0
+  `)
+  // Progresso de quem está lendo (página quando há total; % quando não há)
+  await db.query(`
+    UPDATE librishelf.readings r
+       SET current_page = CASE WHEN b.page_count IS NOT NULL THEN (b.page_count * (10 + r.book_id % 80) / 100) END,
+           progress_percent = 10 + r.book_id % 80,
+           progress_updated_at = now() - ((r.book_id % 5) || ' days')::interval
+      FROM librishelf.books b
+     WHERE b.id = r.book_id AND r.finished_on IS NULL
+  `)
+}
+
 async function main() {
   await checkSafety()
   logger.info('Populando banco local', { db: process.env.DB_NAME, host: process.env.DB_HOST || 'localhost', ...CONFIG })
@@ -599,6 +642,7 @@ async function main() {
   await insertUsers(users)
   const books = await insertBooks(users, catalog)
   await insertReadingStatusAndGoals()
+  await insertReadings()
   await insertSeriesAndNotes()
   const follows = await insertFollows(users)
   const covers = CONFIG.covers ? await generateCovers(catalog) : 0
@@ -611,6 +655,7 @@ async function main() {
       (SELECT count(*)::int FROM librishelf.publishers) AS editoras,
       (SELECT count(*)::int FROM librishelf.tags) AS tags,
       (SELECT count(*)::int FROM librishelf.books WHERE read_date IS NOT NULL) AS lidos,
+      (SELECT count(*)::int FROM librishelf.readings WHERE finished_on IS NOT NULL) AS leituras,
       (SELECT count(*)::int FROM librishelf.books WHERE rating IS NOT NULL) AS com_nota,
       (SELECT count(*)::int FROM librishelf.books WHERE reading_status = 'reading') AS lendo,
       (SELECT count(*)::int FROM librishelf.books WHERE reading_status = 'want') AS quero_ler,

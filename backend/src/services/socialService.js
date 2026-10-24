@@ -106,6 +106,7 @@ export async function feed(viewerId, page) {
     hasMore: rows.length > FEED_PAGE_SIZE,
     events: rows.slice(0, FEED_PAGE_SIZE).map(row => ({
       type: row.type,
+      reread: Boolean(row.reread),
       at: row.at,
       username: row.username,
       isPublic: row.is_public,

@@ -7,8 +7,8 @@ Live at **[librishelf.com](https://librishelf.com)**.
 ## Features
 
 - **Your collection, your way** — add books with authors, publisher, ISBN, tags, publication date, cover art and a 1–5 star rating.
-- **ISBN lookup** — type an ISBN and the title, authors, publisher, date and cover are filled in from [Open Library](https://openlibrary.org) (queried by the server, never by the browser). Invalid ISBNs are flagged so you can fix them.
-- **Reading log** — mark books as read and keep the date you finished them.
+- **ISBN lookup, barcode and title search** — type or scan an ISBN with the camera, or search by title/author, and the title, authors, publisher, date, pages and cover are filled in from [Open Library](https://openlibrary.org) (queried by the server, never by the browser). Invalid ISBNs are flagged so you can fix them.
+- **Reading log** — want to read, reading and read; every reading is kept, so rereads count again (with their own dates and an optional rating), and books in progress track the current page or percentage.
 - **Search and filters** — search by title or ISBN; filter by author, publisher, tag, reading status and year; sort by any field.
 - **Dashboard** — totals, reading rate, books read per year, top authors and tags.
 - **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf, with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.

@@ -212,7 +212,13 @@ const seriesLabel = computed(() => seriesText(props.book, t, locale.value))
 
 const statusCaption = computed(() => {
   const status = currentStatus.value
-  if (status === 'read') return t('bookDialog.readOn', { date: formatDate(props.book.read_date) })
+  if (status === 'read') {
+    const caption = t('bookDialog.readOn', { date: formatDate(props.book.read_date) })
+    // No livro de outra pessoa, as releituras aparecem aqui (o dono vê no painel)
+    return props.isReadOnly && props.book.read_count > 1
+      ? `${caption} · ${t('history.readTimes', { n: props.book.read_count }, props.book.read_count)}`
+      : caption
+  }
   if (status === 'reading') {
     return props.book.started_at
       ? t('status.readingSince', { date: formatDate(props.book.started_at) })

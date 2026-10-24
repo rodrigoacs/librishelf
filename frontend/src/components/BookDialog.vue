@@ -100,6 +100,13 @@
             </template>
           </BookView>
 
+          <ReadingPanel
+            v-if="!isReadOnly && !loading && !loadFailed"
+            :book-id="bookId"
+            :book="book"
+            @changed="onReadingChanged"
+          />
+
           <BookCommunity
             v-if="!isReadOnly && !loading && !loadFailed"
             :book-id="bookId"
@@ -145,6 +152,7 @@ import GeneratedCover from './GeneratedCover.vue'
 import IconButton from './form/IconButton.vue'
 import BookView from './book/BookView.vue'
 import BookEditForm from './book/BookEditForm.vue'
+import ReadingPanel from './book/ReadingPanel.vue'
 import BookCommunity from './book/BookCommunity.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { statusOf } from '../utils/readingStatus.js'
@@ -177,7 +185,7 @@ const readSaving = ref(false)
 
 function emptyBook() {
   // authors: texto para exibir; authorNames: a lista que é editada e salva.
-  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, series: '', series_index: null, notes: '', pubdate: null }
+  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, series: '', series_index: null, notes: '', pubdate: null, page_count: null, read_count: 0, current_page: null, progress_percent: null }
 }
 
 const book = ref(emptyBook())
@@ -198,6 +206,10 @@ function onCoverError(event) {
  */
 async function changeStatus(option) {
   const next = statusOf(book.value) === option ? 'none' : option
+  // "Quero ler"/nenhum apagam o histórico: com mais de uma leitura, pergunta antes
+  const total = (book.value.read_count || 0) + (book.value.reading_status === 'reading' ? 1 : 0)
+  if ((next === 'none' || next === 'want') && total > 1 && !(await confirmClearHistory(total))) return
+
   readSaving.value = true
   try {
     const today = toApiDate(new Date())
@@ -209,11 +221,55 @@ async function changeStatus(option) {
       book: { book_id: props.bookId, read_date: result.readDate, reading_status: book.value.reading_status, started_at: result.startedAt },
       coverChanged: false
     })
+    refreshReadingFields()
   } catch (error) {
     toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
     readSaving.value = false
   }
+}
+
+function confirmClearHistory(count) {
+  return new Promise(resolve => {
+    confirm.require({
+      header: t('history.clearTitle'),
+      message: t('history.clearMessage', { n: count }),
+      icon: 'pi pi-exclamation-triangle',
+      acceptClass: 'btn-danger',
+      rejectClass: 'btn-text btn-secondary',
+      acceptLabel: t('history.clearConfirm'),
+      rejectLabel: t('common.cancel'),
+      accept: () => resolve(true),
+      reject: () => resolve(false),
+      onHide: () => resolve(false)
+    })
+  })
+}
+
+// Contagem de leituras e progresso depois de mudar o status (o servidor sabe)
+async function refreshReadingFields() {
+  try {
+    const data = await api.getBookById(props.bookId)
+    Object.assign(book.value, {
+      read_count: data.read_count ?? 0,
+      current_page: data.current_page ?? null,
+      progress_percent: data.progress_percent ?? null,
+      page_count: data.page_count ?? null
+    })
+  } catch {
+    // Só os números do painel ficam desatualizados até reabrir
+  }
+}
+
+// Painel de leituras: progresso, "Ler de novo", histórico
+function onReadingChanged(patch) {
+  const changes = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined))
+  const local = { ...changes }
+  if ('read_date' in changes) local.read_date = fromApiDate(changes.read_date)
+  if ('started_at' in changes) local.started_at = fromApiDate(changes.started_at)
+  Object.assign(book.value, local)
+  emit('updated', { book: { book_id: props.bookId, ...changes }, coverChanged: false })
+  if ('reading_status' in changes && !('read_count' in changes)) refreshReadingFields()
 }
 
 // Nota direto da visualização, sem entrar no modo de edição.
@@ -269,6 +325,7 @@ function onSaved({ book: saved, coverChanged }) {
   if (coverChanged) coverVersion.value = Date.now()
   applyResponse(saved)
   isEditing.value = false
+  refreshReadingFields()
   emit('updated', { book: { ...saved, book_id: props.bookId }, coverChanged })
 }
 
@@ -289,7 +346,11 @@ function applyResponse(data) {
     series_index: data.series_index ?? null,
     notes: data.notes || '',
     started_at: fromApiDate(data.started_at),
-    pubdate: fromApiDate(data.publication_date)
+    pubdate: fromApiDate(data.publication_date),
+    page_count: data.page_count ?? null,
+    read_count: data.read_count ?? (data.read_date ? 1 : 0),
+    current_page: data.current_page ?? null,
+    progress_percent: data.progress_percent ?? null
   }
 }
 

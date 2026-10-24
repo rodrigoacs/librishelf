@@ -2,6 +2,7 @@ import * as communityRepository from '../repositories/communityRepository.js'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import * as socialRepository from '../repositories/socialRepository.js'
+import * as readingService from './readingService.js'
 import STATUS from '../utils/statusCodes.js'
 import { httpError } from '../utils/httpError.js'
 
@@ -149,6 +150,6 @@ export async function addToWantList(sourceId, userId) {
     olWorkKey: source.ol_work_key,
     olEditionKey: source.ol_edition_key
   })
-  await libraryRepository.setReadingStatus(bookId, { status: 'want', startedAt: null, clearRead: true })
+  await readingService.importReadings(bookId, { status: 'want' })
   return { bookId }
 }

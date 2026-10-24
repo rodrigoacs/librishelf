@@ -5,6 +5,8 @@ import { deleteBookCover } from '../utils/imageProcessor.js'
 import logger from '../utils/logger.js'
 import { parseNameList, parseTagList, nameListError } from '../utils/nameList.js'
 import { httpError } from '../utils/httpError.js'
+import { normalizeDate, normalizeReadDate, normalizeRating, normalizePageCount } from '../utils/bookFields.js'
+import * as readingService from './readingService.js'
 
 const READ_YEAR_PATTERN = /^\d{4}$/
 
@@ -12,36 +14,6 @@ function normalizeIsbn(isbn) {
   if (typeof isbn !== 'string') return isbn ?? null
   const trimmed = isbn.trim()
   return trimmed ? trimmed : null
-}
-
-/**
- * Converte a data recebida para 'YYYY-MM-DD' (ou null quando vazia).
- * Data inválida vira 400 em vez de estourar como 500 no `toISOString()` ou no Postgres.
- */
-function normalizeDate(value, fieldName) {
-  if (value === undefined || value === null || value === '') return null
-
-  const parsed = new Date(value)
-
-  if (Number.isNaN(parsed.getTime())) {
-    throw httpError(`Data inválida em '${fieldName}'.`, STATUS.BAD_REQUEST, 'DATE_INVALID', { field: fieldName })
-  }
-
-  return parsed.toISOString().split('T')[0]
-}
-
-/**
- * Data de leitura não pode estar no futuro. Tolerância de 1 dia: o cliente
- * manda a data local, que pode estar à frente da data UTC do servidor.
- */
-function normalizeReadDate(value) {
-  const date = normalizeDate(value, 'readDate')
-  if (!date) return date
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-  if (date > tomorrow) {
-    throw httpError('A data de leitura não pode estar no futuro.', STATUS.BAD_REQUEST, 'READ_DATE_FUTURE')
-  }
-  return date
 }
 
 const READ_STATES = ['all', 'read', 'unread', 'true', 'false', 'reading', 'want']
@@ -182,16 +154,6 @@ function requireText(value, fieldName) {
 const OL_WORK_KEY = /^\/works\/OL\d+W$/
 const OL_EDITION_KEY = /^\/books\/OL\d+M$/
 
-/** Nota opcional: vazio/null remove; senão inteiro de 1 a 5. */
-function normalizeRating(value) {
-  if (value === undefined || value === null || value === '' || value === 'null') return null
-  const rating = Number(value)
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    throw httpError('A nota precisa ser um número inteiro de 1 a 5.', STATUS.BAD_REQUEST, 'RATING_INVALID')
-  }
-  return rating
-}
-
 function normalizeOlKey(value, pattern, field) {
   if (value === undefined || value === null || value === '') return null
   if (typeof value !== 'string' || !pattern.test(value)) {
@@ -224,7 +186,8 @@ function normalizeBookInput(raw = {}) {
     olEditionKey: normalizeOlKey(raw.olEditionKey, OL_EDITION_KEY, 'olEditionKey'),
     series: normalizeSeries(raw.series),
     seriesIndex: normalizeSeriesIndex(raw.seriesIndex),
-    notes: normalizeNotes(raw.notes)
+    notes: normalizeNotes(raw.notes),
+    pageCount: normalizePageCount(raw.pageCount)
   }
 }
 
@@ -242,9 +205,11 @@ async function addNewBook(bookData) {
   }
 
   const bookId = await libraryRepository.createBook(bookData)
-  if (bookData.series || bookData.seriesIndex !== null || bookData.notes) {
+  if (bookData.series || bookData.seriesIndex !== null || bookData.notes || bookData.pageCount) {
     await libraryRepository.updateExtras(bookId, bookData)
   }
+  // Data de leitura no cadastro = primeira leitura do histórico
+  if (bookData.readDate) await readingService.applyFormReadDate(bookId, bookData.readDate)
   return bookId
 }
 
@@ -261,7 +226,11 @@ async function updateBookDetails(bookId, userId, rawBook) {
   }
 
   await libraryRepository.updateBook(bookId, input)
-  if (input.readDate) await libraryRepository.clearWantIfRead(bookId)
+  // readDate = data da última leitura; sem data, o histórico fica como está
+  // (update_book grava a coluna direto; o resumo volta a refletir as leituras)
+  const body0 = rawBook ?? {}
+  const explicitNull = Object.hasOwn(body0, 'readDate') && (body0.readDate === null || body0.readDate === '')
+  await readingService.applyFormReadDate(bookId, input.readDate, { clear: explicitNull })
 
   // Série, volume e anotação: campo que não veio (cliente antigo) fica como estava.
   const body = rawBook ?? {}
@@ -269,7 +238,8 @@ async function updateBookDetails(bookId, userId, rawBook) {
   await libraryRepository.updateExtras(bookId, {
     series: Object.hasOwn(body, 'series') ? input.series : current?.series ?? null,
     seriesIndex: Object.hasOwn(body, 'seriesIndex') ? input.seriesIndex : current?.series_index ?? null,
-    notes: Object.hasOwn(body, 'notes') ? input.notes : current?.notes ?? null
+    notes: Object.hasOwn(body, 'notes') ? input.notes : current?.notes ?? null,
+    pageCount: Object.hasOwn(body, 'pageCount') ? input.pageCount : current?.page_count ?? null
   })
   return true
 }
@@ -305,64 +275,20 @@ async function setRating(bookId, userId, value) {
 }
 
 /**
- * Marca como lido. O cliente manda a data local (YYYY-MM-DD): com o relógio do
- * servidor em UTC, quem marca às 22h em Brasília veria "lido amanhã".
+ * Marcar lido / desmarcar / status de leitura: ver readingService (as
+ * leituras viraram histórico na migration 009). Ficam aqui os nomes usados
+ * pelas rotas.
  */
 async function markBookAsRead(bookId, userId, rawDate) {
-  await checkBookOwnership(bookId, userId)
-  const readDate = normalizeReadDate(rawDate) ?? new Date()
-  return await libraryRepository.updateReadDate(bookId, readDate)
+  return readingService.markRead(bookId, userId, rawDate)
 }
 
 async function markBookAsUnread(bookId, userId) {
-  await checkBookOwnership(bookId, userId)
-  return await libraryRepository.updateReadDate(bookId, null)
+  return readingService.markUnread(bookId, userId)
 }
 
-/**
- * Status de leitura em um passo só:
- *   none    → só na estante (tira "Quero ler"/"Lendo" e a data de leitura)
- *   want    → "Quero ler" (apaga a data de leitura)
- *   reading → "Lendo" desde `date` (ou hoje); num livro já lido é releitura e a data antiga fica
- *   read    → "Lido" em `date` (ou hoje)
- * Devolve { status, readDate, startedAt } já como ficaram no banco.
- */
 async function setReadingStatus(bookId, userId, rawStatus, rawDate) {
-  await checkBookOwnership(bookId, userId)
-  const status = String(rawStatus ?? '')
-
-  if (!READING_STATUSES.includes(status)) {
-    throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST, 'STATUS_INVALID')
-  }
-
-  if (status === 'read') {
-    const readDate = normalizeReadDate(rawDate) ?? new Date().toISOString().slice(0, 10)
-    await libraryRepository.updateReadDate(bookId, readDate)
-    return { status: 'read', readDate, startedAt: null }
-  }
-
-  let startedAt = null
-  if (status === 'reading') {
-    startedAt = normalizeReadDate(rawDate)
-    if (!startedAt) {
-      const current = await libraryRepository.getBookByIdForUser(bookId, userId)
-      startedAt = current?.reading_status === 'reading' && current.started_at
-        ? new Date(current.started_at).toISOString().slice(0, 10)
-        : new Date().toISOString().slice(0, 10)
-    }
-  }
-
-  const row = await libraryRepository.setReadingStatus(bookId, {
-    status: status === 'want' || status === 'reading' ? status : null,
-    startedAt,
-    clearRead: status !== 'reading'
-  })
-
-  return {
-    status: row.reading_status ?? (row.read_date ? 'read' : 'none'),
-    readDate: row.read_date,
-    startedAt: row.started_at
-  }
+  return readingService.setStatus(bookId, userId, rawStatus, rawDate)
 }
 
 async function getSeries(userId) {
@@ -393,12 +319,7 @@ async function batchUpdate(userId, body = {}) {
   }
 
   if (action === 'status') {
-    const status = String(body.status ?? '')
-    if (!READING_STATUSES.includes(status)) {
-      throw httpError("Status inválido: use 'none', 'want', 'reading' ou 'read'.", STATUS.BAD_REQUEST, 'STATUS_INVALID')
-    }
-    const date = normalizeReadDate(body.date) ?? new Date().toISOString().slice(0, 10)
-    return { updated: await libraryRepository.batchSetStatus(ids, status, date) }
+    return { updated: await readingService.batchStatus(ids, body.status, body.date) }
   }
 
   if (action === 'addTag' || action === 'removeTag') {

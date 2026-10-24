@@ -152,6 +152,14 @@
               maxlength="7"
               :error="errors.seriesIndex"
             />
+            <TextField
+              :id="`${idPrefix}-pages`"
+              v-model="form.pageCount"
+              :label="t('bookForm.pages')"
+              inputmode="numeric"
+              maxlength="5"
+              :error="errors.pageCount"
+            />
           </div>
           <datalist :id="`${idPrefix}-series-options`">
             <option
@@ -299,7 +307,7 @@ const isCreate = computed(() => props.mode === 'create')
 const today = new Date()
 
 function blankForm() {
-  return { title: '', authorNames: [], publisher: '', tags: '', isbn: '', pubdate: null, rating: null, series: '', series_index: '', notes: '' }
+  return { title: '', authorNames: [], publisher: '', tags: '', isbn: '', pubdate: null, rating: null, series: '', series_index: '', notes: '', pageCount: '' }
 }
 
 const form = reactive(blankForm())
@@ -323,7 +331,8 @@ function load() {
     rating: source.rating ?? null,
     series: source.series || '',
     series_index: source.series_index ?? '',
-    notes: source.notes || ''
+    notes: source.notes || '',
+    pageCount: source.page_count ? String(source.page_count) : ''
   })
   initialStatus.value = statusOf(source)
   status.value = initialStatus.value
@@ -461,6 +470,7 @@ async function lookupIsbn() {
     if (form.authorNames.length === 0 && found.authors?.length) form.authorNames = [...found.authors]
     if (!form.publisher.trim() && found.publisher) form.publisher = found.publisher
     if (!form.pubdate && found.pubDate) form.pubdate = parseApiDate(found.pubDate)
+    if (!String(form.pageCount).trim() && found.pages) form.pageCount = String(found.pages)
 
     Object.assign(lookup, {
       active: true,
@@ -516,6 +526,7 @@ async function applySearchResult(item) {
   if (!form.publisher.trim() && item.publisher) form.publisher = item.publisher
   if (!form.pubdate && item.pubDate) form.pubdate = parseApiDate(item.pubDate)
   if (!form.isbn.trim() && item.isbn13) form.isbn = item.isbn13
+  if (!String(form.pageCount).trim() && item.pages) form.pageCount = String(item.pages)
 
   delete errors.isbn
   const sameIsbn = (item.isbn13 || '') === form.isbn.trim()
@@ -543,6 +554,7 @@ async function applySearchResult(item) {
 watch(() => form.title, () => { delete errors.title })
 watch(() => form.authorNames, () => { delete errors.authors })
 watch(() => form.series_index, () => { delete errors.seriesIndex })
+watch(() => form.pageCount, () => { delete errors.pageCount })
 watch(() => form.pubdate, () => { delete errors.pubDate })
 watch(statusDate, () => { delete errors.statusDate })
 
@@ -554,6 +566,10 @@ function validate() {
   if (volume) {
     const number = Number(volume.replace(',', '.'))
     if (!Number.isFinite(number) || number < 0 || number > 9999) errors.seriesIndex = t('bookForm.errors.volume')
+  }
+  const pages = String(form.pageCount ?? '').trim()
+  if (pages && !/^\d{1,5}$/.test(pages) || pages && (Number(pages) < 1 || Number(pages) > 20000)) {
+    errors.pageCount = t('bookForm.errors.pages')
   }
   // Compara só o dia (texto YYYY-MM-DD), sem a hora
   if (statusDate.value && toApiDate(statusDate.value) > toApiDate(new Date()) && (status.value === 'read' || status.value === 'reading')) {
@@ -570,6 +586,7 @@ const FIELD_IDS = {
   pubDate: 'pubdate',
   series: 'series',
   seriesIndex: 'volume',
+  pageCount: 'pages',
   tags: 'tags',
   statusDate: 'status-date',
   rating: 'rating-label',
@@ -607,6 +624,7 @@ async function submit() {
     focusFirstError()
     return
   }
+  if (clearsHistory() && !(await askConfirm(t('history.clearMessage', { n: historyCount() }), t('history.clearTitle')))) return
   if (props.confirmMessage && !(await askConfirm())) return
 
   saving.value = true
@@ -626,11 +644,23 @@ async function submit() {
   }
 }
 
-function askConfirm() {
+// Leituras registradas (concluídas + a em andamento) do livro sendo editado
+function historyCount() {
+  const source = props.initial || {}
+  return (source.read_count || 0) + (source.reading_status === 'reading' ? 1 : 0)
+}
+
+// Trocar para "Quero ler"/nenhum apaga o histórico: com mais de uma leitura, pergunta
+function clearsHistory() {
+  return !isCreate.value && (status.value === 'none' || status.value === 'want') &&
+    status.value !== initialStatus.value && historyCount() > 1
+}
+
+function askConfirm(message = props.confirmMessage, header = t('bookDialog.confirm')) {
   return new Promise(resolve => {
     confirm.require({
-      message: props.confirmMessage,
-      header: t('bookDialog.confirm'),
+      message,
+      header,
       icon: 'pi pi-exclamation-circle',
       acceptClass: 'btn-primary',
       rejectClass: 'btn-text btn-secondary',
@@ -663,6 +693,7 @@ async function create() {
   if (form.series?.trim()) data.append('series', form.series.trim())
   if (String(form.series_index ?? '').trim()) data.append('seriesIndex', String(form.series_index).trim())
   if (form.notes?.trim()) data.append('notes', form.notes)
+  if (String(form.pageCount).trim()) data.append('pageCount', String(form.pageCount).trim())
 
   if (lookupMatchesForm()) {
     if (lookup.olWorkKey) data.append('olWorkKey', lookup.olWorkKey)
@@ -706,7 +737,8 @@ async function update() {
     readDate: readDateToSend(),
     series: (form.series || '').trim(),
     seriesIndex: String(form.series_index ?? '').trim() || null,
-    notes: form.notes || ''
+    notes: form.notes || '',
+    pageCount: String(form.pageCount ?? '').trim() || null
   })
   const book = { ...response.book }
 
@@ -846,7 +878,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus() })
 
 .grid-series {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 7rem;
+  grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem;
   gap: 1rem;
 }
 
@@ -928,6 +960,14 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus() })
 @media (max-width: 480px) {
   .grid-2 {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .grid-series {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .grid-series > :first-child {
+    grid-column: 1 / -1;
   }
 }
 </style>

@@ -151,8 +151,10 @@
       "futureDate": "The date can't be in the future.",
       "volume": "Use a number from 0 to 9999 (e.g. 2 or 1.5).",
       "rating": "Ratings go from 1 to 5.",
-      "coverInvalid": "This file isn't a valid image."
-    }
+      "coverInvalid": "This file isn't a valid image.",
+      "pages": "Use a number from 1 to 20000."
+    },
+    "pages": "Pages"
   },
   "library": {
     "search_ph": "Search by title, author or ISBN...",
@@ -637,6 +639,68 @@
     "noIsbn": "no ISBN",
     "source": "Results from Open Library"
   },
+  "progress": {
+    "label": "Reading progress",
+    "update": "Update",
+    "updateFor": "Update progress for {title}",
+    "page": "Current page",
+    "pageShort": "Page",
+    "of": "of",
+    "totalPages": "Total pages",
+    "totalShort": "total",
+    "editTotal": "Change the total pages",
+    "percent": "Percent read",
+    "usePercent": "Use %",
+    "usePages": "Use pages",
+    "save": "Save",
+    "pageOf": "Page {page} of {total} · {percent}%",
+    "pageOfShort": "{page} of {total} · {percent}%",
+    "percentOnly": "{percent}% read",
+    "pageOnly": "Page {page}",
+    "none": "No progress yet",
+    "errors": {
+      "page": "Enter the current page.",
+      "total": "Total pages must be 1 to 20000.",
+      "over": "The current page is past the total ({total}).",
+      "percent": "Enter a percentage from 0 to 100.",
+      "save": "Could not save the progress."
+    }
+  },
+  "history": {
+    "panelTitle": "Your readings",
+    "readAgain": "Read again",
+    "readAgainToast": "Enjoy the reread! Your previous reading stays in the history.",
+    "readTimes": "Read once | Read {n} times",
+    "title": "Reading history",
+    "loading": "Loading…",
+    "loadError": "Could not load the history.",
+    "empty": "No readings recorded yet.",
+    "nth": "Reading #{n}",
+    "ratingFor": "Rating for reading #{n}",
+    "edit": "Edit reading #{n}",
+    "delete": "Delete reading #{n}",
+    "inProgressSince": "Reading since {date}",
+    "inProgress": "In progress",
+    "fromTo": "{from} to {to}",
+    "days": "{n} day | {n} days",
+    "finishedOn": "Finished on {date}",
+    "deleteTitle": "Delete reading #{n}?",
+    "deleteMessage": "{what}. Your other readings stay.",
+    "deleteConfirm": "Delete",
+    "addPast": "Record an earlier reading",
+    "startedOn": "Started",
+    "finishedOnLabel": "Finished",
+    "finishedOnOptional": "Finished (empty = reading)",
+    "ratingOptional": "Rating for this reading (optional)",
+    "save": "Save reading",
+    "errors": {
+      "finishRequired": "Enter when you finished.",
+      "order": "The end can't be before the start."
+    },
+    "clearTitle": "Delete the reading history?",
+    "clearMessage": "This book has {n} recorded readings. Changing the status deletes all of them.",
+    "clearConfirm": "Delete and change"
+  },
   "community": {
     "book_title": "Community",
     "load_error": "Couldn't load the community.",
@@ -680,6 +744,7 @@
     "load_error": "Couldn't load.",
     "feed_empty": "Nothing here yet. Find readers in a book's Community section and ask to follow them from their public page.",
     "event_read": "finished",
+    "event_reread": "reread",
     "event_added": "added",
     "no_requests": "No requests waiting.",
     "accept": "Accept",
@@ -962,7 +1027,14 @@
     },
     "OPENLIBRARY_UNAVAILABLE": "Open Library is unavailable right now. Try again later.",
     "SEARCH_QUERY_INVALID": "Type {min} to {max} characters to search.",
-    "RATE_LIMIT_SEARCH": "Too many searches in a short time. Wait a minute."
+    "RATE_LIMIT_SEARCH": "Too many searches in a short time. Wait a minute.",
+    "READING_NOT_FOUND": "Reading not found.",
+    "READING_ALREADY_OPEN": "This book already has a reading in progress.",
+    "READING_DATES_ORDER": "The end of a reading can't be before its start.",
+    "NOT_READING": "This book isn't being read.",
+    "PROGRESS_INVALID": "Invalid progress.",
+    "PROGRESS_PAGE_OVER": "The current page is past the book's total pages ({max}).",
+    "PAGE_COUNT_INVALID": "Pages must be from 1 to {max}."
   },
   "block": {
     "block": "Block {name}",

@@ -2,6 +2,7 @@ import { db } from '../database/connection.js'
 import { DATA_QUERIES as q } from '../database/queries.js'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import { normalizeBookInput } from './libraryService.js'
+import * as readingService from './readingService.js'
 import { csvToObjects, toCsv } from '../utils/csv.js'
 import { normalizeIsbn13 } from '../utils/isbn.js'
 import STATUS from '../utils/statusCodes.js'
@@ -20,7 +21,9 @@ import { httpError } from '../utils/httpError.js'
 /** Colunas do CSV do Librishelf (também aceitas na importação). */
 export const CSV_COLUMNS = [
   'title', 'authors', 'publisher', 'isbn', 'tags', 'rating', 'status', 'read_date',
-  'started_at', 'publication_date', 'series', 'volume', 'notes', 'added_at'
+  'started_at', 'publication_date', 'series', 'volume', 'notes', 'added_at',
+  // Releituras: todas as datas de fim, da mais antiga para a mais recente
+  'read_dates', 'pages'
 ]
 
 // Vários nomes numa célula: separados por "; " (nome de autor pode ter vírgula).
@@ -67,6 +70,8 @@ export async function exportJson(userId) {
       series: book.series,
       volume: book.series_index,
       notes: book.notes,
+      pages: book.page_count,
+      readings: book.readings,
       addedAt: book.added_at
     }))
   }
@@ -88,7 +93,9 @@ export async function exportCsv(userId) {
     book.series,
     book.series_index,
     book.notes,
-    book.added_at
+    book.added_at,
+    book.readings.map(r => r.finishedOn).filter(Boolean).join(LIST_SEPARATOR),
+    book.page_count
   ])
   return toCsv([CSV_COLUMNS, ...rows])
 }
@@ -135,6 +142,15 @@ export function splitSeries(rawTitle) {
   return { title: match[1].trim(), series: match[2].trim(), seriesIndex: match[3] }
 }
 
+function cleanPages(value) {
+  const pages = Number(String(value ?? '').trim())
+  return Number.isInteger(pages) && pages >= 1 && pages <= 20000 ? pages : null
+}
+
+function uniqueDates(dates) {
+  return [...new Set(dates.map(notFuture).filter(Boolean))].sort()
+}
+
 function splitList(value, separator) {
   return String(value ?? '').split(separator).map(item => item.trim()).filter(Boolean)
 }
@@ -174,6 +190,7 @@ function fromGoodreads(record) {
     readDate: status === 'read' ? notFuture(cleanDate(record['Date Read']) || added) : null,
     startedAt: status === 'reading' ? notFuture(added) : null,
     pubDate: cleanYear(record['Year Published']) || cleanYear(record['Original Publication Year']),
+    pages: cleanPages(record['Number of Pages']),
     series,
     seriesIndex,
     notes
@@ -194,6 +211,11 @@ function fromLibrishelf(record) {
     readDate: status === 'read' || record.read_date ? notFuture(cleanDate(record.read_date)) : null,
     startedAt: status === 'reading' ? notFuture(cleanDate(record.started_at)) : null,
     pubDate: cleanDate(record.publication_date),
+    // Releituras (CSV novo); sem a coluna, a data de leitura de sempre
+    readDates: status === 'read' || record.read_date || record.read_dates
+      ? uniqueDates([...splitList(record.read_dates, ';').map(cleanDate), cleanDate(record.read_date)])
+      : [],
+    pages: cleanPages(record.pages),
     series: String(record.series ?? '').trim() || null,
     seriesIndex: String(record.volume ?? '').trim() || null,
     notes: String(record.notes ?? '').slice(0, MAX_NOTES)
@@ -258,16 +280,14 @@ export async function importCsv(userId, buffer) {
       }
 
       const bookId = await libraryRepository.createBook({ ...input, user_id: userId })
-      if (input.series || input.seriesIndex !== null || input.notes) {
-        await libraryRepository.updateExtras(bookId, input)
+      if (input.series || input.seriesIndex !== null || input.notes || book.pages) {
+        await libraryRepository.updateExtras(bookId, { ...input, pageCount: book.pages ?? null })
       }
-      if (book.status === 'reading' || book.status === 'want') {
-        await libraryRepository.setReadingStatus(bookId, {
-          status: book.status,
-          startedAt: book.status === 'reading' ? book.startedAt : null,
-          clearRead: book.status === 'want'
-        })
-      }
+      await readingService.importReadings(bookId, {
+        status: book.status,
+        finishedDates: book.readDates ?? (book.status === 'read' && input.readDate ? [input.readDate] : []),
+        startedOn: book.status === 'reading' ? book.startedAt : null
+      })
 
       if (isbn13) isbns.add(isbn13)
       keys.add(key)

@@ -36,6 +36,11 @@ export const LIBRARY_QUERIES = {
       b.read_date,
       b.reading_status,
       b.started_at,
+      b.page_count,
+      -- Leituras (migration 009): concluídas e progresso da que está em andamento
+      (SELECT count(*)::int FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NOT NULL) AS read_count,
+      (SELECT r.current_page FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NULL) AS current_page,
+      (SELECT r.progress_percent FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NULL) AS progress_percent,
       b.series,
       b.series_index,
       b.publication_date
@@ -58,6 +63,11 @@ export const LIBRARY_QUERIES = {
       b.read_date,
       b.reading_status,
       b.started_at,
+      b.page_count,
+      -- Leituras (migration 009): concluídas e progresso da que está em andamento
+      (SELECT count(*)::int FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NOT NULL) AS read_count,
+      (SELECT r.current_page FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NULL) AS current_page,
+      (SELECT r.progress_percent FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NULL) AS progress_percent,
       b.series,
       b.series_index,
       b.notes,
@@ -100,25 +110,8 @@ export const LIBRARY_QUERIES = {
   GET_OWNER: 'SELECT user_id FROM librishelf.books WHERE id = $1',
   FIND_BY_ISBN: 'SELECT * FROM librishelf.books WHERE isbn = $1 AND user_id = $2',
   DELETE_BOOK: 'DELETE FROM librishelf.books WHERE id = $1',
-  // Marcar como lido tira o livro de "Quero ler"/"Lendo"; desmarcar não mexe no status.
-  UPDATE_READ_DATE: `
-    UPDATE librishelf.books
-    SET read_date = $1::timestamp,
-        reading_status = CASE WHEN $1::timestamp IS NOT NULL THEN NULL ELSE reading_status END,
-        last_modified = now()
-    WHERE id = $2
-  `,
-  SET_READING_STATUS: `
-    UPDATE librishelf.books
-    SET reading_status = $1,
-        started_at = $2::timestamp,
-        read_date = CASE WHEN $3 THEN NULL ELSE read_date END,
-        last_modified = now()
-    WHERE id = $4
-    RETURNING reading_status, to_char(started_at, 'YYYY-MM-DD') AS started_at, to_char(read_date, 'YYYY-MM-DD') AS read_date
-  `,
-  UPDATE_EXTRAS: 'UPDATE librishelf.books SET series = $1, series_index = $2, notes = $3 WHERE id = $4',
-  GET_EXTRAS: 'SELECT series, series_index, notes FROM librishelf.books WHERE id = $1',
+  UPDATE_EXTRAS: 'UPDATE librishelf.books SET series = $1, series_index = $2, notes = $3, page_count = $4 WHERE id = $5',
+  GET_EXTRAS: 'SELECT series, series_index, notes, page_count FROM librishelf.books WHERE id = $1',
   SERIES_BY_USER: `
     SELECT min(series) AS name, COUNT(*)::int AS count,
            COUNT(*) FILTER (WHERE read_date IS NOT NULL)::int AS read
@@ -128,25 +121,6 @@ export const LIBRARY_QUERIES = {
     ORDER BY lower(min(series))
   `,
   OWNED_IDS: 'SELECT id FROM librishelf.books WHERE user_id = $1 AND id = ANY($2::int[])',
-  // Ações em lote (ids já conferidos como do usuário).
-  BATCH_STATUS_READ: `
-    UPDATE librishelf.books SET read_date = COALESCE(read_date, $2::timestamp), reading_status = NULL, last_modified = now()
-    WHERE id = ANY($1::int[])
-  `,
-  BATCH_STATUS_READING: `
-    UPDATE librishelf.books
-    SET started_at = CASE WHEN reading_status = 'reading' AND started_at IS NOT NULL THEN started_at ELSE $2::timestamp END,
-        reading_status = 'reading', last_modified = now()
-    WHERE id = ANY($1::int[])
-  `,
-  BATCH_STATUS_WANT: `
-    UPDATE librishelf.books SET reading_status = 'want', started_at = NULL, read_date = NULL, last_modified = now()
-    WHERE id = ANY($1::int[])
-  `,
-  BATCH_STATUS_NONE: `
-    UPDATE librishelf.books SET reading_status = NULL, started_at = NULL, read_date = NULL, last_modified = now()
-    WHERE id = ANY($1::int[])
-  `,
   ENSURE_TAG: `
     WITH ins AS (
       INSERT INTO librishelf.tags (name, user_id) VALUES ($1, $2)
@@ -170,11 +144,6 @@ export const LIBRARY_QUERIES = {
       AND btl.book_id = ANY($1::int[])
   `,
   BATCH_DELETE: 'DELETE FROM librishelf.books WHERE id = ANY($1::int[])',
-  // Editar a data de leitura no formulário também tira de "Quero ler".
-  CLEAR_WANT_IF_READ: `
-    UPDATE librishelf.books SET reading_status = NULL
-    WHERE id = $1 AND read_date IS NOT NULL AND reading_status = 'want'
-  `,
   ADD_BOOK_FUNC: 'SELECT librishelf.add_book($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) AS book_id',
   UPDATE_BOOK_FUNC: 'SELECT librishelf.update_book($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
   UPDATE_RATING: 'UPDATE librishelf.books SET rating = $1, last_modified = now() WHERE id = $2 RETURNING rating',
@@ -338,21 +307,26 @@ export const DASHBOARD_QUERIES = {
       FROM librishelf.books
       WHERE user_id = $1
     ),
+    -- Leituras concluídas (releituras contam de novo).
+    finished AS (
+      SELECT r.finished_on
+      FROM librishelf.readings r
+      JOIN user_books ub ON ub.id = r.book_id
+      WHERE r.finished_on IS NOT NULL
+    ),
     -- Histórico completo (todos os anos com leitura).
     reading_by_year AS (
-      SELECT EXTRACT(YEAR FROM read_date::date)::int AS year, COUNT(*)::int AS count
-      FROM user_books
-      WHERE read_date IS NOT NULL
+      SELECT EXTRACT(YEAR FROM finished_on)::int AS year, COUNT(*)::int AS count
+      FROM finished
       GROUP BY 1
     ),
     -- Mês a mês no ano $2 (os 12 meses, inclusive os zerados).
     reading_by_month AS (
-      SELECT m.month, COUNT(ub.id)::int AS count
+      SELECT m.month, COUNT(f.finished_on)::int AS count
       FROM generate_series(1, 12) AS m(month)
-      LEFT JOIN user_books ub
-        ON ub.read_date IS NOT NULL
-       AND EXTRACT(YEAR FROM ub.read_date::date) = $2
-       AND EXTRACT(MONTH FROM ub.read_date::date) = m.month
+      LEFT JOIN finished f
+        ON EXTRACT(YEAR FROM f.finished_on) = $2
+       AND EXTRACT(MONTH FROM f.finished_on) = m.month
       GROUP BY m.month
     ),
     top_publishers AS (
@@ -610,6 +584,16 @@ export const DATA_QUERIES = {
       b.series,
       b.series_index,
       b.notes,
+      b.page_count,
+      -- Todas as leituras, da mais antiga para a mais recente
+      COALESCE((SELECT json_agg(json_build_object(
+          'startedOn', to_char(r.started_on, 'YYYY-MM-DD'),
+          'finishedOn', to_char(r.finished_on, 'YYYY-MM-DD'),
+          'rating', r.rating,
+          'currentPage', r.current_page,
+          'progressPercent', r.progress_percent)
+          ORDER BY r.finished_on NULLS LAST, r.started_on, r.id)
+        FROM librishelf.readings r WHERE r.book_id = b.id), '[]'::json) AS readings,
       to_char(b.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS added_at
     FROM librishelf.books b
     LEFT JOIN librishelf.publishers p ON p.id = b.publisher_id
@@ -649,8 +633,9 @@ export const PROFILE_QUERIES = {
       COALESCE((
         SELECT json_agg(y ORDER BY y.year)
         FROM (
-          SELECT EXTRACT(YEAR FROM read_date)::int AS year, count(*)::int AS count
-          FROM ub WHERE read_date IS NOT NULL GROUP BY 1
+          SELECT EXTRACT(YEAR FROM r.finished_on)::int AS year, count(*)::int AS count
+          FROM librishelf.readings r JOIN ub ON ub.id = r.book_id
+          WHERE r.finished_on IS NOT NULL GROUP BY 1
         ) y
       ), '[]'::json) AS reading_by_year,
       COALESCE((
@@ -739,15 +724,17 @@ export const SOCIAL_QUERIES = {
       WHERE f.follower_id = $1 AND f.status = 'accepted' AND u.show_activity
     ),
     events AS (
-      SELECT 'read' AS type, (b.read_date AT TIME ZONE 'UTC') AS at, b.id AS book_id, b.user_id, b.title, b.rating
-      FROM librishelf.books b
-      WHERE b.user_id IN (SELECT followee_id FROM followed) AND b.read_date IS NOT NULL
+      SELECT 'read' AS type, (r.finished_on::timestamp AT TIME ZONE 'UTC') AS at, b.id AS book_id, b.user_id, b.title, b.rating,
+             (row_number() OVER (PARTITION BY r.book_id ORDER BY r.finished_on, r.id) > 1) AS reread
+      FROM librishelf.readings r
+      JOIN librishelf.books b ON b.id = r.book_id
+      WHERE b.user_id IN (SELECT followee_id FROM followed) AND r.finished_on IS NOT NULL
       UNION ALL
-      SELECT 'added', b.created_at, b.id, b.user_id, b.title, b.rating
+      SELECT 'added', b.created_at, b.id, b.user_id, b.title, b.rating, false
       FROM librishelf.books b
       WHERE b.user_id IN (SELECT followee_id FROM followed)
     )
-    SELECT e.type, e.at, e.book_id, e.title, e.rating, u.name AS username, u.is_public,
+    SELECT e.type, e.at, e.book_id, e.title, e.rating, e.reread, u.name AS username, u.is_public,
            ${AUTHORS_OF('e.book_id')} AS authors
     FROM events e
     JOIN librishelf.users u ON u.id = e.user_id

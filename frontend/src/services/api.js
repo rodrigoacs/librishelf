@@ -137,6 +137,29 @@ export default {
     return client.patch(`/library/${id}/status`, date ? { status, date } : { status })
   },
 
+  // --- Leituras (histórico) e progresso ---
+  getReadings(id) {
+    return client.get(`/library/${id}/readings`)
+  },
+
+  /** { startedOn?, finishedOn?, rating? } — sem finishedOn = em andamento. */
+  addReading(id, reading) {
+    return client.post(`/library/${id}/readings`, reading)
+  },
+
+  updateReading(id, readingId, fields) {
+    return client.patch(`/library/${id}/readings/${readingId}`, fields)
+  },
+
+  deleteReading(id, readingId) {
+    return client.delete(`/library/${id}/readings/${readingId}`)
+  },
+
+  /** { page?, percent?, totalPages? } → { reading, pageCount } */
+  setProgress(id, progress) {
+    return client.patch(`/library/${id}/progress`, progress)
+  },
+
   getSeries() {
     return client.get('/library/series')
   },

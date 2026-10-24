@@ -34,7 +34,8 @@ describe('lookupIsbn', () => {
       pubDate: '1988-10-01',
       olWorkKey: '/works/OL45804W',
       olEditionKey: '/books/OL7353617M',
-      coverId: 15152634
+      coverId: 15152634,
+      pages: 96
     })
   })
 

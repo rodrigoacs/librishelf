@@ -208,7 +208,7 @@ async function authorNames(keys) {
 }
 
 /**
- * ISBN → { isbn13, title, authors[], publisher, pubDate, olWorkKey, olEditionKey, coverId }
+ * ISBN → { isbn13, title, authors[], publisher, pubDate, olWorkKey, olEditionKey, coverId, pages }
  * ou null se o Open Library não conhece o ISBN.
  */
 export async function lookupIsbn(rawIsbn) {
@@ -254,7 +254,8 @@ export async function lookupIsbn(rawIsbn) {
     pubDate: parsePublishDate(edition.publish_date),
     olWorkKey: workKey,
     olEditionKey: OL_EDITION_KEY.test(edition.key) ? edition.key : null,
-    coverId: firstCoverId(edition.covers, work?.covers)
+    coverId: firstCoverId(edition.covers, work?.covers),
+    pages: positiveInt(edition.number_of_pages)
   }
 
   cacheSet(lookupCache, isbn13, result, CACHE_TTL_MS, CACHE_MAX)

@@ -11,6 +11,7 @@ export const FIXTURES = {
     publish_date: 'October 1, 1988',
     covers: [15152634, 8739161, -1],
     isbn_13: ['9780140328721'],
+    number_of_pages: 96,
     key: '/books/OL7353617M'
   },
   '/works/OL45804W.json': {

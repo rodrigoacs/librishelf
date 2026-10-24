@@ -151,8 +151,10 @@
       "futureDate": "A data não pode estar no futuro.",
       "volume": "Use um número de 0 a 9999 (ex.: 2 ou 1,5).",
       "rating": "A nota vai de 1 a 5.",
-      "coverInvalid": "Este arquivo não é uma imagem válida."
-    }
+      "coverInvalid": "Este arquivo não é uma imagem válida.",
+      "pages": "Use um número de 1 a 20000."
+    },
+    "pages": "Páginas"
   },
   "library": {
     "search_ph": "Pesquisar por título, autor ou ISBN...",
@@ -637,6 +639,68 @@
     "noIsbn": "sem ISBN",
     "source": "Resultados do Open Library"
   },
+  "progress": {
+    "label": "Progresso da leitura",
+    "update": "Atualizar",
+    "updateFor": "Atualizar o progresso de {title}",
+    "page": "Página atual",
+    "pageShort": "Pág.",
+    "of": "de",
+    "totalPages": "Total de páginas",
+    "totalShort": "total",
+    "editTotal": "Mudar o total de páginas",
+    "percent": "Porcentagem lida",
+    "usePercent": "Usar %",
+    "usePages": "Usar páginas",
+    "save": "Salvar",
+    "pageOf": "Página {page} de {total} · {percent}%",
+    "pageOfShort": "{page} de {total} · {percent}%",
+    "percentOnly": "{percent}% lido",
+    "pageOnly": "Página {page}",
+    "none": "Nenhum progresso registrado",
+    "errors": {
+      "page": "Informe a página atual.",
+      "total": "O total de páginas vai de 1 a 20000.",
+      "over": "A página atual passa do total ({total}).",
+      "percent": "Informe uma porcentagem de 0 a 100.",
+      "save": "Não foi possível salvar o progresso."
+    }
+  },
+  "history": {
+    "panelTitle": "Suas leituras",
+    "readAgain": "Ler de novo",
+    "readAgainToast": "Boa releitura! A leitura anterior continua no histórico.",
+    "readTimes": "Lido uma vez | Lido {n} vezes",
+    "title": "Histórico de leituras",
+    "loading": "Carregando…",
+    "loadError": "Não foi possível carregar o histórico.",
+    "empty": "Nenhuma leitura registrada ainda.",
+    "nth": "{n}ª leitura",
+    "ratingFor": "Nota da {n}ª leitura",
+    "edit": "Editar a {n}ª leitura",
+    "delete": "Apagar a {n}ª leitura",
+    "inProgressSince": "Lendo desde {date}",
+    "inProgress": "Em andamento",
+    "fromTo": "{from} a {to}",
+    "days": "{n} dia | {n} dias",
+    "finishedOn": "Terminada em {date}",
+    "deleteTitle": "Apagar a {n}ª leitura?",
+    "deleteMessage": "{what}. As outras leituras continuam.",
+    "deleteConfirm": "Apagar",
+    "addPast": "Registrar uma leitura anterior",
+    "startedOn": "Início",
+    "finishedOnLabel": "Fim",
+    "finishedOnOptional": "Fim (vazio = lendo)",
+    "ratingOptional": "Nota desta leitura (opcional)",
+    "save": "Salvar leitura",
+    "errors": {
+      "finishRequired": "Informe quando terminou.",
+      "order": "O fim não pode ser antes do início."
+    },
+    "clearTitle": "Apagar o histórico de leituras?",
+    "clearMessage": "Este livro tem {n} leituras registradas. Mudar o status apaga todas elas.",
+    "clearConfirm": "Apagar e mudar"
+  },
   "community": {
     "book_title": "Comunidade",
     "load_error": "Não foi possível carregar a comunidade.",
@@ -680,6 +744,7 @@
     "load_error": "Não foi possível carregar.",
     "feed_empty": "Nada por aqui ainda. Encontre leitores na seção Comunidade de um livro e peça para seguir pela página pública deles.",
     "event_read": "terminou de ler",
+    "event_reread": "releu",
     "event_added": "adicionou",
     "no_requests": "Nenhum pedido esperando resposta.",
     "accept": "Aceitar",
@@ -962,7 +1027,14 @@
     },
     "OPENLIBRARY_UNAVAILABLE": "O Open Library está indisponível agora. Tente de novo mais tarde.",
     "SEARCH_QUERY_INVALID": "Digite de {min} a {max} caracteres para buscar.",
-    "RATE_LIMIT_SEARCH": "Muitas buscas em pouco tempo. Aguarde um minuto."
+    "RATE_LIMIT_SEARCH": "Muitas buscas em pouco tempo. Aguarde um minuto.",
+    "READING_NOT_FOUND": "Leitura não encontrada.",
+    "READING_ALREADY_OPEN": "Este livro já tem uma leitura em andamento.",
+    "READING_DATES_ORDER": "O fim da leitura não pode ser antes do início.",
+    "NOT_READING": "Este livro não está em leitura.",
+    "PROGRESS_INVALID": "Progresso inválido.",
+    "PROGRESS_PAGE_OVER": "A página atual passa do total de páginas do livro ({max}).",
+    "PAGE_COUNT_INVALID": "O número de páginas precisa ser de 1 a {max}."
   },
   "block": {
     "block": "Bloquear {name}",
