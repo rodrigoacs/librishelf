@@ -13,6 +13,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Lists** — "Best of 2026", "Vacation reads": pick books from your shelf, drag (or use the keyboard) to order them, optionally numbered. Public lists show on your profile and get their own shareable page (`/u/your-username/lists/<id>`) with a link preview of the list's covers.
 - **Search and filters** — search by title or ISBN; filter by author, publisher, tag, reading status and year; sort by any field.
 - **Dashboard** — totals, reading rate, books read per year, top authors and tags.
+- **Your year in books** — a yearly recap (available all year; "so far" for the current one): books and pages read, month by month, goal, best rated, most-read authors and records (longest, fastest…), plus a 9:16 story image drawn in the browser to download or share.
 - **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf (with a link preview on WhatsApp and social networks: title, book count and a mosaic of your covers), with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.
 - **Community (opt-in)** — see who else has a book, their average rating and what people who have it also have. Follow other readers (they approve each request) and get a feed of what they add and finish. Everything is off until the user turns it on.
 - **Account control** — email confirmation, password recovery by email, change your password (signs out other sessions) and delete your account with all its data.

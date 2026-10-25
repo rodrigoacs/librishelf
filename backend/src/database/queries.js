@@ -1044,3 +1044,62 @@ export const LIST_QUERIES = {
     ORDER BY l.created_at, l.id
   `
 }
+
+// Retrospectiva do ano ($1 usuário, $2 ano): leituras concluídas no ano
+// (releitura conta de novo), com a nota daquela leitura ou a do livro.
+const IN_YEAR = (col) => `${col} >= make_date($2::int, 1, 1) AND ${col} < make_date($2::int + 1, 1, 1)`
+
+export const YEAR_QUERIES = {
+  FINISHED: `
+    SELECT r.id, r.book_id, r.started_on, r.finished_on,
+           COALESCE(r.rating, b.rating) AS rating,
+           b.title, ${AUTHORS_OF('b.id')} AS authors, b.page_count,
+           EXISTS (
+             SELECT 1 FROM librishelf.readings e
+             WHERE e.book_id = r.book_id AND e.finished_on IS NOT NULL
+               AND (e.finished_on < r.finished_on OR (e.finished_on = r.finished_on AND e.id < r.id))
+           ) AS reread
+    FROM librishelf.readings r
+    JOIN librishelf.books b ON b.id = r.book_id
+    WHERE b.user_id = $1 AND ${IN_YEAR('r.finished_on')}
+    ORDER BY r.finished_on, r.id
+  `,
+  TOP_AUTHORS: `
+    SELECT a.name, count(DISTINCT r.book_id)::int AS count
+    FROM librishelf.readings r
+    JOIN librishelf.books b ON b.id = r.book_id
+    JOIN librishelf.books_authors_link bal ON bal.book_id = b.id
+    JOIN librishelf.authors a ON a.id = bal.author_id
+    WHERE b.user_id = $1 AND ${IN_YEAR('r.finished_on')}
+    GROUP BY a.name
+    ORDER BY count DESC, a.name
+    LIMIT 5
+  `,
+  TOP_TAGS: `
+    SELECT t.name, count(DISTINCT r.book_id)::int AS count
+    FROM librishelf.readings r
+    JOIN librishelf.books b ON b.id = r.book_id
+    JOIN librishelf.books_tags_link btl ON btl.book_id = b.id
+    JOIN librishelf.tags t ON t.id = btl.tag_id
+    WHERE b.user_id = $1 AND ${IN_YEAR('r.finished_on')}
+    GROUP BY t.name
+    ORDER BY count DESC, t.name
+    LIMIT 5
+  `,
+  // Anos com alguma leitura concluída (o atual entra sempre, no serviço)
+  YEARS: `
+    SELECT DISTINCT extract(year FROM r.finished_on)::int AS year
+    FROM librishelf.readings r
+    JOIN librishelf.books b ON b.id = r.book_id
+    WHERE b.user_id = $1 AND r.finished_on IS NOT NULL
+    ORDER BY year DESC
+  `,
+  PREVIOUS_COUNT: `
+    SELECT count(*)::int AS total
+    FROM librishelf.readings r
+    JOIN librishelf.books b ON b.id = r.book_id
+    WHERE b.user_id = $1 AND r.finished_on >= make_date($2::int - 1, 1, 1) AND r.finished_on < make_date($2::int, 1, 1)
+  `,
+  GOAL: 'SELECT target FROM librishelf.reading_goals WHERE user_id = $1 AND year = $2',
+  REVIEWS: `SELECT count(*)::int AS total FROM librishelf.reviews WHERE user_id = $1 AND ${IN_YEAR('created_at')}`
+}

@@ -33,6 +33,22 @@
       ></i>
     </router-link>
 
+    <router-link
+      v-if="readThisYear > 0"
+      :to="{ name: 'year' }"
+      class="notice year-notice"
+    >
+      <i
+        class="pi pi-sparkles"
+        aria-hidden="true"
+      ></i>
+      <span>{{ t('home.yearInBooks', { year: new Date().getFullYear(), n: readThisYear }, readThisYear) }}</span>
+      <i
+        class="pi pi-angle-right notice-arrow"
+        aria-hidden="true"
+      ></i>
+    </router-link>
+
     <!-- Carregando -->
     <div
       v-if="loading"
@@ -437,7 +453,8 @@ onMounted(() => {
   margin-top: -1rem;
 }
 
-.notice .pi-user-plus {
+.notice .pi-user-plus,
+.notice .pi-sparkles {
   color: var(--main-color);
 }
 

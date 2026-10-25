@@ -6,6 +6,16 @@
         <p>{{ $t('dashboard.subtitle') }}</p>
       </div>
       <div class="header-side">
+        <router-link
+          :to="{ name: 'year', params: { year } }"
+          class="year-link"
+        >
+          <i
+            class="pi pi-sparkles"
+            aria-hidden="true"
+          ></i>
+          {{ t('year.title', { year }) }}
+        </router-link>
         <label
           class="sr-only"
           for="dashboard-year"
@@ -889,6 +899,29 @@ a.author-row:focus-visible {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.year-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(var(--main-color-rgb), 0.12);
+  color: var(--main-color);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.year-link:hover {
+  background: rgba(var(--main-color-rgb), 0.2);
+}
+
+.year-link:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
 }
 
 .year-dropdown {

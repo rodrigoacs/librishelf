@@ -1,5 +1,6 @@
 import express from 'express'
 import * as dashboardService from '../services/dashboardService.js'
+import * as yearService from '../services/yearService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
@@ -14,6 +15,15 @@ router.get('/stats', async (req, res) => {
     res.status(STATUS.OK).json(stats)
   } catch (error) {
     sendError(res, error, 'Dashboard Error')
+  }
+})
+
+// "Seu ano em livros" (retrospectiva): GET /dashboard/year/2026
+router.get('/year/:year', async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await yearService.yearInBooks(req.user.id, req.params.year))
+  } catch (error) {
+    sendError(res, error, 'Erro ao montar a retrospectiva')
   }
 })
 

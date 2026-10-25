@@ -373,6 +373,11 @@ export default {
   },
 
   // --- Público ---
+  /** "Seu ano em livros" (retrospectiva do ano). */
+  getYearInBooks(year) {
+    return client.get(`/dashboard/year/${year}`)
+  },
+
   getRandomCovers() {
     return client.get('/library/covers/random')
   },
