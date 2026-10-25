@@ -1,5 +1,5 @@
 import { db } from '../database/connection.js'
-import { DATA_QUERIES as q } from '../database/queries.js'
+import { DATA_QUERIES as q, REVIEW_QUERIES } from '../database/queries.js'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import { normalizeBookInput } from './libraryService.js'
 import * as readingService from './readingService.js'
@@ -23,7 +23,9 @@ export const CSV_COLUMNS = [
   'title', 'authors', 'publisher', 'isbn', 'tags', 'rating', 'status', 'read_date',
   'started_at', 'publication_date', 'series', 'volume', 'notes', 'added_at',
   // Releituras: todas as datas de fim, da mais antiga para a mais recente
-  'read_dates', 'pages'
+  'read_dates', 'pages',
+  // Resenha (texto, spoiler 'yes'/vazio, public/followers)
+  'review', 'review_spoiler', 'review_visibility'
 ]
 
 // Vários nomes numa célula: separados por "; " (nome de autor pode ter vírgula).
@@ -73,6 +75,7 @@ export async function exportJson(userId) {
       notes: book.notes,
       pages: book.page_count,
       readings: book.readings,
+      review: book.review,
       addedAt: book.added_at
     }))
   }
@@ -96,7 +99,10 @@ export async function exportCsv(userId) {
     book.notes,
     book.added_at,
     book.readings.map(r => r.finishedOn).filter(Boolean).join(LIST_SEPARATOR),
-    book.page_count
+    book.page_count,
+    book.review?.body ?? '',
+    book.review?.hasSpoiler ? 'yes' : '',
+    book.review?.visibility ?? ''
   ])
   return toCsv([CSV_COLUMNS, ...rows])
 }
@@ -107,6 +113,7 @@ export async function exportCsv(userId) {
 
 export const MAX_IMPORT_ROWS = 5000
 const MAX_NOTES = 5000
+const MAX_REVIEW = 5000
 const GOODREADS_SHELVES = new Set(['read', 'currently-reading', 'to-read'])
 
 /** ="0441013597" (como o Goodreads exporta) → 0441013597. */
@@ -217,6 +224,9 @@ function fromLibrishelf(record) {
       ? uniqueDates([...splitList(record.read_dates, ';').map(cleanDate), cleanDate(record.read_date)])
       : [],
     pages: cleanPages(record.pages),
+    review: String(record.review ?? '').trim().slice(0, MAX_REVIEW) || null,
+    reviewSpoiler: String(record.review_spoiler ?? '').trim().toLowerCase() === 'yes',
+    reviewVisibility: record.review_visibility === 'followers' ? 'followers' : 'public',
     series: String(record.series ?? '').trim() || null,
     seriesIndex: String(record.volume ?? '').trim() || null,
     notes: String(record.notes ?? '').slice(0, MAX_NOTES)
@@ -283,6 +293,9 @@ export async function importCsv(userId, buffer) {
       const bookId = await libraryRepository.createBook({ ...input, user_id: userId })
       if (input.series || input.seriesIndex !== null || input.notes || book.pages) {
         await libraryRepository.updateExtras(bookId, { ...input, pageCount: book.pages ?? null })
+      }
+      if (book.review) {
+        await db.query(REVIEW_QUERIES.UPSERT, [bookId, userId, book.review, book.reviewSpoiler, book.reviewVisibility])
       }
       await readingService.importReadings(bookId, {
         status: book.status,

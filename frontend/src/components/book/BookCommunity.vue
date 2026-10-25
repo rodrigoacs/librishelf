@@ -111,6 +111,25 @@
         </div>
       </template>
 
+      <div
+        v-if="community.reviews?.length"
+        class="community-reviews"
+      >
+        <h3>{{ t('review.fromReaders', { n: community.reviews.length }, community.reviews.length) }}</h3>
+        <ReviewCard
+          v-for="item in shownReviews"
+          :key="item.id"
+          :review="item"
+          show-author
+        />
+        <button
+          v-if="community.reviews.length > REVIEWS_SHOWN && !allReviews"
+          type="button"
+          class="more-reviews"
+          @click="allReviews = true"
+        >{{ t('review.showAll', { n: community.reviews.length }) }}</button>
+      </div>
+
       <p
         v-if="!currentUser?.showInCommunity"
         class="community-hint"
@@ -130,10 +149,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../../services/api.js'
 import StarRating from '../StarRating.vue'
+import ReviewCard from '../review/ReviewCard.vue'
 import { currentUser } from '../../services/session.js'
 
 /** Comunidade do livro: quem mais tem, média das notas e "quem tem também tem". */
@@ -144,6 +164,13 @@ const props = defineProps({
 const { t } = useI18n()
 
 const ALSO_HAVE_SHOWN = 3
+const REVIEWS_SHOWN = 3
+
+const allReviews = ref(false)
+const shownReviews = computed(() => {
+  const list = community.value?.reviews || []
+  return allReviews.value ? list : list.slice(0, REVIEWS_SHOWN)
+})
 
 const communityOpen = ref(false)
 const community = ref(null)
@@ -158,6 +185,7 @@ async function loadCommunity() {
   if (!props.bookId) return
   communityLoading.value = true
   communityError.value = false
+  allReviews.value = false
   try {
     community.value = await api.getBookCommunity(props.bookId)
   } catch {
@@ -172,6 +200,43 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 </script>
 
 <style scoped>
+/* Resenhas de outros leitores */
+.community-reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.community-reviews h3 {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.more-reviews {
+  align-self: flex-start;
+  padding: 0.35rem 0.1rem;
+  border: none;
+  background: none;
+  color: var(--main-color);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.more-reviews:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.more-reviews:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* Comunidade recolhida */
 .community-section {
   border-top: 1px solid var(--border-color);

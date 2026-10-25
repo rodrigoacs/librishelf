@@ -9,7 +9,8 @@ import { installRouteFocus } from '../services/routeFocus.js'
  *   requiresAuth — precisa de sessão; sem ela vai para /login?redirect=...
  *   guestOnly    — login/cadastro; quem já está logado vai para o início
  *   standalone   — tela cheia, sem o menu lateral
- *   public       — acessível com ou sem sessão (mostra o menu se houver sessão)
+ *   public       — acessível com ou sem sessão: carrega a sessão, se houver (e
+ *                  mostra o menu, a não ser que seja standalone)
  *   title        — chave de pageTitle.* para o título da aba (services/pageTitle.js)
  *   noindex      — fora de buscadores; 'server' = o nginx decide (ver pageTitle.js)
  *
@@ -35,8 +36,9 @@ const router = createRouter({
     { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPassword.vue'), meta: { standalone: true, title: 'resetPassword' } },
     { path: '/verify-email', name: 'verify-email', component: () => import('../views/VerifyEmail.vue'), meta: { standalone: true, title: 'verifyEmail' } },
     { path: '/unsubscribe', name: 'unsubscribe', component: () => import('../views/Unsubscribe.vue'), meta: { standalone: true, title: 'unsubscribe', noindex: true } },
+    { path: '/moderation', name: 'moderation', component: () => import('../views/Moderation.vue'), meta: { standalone: true, title: 'moderation', noindex: true } },
 
-    { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, title: 'publicLibrary', noindex: 'server' } },
+    { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, public: true, title: 'publicLibrary', noindex: 'server' } },
     { path: '/privacy', name: 'privacy', component: () => import('../views/Privacy.vue'), meta: { public: true, title: 'privacy' } },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFound.vue'), meta: { public: true, title: 'notFound' } }

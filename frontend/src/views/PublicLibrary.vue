@@ -278,6 +278,26 @@
               viewer.commonCount - viewer.commonBooks.length }) }}</p>
         </div>
       </div>
+
+      <div
+        v-if="reviews.items.length"
+        class="panel reviews-panel"
+      >
+        <h2>{{ t('review.profileTitle', { n: reviews.total }, reviews.total) }}</h2>
+        <div class="review-grid">
+          <ReviewCard
+            v-for="item in reviews.items"
+            :key="item.id"
+            :review="item"
+            show-book
+            @open-book="openBook"
+          />
+        </div>
+        <p
+          v-if="reviews.total > reviews.items.length"
+          class="muted small"
+        >{{ t('review.profileMore', { n: reviews.total - reviews.items.length }) }}</p>
+      </div>
     </section>
 
     <div
@@ -371,6 +391,7 @@
 </template>
 
 <script setup>
+import ReviewCard from '../components/review/ReviewCard.vue'
 import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -404,6 +425,7 @@ const bookDialogVisible = ref(false)
 
 const stats = computed(() => profile.value?.stats ?? {})
 const viewer = computed(() => profile.value?.viewer ?? null)
+const reviews = computed(() => profile.value?.reviews ?? { total: 0, items: [] })
 const followStatus = computed(() => viewer.value?.followStatus ?? null)
 
 // Barras dos últimos anos com leitura, proporcionais ao ano com mais livros.
@@ -494,6 +516,8 @@ async function block() {
     profile.value.viewer.followStatus = null
     profile.value.viewer.commonCount = null
     profile.value.viewer.commonBooks = []
+    // Bloqueado não aparece mais aqui (e a resenha deixa de ser visível)
+    profile.value.reviews = { total: 0, items: [] }
     toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.blocked', { name: username.value }), life: 4000 })
   } catch (error) {
     toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
@@ -727,6 +751,21 @@ watch(username, () => {
   letter-spacing: 0.05em;
   color: var(--text-muted);
   font-weight: 600;
+}
+
+.reviews-panel {
+  margin-top: 1rem;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.reviews-panel .small {
+  margin: 0.75rem 0 0;
 }
 
 .panel .sub-heading {

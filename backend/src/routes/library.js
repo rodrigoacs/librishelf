@@ -3,6 +3,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import multer from 'multer'
 import * as readingService from '../services/readingService.js'
+import * as reviewService from '../services/reviewService.js'
 import * as libraryService from '../services/libraryService.js'
 import * as dataService from '../services/dataService.js'
 import { authenticateToken, optionalAuth } from '../middlewares/auth.js'
@@ -107,13 +108,15 @@ router.get('/public/u/:username/profile', publicLimiter, optionalAuth, async (re
   }
 })
 
-router.get('/public/u/:username/book/:id', publicLimiter, validateNumericId(), async (req, res) => {
+router.get('/public/u/:username/book/:id', publicLimiter, optionalAuth, validateNumericId(), async (req, res) => {
   try {
     const { username, id } = req.params
     const book = await libraryService.getPublicBook(username, id)
 
     if (!book) return res.status(STATUS.NOT_FOUND).json(errorBody('Livro não encontrado.', 'BOOK_NOT_FOUND'))
 
+    // Resenha do dono, se quem está vendo pode lê-la (pública ou seguidor)
+    book.review = await reviewService.forPublicBook(Number(id), req.user?.id)
     res.status(STATUS.OK).json(book)
   } catch (error) {
     sendError(res, error, 'Erro ao buscar livro público')
@@ -312,6 +315,34 @@ router.patch('/:id/status', validateNumericId(), async (req, res) => {
     res.status(STATUS.OK).json(result)
   } catch (error) {
     sendError(res, error, 'Erro ao mudar o status de leitura')
+  }
+})
+
+// --- Resenha do livro (pública ou para seguidores) ---
+
+router.get('/:id/review', validateNumericId(), async (req, res) => {
+  try {
+    res.status(STATUS.OK).json({ review: await reviewService.getOwn(Number(req.params.id), req.user.id) })
+  } catch (error) {
+    sendError(res, error, 'Erro ao buscar resenha')
+  }
+})
+
+// { body, hasSpoiler?, visibility?: 'public' | 'followers' }
+router.put('/:id/review', validateNumericId(), async (req, res) => {
+  try {
+    res.status(STATUS.OK).json({ review: await reviewService.save(Number(req.params.id), req.user.id, req.body ?? {}) })
+  } catch (error) {
+    sendError(res, error, 'Erro ao salvar resenha')
+  }
+})
+
+router.delete('/:id/review', validateNumericId(), async (req, res) => {
+  try {
+    await reviewService.remove(Number(req.params.id), req.user.id)
+    res.status(STATUS.OK).json({ review: null })
+  } catch (error) {
+    sendError(res, error, 'Erro ao apagar resenha')
   }
 })
 

@@ -128,15 +128,16 @@ function select(value) {
   font-size: var(--fs-xs);
 }
 
-.size-sm .pi {
+/* .star-rating junto: o <dialog> também usa size-lg e as estrelas herdavam o tamanho grande */
+.star-rating.size-sm .pi {
   font-size: var(--fs-sm);
 }
 
-.size-md .pi {
+.star-rating.size-md .pi {
   font-size: var(--fs-lg);
 }
 
-.size-lg .pi {
+.star-rating.size-lg .pi {
   font-size: var(--fs-xl);
 }
 

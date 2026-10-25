@@ -142,7 +142,7 @@ server {
 
 ### Email (password recovery and sign-up confirmation)
 
-The API sends email over SMTP: the password reset link (valid for 1 hour), the sign-up confirmation link (valid for 3 days) and, for users who turn it on in Account, follower notifications (someone asked to follow you / accepted your request) — at most one every `FOLLOW_EMAIL_INTERVAL_HOURS` (default 6), with one-click unsubscribe (`List-Unsubscribe` + `List-Unsubscribe-Post`, RFC 8058). Until a user confirms their email, public library, community and following stay locked; accounts that existed before this version count as confirmed.
+The API sends email over SMTP: the password reset link (valid for 1 hour), the sign-up confirmation link (valid for 3 days) and, for users who turn it on in Account, follower notifications (someone asked to follow you / accepted your request) — at most one every `FOLLOW_EMAIL_INTERVAL_HOURS` (default 6), with one-click unsubscribe (`List-Unsubscribe` + `List-Unsubscribe-Post`, RFC 8058). When a reader reports a review, `ADMIN_EMAIL` gets the review text and a signed link to `/moderation` to hide it or keep it visible; after 3 reports from different readers it is hidden automatically until reviewed. Until a user confirms their email, public library, community and following stay locked; accounts that existed before this version count as confirmed.
 
 Set in `backend/src/.env`:
 
@@ -155,6 +155,7 @@ SMTP_USER=...
 SMTP_PASS=...
 MAIL_FROM="Librishelf <noreply@librishelf.com>"
 # FOLLOW_EMAIL_INTERVAL_HOURS=6         # optional
+ADMIN_EMAIL=you@example.com             # receives review reports (link to hide/keep); without it reports only go to the log
 ```
 
 To send as `@librishelf.com` without landing in spam, add the SPF and DKIM records your SMTP provider gives you to the domain's DNS (and ideally a DMARC record). Without `SMTP_HOST` nothing is sent: the email content, links included, goes to the server log — handy for local development.

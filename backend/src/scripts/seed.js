@@ -629,6 +629,80 @@ async function insertReadings() {
   `)
 }
 
+// Resenhas: frases por faixa de nota, juntadas em 1 a 4 parágrafos
+const REVIEW_OPENERS = {
+  high: ['Que livro.', 'Terminei com vontade de começar de novo.', 'Um dos melhores que li nos últimos anos.', 'Demorei a engrenar, mas depois não consegui largar.', 'Li em dois dias.'],
+  mid: ['Gostei, com ressalvas.', 'Bom livro, mas esperava mais.', 'Começa muito bem e perde um pouco o fôlego no meio.', 'Leitura agradável, sem grandes surpresas.'],
+  low: ['Não funcionou para mim.', 'Insisti até o fim, mas foi difícil.', 'A premissa é ótima, a execução nem tanto.', 'Abandonei duas vezes antes de terminar.']
+}
+const REVIEW_MIDDLES = [
+  'A construção dos personagens é o ponto mais forte: dá para entender cada escolha, mesmo as piores.',
+  'O ritmo alterna capítulos curtíssimos com outros longos e contemplativos, o que nem sempre ajuda.',
+  'A ambientação é tão bem feita que dá vontade de procurar o lugar no mapa.',
+  'Os diálogos soam naturais, e o humor aparece nos momentos certos.',
+  'Algumas passagens ficaram comigo por dias — marquei várias páginas.',
+  'A tradução tem alguns tropeços, mas nada que atrapalhe a leitura.',
+  'O narrador esconde informações de propósito, e a recompensa vem no último terço.',
+  'Senti falta de mais desenvolvimento dos personagens secundários.',
+  'É o tipo de livro que pede leitura lenta, com pausas.'
+]
+const REVIEW_SPOILERS = [
+  'O final, com a revelação de que o narrador estava mentindo desde o primeiro capítulo, muda tudo o que veio antes.',
+  'A morte do irmão no meio do livro me pegou completamente desprevenida.',
+  'Quando descobrimos quem escreveu as cartas, várias pistas do começo fazem sentido.'
+]
+const REVIEW_CLOSERS = {
+  high: ['Recomendo muito.', 'Vou procurar outros do mesmo autor.', 'Entrou para a lista de favoritos.'],
+  mid: ['Vale a leitura, sem expectativas altas.', 'Bom para ler nas férias.', 'Leria o próximo da série.'],
+  low: ['Não recomendaria, mas entendo quem gosta.', 'Talvez eu não estivesse no momento certo para ele.', 'Fica a curiosidade sobre os outros livros do autor.']
+}
+
+function reviewText(rating, withSpoiler) {
+  const band = rating >= 4 ? 'high' : rating === 3 ? 'mid' : 'low'
+  const parts = [pick(REVIEW_OPENERS[band])]
+  for (const middle of pickSome(REVIEW_MIDDLES, int(0, 3))) parts.push(middle)
+  if (withSpoiler) parts.push(pick(REVIEW_SPOILERS))
+  parts.push(pick(REVIEW_CLOSERS[band]))
+  // Às vezes um parágrafo só; às vezes quebrado em dois ou três
+  if (parts.length > 2 && chance(0.6)) {
+    const cut = int(1, parts.length - 1)
+    return `${parts.slice(0, cut).join(' ')}\n\n${parts.slice(cut).join(' ')}`
+  }
+  return parts.join(' ')
+}
+
+async function insertReviews() {
+  const { rows: books } = await db.query(`
+    SELECT b.id, b.user_id, b.rating, b.read_date, u.name = 'demo' AS demo
+      FROM librishelf.books b
+      JOIN librishelf.users u ON u.id = b.user_id
+     WHERE b.read_date IS NOT NULL AND b.rating IS NOT NULL
+     ORDER BY b.id
+  `)
+  const reviews = []
+  for (const book of books) {
+    if (!chance(book.demo ? 0.3 : 0.18)) continue
+    const spoiler = chance(0.12)
+    const written = Math.min(NOW, new Date(book.read_date).getTime() + int(0, 20) * DAY)
+    reviews.push([book.id, book.user_id, reviewText(book.rating, spoiler), spoiler, chance(0.15) ? 'followers' : 'public', new Date(written).toISOString()])
+  }
+  for (let i = 0; i < reviews.length; i += 500) {
+    const chunk = reviews.slice(i, i + 500)
+    const values = chunk.map((_, j) => `($${j * 6 + 1}, $${j * 6 + 2}, $${j * 6 + 3}, $${j * 6 + 4}, $${j * 6 + 5}, $${j * 6 + 6}, $${j * 6 + 6})`).join(', ')
+    await db.query(`INSERT INTO librishelf.reviews (book_id, user_id, body, has_spoiler, visibility, created_at, updated_at) VALUES ${values}`, chunk.flat())
+  }
+  // Curtidas de leitores com biblioteca pública (cada resenha pública, de 0 a ~12)
+  await db.query(`
+    INSERT INTO librishelf.review_likes (review_id, user_id)
+    SELECT r.id, u.id
+      FROM librishelf.reviews r
+      JOIN librishelf.users u ON u.is_public AND u.id <> r.user_id
+     WHERE r.visibility = 'public' AND (r.id * 31 + u.id * 17) % 23 < (r.id % 4)
+    ON CONFLICT DO NOTHING
+  `)
+  return reviews.length
+}
+
 async function main() {
   await checkSafety()
   logger.info('Populando banco local', { db: process.env.DB_NAME, host: process.env.DB_HOST || 'localhost', ...CONFIG })
@@ -644,6 +718,7 @@ async function main() {
   await insertReadingStatusAndGoals()
   await insertReadings()
   await insertSeriesAndNotes()
+  const reviews = await insertReviews()
   const follows = await insertFollows(users)
   const covers = CONFIG.covers ? await generateCovers(catalog) : 0
 
@@ -667,6 +742,7 @@ async function main() {
     ...summary,
     livros_gravados: books,
     seguir: follows,
+    resenhas: reviews,
     capas: covers,
     segundos: Math.round((Date.now() - startedAt) / 1000),
     login: `demo / ${PASSWORD} (todas as contas usam a mesma senha)`

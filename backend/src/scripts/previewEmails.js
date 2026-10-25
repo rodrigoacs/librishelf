@@ -7,7 +7,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail, followDigestEmail } from '../services/emailTemplates.js'
+import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail, followDigestEmail, reviewReportEmail } from '../services/emailTemplates.js'
 
 const outDir = path.resolve(process.argv[2] || path.join(os.tmpdir(), 'librishelf-emails'))
 fs.mkdirSync(outDir, { recursive: true })
@@ -23,7 +23,8 @@ const emails = {
   'email-trocado-pt': emailChangedEmail({ name: 'Rodrigo', link: `${base}/forgot-password`, locale: 'pt', newEmail: 'ro•••@gmail.com' }),
   'seguidores-1-pt': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=requests`, locale: 'pt', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'request', actor: 'jesteves' }] }),
   'seguidores-varios-pt': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=requests`, locale: 'pt', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'request', actor: 'jesteves' }, { kind: 'request', actor: 'marina.lê' }, { kind: 'accepted', actor: 'caio_r' }] }),
-  'seguidores-aceito-en': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=following`, locale: 'en', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'accepted', actor: 'jesteves' }] })
+  'seguidores-aceito-en': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=following`, locale: 'en', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'accepted', actor: 'jesteves' }] }),
+  'denuncia-pt': reviewReportEmail({ name: 'moderação', link: `${base}/moderation?token=12.${token.slice(0, 32)}`, locale: 'pt', author: 'jesteves', title: 'Silas e o Inverno', excerpt: 'Demorei a engrenar, mas depois não consegui largar.\n\nO final, com a revelação de que o narrador mentia, muda tudo.', reason: 'spoiler', note: 'Conta o final sem marcar como spoiler.', total: 3, hidden: true })
 }
 
 for (const [file, mail] of Object.entries(emails)) {

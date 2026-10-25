@@ -40,7 +40,7 @@ const MAX_COVERS = 500
 
 // Nunca guardados: sessão/conta, buscas externas, prévia, descadastro e o
 // mosaico aleatório da tela de login
-const API_BYPASS = [/^\/api\/auth\//, /^\/api\/isbn\//, /^\/api\/meta\//, /^\/api\/email\//, /^\/api\/ping$/, /^\/api\/library\/covers\/random/]
+const API_BYPASS = [/^\/api\/auth\//, /^\/api\/isbn\//, /^\/api\/meta\//, /^\/api\/email\//, /^\/api\/moderation\//, /^\/api\/ping$/, /^\/api\/library\/covers\/random/]
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {

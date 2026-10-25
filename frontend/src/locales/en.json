@@ -555,6 +555,14 @@
         ]
       },
       {
+        "title": "Reviews",
+        "paragraphs": [
+          "Unlike notes, which are only yours, a review is meant to be read by others. You choose who can read it: everyone who sees your public library (and, if you take part in the community, other readers of the same book) or only your approved followers. With a private library, nobody sees it.",
+          "Signed-in readers can like and report reviews. The author doesn't find out who reported. A report (reason, details and who sent it) goes to Librishelf moderation, which may hide the review; after several reports it is hidden automatically until it's reviewed.",
+          "You can edit or delete your review at any time. It is included when you download your data and is deleted along with the book or the account."
+        ]
+      },
+      {
         "title": "Book search and camera",
         "paragraphs": [
           "When you search for a book by ISBN or by title, Librishelf queries Open Library (openlibrary.org), a public book catalog. The query is made by our server: Open Library only receives the ISBN or the search text, never your data or your account.",
@@ -950,7 +958,8 @@
     "publicLibrary": "{name}'s library",
     "privacy": "Privacy",
     "notFound": "Page not found",
-    "unsubscribe": "Unsubscribe"
+    "unsubscribe": "Unsubscribe",
+    "moderation": "Moderation"
   },
   "password": {
     "show": "Show password",
@@ -1056,7 +1065,11 @@
       "olEditionKey": "Open Library edition",
       "isPublic": "public library",
       "showInCommunity": "community",
-      "showActivity": "activity"
+      "showActivity": "activity",
+      "visibility": "visibility",
+      "hasSpoiler": "spoiler",
+      "reason": "reason",
+      "note": "details"
     },
     "OPENLIBRARY_UNAVAILABLE": "Open Library is unavailable right now. Try again later.",
     "SEARCH_QUERY_INVALID": "Type {min} to {max} characters to search.",
@@ -1070,7 +1083,13 @@
     "PAGE_COUNT_INVALID": "Pages must be from 1 to {max}.",
     "UNSUBSCRIBE_TOKEN_INVALID": "This unsubscribe link isn't valid.",
     "EMAIL_NOT_VERIFIED_NOTIFY": "Confirm your email to receive notifications.",
-    "OFFLINE": "You're offline. This screen hasn't been opened online on this device yet."
+    "OFFLINE": "You're offline. This screen hasn't been opened online on this device yet.",
+    "REVIEW_EMPTY": "Write the review before publishing.",
+    "REVIEW_TOO_LONG": "A review can have at most {max} characters.",
+    "REVIEW_OWN": "You can't like or report your own review.",
+    "REVIEW_NOT_FOUND": "Review not found.",
+    "MODERATION_TOKEN_INVALID": "This moderation link is invalid.",
+    "RATE_LIMIT_REPORTS": "Too many reports in a short time. Try again later."
   },
   "block": {
     "block": "Block {name}",
@@ -1083,5 +1102,81 @@
     "unblocked": "{name} was unblocked.",
     "listTitle": "Blocked readers",
     "listEmpty": "Nobody blocked. To block someone, open their public library and use the ⋯ menu."
+  },
+  "review": {
+    "title": "Review",
+    "write": "Write a review",
+    "writeHint": "What did you think? Other readers can read it — your notes stay private.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Publish review",
+    "saved": "Review published",
+    "saveFailed": "Couldn't save the review.",
+    "loadFailed": "Couldn't load the review.",
+    "placeholder": "Write what you thought of the book…",
+    "counter": "{n} / {max}",
+    "spoiler": "Contains spoilers",
+    "spoilerHint": "The text stays blurred until the reader chooses to see it.",
+    "visibility": "Who can read it",
+    "public": "Everyone",
+    "followers": "Followers only",
+    "privateHint": "Your library is private: nobody sees this review until you make it public in {settings}.",
+    "followersOffHint": "You don't accept followers, so nobody sees this review. To change that, go to {settings}.",
+    "settingsLink": "Account",
+    "hiddenNotice": "This review was hidden after reports and isn't shown to other readers. Edits keep it hidden until it's reviewed.",
+    "deleteTitle": "Delete review?",
+    "deleteMessage": "The review and its likes will be deleted. This can't be undone.",
+    "deleteConfirm": "Delete",
+    "deleted": "Review deleted",
+    "deleteFailed": "Couldn't delete the review.",
+    "ofOwner": "Review by {'@'}{name}",
+    "followersBadge": "Followers",
+    "followersHint": "Visible to followers only",
+    "showSpoiler": "Contains spoilers — show",
+    "readMore": "Read more",
+    "readLess": "Read less",
+    "like": "Like review",
+    "unlike": "Unlike review",
+    "likes": "No likes | 1 like | {n} likes",
+    "likeFailed": "Couldn't like the review",
+    "report": "Report review",
+    "reportTitle": "Report review",
+    "reportIntro": "Tell us what's wrong. The author won't see who reported it; it goes to moderation.",
+    "reportReason": "Reason",
+    "reportNote": "Details (optional)",
+    "reportSend": "Send report",
+    "reportSent": "Report sent",
+    "reportSentDetail": "Thanks. We'll review it.",
+    "reportFailed": "Couldn't send the report.",
+    "reasons": {
+      "spoiler": "Unmarked spoiler",
+      "offensive": "Offensive or abusive",
+      "spam": "Spam or advertising",
+      "other": "Something else"
+    },
+    "fromReaders": "Reader reviews | 1 reader review | {n} reader reviews",
+    "showAll": "See all {n} reviews",
+    "profileTitle": "Reviews | 1 review | {n} reviews",
+    "profileMore": "And {n} more — open the books on the shelf to read them.",
+    "editAria": "Edit review",
+    "deleteAria": "Delete review"
+  },
+  "moderation": {
+    "subtitle": "Moderation",
+    "loading": "Opening…",
+    "title": "Reported review",
+    "failedTitle": "Invalid link",
+    "visible": "Visible to readers",
+    "hiddenAuto": "Hidden automatically (several reports)",
+    "hiddenManual": "Hidden by moderation",
+    "markedSpoiler": "Marked as a spoiler by the author.",
+    "reports": "Reports",
+    "reportsCount": "No reports | 1 report | {n} reports",
+    "hide": "Hide review",
+    "keep": "Keep visible",
+    "restore": "Show review again",
+    "keepHint": "Keeping or showing it again resets the count for automatic hiding.",
+    "hiddenDone": "Review hidden",
+    "keptDone": "Review visible"
   }
 }

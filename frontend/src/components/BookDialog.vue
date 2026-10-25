@@ -107,6 +107,33 @@
             @changed="onReadingChanged"
           />
 
+          <ReviewEditor
+            v-if="!isReadOnly && !loading && !loadFailed"
+            :book-id="bookId"
+          />
+
+          <!-- Biblioteca de outra pessoa: a resenha dela, se puder ver -->
+          <section
+            v-if="isReadOnly && !loading && book.review"
+            class="public-review"
+            aria-labelledby="public-review-title"
+          >
+            <h3
+              id="public-review-title"
+              class="public-review-title"
+            >
+              <i
+                class="pi pi-comment"
+                aria-hidden="true"
+              ></i>
+              {{ t('review.ofOwner', { name: ownerUsername }) }}
+            </h3>
+            <ReviewCard
+              :review="book.review"
+              flat
+            />
+          </section>
+
           <BookCommunity
             v-if="!isReadOnly && !loading && !loadFailed"
             :book-id="bookId"
@@ -154,6 +181,8 @@ import BookView from './book/BookView.vue'
 import BookEditForm from './book/BookEditForm.vue'
 import ReadingPanel from './book/ReadingPanel.vue'
 import BookCommunity from './book/BookCommunity.vue'
+import ReviewEditor from './review/ReviewEditor.vue'
+import ReviewCard from './review/ReviewCard.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { statusOf } from '../utils/readingStatus.js'
 import { setOverlayTitle } from '../services/pageTitle.js'
@@ -185,7 +214,7 @@ const readSaving = ref(false)
 
 function emptyBook() {
   // authors: texto para exibir; authorNames: a lista que é editada e salva.
-  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, series: '', series_index: null, notes: '', pubdate: null, page_count: null, read_count: 0, current_page: null, progress_percent: null }
+  return { title: '', authors: '', authorNames: [], publisher: '', tags: '', isbn: '', isbnValid: true, rating: null, read_date: null, reading_status: null, started_at: null, series: '', series_index: null, notes: '', pubdate: null, page_count: null, read_count: 0, current_page: null, progress_percent: null, review: null }
 }
 
 const book = ref(emptyBook())
@@ -350,7 +379,9 @@ function applyResponse(data) {
     page_count: data.page_count ?? null,
     read_count: data.read_count ?? (data.read_date ? 1 : 0),
     current_page: data.current_page ?? null,
-    progress_percent: data.progress_percent ?? null
+    progress_percent: data.progress_percent ?? null,
+    // Só na biblioteca pública de outra pessoa (a do dono carrega no ReviewEditor)
+    review: data.review ?? null
   }
 }
 
@@ -431,6 +462,27 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.public-review {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+
+.public-review-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.public-review-title .pi {
+  color: var(--text-secondary);
+}
+
 .dialog-shell {
   position: relative;
   display: flex;

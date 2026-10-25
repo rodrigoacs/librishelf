@@ -37,6 +37,7 @@
             v-if="!isReadOnly"
             :model-value="book.rating"
             class="rating-row"
+            size="lg"
             :disabled="ratingSaving"
             :label="t('rating.label')"
             @update:model-value="value => emit('rate', value)"
@@ -45,6 +46,7 @@
             v-else-if="book.rating"
             :model-value="book.rating"
             class="rating-row"
+            size="lg"
             readonly
           />
         </template>

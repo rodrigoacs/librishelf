@@ -3,6 +3,7 @@ import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import * as socialRepository from '../repositories/socialRepository.js'
 import * as readingService from './readingService.js'
+import * as reviewService from './reviewService.js'
 import STATUS from '../utils/statusCodes.js'
 import { httpError } from '../utils/httpError.js'
 
@@ -23,11 +24,13 @@ export async function bookCommunity(bookId, userId) {
   const readers = await communityRepository.readersOfBook(bookId, userId)
   const ratings = readers.map(r => r.rating).filter(r => r !== null)
 
-  const alsoHave = readers.length > 0
-    ? await communityRepository.alsoHave(bookId, userId, ALSO_HAVE_LIMIT)
-    : []
+  const [alsoHave, reviews] = await Promise.all([
+    readers.length > 0 ? communityRepository.alsoHave(bookId, userId, ALSO_HAVE_LIMIT) : [],
+    reviewService.forSameBook(bookId, userId)
+  ])
 
   return {
+    reviews,
     readerCount: readers.length,
     readers: readers
       .map(r => ({ username: r.username, hasRead: r.has_read, rating: r.rating }))
@@ -72,6 +75,9 @@ export async function publicProfile(username, viewerId) {
     },
     viewer: null
   }
+
+  // Resenhas que este leitor pode ver (públicas; "seguidores" se ele segue)
+  profile.reviews = await reviewService.forProfile(user.id, viewerId)
 
   if (viewerId) {
     if (viewerId === user.id) {

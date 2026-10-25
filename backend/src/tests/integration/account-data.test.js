@@ -111,7 +111,7 @@ describe('Exportar', () => {
     })
     expect(res.headers['content-type']).toMatch(/text\/csv/)
     const rows = parseCsv(res.body)
-    expect(rows[0]).toEqual(['title', 'authors', 'publisher', 'isbn', 'tags', 'rating', 'status', 'read_date', 'started_at', 'publication_date', 'series', 'volume', 'notes', 'added_at', 'read_dates', 'pages'])
+    expect(rows[0]).toEqual(['title', 'authors', 'publisher', 'isbn', 'tags', 'rating', 'status', 'read_date', 'started_at', 'publication_date', 'series', 'volume', 'notes', 'added_at', 'read_dates', 'pages', 'review', 'review_spoiler', 'review_visibility'])
     expect(rows).toHaveLength(4)
 
     // A outra conta importa o CSV exportado e fica com os mesmos livros.

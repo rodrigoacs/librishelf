@@ -151,6 +151,38 @@ export default {
     return client.patch(`/library/${id}/status`, date ? { status, date } : { status })
   },
 
+  // --- Resenhas ---
+  getReview(bookId) {
+    return client.get(`/library/${bookId}/review`)
+  },
+
+  /** { body, hasSpoiler, visibility: 'public' | 'followers' } */
+  saveReview(bookId, review) {
+    return client.put(`/library/${bookId}/review`, review)
+  },
+
+  deleteReview(bookId) {
+    return client.delete(`/library/${bookId}/review`)
+  },
+
+  likeReview(reviewId, liked) {
+    return liked ? client.post(`/reviews/${reviewId}/like`, {}) : client.delete(`/reviews/${reviewId}/like`)
+  },
+
+  /** reason: 'spoiler' | 'offensive' | 'spam' | 'other' */
+  reportReview(reviewId, reason, note) {
+    return client.post(`/reviews/${reviewId}/report`, { reason, note })
+  },
+
+  // Moderação pelo link do e-mail de denúncia (sem login)
+  getModeration(token) {
+    return client.get(`/moderation/review?token=${enc(token)}`)
+  },
+
+  moderateReview(token, hide) {
+    return client.post(`/moderation/review/${hide ? 'hide' : 'show'}?token=${enc(token)}`, {})
+  },
+
   // --- Leituras (histórico) e progresso ---
   getReadings(id) {
     return client.get(`/library/${id}/readings`)

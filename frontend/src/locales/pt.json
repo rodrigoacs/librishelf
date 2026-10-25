@@ -555,6 +555,14 @@
         ]
       },
       {
+        "title": "Resenhas",
+        "paragraphs": [
+          "Diferente das anotações, que são só suas, a resenha é feita para outros lerem. Você escolhe quem pode ler: todos que veem sua biblioteca pública (e, se você participa da comunidade, outros leitores do mesmo livro) ou só seus seguidores aprovados. Com a biblioteca privada, ninguém vê.",
+          "Leitores logados podem curtir e denunciar resenhas. Quem escreveu não fica sabendo quem denunciou. A denúncia (motivo, detalhes e quem enviou) vai para a moderação do Librishelf, que pode ocultar a resenha; com várias denúncias ela é ocultada automaticamente até a revisão.",
+          "Você pode editar ou apagar sua resenha a qualquer momento. Ela também vai junto quando você baixa seus dados e é apagada com o livro ou com a conta."
+        ]
+      },
+      {
         "title": "Busca de livros e câmera",
         "paragraphs": [
           "Quando você busca um livro por ISBN ou por título, o Librishelf consulta o Open Library (openlibrary.org), um catálogo público de livros. A consulta é feita pelo nosso servidor: o Open Library recebe só o ISBN ou o texto buscado, nunca seus dados ou sua conta.",
@@ -950,7 +958,8 @@
     "publicLibrary": "Biblioteca de {name}",
     "privacy": "Privacidade",
     "notFound": "Página não encontrada",
-    "unsubscribe": "Descadastrar avisos"
+    "unsubscribe": "Descadastrar avisos",
+    "moderation": "Moderação"
   },
   "password": {
     "show": "Mostrar senha",
@@ -1056,7 +1065,11 @@
       "olEditionKey": "edição do Open Library",
       "isPublic": "biblioteca pública",
       "showInCommunity": "comunidade",
-      "showActivity": "atividade"
+      "showActivity": "atividade",
+      "visibility": "visibilidade",
+      "hasSpoiler": "spoiler",
+      "reason": "motivo",
+      "note": "detalhes"
     },
     "OPENLIBRARY_UNAVAILABLE": "O Open Library está indisponível agora. Tente de novo mais tarde.",
     "SEARCH_QUERY_INVALID": "Digite de {min} a {max} caracteres para buscar.",
@@ -1070,7 +1083,13 @@
     "PAGE_COUNT_INVALID": "O número de páginas precisa ser de 1 a {max}.",
     "UNSUBSCRIBE_TOKEN_INVALID": "Este link de descadastro não é válido.",
     "EMAIL_NOT_VERIFIED_NOTIFY": "Confirme seu e-mail para receber avisos.",
-    "OFFLINE": "Sem conexão. Esta tela ainda não foi aberta com internet neste aparelho."
+    "OFFLINE": "Sem conexão. Esta tela ainda não foi aberta com internet neste aparelho.",
+    "REVIEW_EMPTY": "Escreva a resenha antes de publicar.",
+    "REVIEW_TOO_LONG": "A resenha pode ter no máximo {max} caracteres.",
+    "REVIEW_OWN": "Você não pode curtir nem denunciar a sua própria resenha.",
+    "REVIEW_NOT_FOUND": "Resenha não encontrada.",
+    "MODERATION_TOKEN_INVALID": "Este link de moderação é inválido.",
+    "RATE_LIMIT_REPORTS": "Muitas denúncias em pouco tempo. Tente novamente mais tarde."
   },
   "block": {
     "block": "Bloquear {name}",
@@ -1083,5 +1102,81 @@
     "unblocked": "{name} foi desbloqueado.",
     "listTitle": "Leitores bloqueados",
     "listEmpty": "Ninguém bloqueado. Para bloquear, abra a biblioteca pública da pessoa e use o menu ⋯."
+  },
+  "review": {
+    "title": "Resenha",
+    "write": "Escrever uma resenha",
+    "writeHint": "O que você achou? Outros leitores podem ler — as anotações continuam só suas.",
+    "edit": "Editar",
+    "delete": "Apagar",
+    "save": "Publicar resenha",
+    "saved": "Resenha publicada",
+    "saveFailed": "Não foi possível salvar a resenha.",
+    "loadFailed": "Não foi possível carregar a resenha.",
+    "placeholder": "Escreva o que achou do livro…",
+    "counter": "{n} / {max}",
+    "spoiler": "Contém spoiler",
+    "spoilerHint": "O texto aparece borrado até o leitor pedir para ver.",
+    "visibility": "Quem pode ler",
+    "public": "Todos",
+    "followers": "Só seguidores",
+    "privateHint": "Sua biblioteca está privada: ninguém vê a resenha até você torná-la pública em {settings}.",
+    "followersOffHint": "Você não aceita seguidores, então ninguém vê esta resenha. Para mudar, vá em {settings}.",
+    "settingsLink": "Conta",
+    "hiddenNotice": "Esta resenha foi ocultada depois de denúncias e não aparece para outros leitores. Se editar, ela continua oculta até a revisão.",
+    "deleteTitle": "Apagar resenha?",
+    "deleteMessage": "A resenha e as curtidas dela serão apagadas. Não dá para desfazer.",
+    "deleteConfirm": "Apagar",
+    "deleted": "Resenha apagada",
+    "deleteFailed": "Não foi possível apagar a resenha.",
+    "ofOwner": "Resenha de {'@'}{name}",
+    "followersBadge": "Seguidores",
+    "followersHint": "Visível só para seguidores",
+    "showSpoiler": "Contém spoiler — mostrar",
+    "readMore": "Ler mais",
+    "readLess": "Ler menos",
+    "like": "Curtir resenha",
+    "unlike": "Descurtir resenha",
+    "likes": "Nenhuma curtida | 1 curtida | {n} curtidas",
+    "likeFailed": "Não foi possível curtir",
+    "report": "Denunciar resenha",
+    "reportTitle": "Denunciar resenha",
+    "reportIntro": "Conte o que há de errado. A denúncia é anônima para quem escreveu e vai para a moderação.",
+    "reportReason": "Motivo",
+    "reportNote": "Detalhes (opcional)",
+    "reportSend": "Enviar denúncia",
+    "reportSent": "Denúncia enviada",
+    "reportSentDetail": "Obrigado. Vamos revisar a resenha.",
+    "reportFailed": "Não foi possível enviar a denúncia.",
+    "reasons": {
+      "spoiler": "Spoiler sem aviso",
+      "offensive": "Ofensiva ou abusiva",
+      "spam": "Spam ou propaganda",
+      "other": "Outro motivo"
+    },
+    "fromReaders": "Resenhas de leitores | 1 resenha de leitor | {n} resenhas de leitores",
+    "showAll": "Ver todas as {n} resenhas",
+    "profileTitle": "Resenhas | 1 resenha | {n} resenhas",
+    "profileMore": "E mais {n} — abra os livros da estante para ler.",
+    "editAria": "Editar resenha",
+    "deleteAria": "Apagar resenha"
+  },
+  "moderation": {
+    "subtitle": "Moderação",
+    "loading": "Abrindo…",
+    "title": "Resenha denunciada",
+    "failedTitle": "Link inválido",
+    "visible": "Visível para os leitores",
+    "hiddenAuto": "Oculta automaticamente (várias denúncias)",
+    "hiddenManual": "Oculta pela moderação",
+    "markedSpoiler": "Marcada pelo autor como spoiler.",
+    "reports": "Denúncias",
+    "reportsCount": "Nenhuma denúncia | 1 denúncia | {n} denúncias",
+    "hide": "Ocultar resenha",
+    "keep": "Manter visível",
+    "restore": "Reexibir resenha",
+    "keepHint": "Manter ou reexibir zera a contagem para a ocultação automática.",
+    "hiddenDone": "Resenha ocultada",
+    "keptDone": "Resenha visível"
   }
 }

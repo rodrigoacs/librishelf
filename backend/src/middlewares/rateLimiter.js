@@ -80,6 +80,15 @@ const coverProxyLimiter = buildLimiter({
   code: 'RATE_LIMIT'
 })
 
+// Denúncias de resenha: poucas por pessoa (cada uma pode virar e-mail)
+const reportLimiter = buildLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  perUser: true,
+  message: 'Muitas denúncias em pouco tempo. Tente novamente mais tarde.',
+  code: 'RATE_LIMIT_REPORTS'
+})
+
 // Trecho de <head> das bibliotecas públicas, pedido pelo nginx a cada
 // abertura de /u/<usuário>. Generoso: em 429 o nginx cai no noindex padrão.
 const metaLimiter = buildLimiter({
@@ -123,4 +132,4 @@ const tokenLimiter = buildLimiter({
   code: 'RATE_LIMIT_ATTEMPTS'
 })
 
-export { mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, metaLimiter, isbnLimiter, bookSearchLimiter, coverProxyLimiter, socialLimiter }
+export { mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, metaLimiter, isbnLimiter, bookSearchLimiter, coverProxyLimiter, reportLimiter, socialLimiter }

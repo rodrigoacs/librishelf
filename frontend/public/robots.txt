@@ -7,4 +7,5 @@ Disallow: /api/
 Disallow: /reset-password
 Disallow: /verify-email
 Disallow: /unsubscribe
+Disallow: /moderation
 Allow: /

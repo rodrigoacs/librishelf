@@ -81,6 +81,19 @@ const TEXTS = {
       manage: 'Você também pode mudar isso na Conta, em Avisos por e-mail.',
       footer: 'Você recebeu este e-mail porque ativou os avisos de seguidores no Librishelf. Este é um endereço automático: respostas não são lidas.'
     },
+    report: {
+      subject: ({ title, hidden }) => `${hidden ? '[Oculta] ' : ''}Resenha denunciada: ${title}`,
+      preheader: ({ author, reasonLabel }) => `${author} · ${reasonLabel}`,
+      title: 'Resenha denunciada',
+      greeting: () => 'Olá!',
+      body: ({ hidden, total }) => (hidden
+        ? `Esta resenha recebeu ${total} denúncias e foi ocultada automaticamente até alguém revisar.`
+        : 'Um leitor denunciou esta resenha. Ela continua visível até você decidir.'),
+      line: line => line,
+      button: 'Revisar a resenha',
+      note: 'No link você vê a resenha inteira e as denúncias, e escolhe ocultar ou manter.',
+      ignore: 'Você recebeu este e-mail porque o endereço está em ADMIN_EMAIL no servidor do Librishelf.'
+    },
     fallback: 'Se o botão não funcionar, copie e cole este endereço no navegador:',
     tagline: 'Sua biblioteca pessoal, organizada.',
     footer: 'Você recebeu este e-mail porque ele está cadastrado no Librishelf. Este é um endereço automático: respostas não são lidas.'
@@ -131,6 +144,19 @@ const TEXTS = {
       unsubscribeLink: 'Unsubscribe in one click',
       manage: 'You can also change this in Account, under Email notifications.',
       footer: "You're receiving this email because you turned on follower notifications on Librishelf. This is an automated address: replies are not read."
+    },
+    report: {
+      subject: ({ title, hidden }) => `${hidden ? '[Hidden] ' : ''}Review reported: ${title}`,
+      preheader: ({ author, reasonLabel }) => `${author} · ${reasonLabel}`,
+      title: 'Review reported',
+      greeting: () => 'Hi!',
+      body: ({ hidden, total }) => (hidden
+        ? `This review got ${total} reports and was hidden automatically until someone reviews it.`
+        : 'A reader reported this review. It stays visible until you decide.'),
+      line: line => line,
+      button: 'Review it',
+      note: 'The link shows the full review and the reports, and lets you hide or keep it.',
+      ignore: "You're receiving this email because this address is set as ADMIN_EMAIL on the Librishelf server."
     },
     fallback: "If the button doesn't work, copy and paste this address into your browser:",
     tagline: 'Your personal library, organized.',
@@ -311,3 +337,29 @@ export const emailChangedEmail = params => build('changed', params)
  * { name, link, locale, items: [{ kind: 'request'|'accepted', actor }], hours, unsubscribe }
  */
 export const followDigestEmail = params => build('follow', params)
+
+const REPORT_REASONS = {
+  pt: { spoiler: 'Spoiler sem aviso', offensive: 'Ofensiva ou discurso de ódio', spam: 'Spam ou propaganda', other: 'Outro motivo' },
+  en: { spoiler: 'Unmarked spoiler', offensive: 'Offensive or hateful', spam: 'Spam or advertising', other: 'Other' }
+}
+
+/**
+ * Denúncia de resenha para quem modera:
+ * { link, locale, author, title, excerpt, reason, note, total, hidden }
+ */
+export function reviewReportEmail({ author, title, excerpt, reason, note, total, hidden, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  const reasonLabel = REPORT_REASONS[code][reason] || reason
+  const L = code === 'en'
+    ? { book: 'Book', author: 'Author', reason: 'Reason', note: 'Reader note', excerpt: 'Excerpt', count: 'Reports' }
+    : { book: 'Livro', author: 'Autor da resenha', reason: 'Motivo', note: 'Observação do leitor', excerpt: 'Trecho', count: 'Denúncias' }
+  const items = [
+    `${L.book}: ${title}`,
+    `${L.author}: ${author}`,
+    `${L.reason}: ${reasonLabel}`,
+    ...(note ? [`${L.note}: ${note}`] : []),
+    `${L.count}: ${total}`,
+    `${L.excerpt}: “${excerpt}”`
+  ]
+  return build('report', { ...rest, locale: code, items, author, title, reasonLabel, total, hidden })
+}

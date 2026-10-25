@@ -35,6 +35,7 @@ coverage
 # Capas enviadas pelos usuários (volume do Docker e pasta local dos testes)
 uploads/
 backend/uploads/
+uploads-test/
 
 # Scripts de entrega dos pacotes: rodam a partir de fora do repositório
 /pacote-*.sh
