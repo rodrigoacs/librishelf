@@ -406,6 +406,15 @@
       "on": "Your library may now appear in search engines.",
       "off": "Your library will no longer appear in search engines."
     },
+    "notifications": {
+      "title": "Email notifications",
+      "desc": "Get an email when someone asks to follow you and when your request is accepted.",
+      "verifyFirst": "Confirm your email to receive notifications.",
+      "follow": "Follow requests and accepted requests",
+      "followHelp": "Sent to {email}. At most one email every {hours} hours — anything in between comes together. Every email has an unsubscribe link.",
+      "on": "You'll receive email notifications.",
+      "off": "Email notifications turned off."
+    },
     "password": {
       "title": "Change password",
       "desc": "Your other open sessions will be signed out.",
@@ -482,6 +491,7 @@
       "label": "On this page",
       "privacy": "Privacy",
       "account": "Account",
+      "notifications": "Notifications",
       "password": "Password",
       "data": "Data",
       "delete": "Delete"
@@ -701,6 +711,18 @@
     "clearMessage": "This book has {n} recorded readings. Changing the status deletes all of them.",
     "clearConfirm": "Delete and change"
   },
+  "unsubscribe": {
+    "loading": "Unsubscribing…",
+    "doneTitle": "Done, you're unsubscribed",
+    "doneText": "You won't get follower notifications by email anymore. Requests still show up in the Community.",
+    "undo": "Undo",
+    "settings": "Open notifications in Account",
+    "undoneTitle": "Notifications back on",
+    "undoneText": "You'll get follower notifications by email again.",
+    "home": "Go to Librishelf",
+    "failedTitle": "Couldn't unsubscribe",
+    "failedText": "This unsubscribe link isn't valid. You can turn notifications off in Account."
+  },
   "community": {
     "book_title": "Community",
     "load_error": "Couldn't load the community.",
@@ -917,7 +939,8 @@
     "verifyEmail": "Confirm email",
     "publicLibrary": "{name}'s library",
     "privacy": "Privacy",
-    "notFound": "Page not found"
+    "notFound": "Page not found",
+    "unsubscribe": "Unsubscribe"
   },
   "password": {
     "show": "Show password",
@@ -1034,7 +1057,9 @@
     "NOT_READING": "This book isn't being read.",
     "PROGRESS_INVALID": "Invalid progress.",
     "PROGRESS_PAGE_OVER": "The current page is past the book's total pages ({max}).",
-    "PAGE_COUNT_INVALID": "Pages must be from 1 to {max}."
+    "PAGE_COUNT_INVALID": "Pages must be from 1 to {max}.",
+    "UNSUBSCRIBE_TOKEN_INVALID": "This unsubscribe link isn't valid.",
+    "EMAIL_NOT_VERIFIED_NOTIFY": "Confirm your email to receive notifications."
   },
   "block": {
     "block": "Block {name}",

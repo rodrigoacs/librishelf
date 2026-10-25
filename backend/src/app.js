@@ -13,6 +13,7 @@ import communityRoutes from './routes/community.js'
 import socialRoutes from './routes/social.js'
 import uploadsRoutes from './routes/uploads.js'
 import metaRoutes from './routes/meta.js'
+import emailRoutes from './routes/email.js'
 import errorHandler from './middlewares/errorHandler.js'
 import corsOptions from './config/corsOptions.js'
 import trustProxy from './config/trustProxy.js'
@@ -39,6 +40,7 @@ app.use('/isbn', isbnRoutes)
 app.use('/community', communityRoutes)
 app.use('/social', socialRoutes)
 app.use('/meta', metaRoutes)
+app.use('/email', emailRoutes)
 app.get('/ping', (req, res) => { res.json({ message: 'pong' }) })
 
 app.use(errorHandler)

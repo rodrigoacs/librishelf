@@ -215,6 +215,44 @@
           </dl>
         </section>
 
+        <!-- Avisos por e-mail (opt-in) -->
+        <section
+          class="settings-card"
+          aria-labelledby="settings-notifications-title"
+          id="settings-notifications"
+          tabindex="-1"
+        >
+          <h2 id="settings-notifications-title">{{ t('settings.notifications.title') }}</h2>
+          <p class="card-desc">{{ t('settings.notifications.desc') }}</p>
+          <p
+            v-if="!emailVerified"
+            class="verify-note"
+          >
+            <i
+              class="pi pi-envelope"
+              aria-hidden="true"
+            ></i>
+            {{ t('settings.notifications.verifyFirst') }}
+          </p>
+
+          <div class="toggle-block">
+            <div class="toggle-row">
+              <AppSwitch
+                inputId="settings-follow-emails"
+                :modelValue="followEmails"
+                :disabled="savingNotifications || (!emailVerified && !followEmails)"
+                aria-describedby="settings-follow-emails-help"
+                @update:modelValue="saveFollowEmails"
+              />
+              <label for="settings-follow-emails">{{ t('settings.notifications.follow') }}</label>
+            </div>
+            <small
+              id="settings-follow-emails-help"
+              class="toggle-help"
+            >{{ t('settings.notifications.followHelp', { hours: 6, email: user?.email || '' }) }}</small>
+          </div>
+        </section>
+
         <!-- Senha -->
         <section
           class="settings-card"
@@ -504,6 +542,7 @@ const { t, locale } = useI18n()
 const indexItems = computed(() => [
   { id: 'settings-privacy', label: t('settings.index.privacy') },
   { id: 'settings-account', label: t('settings.index.account') },
+  { id: 'settings-notifications', label: t('settings.index.notifications') },
   { id: 'settings-password', label: t('settings.index.password') },
   { id: 'settings-data', label: t('settings.index.data') },
   { id: 'settings-delete', label: t('settings.index.delete') }
@@ -526,6 +565,22 @@ const emailVerified = computed(() => user.value?.emailVerified !== false)
 const showInCommunity = computed(() => Boolean(user.value?.showInCommunity))
 const showActivity = computed(() => Boolean(user.value?.showActivity))
 const allowIndexing = computed(() => Boolean(user.value?.allowIndexing))
+const followEmails = computed(() => Boolean(user.value?.followEmails))
+const savingNotifications = ref(false)
+
+// Avisos por e-mail: vão no idioma atual do app
+async function saveFollowEmails(value) {
+  savingNotifications.value = true
+  try {
+    const result = await api.setNotifications({ followEmails: value, locale: locale.value === 'en' ? 'en' : 'pt' })
+    updateUser({ followEmails: result.followEmails })
+    toast.add({ severity: 'success', summary: t('common.success'), detail: result.followEmails ? t('settings.notifications.on') : t('settings.notifications.off'), life: 3000 })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+  } finally {
+    savingNotifications.value = false
+  }
+}
 const publicUrl = computed(() => `${window.location.origin}/u/${encodeURIComponent(user.value?.name || '')}`)
 
 const savingVisibility = ref(false)

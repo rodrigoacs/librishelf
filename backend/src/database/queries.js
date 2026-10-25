@@ -172,7 +172,7 @@ export const AUTH_QUERIES = {
     WHERE name = $1
   `,
   FIND_USER_BY_ID: `
-    SELECT id, name, email, is_public, show_in_community, show_activity, allow_indexing, email_verified_at
+    SELECT id, name, email, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at
     FROM librishelf.users
     WHERE id = $1
   `,
@@ -188,12 +188,12 @@ export const AUTH_QUERIES = {
   UPDATE_EMAIL: `
     UPDATE librishelf.users SET email = $2, email_verified_at = NULL, updated_at = now()
     WHERE id = $1
-    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity, allow_indexing
+    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity, allow_indexing, follow_emails
   `,
   UPDATE_NAME: `
     UPDATE librishelf.users SET name = $2, updated_at = now()
     WHERE id = $1
-    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity, allow_indexing
+    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity, allow_indexing, follow_emails
   `,
   MARK_EMAIL_VERIFIED: `
     UPDATE librishelf.users
@@ -215,7 +215,7 @@ export const AUTH_QUERIES = {
   CREATE_USER: `
     INSERT INTO librishelf.users (name, password_hash, email)
     VALUES ($1, $2, $3)
-    RETURNING id, name, email, is_public, show_in_community, show_activity, allow_indexing, email_verified_at
+    RETURNING id, name, email, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at
   `,
   UPDATE_PASSWORD: `
     UPDATE librishelf.users
@@ -554,7 +554,7 @@ export const COMMUNITY_QUERIES = {
 export const DATA_QUERIES = {
   EXPORT_USER: `
     SELECT name, email, to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at,
-           is_public, show_in_community, show_activity, allow_indexing,
+           is_public, show_in_community, show_activity, allow_indexing, follow_emails,
            email_verified_at IS NOT NULL AS email_verified
     FROM librishelf.users WHERE id = $1
   `,
@@ -759,5 +759,90 @@ export const TOKEN_QUERIES = {
   DELETE_STALE: `
     DELETE FROM librishelf.user_tokens
     WHERE expires_at < now() - interval '7 days' OR used_at < now() - interval '7 days'
+  `
+}
+
+// Prévia das bibliotecas públicas (Open Graph, metaService)
+export const META_QUERIES = {
+  LIBRARY_STATS: `
+    SELECT count(*)::int AS total,
+           count(*) FILTER (WHERE read_date IS NOT NULL)::int AS read,
+           extract(epoch FROM max(coalesce(last_modified, created_at)))::bigint AS changed
+    FROM librishelf.books WHERE user_id = $1
+  `,
+  // Candidatas a aparecer no mosaico: melhor avaliadas e lidas por último
+  COVER_CANDIDATES: `
+    SELECT id FROM librishelf.books
+    WHERE user_id = $1
+    ORDER BY rating DESC NULLS LAST, read_date DESC NULLS LAST, id DESC
+    LIMIT $2
+  `,
+  // Capa nova muda a versão da imagem da prévia
+  TOUCH_BOOK: 'UPDATE librishelf.books SET last_modified = now() WHERE id = $1'
+}
+
+// Aviso por e-mail de seguidores (migration 010)
+export const FOLLOW_EMAIL_QUERIES = {
+  // Só entra na fila quem quer o aviso e tem e-mail confirmado
+  ENQUEUE: `
+    INSERT INTO librishelf.follow_email_queue (user_id, kind, actor_id)
+    SELECT u.id, $2, $3 FROM librishelf.users u
+    WHERE u.id = $1 AND u.follow_emails AND u.email_verified_at IS NOT NULL AND u.is_active IS NOT FALSE
+    ON CONFLICT (user_id, kind, actor_id) DO NOTHING
+    RETURNING user_id
+  `,
+  DEQUEUE: 'DELETE FROM librishelf.follow_email_queue WHERE user_id = $1 AND kind = $2 AND actor_id = $3',
+  // Bloqueio: some tudo entre os dois, nos dois sentidos
+  DEQUEUE_PAIR: `
+    DELETE FROM librishelf.follow_email_queue
+    WHERE (user_id = $1 AND actor_id = $2) OR (user_id = $2 AND actor_id = $1)
+  `,
+  CLEAR_USER: 'DELETE FROM librishelf.follow_email_queue WHERE user_id = $1',
+  // Quem tem aviso na fila e já pode receber (último e-mail há mais de $1 segundos)
+  DUE_USERS: `
+    SELECT DISTINCT q.user_id
+    FROM librishelf.follow_email_queue q
+    JOIN librishelf.users u ON u.id = q.user_id
+    WHERE u.follow_emails
+      AND (u.follow_email_sent_at IS NULL OR u.follow_email_sent_at <= now() - make_interval(secs => $1))
+    LIMIT 200
+  `,
+  // Reserva o envio (vale com mais de um processo): só um consegue
+  CLAIM: `
+    WITH prev AS (SELECT follow_email_sent_at FROM librishelf.users WHERE id = $1)
+    UPDATE librishelf.users u
+    SET follow_email_sent_at = now()
+    WHERE u.id = $1 AND u.follow_emails AND u.email_verified_at IS NOT NULL AND u.is_active IS NOT FALSE
+      AND (u.follow_email_sent_at IS NULL OR u.follow_email_sent_at <= now() - make_interval(secs => $2))
+      AND EXISTS (SELECT 1 FROM librishelf.follow_email_queue q WHERE q.user_id = u.id)
+    RETURNING u.id, u.name, u.email, u.email_locale, (SELECT follow_email_sent_at FROM prev) AS previous_sent_at, now() AS claimed_at
+  `,
+  RELEASE: 'UPDATE librishelf.users SET follow_email_sent_at = $2 WHERE id = $1',
+  // Avisos que ainda valem: pedido ainda pendente / seguir ainda aceito, sem bloqueio
+  PENDING_ITEMS: `
+    SELECT q.kind, q.actor_id, a.name AS actor, q.created_at
+    FROM librishelf.follow_email_queue q
+    JOIN librishelf.users a ON a.id = q.actor_id
+    WHERE q.user_id = $1
+      AND a.is_active IS NOT FALSE
+      AND (
+        (q.kind = 'request' AND EXISTS (SELECT 1 FROM librishelf.follows f
+          WHERE f.follower_id = q.actor_id AND f.followee_id = q.user_id AND f.status = 'pending'))
+        OR
+        (q.kind = 'accepted' AND EXISTS (SELECT 1 FROM librishelf.follows f
+          WHERE f.follower_id = q.user_id AND f.followee_id = q.actor_id AND f.status = 'accepted'))
+      )
+      AND NOT EXISTS (SELECT 1 FROM librishelf.blocks b
+        WHERE (b.blocker_id = q.user_id AND b.blocked_id = q.actor_id) OR (b.blocker_id = q.actor_id AND b.blocked_id = q.user_id))
+    ORDER BY q.created_at
+  `,
+  DELETE_UPTO: 'DELETE FROM librishelf.follow_email_queue WHERE user_id = $1 AND created_at <= $2',
+  SET_PREFS: `
+    UPDATE librishelf.users
+    SET follow_emails = COALESCE($2, follow_emails),
+        email_locale = COALESCE($3, email_locale),
+        updated_at = now()
+    WHERE id = $1
+    RETURNING follow_emails, email_locale
   `
 }

@@ -9,6 +9,7 @@ import crypto from 'node:crypto'
 import * as tokenRepository from '../repositories/tokenRepository.js'
 import { sendMail } from './mailService.js'
 import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail } from './emailTemplates.js'
+import * as followEmailService from './followEmailService.js'
 import { httpError } from '../utils/httpError.js'
 import { isReservedUsername } from '../utils/reservedNames.js'
 
@@ -65,6 +66,7 @@ function toProfile(user) {
     showInCommunity: Boolean(user.show_in_community),
     showActivity: Boolean(user.show_activity),
     allowIndexing: Boolean(user.allow_indexing),
+    followEmails: Boolean(user.follow_emails),
     emailVerified: Boolean(user.email_verified_at)
   }
 }
@@ -318,6 +320,34 @@ async function setPrivacy(userId, body = {}) {
   }
 }
 
+/**
+ * Avisos por e-mail (opt-in): followEmails liga/desliga os avisos de
+ * seguidores; locale é o idioma dos e-mails (o do app quando ligou).
+ * Ligar exige e-mail confirmado.
+ */
+async function setNotifications(userId, body = {}) {
+  const { followEmails, locale } = body
+  if (followEmails === undefined && locale === undefined) {
+    throw httpError('Nada para alterar.', STATUS.BAD_REQUEST, 'NOTHING_TO_UPDATE')
+  }
+  if (followEmails !== undefined && typeof followEmails !== 'boolean') {
+    throw httpError("Campo 'followEmails' precisa ser true ou false.", STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: 'followEmails' })
+  }
+  if (locale !== undefined && !['pt', 'en'].includes(locale)) {
+    throw httpError("Campo 'locale' inválido.", STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: 'locale' })
+  }
+  if (followEmails === true) {
+    const user = await authRepository.getUserById(userId)
+    if (!user) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
+    if (!user.email_verified_at) {
+      throw httpError('Confirme seu e-mail para receber avisos.', STATUS.FORBIDDEN, 'EMAIL_NOT_VERIFIED_NOTIFY')
+    }
+  }
+  const result = await followEmailService.setPreferences(userId, { followEmails, locale })
+  if (!result) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
+  return result
+}
+
 /** ro•••@gmail.com: o aviso ao e-mail antigo não entrega o endereço novo inteiro. */
 function maskEmail(email) {
   const [local, domain] = String(email).split('@')
@@ -433,6 +463,7 @@ export {
   changeEmail,
   changeUsername,
   setPrivacy,
+  setNotifications,
   deleteAccount,
   USERNAME_PATTERN
 }

@@ -2,6 +2,7 @@ import * as socialRepository from '../repositories/socialRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { httpError } from '../utils/httpError.js'
+import * as followEmails from './followEmailService.js'
 
 const FEED_PAGE_SIZE = 30
 
@@ -32,6 +33,8 @@ export async function requestFollow(viewerId, username) {
   }
 
   const status = await socialRepository.requestFollow(viewerId, target.id)
+  // Aviso por e-mail (se a pessoa quer); não espera o envio
+  if (status === 'pending') void followEmails.notify(target.id, 'request', viewerId)
   return { username: target.name, status }
 }
 
@@ -39,6 +42,8 @@ export async function requestFollow(viewerId, username) {
 export async function unfollow(viewerId, username) {
   const target = await findUser(username)
   await socialRepository.deleteFollow(viewerId, target.id, ['pending', 'accepted'])
+  await followEmails.withdraw(target.id, 'request', viewerId)
+  await followEmails.withdraw(viewerId, 'accepted', target.id)
   return { username: target.name, status: null }
 }
 
@@ -46,6 +51,8 @@ export async function acceptRequest(viewerId, username) {
   const follower = await findUser(username)
   const accepted = await socialRepository.acceptFollow(follower.id, viewerId)
   if (!accepted) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND, 'REQUEST_NOT_FOUND')
+  await followEmails.withdraw(viewerId, 'request', follower.id)
+  void followEmails.notify(follower.id, 'accepted', viewerId)
   return { username: follower.name, status: 'accepted' }
 }
 
@@ -53,12 +60,14 @@ export async function rejectRequest(viewerId, username) {
   const follower = await findUser(username)
   const removed = await socialRepository.deleteFollow(follower.id, viewerId, ['pending'])
   if (!removed) throw httpError('Pedido não encontrado.', STATUS.NOT_FOUND, 'REQUEST_NOT_FOUND')
+  await followEmails.withdraw(viewerId, 'request', follower.id)
 }
 
 export async function removeFollower(viewerId, username) {
   const follower = await findUser(username)
   const removed = await socialRepository.deleteFollow(follower.id, viewerId, ['accepted'])
   if (!removed) throw httpError('Seguidor não encontrado.', STATUS.NOT_FOUND, 'FOLLOWER_NOT_FOUND')
+  await followEmails.withdraw(follower.id, 'accepted', viewerId)
 }
 
 /**
@@ -70,6 +79,7 @@ export async function blockUser(viewerId, username) {
   const target = await findUser(username)
   if (target.id === viewerId) throw httpError('Você não pode bloquear a si mesmo.', STATUS.BAD_REQUEST, 'BLOCK_SELF')
   await socialRepository.block(viewerId, target.id)
+  await followEmails.withdrawPair(viewerId, target.id)
   return { username: target.name, blocked: true }
 }
 

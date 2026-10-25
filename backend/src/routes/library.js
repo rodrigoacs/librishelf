@@ -251,6 +251,8 @@ router.post('/:id/cover', validateNumericId(), uploadLimiter, handleUpload(uploa
     await libraryService.checkBookOwnership(id, userId)
 
     await saveBookCover(req.file.buffer, id)
+    // Capa nova: a prévia da biblioteca pública (mosaico) ganha versão nova
+    await libraryService.touchBook(id)
 
     logger.info('Capa processada (jpg + avif)', { bookId: id, userId })
 

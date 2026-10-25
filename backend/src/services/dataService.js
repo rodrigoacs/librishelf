@@ -53,7 +53,8 @@ export async function exportJson(userId) {
       isPublic: user.is_public,
       showInCommunity: user.show_in_community,
       showActivity: user.show_activity,
-      allowIndexing: user.allow_indexing
+      allowIndexing: user.allow_indexing,
+      followEmails: user.follow_emails
     },
     readingGoals: goals,
     books: books.map(book => ({

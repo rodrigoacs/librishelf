@@ -291,6 +291,10 @@ async function setReadingStatus(bookId, userId, rawStatus, rawDate) {
   return readingService.setStatus(bookId, userId, rawStatus, rawDate)
 }
 
+async function touchBook(bookId) {
+  await libraryRepository.touchBook(bookId)
+}
+
 async function getSeries(userId) {
   return await libraryRepository.getSeriesByUser(userId)
 }
@@ -361,6 +365,7 @@ export {
   markBookAsUnread,
   setReadingStatus,
   getSeries,
+  touchBook,
   batchUpdate,
   setRating,
   getPublicLibraryByUsername,

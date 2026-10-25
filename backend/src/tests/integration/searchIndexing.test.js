@@ -9,6 +9,8 @@ const tokens = {}
 const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
 const visibility = (user, body) => request(app).patch('/auth/me/visibility').set(auth(user)).send(body)
 const head = name => request(app).get(`/meta/u/${encodeURIComponent(name)}`)
+// O trecho começa pela tag robots; depois vêm as tags Open Graph
+const robotsOf = res => res.text.match(/^<meta name="robots"[^>]*>/)?.[0]
 
 async function signUp(name, confirm = true) {
   await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
@@ -37,25 +39,25 @@ describe('Aparecer em buscadores', () => {
       const res = await head(name)
       expect(res.statusCode).toBe(200)
       expect(res.headers['content-type']).toMatch(/text\/html/)
-      expect(res.text).toBe(ROBOTS_NOINDEX)
+      expect(robotsOf(res)).toBe(ROBOTS_NOINDEX)
     }
     await visibility('nina', { isPublic: true })
-    expect((await head('nina')).text).toBe(ROBOTS_NOINDEX)
+    expect(robotsOf(await head('nina'))).toBe(ROBOTS_NOINDEX)
   })
 
   it('ligar a opção libera o index só enquanto a biblioteca for pública', async () => {
     const res = await visibility('nina', { allowIndexing: true })
     expect(res.statusCode).toBe(200)
     expect(res.body).toMatchObject({ isPublic: true, allowIndexing: true })
-    expect((await head('nina')).text).toBe(ROBOTS_INDEX)
+    expect(robotsOf(await head('nina'))).toBe(ROBOTS_INDEX)
 
     const profile = await request(app).get('/library/public/u/nina/profile')
     expect(profile.body.indexable).toBe(true)
 
     await visibility('nina', { isPublic: false })
-    expect((await head('nina')).text).toBe(ROBOTS_NOINDEX)
+    expect(robotsOf(await head('nina'))).toBe(ROBOTS_NOINDEX)
     await visibility('nina', { isPublic: true, allowIndexing: false })
-    expect((await head('nina')).text).toBe(ROBOTS_NOINDEX)
+    expect(robotsOf(await head('nina'))).toBe(ROBOTS_NOINDEX)
   })
 
   it('valida o tipo e exige e-mail confirmado para ligar', async () => {
@@ -66,6 +68,6 @@ describe('Aparecer em buscadores', () => {
   })
 
   it('nome com caracteres fora do padrão não consulta nada', async () => {
-    expect((await head('a"b<c')).text).toBe(ROBOTS_NOINDEX)
+    expect(robotsOf(await head('a"b<c'))).toBe(ROBOTS_NOINDEX)
   })
 })

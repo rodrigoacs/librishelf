@@ -3,8 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Em /u/<usuário> o nginx troca o bloco abaixo (SSI) pelas tags da biblioteca; nas outras páginas são só comentários. -->
-    <!--# include virtual="/__meta/u/$lib_user" set="meta_head" wait="yes" --><!--# if expr="$meta_head" --><!--# echo var="meta_head" encoding="none" --><!--# else --><!--# echo var="meta_fallback" encoding="none" default="" --><!--# endif -->
     <title>Librishelf</title>
     <meta name="description" content="Librishelf — organize sua biblioteca pessoal: cadastre livros, acompanhe o que já leu e encontre qualquer obra da sua coleção." />
     <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
@@ -16,6 +14,15 @@
     <!-- Instalar como app no celular (ícone na tela inicial, abre sem a barra do navegador) -->
     <link rel="manifest" href="/manifest.webmanifest" />
 
+    <!--
+      Prévia (WhatsApp, redes) e robots. Em /u/<usuário> o nginx processa os
+      comandos SSI desta parte: pede ao backend as tags daquela biblioteca, que
+      entram no lugar das genéricas abaixo; se o backend falhar, ficam as
+      genéricas com noindex. Nas outras páginas os comandos SSI são só
+      comentários e valem as tags genéricas (iguais a defaultTags() no
+      metaService do backend).
+    -->
+    <!--# include virtual="/__meta/u/$lib_user" set="meta_head" wait="yes" --><!--# if expr="$meta_head" --><!--# echo var="meta_head" encoding="none" --><!--# else --><!--# echo var="meta_fallback" encoding="none" default="" -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Librishelf" />
     <meta property="og:title" content="Librishelf" />
@@ -26,6 +33,7 @@
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary" />
+    <!--# endif -->
 
     <script>
       // Aplica tema, cor de destaque e idioma antes do CSS e do Vue carregarem

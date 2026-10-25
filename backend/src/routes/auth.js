@@ -171,6 +171,15 @@ router.patch('/me/visibility', authenticateToken, async (req, res) => {
   }
 })
 
+// Avisos por e-mail: { followEmails?: boolean, locale?: 'pt' | 'en' }
+router.patch('/me/notifications', authenticateToken, async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await authService.setNotifications(req.user.id, req.body ?? {}))
+  } catch (error) {
+    sendError(res, error, 'Erro ao alterar avisos por e-mail')
+  }
+})
+
 router.delete('/me', authenticateToken, sensitiveLimiter, async (req, res) => {
   try {
     const { password } = req.body ?? {}

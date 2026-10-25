@@ -65,6 +65,22 @@ const TEXTS = {
       note: 'Redefinir a senha derruba todas as sessões abertas.',
       ignore: 'Se foi você quem trocou, pode ignorar este aviso.'
     },
+    follow: {
+      subject: ({ items }) => followSubjectPt(items),
+      preheader: ({ items }) => items.map(item => followLinePt(item)).join(' · '),
+      title: 'Novidades dos seus leitores',
+      greeting: name => `Olá, ${name}!`,
+      body: ({ items }) => (items.some(item => item.kind === 'request')
+        ? 'Pedidos para seguir precisam da sua aprovação. Você decide quem acompanha suas leituras.'
+        : 'Agora você acompanha as leituras dessas pessoas na comunidade.'),
+      line: item => followLinePt(item),
+      button: ({ items }) => (items.some(item => item.kind === 'request') ? 'Ver pedidos' : 'Abrir a comunidade'),
+      note: ({ hours }) => `Você recebe no máximo um destes avisos a cada ${hours} horas; o que acontecer nesse meio-tempo vem junto no próximo.`,
+      unsubscribe: 'Não quer mais estes avisos?',
+      unsubscribeLink: 'Descadastrar com um clique',
+      manage: 'Você também pode mudar isso na Conta, em Avisos por e-mail.',
+      footer: 'Você recebeu este e-mail porque ativou os avisos de seguidores no Librishelf. Este é um endereço automático: respostas não são lidas.'
+    },
     fallback: 'Se o botão não funcionar, copie e cole este endereço no navegador:',
     tagline: 'Sua biblioteca pessoal, organizada.',
     footer: 'Você recebeu este e-mail porque ele está cadastrado no Librishelf. Este é um endereço automático: respostas não são lidas.'
@@ -100,10 +116,52 @@ const TEXTS = {
       note: 'Resetting your password signs out every open session.',
       ignore: 'If you made this change, you can ignore this notice.'
     },
+    follow: {
+      subject: ({ items }) => followSubjectEn(items),
+      preheader: ({ items }) => items.map(item => followLineEn(item)).join(' · '),
+      title: 'News from your readers',
+      greeting: name => `Hi, ${name}!`,
+      body: ({ items }) => (items.some(item => item.kind === 'request')
+        ? 'Follow requests need your approval. You decide who keeps up with your reading.'
+        : "You now follow these readers' activity in the community."),
+      line: item => followLineEn(item),
+      button: ({ items }) => (items.some(item => item.kind === 'request') ? 'See requests' : 'Open the community'),
+      note: ({ hours }) => `You get at most one of these emails every ${hours} hours; anything that happens in between comes in the next one.`,
+      unsubscribe: "Don't want these emails anymore?",
+      unsubscribeLink: 'Unsubscribe in one click',
+      manage: 'You can also change this in Account, under Email notifications.',
+      footer: "You're receiving this email because you turned on follower notifications on Librishelf. This is an automated address: replies are not read."
+    },
     fallback: "If the button doesn't work, copy and paste this address into your browser:",
     tagline: 'Your personal library, organized.',
     footer: "You're receiving this email because it is registered on Librishelf. This is an automated address: replies are not read."
   }
+}
+
+function followLinePt({ kind, actor }) {
+  return kind === 'request' ? `${actor} pediu para seguir você` : `${actor} aceitou seu pedido para seguir`
+}
+
+function followLineEn({ kind, actor }) {
+  return kind === 'request' ? `${actor} asked to follow you` : `${actor} accepted your follow request`
+}
+
+function followSubjectPt(items) {
+  const requests = items.filter(item => item.kind === 'request')
+  const accepted = items.filter(item => item.kind === 'accepted')
+  if (items.length === 1) return `${followLinePt(items[0])} no Librishelf`
+  if (accepted.length === 0) return `${requests.length} pedidos para seguir você no Librishelf`
+  if (requests.length === 0) return `${accepted.length} pedidos seus foram aceitos no Librishelf`
+  return 'Novidades dos seus leitores no Librishelf'
+}
+
+function followSubjectEn(items) {
+  const requests = items.filter(item => item.kind === 'request')
+  const accepted = items.filter(item => item.kind === 'accepted')
+  if (items.length === 1) return `${followLineEn(items[0])} on Librishelf`
+  if (accepted.length === 0) return `${requests.length} people asked to follow you on Librishelf`
+  if (requests.length === 0) return `${accepted.length} of your follow requests were accepted on Librishelf`
+  return 'News from your readers on Librishelf'
 }
 
 export function normalizeLocale(locale) {
@@ -119,7 +177,7 @@ function logoUrl() {
   return process.env.MAIL_LOGO_URL?.trim() || 'https://librishelf.com/bookshelf.png'
 }
 
-function layout({ locale, lang, t, name, link }) {
+function layout({ locale, lang, t, name, link, items = [], unsubscribe = null }) {
   const url = escapeHtml(link)
   const home = escapeHtml(siteUrl())
   const homeLabel = escapeHtml(siteUrl().replace(/^https?:\/\//, ''))
@@ -161,8 +219,12 @@ function layout({ locale, lang, t, name, link }) {
             <td class="px" bgcolor="${BRAND.card}" style="background:${BRAND.card};padding:40px 48px 12px;font-family:${SANS};color:${BRAND.ink}">
               <h1 class="title" style="margin:0 0 20px;font-family:${SERIF};font-size:30px;line-height:1.2;font-weight:normal;color:${BRAND.ink}">${escapeHtml(t.title)}</h1>
               <p style="margin:0 0 12px;font-size:16px;line-height:1.6;font-weight:bold">${escapeHtml(t.greeting(name))}</p>
-              <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:${BRAND.muted}">${escapeHtml(t.body)}</p>
-
+              <p style="margin:0 0 ${items.length ? 16 : 28}px;font-size:16px;line-height:1.6;color:${BRAND.muted}">${escapeHtml(t.body)}</p>
+${items.length ? `              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 28px">${items.map(line => `
+                <tr><td style="padding:10px 14px;border-left:3px solid ${BRAND.button};background:${BRAND.tint};font-size:15px;line-height:1.5;color:${BRAND.ink}">${escapeHtml(line)}</td></tr>
+                <tr><td style="height:6px;line-height:6px;font-size:0">&nbsp;</td></tr>`).join('')}
+              </table>
+` : ''}
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
                 <td align="center" bgcolor="${BRAND.button}" style="background:${BRAND.button};border-radius:10px">
                   <a href="${url}" target="_blank" style="display:block;padding:15px 28px;font-family:${SANS};font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px">${escapeHtml(t.button)}</a>
@@ -181,7 +243,9 @@ function layout({ locale, lang, t, name, link }) {
                   <p style="margin:0;font-size:13px;line-height:1.5;word-break:break-all"><a href="${url}" target="_blank" style="color:${BRAND.link};text-decoration:underline">${url}</a></p>
                 </td>
               </tr></table>
-              <p style="margin:24px 0 0;padding-top:20px;border-top:1px solid ${BRAND.line};font-size:14px;line-height:1.6;color:${BRAND.muted}">${escapeHtml(t.ignore)}</p>
+              ${unsubscribe
+                ? `<p style="margin:24px 0 0;padding-top:20px;border-top:1px solid ${BRAND.line};font-size:14px;line-height:1.6;color:${BRAND.muted}">${escapeHtml(t.unsubscribe)} <a href="${escapeHtml(unsubscribe)}" target="_blank" style="color:${BRAND.link};text-decoration:underline">${escapeHtml(t.unsubscribeLink)}</a>. ${escapeHtml(t.manage)}</p>`
+                : `<p style="margin:24px 0 0;padding-top:20px;border-top:1px solid ${BRAND.line};font-size:14px;line-height:1.6;color:${BRAND.muted}">${escapeHtml(t.ignore)}</p>`}
             </td>
           </tr>
 
@@ -189,7 +253,7 @@ function layout({ locale, lang, t, name, link }) {
           <tr>
             <td align="center" style="padding:24px 24px 0;font-family:${SANS};font-size:12px;line-height:1.6;color:${BRAND.soft}">
               <a href="${home}" target="_blank" style="font-family:${SERIF};font-size:15px;color:${BRAND.ink};text-decoration:none">Librishelf</a><span style="color:#a1a1aa">&nbsp;&middot;&nbsp;</span><a href="${home}" target="_blank" style="color:${BRAND.soft};text-decoration:underline">${homeLabel}</a>
-              <p style="margin:10px auto 0;max-width:420px">${escapeHtml(lang.footer)}</p>
+              <p style="margin:10px auto 0;max-width:420px">${escapeHtml(t.footer || lang.footer)}</p>
             </td>
           </tr>
 
@@ -201,11 +265,20 @@ function layout({ locale, lang, t, name, link }) {
 </html>`
 }
 
-function build(kind, { name, link, locale, ...extra }) {
+function build(kind, { name, link, locale, unsubscribe = null, ...extra }) {
   const code = normalizeLocale(locale)
   const lang = TEXTS[code]
   const base = lang[kind]
-  const t = { ...base, body: typeof base.body === 'function' ? base.body(extra) : base.body }
+  const resolve = value => (typeof value === 'function' ? value(extra) : value)
+  const t = {
+    ...base,
+    subject: resolve(base.subject),
+    preheader: resolve(base.preheader),
+    body: resolve(base.body),
+    button: resolve(base.button),
+    note: resolve(base.note)
+  }
+  const items = base.line ? (extra.items || []).map(item => base.line(item)) : []
 
   const text = [
     t.title,
@@ -213,22 +286,28 @@ function build(kind, { name, link, locale, ...extra }) {
     t.greeting(name),
     '',
     t.body,
+    ...(items.length ? ['', ...items.map(line => `• ${line}`)] : []),
     '',
     `${t.button}:`,
     link,
     '',
     t.note,
     '',
-    t.ignore,
+    unsubscribe ? `${t.unsubscribe} ${t.unsubscribeLink}: ${unsubscribe}` : t.ignore,
     '',
     '— Librishelf',
     siteUrl()
   ].join('\n')
 
-  return { subject: t.subject, text, html: layout({ locale: code, lang, t, name, link }) }
+  return { subject: t.subject, text, html: layout({ locale: code, lang, t, name, link, items, unsubscribe }) }
 }
 
 export const resetPasswordEmail = params => build('reset', params)
 export const verifyEmailEmail = params => build('verify', params)
 /** Aviso ao endereço antigo: { name, link, locale, newEmail } (newEmail já mascarado). */
 export const emailChangedEmail = params => build('changed', params)
+/**
+ * Avisos de seguidores juntos num e-mail só:
+ * { name, link, locale, items: [{ kind: 'request'|'accepted', actor }], hours, unsubscribe }
+ */
+export const followDigestEmail = params => build('follow', params)

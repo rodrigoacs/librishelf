@@ -406,6 +406,15 @@
       "on": "Sua biblioteca pode aparecer em buscadores.",
       "off": "Sua biblioteca não vai mais aparecer em buscadores."
     },
+    "notifications": {
+      "title": "Avisos por e-mail",
+      "desc": "Receba um e-mail quando alguém pedir para seguir você e quando aceitarem o seu pedido.",
+      "verifyFirst": "Confirme seu e-mail para receber avisos.",
+      "follow": "Pedidos para seguir e pedidos aceitos",
+      "followHelp": "Vai para {email}. No máximo um e-mail a cada {hours} horas — o que acontecer nesse meio-tempo vem junto. Todo e-mail tem um link para descadastrar.",
+      "on": "Você vai receber avisos por e-mail.",
+      "off": "Avisos por e-mail desligados."
+    },
     "password": {
       "title": "Alterar senha",
       "desc": "As outras sessões abertas serão encerradas.",
@@ -482,6 +491,7 @@
       "label": "Nesta página",
       "privacy": "Privacidade",
       "account": "Conta",
+      "notifications": "Avisos",
       "password": "Senha",
       "data": "Dados",
       "delete": "Excluir"
@@ -701,6 +711,18 @@
     "clearMessage": "Este livro tem {n} leituras registradas. Mudar o status apaga todas elas.",
     "clearConfirm": "Apagar e mudar"
   },
+  "unsubscribe": {
+    "loading": "Descadastrando…",
+    "doneTitle": "Pronto, você foi descadastrado",
+    "doneText": "Você não vai mais receber avisos de seguidores por e-mail. Os pedidos continuam aparecendo na Comunidade.",
+    "undo": "Desfazer",
+    "settings": "Abrir avisos na Conta",
+    "undoneTitle": "Avisos ligados de novo",
+    "undoneText": "Você volta a receber os avisos de seguidores por e-mail.",
+    "home": "Ir para o Librishelf",
+    "failedTitle": "Não deu para descadastrar",
+    "failedText": "Este link de descadastro não é válido. Você pode desligar os avisos na Conta."
+  },
   "community": {
     "book_title": "Comunidade",
     "load_error": "Não foi possível carregar a comunidade.",
@@ -917,7 +939,8 @@
     "verifyEmail": "Confirmar e-mail",
     "publicLibrary": "Biblioteca de {name}",
     "privacy": "Privacidade",
-    "notFound": "Página não encontrada"
+    "notFound": "Página não encontrada",
+    "unsubscribe": "Descadastrar avisos"
   },
   "password": {
     "show": "Mostrar senha",
@@ -1034,7 +1057,9 @@
     "NOT_READING": "Este livro não está em leitura.",
     "PROGRESS_INVALID": "Progresso inválido.",
     "PROGRESS_PAGE_OVER": "A página atual passa do total de páginas do livro ({max}).",
-    "PAGE_COUNT_INVALID": "O número de páginas precisa ser de 1 a {max}."
+    "PAGE_COUNT_INVALID": "O número de páginas precisa ser de 1 a {max}.",
+    "UNSUBSCRIBE_TOKEN_INVALID": "Este link de descadastro não é válido.",
+    "EMAIL_NOT_VERIFIED_NOTIFY": "Confirme seu e-mail para receber avisos."
   },
   "block": {
     "block": "Bloquear {name}",

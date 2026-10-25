@@ -1,5 +1,5 @@
 import { db } from "../database/connection.js"
-import { LIBRARY_QUERIES as q } from "../database/queries.js"
+import { LIBRARY_QUERIES as q, META_QUERIES } from "../database/queries.js"
 import { resolvePagination } from "../utils/pagination.js"
 import STATUS from "../utils/statusCodes.js"
 import { parseNameList } from "../utils/nameList.js"
@@ -282,6 +282,10 @@ async function batchDelete(ids) {
   return result.rowCount
 }
 
+async function touchBook(bookId) {
+  await db.query(META_QUERIES.TOUCH_BOOK, [bookId])
+}
+
 async function pruneUserNames(userId) {
   await db.query(q.PRUNE_USER_NAMES, [userId])
 }
@@ -305,5 +309,6 @@ export {
   batchAddTag,
   batchRemoveTag,
   batchDelete,
-  pruneUserNames
+  pruneUserNames,
+  touchBook
 }

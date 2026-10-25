@@ -34,6 +34,7 @@ const router = createRouter({
     { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPassword.vue'), meta: { standalone: true, title: 'forgotPassword' } },
     { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPassword.vue'), meta: { standalone: true, title: 'resetPassword' } },
     { path: '/verify-email', name: 'verify-email', component: () => import('../views/VerifyEmail.vue'), meta: { standalone: true, title: 'verifyEmail' } },
+    { path: '/unsubscribe', name: 'unsubscribe', component: () => import('../views/Unsubscribe.vue'), meta: { standalone: true, title: 'unsubscribe', noindex: true } },
 
     { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, title: 'publicLibrary', noindex: 'server' } },
     { path: '/privacy', name: 'privacy', component: () => import('../views/Privacy.vue'), meta: { public: true, title: 'privacy' } },

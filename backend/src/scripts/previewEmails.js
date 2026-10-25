@@ -7,7 +7,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail } from '../services/emailTemplates.js'
+import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail, followDigestEmail } from '../services/emailTemplates.js'
 
 const outDir = path.resolve(process.argv[2] || path.join(os.tmpdir(), 'librishelf-emails'))
 fs.mkdirSync(outDir, { recursive: true })
@@ -20,7 +20,10 @@ const emails = {
   'verificar-en': verifyEmailEmail({ name: 'Rodrigo', link: `${base}/verify-email?token=${token}`, locale: 'en' }),
   'senha-pt': resetPasswordEmail({ name: 'Rodrigo', link: `${base}/reset-password?token=${token}`, locale: 'pt' }),
   'senha-en': resetPasswordEmail({ name: 'Rodrigo', link: `${base}/reset-password?token=${token}`, locale: 'en' }),
-  'email-trocado-pt': emailChangedEmail({ name: 'Rodrigo', link: `${base}/forgot-password`, locale: 'pt', newEmail: 'ro•••@gmail.com' })
+  'email-trocado-pt': emailChangedEmail({ name: 'Rodrigo', link: `${base}/forgot-password`, locale: 'pt', newEmail: 'ro•••@gmail.com' }),
+  'seguidores-1-pt': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=requests`, locale: 'pt', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'request', actor: 'jesteves' }] }),
+  'seguidores-varios-pt': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=requests`, locale: 'pt', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'request', actor: 'jesteves' }, { kind: 'request', actor: 'marina.lê' }, { kind: 'accepted', actor: 'caio_r' }] }),
+  'seguidores-aceito-en': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=following`, locale: 'en', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'accepted', actor: 'jesteves' }] })
 }
 
 for (const [file, mail] of Object.entries(emails)) {

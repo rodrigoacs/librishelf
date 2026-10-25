@@ -61,6 +61,20 @@ export default {
     return client.put('/auth/password', { currentPassword, newPassword })
   },
 
+  /** Avisos por e-mail: { followEmails?, locale? } */
+  setNotifications(prefs) {
+    return client.patch('/auth/me/notifications', prefs)
+  },
+
+  /** Descadastro pelo link do e-mail (sem login). */
+  unsubscribe(token) {
+    return client.post(`/email/unsubscribe?token=${enc(token)}`, {})
+  },
+
+  resubscribe(token) {
+    return client.post(`/email/resubscribe?token=${enc(token)}`, {})
+  },
+
   /** Qualquer combinação de { isPublic, showInCommunity, showActivity }. */
   changeEmail(email, password, locale) {
     return client.patch('/auth/me/email', { email, password, locale })

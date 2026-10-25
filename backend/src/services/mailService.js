@@ -43,10 +43,19 @@ export function testOutbox() {
   return outbox
 }
 
-/** Envia (ou registra no log, sem SMTP). Lança erro se o servidor SMTP recusar. */
-export async function sendMail({ to, subject, text, html }) {
+/**
+ * Envia (ou registra no log, sem SMTP). Lança erro se o servidor SMTP recusar.
+ * `unsubscribeUrl` (avisos): cabeçalhos List-Unsubscribe e
+ * List-Unsubscribe-Post para o descadastro de um clique do Gmail, Yahoo,
+ * Apple Mail… (RFC 8058). O provedor faz um POST nessa URL.
+ *   https://www.rfc-editor.org/rfc/rfc8058
+ */
+export async function sendMail({ to, subject, text, html, unsubscribeUrl }) {
+  const headers = unsubscribeUrl ? { 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : undefined
+  const list = unsubscribeUrl ? { unsubscribe: unsubscribeUrl } : undefined
+
   if (process.env.NODE_ENV === 'test') {
-    outbox.push({ to, subject, text, html })
+    outbox.push({ to, subject, text, html, headers, list })
     return
   }
 
@@ -55,7 +64,7 @@ export async function sendMail({ to, subject, text, html }) {
     return
   }
 
-  const info = await getTransport().sendMail({ from: sender(), to, subject, text, html })
+  const info = await getTransport().sendMail({ from: sender(), to, subject, text, html, headers, list })
   logger.info('E-mail enviado', { to, subject, messageId: info.messageId })
 }
 

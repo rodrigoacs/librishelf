@@ -11,7 +11,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Reading log** — want to read, reading and read; every reading is kept, so rereads count again (with their own dates and an optional rating), and books in progress track the current page or percentage.
 - **Search and filters** — search by title or ISBN; filter by author, publisher, tag, reading status and year; sort by any field.
 - **Dashboard** — totals, reading rate, books read per year, top authors and tags.
-- **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf, with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.
+- **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf (with a link preview on WhatsApp and social networks: title, book count and a mosaic of your covers), with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.
 - **Community (opt-in)** — see who else has a book, their average rating and what people who have it also have. Follow other readers (they approve each request) and get a feed of what they add and finish. Everything is off until the user turns it on.
 - **Account control** — email confirmation, password recovery by email, change your password (signs out other sessions) and delete your account with all its data.
 - **Portuguese and English**, light and dark themes, six accent colors.
@@ -142,7 +142,7 @@ server {
 
 ### Email (password recovery and sign-up confirmation)
 
-The API sends two kinds of email over SMTP: the password reset link (valid for 1 hour) and the sign-up confirmation link (valid for 3 days). Until a user confirms their email, public library, community and following stay locked; accounts that existed before this version count as confirmed.
+The API sends email over SMTP: the password reset link (valid for 1 hour), the sign-up confirmation link (valid for 3 days) and, for users who turn it on in Account, follower notifications (someone asked to follow you / accepted your request) — at most one every `FOLLOW_EMAIL_INTERVAL_HOURS` (default 6), with one-click unsubscribe (`List-Unsubscribe` + `List-Unsubscribe-Post`, RFC 8058). Until a user confirms their email, public library, community and following stay locked; accounts that existed before this version count as confirmed.
 
 Set in `backend/src/.env`:
 
@@ -154,6 +154,7 @@ SMTP_SECURE=false
 SMTP_USER=...
 SMTP_PASS=...
 MAIL_FROM="Librishelf <noreply@librishelf.com>"
+# FOLLOW_EMAIL_INTERVAL_HOURS=6         # optional
 ```
 
 To send as `@librishelf.com` without landing in spam, add the SPF and DKIM records your SMTP provider gives you to the domain's DNS (and ideally a DMARC record). Without `SMTP_HOST` nothing is sent: the email content, links included, goes to the server log — handy for local development.
