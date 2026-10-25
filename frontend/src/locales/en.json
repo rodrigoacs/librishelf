@@ -526,7 +526,7 @@
         "title": "What we collect",
         "paragraphs": [
           "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
-          "Content you add: your books and their details (title, authors, publisher, ISBN, series, tags, dates, ratings, reading status and goals), personal notes and the covers you upload. Personal notes are yours only: they never appear in your public library.",
+          "Content you add: your books and their details (title, authors, publisher, ISBN, series, tags, dates, ratings, reading status, reading history and progress, and goals), personal notes and the covers you upload. Personal notes are yours only: they never appear in your public library.",
           "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts."
         ]
       },
@@ -540,9 +540,10 @@
       {
         "title": "Public library",
         "paragraphs": [
-          "Your library is private by default. If you turn on sharing in Account, anyone with your link can see your books and covers, and some covers may appear on the site's sign-in pages.",
-          "You can turn it off whenever you want, and the change is immediate.",
-          "Public libraries don't show up in search engines like Google: the site asks for them not to be indexed."
+          "Your library is private by default. If you turn on sharing in Account, anyone with your link can see your books and covers, and some covers may appear on the site's entry screens.",
+          "When someone shares your library link (WhatsApp, social networks), the preview shows your username, how many books you have and have read, and a mosaic of some of your covers.",
+          "You can turn it off at any time, and the change takes effect immediately.",
+          "By default, public libraries don't show up in search engines like Google: the site asks not to be indexed. They only show up if you turn on \"Show in search engines\" in Account."
         ]
       },
       {
@@ -554,23 +555,26 @@
         ]
       },
       {
-        "title": "ISBN lookup",
+        "title": "Book search and camera",
         "paragraphs": [
-          "When you click Look up, Librishelf checks the ISBN on Open Library (openlibrary.org), a public book catalog. The request is made by our server: Open Library only receives the ISBN, never your data or your account."
+          "When you search for a book by ISBN or by title, Librishelf queries Open Library (openlibrary.org), a public book catalog. The query is made by our server: Open Library only receives the ISBN or the search text, never your data or your account.",
+          "When you scan a barcode with the camera, the image is processed on your own device and is not sent to anyone; only the scanned ISBN is used for the search. The camera turns off as soon as you close the scanner."
         ]
       },
       {
         "title": "Emails we send",
         "paragraphs": [
-          "We use your email only for account matters: confirming the address when you sign up and sending a password recovery link when you ask for one. We don't send marketing.",
-          "Links are short-lived (1 hour for passwords, 3 days for confirmation), work only once, and we store only a hashed version of them."
+          "We only use your email for account matters: confirming the address when you sign up and sending the password recovery link when you ask for it. We don't send marketing.",
+          "If you turn on email notifications in Account, we also let you know when someone asks to follow you or accepts your request — at most one email every few hours. Every notification has a one-click unsubscribe link.",
+          "Password and confirmation links are short-lived (1 hour for the password, 3 days for confirmation), work only once, and we only store an encrypted version of them."
         ]
       },
       {
-        "title": "Cookies",
+        "title": "Cookies and data in your browser",
         "paragraphs": [
-          "We use a single essential cookie that keeps you signed in. It is not used for tracking or advertising.",
-          "Your theme and language preferences are saved only in your browser."
+          "We only use one essential cookie, which keeps you signed in. It isn't used for tracking or advertising.",
+          "Your theme and language preferences are saved only in your browser.",
+          "So the app can open without internet, your browser keeps the last version of the screens you saw (such as your library and the books you opened), the covers and your username. This stays on this device only and is deleted when you sign out."
         ]
       },
       {
@@ -722,6 +726,12 @@
     "home": "Go to Librishelf",
     "failedTitle": "Couldn't unsubscribe",
     "failedText": "This unsubscribe link isn't valid. You can turn notifications off in Account."
+  },
+  "offline": {
+    "title": "You're offline.",
+    "text": "You're seeing the last saved version of your library. To add or change books, connect again.",
+    "updatedTitle": "Librishelf updated",
+    "updatedText": "A new version was installed. Reload the page to get everything that changed."
   },
   "community": {
     "book_title": "Community",
@@ -1059,7 +1069,8 @@
     "PROGRESS_PAGE_OVER": "The current page is past the book's total pages ({max}).",
     "PAGE_COUNT_INVALID": "Pages must be from 1 to {max}.",
     "UNSUBSCRIBE_TOKEN_INVALID": "This unsubscribe link isn't valid.",
-    "EMAIL_NOT_VERIFIED_NOTIFY": "Confirm your email to receive notifications."
+    "EMAIL_NOT_VERIFIED_NOTIFY": "Confirm your email to receive notifications.",
+    "OFFLINE": "You're offline. This screen hasn't been opened online on this device yet."
   },
   "block": {
     "block": "Block {name}",

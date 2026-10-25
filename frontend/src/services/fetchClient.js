@@ -1,5 +1,6 @@
 import { API_URL } from '../config/site.js'
 import i18n from '../i18n.js'
+import { markApiReachable, markApiUnreachable } from './network.js'
 
 // Rotas de auth respondem 401 por credencial errada (login, senha atual
 // incorreta), não por sessão expirada.
@@ -75,7 +76,16 @@ async function client(endpoint, { body, ...customConfig } = {}) {
   } catch (error) {
     // Cancelada de propósito: quem chamou trata. Senão é rede (sem internet, servidor fora).
     if (error.name === 'AbortError') throw error
+    markApiUnreachable()
     throw new ApiError(i18n.global.t('errors.NETWORK'), 0, null)
+  }
+
+  // Resposta guardada pelo service worker (sem internet): modo leitura
+  if (response.headers.get('X-Librishelf-Offline')) {
+    markApiUnreachable()
+    if (response.status === 503) throw new ApiError(i18n.global.t('errors.OFFLINE'), 0, null)
+  } else {
+    markApiReachable()
   }
 
   if (response.status === 401) {

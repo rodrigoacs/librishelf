@@ -17,6 +17,7 @@
     >
       <ToastHost />
       <ConfirmHost />
+      <OfflineBanner />
       <EmailBanner
         v-if="showNavigation && currentUser && currentUser.emailVerified === false"
         :email="currentUser.email"
@@ -35,6 +36,7 @@ import ToastHost from './components/ui/ToastHost.vue'
 import ConfirmHost from './components/ui/ConfirmHost.vue'
 import { isAuthenticated, currentUser } from './services/session.js'
 import EmailBanner from './components/EmailBanner.vue'
+import OfflineBanner from './components/OfflineBanner.vue'
 
 const route = useRoute()
 const { t } = useI18n()

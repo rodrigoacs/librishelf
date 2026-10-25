@@ -12,8 +12,15 @@ import './assets/main.css'
 // Registra o tratamento de sessão expirada antes da primeira requisição.
 import './services/session.js'
 import { initTheme } from './composables/useTheme.js'
+import { registerServiceWorker, reloadOnStaleChunks } from './services/pwa.js'
+import { addToast } from './services/toast.js'
 
 initTheme()
+reloadOnStaleChunks()
+// Versão nova do app instalada com esta aba aberta: a próxima tela já vem dela
+registerServiceWorker({
+  onUpdated: () => addToast({ severity: 'info', summary: i18n.global.t('offline.updatedTitle'), detail: i18n.global.t('offline.updatedText'), life: 8000 })
+})
 
 const app = createApp(App)
 

@@ -526,7 +526,7 @@
         "title": "Quais dados coletamos",
         "paragraphs": [
           "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
-          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, série, tags, datas, notas, status de leitura e metas), anotações pessoais e as capas que você enviar. As anotações pessoais são só suas: nunca aparecem na biblioteca pública.",
+          "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, série, tags, datas, notas, status de leitura, histórico de leituras e progresso, e metas), anotações pessoais e as capas que você enviar. As anotações pessoais são só suas: nunca aparecem na biblioteca pública.",
           "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login."
         ]
       },
@@ -541,8 +541,9 @@
         "title": "Biblioteca pública",
         "paragraphs": [
           "Sua biblioteca é privada por padrão. Se você ativar o compartilhamento em Conta, qualquer pessoa com o seu link pode ver seus livros e capas, e algumas capas podem aparecer nas telas de entrada do site.",
+          "Quando alguém compartilha o link da sua biblioteca (WhatsApp, redes sociais), a prévia mostra seu nome de usuário, quantos livros você tem e já leu e um mosaico de algumas das suas capas.",
           "Você pode desativar quando quiser, e a mudança vale na hora.",
-          "Bibliotecas públicas não aparecem em buscadores como o Google: o site pede para não serem indexadas."
+          "Por padrão, bibliotecas públicas não aparecem em buscadores como o Google: o site pede para não serem indexadas. Só aparecem se você ligar \"Aparecer em buscadores\" em Conta."
         ]
       },
       {
@@ -554,23 +555,26 @@
         ]
       },
       {
-        "title": "Busca por ISBN",
+        "title": "Busca de livros e câmera",
         "paragraphs": [
-          "Quando você clica em Buscar, o Librishelf consulta o ISBN no Open Library (openlibrary.org), um catálogo público de livros. A consulta é feita pelo nosso servidor: o Open Library recebe só o ISBN, nunca seus dados ou sua conta."
+          "Quando você busca um livro por ISBN ou por título, o Librishelf consulta o Open Library (openlibrary.org), um catálogo público de livros. A consulta é feita pelo nosso servidor: o Open Library recebe só o ISBN ou o texto buscado, nunca seus dados ou sua conta.",
+          "Ao ler o código de barras com a câmera, a imagem é processada no seu próprio aparelho e não é enviada a ninguém; só o ISBN lido é usado na busca. A câmera desliga assim que você fecha o leitor."
         ]
       },
       {
         "title": "E-mails que enviamos",
         "paragraphs": [
           "Usamos seu e-mail só para assuntos da sua conta: confirmar o endereço no cadastro e enviar o link de recuperação de senha quando você pedir. Não mandamos propaganda.",
-          "Os links valem por pouco tempo (1 hora para a senha, 3 dias para a confirmação), funcionam uma vez só e guardamos apenas uma versão cifrada deles."
+          "Se você ligar os avisos por e-mail em Conta, também avisamos quando alguém pede para seguir você ou aceita o seu pedido — no máximo um e-mail a cada algumas horas. Todo aviso tem um link para descadastrar com um clique.",
+          "Os links de senha e confirmação valem por pouco tempo (1 hora para a senha, 3 dias para a confirmação), funcionam uma vez só e guardamos apenas uma versão cifrada deles."
         ]
       },
       {
-        "title": "Cookies",
+        "title": "Cookies e dados no seu navegador",
         "paragraphs": [
           "Usamos apenas um cookie essencial, que mantém você conectado. Ele não serve para rastreamento nem publicidade.",
-          "Suas preferências de tema e idioma ficam salvas só no seu navegador."
+          "Suas preferências de tema e idioma ficam salvas só no seu navegador.",
+          "Para o app abrir sem internet, o navegador guarda a última versão das telas que você viu (como sua biblioteca e os livros que abriu), as capas e seu nome de usuário. Isso fica só neste aparelho e é apagado quando você sai da conta."
         ]
       },
       {
@@ -722,6 +726,12 @@
     "home": "Ir para o Librishelf",
     "failedTitle": "Não deu para descadastrar",
     "failedText": "Este link de descadastro não é válido. Você pode desligar os avisos na Conta."
+  },
+  "offline": {
+    "title": "Sem conexão.",
+    "text": "Você está vendo a última versão salva da sua biblioteca. Para cadastrar ou alterar livros, conecte-se de novo.",
+    "updatedTitle": "Librishelf atualizado",
+    "updatedText": "Uma versão nova foi instalada. Recarregue a página para usar tudo o que mudou."
   },
   "community": {
     "book_title": "Comunidade",
@@ -1059,7 +1069,8 @@
     "PROGRESS_PAGE_OVER": "A página atual passa do total de páginas do livro ({max}).",
     "PAGE_COUNT_INVALID": "O número de páginas precisa ser de 1 a {max}.",
     "UNSUBSCRIBE_TOKEN_INVALID": "Este link de descadastro não é válido.",
-    "EMAIL_NOT_VERIFIED_NOTIFY": "Confirme seu e-mail para receber avisos."
+    "EMAIL_NOT_VERIFIED_NOTIFY": "Confirme seu e-mail para receber avisos.",
+    "OFFLINE": "Sem conexão. Esta tela ainda não foi aberta com internet neste aparelho."
   },
   "block": {
     "block": "Bloquear {name}",
