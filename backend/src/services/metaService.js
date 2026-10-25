@@ -5,6 +5,7 @@ import * as authRepository from '../repositories/authRepository.js'
 import { db } from '../database/connection.js'
 import { META_QUERIES as q } from '../database/queries.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
+import * as listService from './listService.js'
 
 /**
  * Trecho de <head> que o nginx do frontend injeta (SSI) no index.html de
@@ -80,8 +81,13 @@ async function libraryStats(userId) {
 /** Até `limit` capas que existem no disco (as mais bem avaliadas e lidas por último primeiro). */
 async function coverFiles(userId, limit = MAX_COVERS) {
   const { rows } = await db.query(q.COVER_CANDIDATES, [userId, COVER_CANDIDATES])
+  return existingCovers(rows.map(row => row.id), limit)
+}
+
+/** Dos livros `ids` (na ordem), até `limit` que têm capa enviada. */
+async function existingCovers(ids, limit) {
   const files = []
-  for (const { id } of rows) {
+  for (const id of ids) {
     const file = path.join(UPLOAD_DIR, `${id}.jpg`)
     try {
       await fs.access(file)
@@ -147,6 +153,82 @@ export async function libraryHead(username) {
   }
 
   return tags.join('')
+}
+
+// ------------------------------------------------------------------ listas
+
+const LIST_ID = /^\d{1,9}$/
+
+async function findList(username, listId) {
+  if (typeof username !== 'string' || !USERNAME.test(username) || !LIST_ID.test(String(listId))) return null
+  return listService.findPublic(username, Number(listId))
+}
+
+// Muda quando a lista muda (ordem, livros, nome)
+const listVersion = list => `${new Date(list.updatedAt).getTime().toString(36)}${list.itemCount.toString(36)}`
+
+function describeList(name, list) {
+  const count = list.itemCount === 1 ? '1 livro' : `${list.itemCount} livros`
+  const first = list.items.slice(0, 3).map(item => item.title)
+  const intro = list.description ? `${list.description.replace(/\s+/g, ' ').slice(0, 140)}${list.description.length > 140 ? '…' : ''} · ` : ''
+  const sample = first.length ? `: ${first.join(', ')}${list.itemCount > first.length ? '…' : ''}` : ''
+  return `${intro}${count}${sample}. Lista de ${name} no Librishelf.`
+}
+
+/** Trecho do <head> de /u/<username>/lists/<id>: robots + Open Graph. */
+export async function listHead(username, listId) {
+  const found = await findList(username, listId)
+  if (!found) return ROBOTS_NOINDEX + defaultTags()
+  const { user, list } = found
+
+  const site = siteUrl()
+  const url = `${site}/u/${encodeURIComponent(user.name)}/lists/${list.id}`
+  const covers = await existingCovers(list.items.map(item => item.bookId), 1)
+  const tags = [
+    user.allow_indexing ? ROBOTS_INDEX : ROBOTS_NOINDEX,
+    meta('og:type', 'website'),
+    meta('og:site_name', 'Librishelf'),
+    meta('og:title', `${list.title} · lista de ${user.name}`),
+    meta('og:description', describeList(user.name, list)),
+    meta('og:url', url),
+    meta('og:locale', 'pt_BR')
+  ]
+  if (covers.length > 0) {
+    const image = `${site}/api/meta/u/${encodeURIComponent(user.name)}/lists/${list.id}/image.jpg?v=${listVersion(list)}`
+    tags.push(
+      meta('og:image', image),
+      meta('og:image:type', 'image/jpeg'),
+      meta('og:image:width', String(IMAGE_WIDTH)),
+      meta('og:image:height', String(IMAGE_HEIGHT)),
+      meta('og:image:alt', `Capas dos livros da lista ${list.title}`),
+      metaName('twitter:card', 'summary_large_image')
+    )
+  } else {
+    tags.push(
+      meta('og:image', `${site}/bookshelf.png`),
+      meta('og:image:alt', 'Ícone de estante de livros do Librishelf'),
+      metaName('twitter:card', 'summary')
+    )
+  }
+  return tags.join('')
+}
+
+/** Mosaico das capas da lista, na ordem dela → { buffer, version } ou null. */
+export async function listImage(username, listId) {
+  const found = await findList(username, listId)
+  if (!found) return null
+  const { user, list } = found
+  const version = listVersion(list)
+  const key = `list:${user.id}:${list.id}:${version}`
+  const cached = imageCache.get(key)
+  if (cached) return { buffer: cached, version }
+
+  const files = await existingCovers(list.items.map(item => item.bookId), MAX_COVERS)
+  if (files.length === 0) return null
+  const buffer = await buildMosaic(files)
+  if (imageCache.size >= IMAGE_CACHE_MAX) imageCache.delete(imageCache.keys().next().value)
+  imageCache.set(key, buffer)
+  return { buffer, version }
 }
 
 // ------------------------------------------------------------------ imagem

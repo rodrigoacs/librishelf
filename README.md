@@ -9,6 +9,8 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Your collection, your way** — add books with authors, publisher, ISBN, tags, publication date, cover art and a 1–5 star rating.
 - **ISBN lookup, barcode and title search** — type or scan an ISBN with the camera, or search by title/author, and the title, authors, publisher, date, pages and cover are filled in from [Open Library](https://openlibrary.org) (queried by the server, never by the browser). Invalid ISBNs are flagged so you can fix them.
 - **Reading log** — want to read, reading and read; every reading is kept, so rereads count again (with their own dates and an optional rating), and books in progress track the current page or percentage.
+- **Reviews** — write a review per book (spoiler warning, public or followers only); readers can like and report them, with moderation by email.
+- **Lists** — "Best of 2026", "Vacation reads": pick books from your shelf, drag (or use the keyboard) to order them, optionally numbered. Public lists show on your profile and get their own shareable page (`/u/your-username/lists/<id>`) with a link preview of the list's covers.
 - **Search and filters** — search by title or ISBN; filter by author, publisher, tag, reading status and year; sort by any field.
 - **Dashboard** — totals, reading rate, books read per year, top authors and tags.
 - **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf (with a link preview on WhatsApp and social networks: title, book count and a mosaic of your covers), with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.

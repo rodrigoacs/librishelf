@@ -955,3 +955,92 @@ export const REVIEW_QUERIES = {
   HIDE: "UPDATE librishelf.reviews SET hidden_at = now(), hidden_reason = 'moderation', reviewed_at = now() WHERE id = $1 RETURNING id",
   SHOW: 'UPDATE librishelf.reviews SET hidden_at = NULL, hidden_reason = NULL, reviewed_at = now() WHERE id = $1 RETURNING id'
 }
+
+// Listas: resumo (para as grades) com as 4 primeiras capas e a contagem
+const LIST_SUMMARY = `
+  l.id, l.user_id, l.title, l.description, l.is_public, l.ranked, l.created_at, l.updated_at,
+  (SELECT count(*)::int FROM librishelf.list_items li WHERE li.list_id = l.id) AS item_count,
+  (SELECT COALESCE(json_agg(json_build_object('bookId', c.id, 'title', c.title, 'authors', c.authors) ORDER BY c.ord), '[]')
+   FROM (
+     SELECT b.id, b.title, ${AUTHORS_OF('b.id')} AS authors, row_number() OVER (ORDER BY li.position, li.added_at) AS ord
+     FROM librishelf.list_items li
+     JOIN librishelf.books b ON b.id = li.book_id
+     WHERE li.list_id = l.id
+     ORDER BY li.position, li.added_at
+     LIMIT 4
+   ) c
+  ) AS covers
+`
+
+export const LIST_QUERIES = {
+  // Do dono; $2 (opcional) marca as listas que já têm aquele livro
+  OF_OWNER: `
+    SELECT ${LIST_SUMMARY},
+      ($2::int IS NOT NULL AND EXISTS (
+        SELECT 1 FROM librishelf.list_items li WHERE li.list_id = l.id AND li.book_id = $2::int)) AS has_book
+    FROM librishelf.lists l
+    WHERE l.user_id = $1
+    ORDER BY l.updated_at DESC, l.id DESC
+  `,
+  COUNT_OF_OWNER: 'SELECT count(*)::int AS total FROM librishelf.lists WHERE user_id = $1',
+  GET: `SELECT ${LIST_SUMMARY} FROM librishelf.lists l WHERE l.id = $1`,
+  CREATE: `
+    INSERT INTO librishelf.lists (user_id, title, description, is_public, ranked)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id
+  `,
+  UPDATE: `
+    UPDATE librishelf.lists
+    SET title = $3, description = $4, is_public = $5, ranked = $6, updated_at = now()
+    WHERE id = $1 AND user_id = $2
+    RETURNING id
+  `,
+  DELETE: 'DELETE FROM librishelf.lists WHERE id = $1 AND user_id = $2 RETURNING id',
+  TOUCH: 'UPDATE librishelf.lists SET updated_at = now() WHERE id = $1',
+  ITEMS: `
+    SELECT li.book_id, li.position, li.added_at,
+           b.title, ${AUTHORS_OF('b.id')} AS authors, b.rating, b.read_date, b.reading_status,
+           b.series, b.series_index
+    FROM librishelf.list_items li
+    JOIN librishelf.books b ON b.id = li.book_id
+    WHERE li.list_id = $1
+    ORDER BY li.position, li.added_at
+  `,
+  BOOK_IDS: 'SELECT book_id FROM librishelf.list_items WHERE list_id = $1',
+  COUNT_ITEMS: 'SELECT count(*)::int AS total FROM librishelf.list_items WHERE list_id = $1',
+  // No fim da lista; repetido não faz nada
+  ADD_ITEM: `
+    INSERT INTO librishelf.list_items (list_id, book_id, position)
+    SELECT $1, $2, COALESCE(max(position), 0) + 1 FROM librishelf.list_items WHERE list_id = $1
+    ON CONFLICT (list_id, book_id) DO NOTHING
+    RETURNING book_id
+  `,
+  REMOVE_ITEM: 'DELETE FROM librishelf.list_items WHERE list_id = $1 AND book_id = $2 RETURNING book_id',
+  // $2 = ids na ordem nova (1, 2, 3…)
+  REORDER: `
+    UPDATE librishelf.list_items li
+    SET position = o.ord
+    FROM unnest($2::int[]) WITH ORDINALITY AS o(book_id, ord)
+    WHERE li.list_id = $1 AND li.book_id = o.book_id
+  `,
+  // Perfil público: listas públicas com pelo menos um livro
+  PUBLIC_OF_USER: `
+    SELECT ${LIST_SUMMARY}
+    FROM librishelf.lists l
+    WHERE l.user_id = $1 AND l.is_public
+      AND EXISTS (SELECT 1 FROM librishelf.list_items li WHERE li.list_id = l.id)
+    ORDER BY l.updated_at DESC, l.id DESC
+    LIMIT $2
+  `,
+  EXPORT: `
+    SELECT l.title, l.description, l.is_public, l.ranked, l.created_at,
+      COALESCE(json_agg(json_build_object('title', b.title, 'isbn', b.isbn) ORDER BY li.position, li.added_at)
+        FILTER (WHERE b.id IS NOT NULL), '[]') AS books
+    FROM librishelf.lists l
+    LEFT JOIN librishelf.list_items li ON li.list_id = l.id
+    LEFT JOIN librishelf.books b ON b.id = li.book_id
+    WHERE l.user_id = $1
+    GROUP BY l.id
+    ORDER BY l.created_at, l.id
+  `
+}

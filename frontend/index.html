@@ -15,14 +15,15 @@
     <link rel="manifest" href="/manifest.webmanifest" />
 
     <!--
-      Prévia (WhatsApp, redes) e robots. Em /u/<usuário> o nginx processa os
-      comandos SSI desta parte: pede ao backend as tags daquela biblioteca, que
+      Prévia (WhatsApp, redes) e robots. Em /u/<usuário> e /u/<usuário>/lists/<id>
+      o nginx processa os comandos SSI desta parte: pede ao backend as tags
+      daquela biblioteca ou lista ($meta_rest vem do nginx.conf), que
       entram no lugar das genéricas abaixo; se o backend falhar, ficam as
       genéricas com noindex. Nas outras páginas os comandos SSI são só
       comentários e valem as tags genéricas (iguais a defaultTags() no
       metaService do backend).
     -->
-    <!--# include virtual="/__meta/u/$lib_user" set="meta_head" wait="yes" --><!--# if expr="$meta_head" --><!--# echo var="meta_head" encoding="none" --><!--# else --><!--# echo var="meta_fallback" encoding="none" default="" -->
+    <!--# include virtual="/__meta/u/$lib_user$meta_rest" set="meta_head" wait="yes" --><!--# if expr="$meta_head" --><!--# echo var="meta_head" encoding="none" --><!--# else --><!--# echo var="meta_fallback" encoding="none" default="" -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Librishelf" />
     <meta property="og:title" content="Librishelf" />

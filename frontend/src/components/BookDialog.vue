@@ -151,6 +151,13 @@
               @click="deleteBook"
             />
             <AppButton
+              :label="t('lists.addToShort')"
+              icon="pi pi-list"
+              class="btn-outlined btn-secondary btn-sm footer-lists"
+              aria-haspopup="dialog"
+              @click="addToListOpen = true"
+            />
+            <AppButton
               v-tooltip.top="t('bookDialog.editShortcut')"
               :label="t('bookDialog.editShort')"
               icon="pi pi-pencil"
@@ -163,6 +170,12 @@
       </div>
     </div>
   </AppDialog>
+  <AddToListDialog
+    v-if="!isReadOnly && bookId"
+    v-model:visible="addToListOpen"
+    :book-id="bookId"
+    :book-title="book.title"
+  />
 </template>
 
 <script setup>
@@ -183,6 +196,7 @@ import ReadingPanel from './book/ReadingPanel.vue'
 import BookCommunity from './book/BookCommunity.vue'
 import ReviewEditor from './review/ReviewEditor.vue'
 import ReviewCard from './review/ReviewCard.vue'
+import AddToListDialog from './list/AddToListDialog.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { statusOf } from '../utils/readingStatus.js'
 import { setOverlayTitle } from '../services/pageTitle.js'
@@ -211,6 +225,7 @@ const isEditing = ref(false)
 const coverVersion = ref(0)
 const ratingSaving = ref(false)
 const readSaving = ref(false)
+const addToListOpen = ref(false)
 
 function emptyBook() {
   // authors: texto para exibir; authorNames: a lista que é editada e salva.
@@ -584,8 +599,14 @@ onBeforeUnmount(() => {
   gap: 0.75rem;
 }
 
-.footer-edit.btn {
+.footer-edit.btn,
+.footer-lists.btn {
   border-radius: 8px;
+}
+
+/* Apagar à esquerda; Listas e Editar juntos à direita */
+.footer-lists.btn {
+  margin-left: auto;
 }
 
 .mini-cover {

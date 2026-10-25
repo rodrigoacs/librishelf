@@ -75,6 +75,7 @@
           :key="item.route"
           :to="item.route"
           class="nav-item"
+          :class="{ active: item.route === '/lists' && route.name === 'list' }"
           active-class="active"
           @click="mobileMenuOpen = false"
         >
@@ -227,6 +228,7 @@ watch(() => route.path, () => {
 const items = computed(() => [
   { label: t('menu.home'), icon: 'pi pi-home', route: '/' },
   { label: t('menu.library'), icon: 'pi pi-book', route: '/books' },
+  { label: t('menu.lists'), icon: 'pi pi-list', route: '/lists' },
   { label: t('menu.authors'), icon: 'pi pi-users', route: '/authors' },
   { label: t('menu.publishers'), icon: 'pi pi-building', route: '/publishers' },
   { label: t('menu.categories'), icon: 'pi pi-tags', route: '/tags' },

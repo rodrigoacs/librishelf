@@ -4,6 +4,7 @@ import path from 'path'
 import multer from 'multer'
 import * as readingService from '../services/readingService.js'
 import * as reviewService from '../services/reviewService.js'
+import * as listService from '../services/listService.js'
 import * as libraryService from '../services/libraryService.js'
 import * as dataService from '../services/dataService.js'
 import { authenticateToken, optionalAuth } from '../middlewares/auth.js'
@@ -120,6 +121,15 @@ router.get('/public/u/:username/book/:id', publicLimiter, optionalAuth, validate
     res.status(STATUS.OK).json(book)
   } catch (error) {
     sendError(res, error, 'Erro ao buscar livro público')
+  }
+})
+
+// Página pública de uma lista (lista pública de biblioteca pública)
+router.get('/public/u/:username/lists/:id', publicLimiter, validateNumericId(), async (req, res) => {
+  try {
+    res.status(STATUS.OK).json({ list: await listService.getPublic(req.params.username, Number(req.params.id)) })
+  } catch (error) {
+    sendError(res, error, 'Erro ao buscar lista pública')
   }
 })
 

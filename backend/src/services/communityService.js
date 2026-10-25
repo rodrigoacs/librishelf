@@ -4,6 +4,7 @@ import * as authRepository from '../repositories/authRepository.js'
 import * as socialRepository from '../repositories/socialRepository.js'
 import * as readingService from './readingService.js'
 import * as reviewService from './reviewService.js'
+import * as listService from './listService.js'
 import STATUS from '../utils/statusCodes.js'
 import { httpError } from '../utils/httpError.js'
 
@@ -78,6 +79,7 @@ export async function publicProfile(username, viewerId) {
 
   // Resenhas que este leitor pode ver (públicas; "seguidores" se ele segue)
   profile.reviews = await reviewService.forProfile(user.id, viewerId)
+  profile.lists = await listService.forProfile(user.id)
 
   if (viewerId) {
     if (viewerId === user.id) {

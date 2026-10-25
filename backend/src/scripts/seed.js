@@ -703,6 +703,58 @@ async function insertReviews() {
   return reviews.length
 }
 
+// Listas: "Melhores de <ano>" com os livros mais bem avaliados lidos naquele
+// ano, "Para ler nas férias" com os "quero ler" e algumas temáticas
+const LIST_THEMES = ['Para ler nas férias', 'Clássicos que todo mundo devia ler', 'Livros para presentear', 'Releituras favoritas', 'Leituras rápidas', 'Os que me fizeram chorar']
+
+async function insertLists() {
+  const { rows: users } = await db.query(`
+    SELECT u.id, u.name, u.is_public FROM librishelf.users u
+    WHERE EXISTS (SELECT 1 FROM librishelf.books b WHERE b.user_id = u.id)
+    ORDER BY u.id
+  `)
+  let total = 0
+  const createList = async (userId, title, description, isPublic, ranked, bookIds) => {
+    if (bookIds.length === 0) return
+    const { rows: [{ id }] } = await db.query(
+      'INSERT INTO librishelf.lists (user_id, title, description, is_public, ranked) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+      [userId, title, description, isPublic, ranked])
+    await db.query(`
+      INSERT INTO librishelf.list_items (list_id, book_id, position)
+      SELECT $1, book_id, ord FROM unnest($2::int[]) WITH ORDINALITY AS o(book_id, ord)
+    `, [id, bookIds])
+    total++
+  }
+  const bestOf = async (userId, year, limit) => (await db.query(`
+    SELECT id FROM librishelf.books
+    WHERE user_id = $1 AND rating IS NOT NULL AND extract(year FROM read_date) = $2
+    ORDER BY rating DESC, read_date DESC LIMIT $3
+  `, [userId, year, limit])).rows.map(row => row.id)
+  const year = new Date(NOW).getFullYear()
+
+  for (const user of users) {
+    const demo = user.name === 'demo'
+    if (!demo && !chance(user.is_public ? 0.45 : 0.15)) continue
+
+    // Melhores do ano passado (e do atual para o demo)
+    for (const y of demo ? [year, year - 1] : [year - 1]) {
+      const ids = await bestOf(user.id, y, demo ? 10 : int(5, 10))
+      if (ids.length >= 3) {
+        await createList(user.id, `Melhores de ${y}`, chance(0.6) ? `Os livros que mais gostei de ler em ${y}, do melhor para o "muito bom".` : null, demo || chance(0.8), true, ids)
+      }
+    }
+    if (demo || chance(0.5)) {
+      const want = (await db.query(`SELECT id FROM librishelf.books WHERE user_id = $1 AND reading_status = 'want' ORDER BY id LIMIT 8`, [user.id])).rows.map(row => row.id)
+      await createList(user.id, 'Para ler nas férias', null, false, false, want)
+    }
+    if (demo || chance(0.4)) {
+      const ids = (await db.query('SELECT id FROM librishelf.books WHERE user_id = $1 ORDER BY (id * $3) % 997, id LIMIT $2', [user.id, int(4, 12), int(1, 996)])).rows.map(row => row.id)
+      await createList(user.id, pick(LIST_THEMES.slice(1)), chance(0.5) ? 'Uma seleção pessoal, sem ordem de preferência.' : null, chance(0.7), false, ids)
+    }
+  }
+  return total
+}
+
 async function main() {
   await checkSafety()
   logger.info('Populando banco local', { db: process.env.DB_NAME, host: process.env.DB_HOST || 'localhost', ...CONFIG })
@@ -719,6 +771,7 @@ async function main() {
   await insertReadings()
   await insertSeriesAndNotes()
   const reviews = await insertReviews()
+  const lists = await insertLists()
   const follows = await insertFollows(users)
   const covers = CONFIG.covers ? await generateCovers(catalog) : 0
 
@@ -743,6 +796,7 @@ async function main() {
     livros_gravados: books,
     seguir: follows,
     resenhas: reviews,
+    listas: lists,
     capas: covers,
     segundos: Math.round((Date.now() - startedAt) / 1000),
     login: `demo / ${PASSWORD} (todas as contas usam a mesma senha)`

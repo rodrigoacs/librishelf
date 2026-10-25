@@ -12,8 +12,11 @@ import { nextTick } from 'vue'
  */
 const MAX_FRAMES = 30
 
+// O nome da lista no fim da URL (/u/x/lists/3/melhores-de-2026) é só enfeite
+const pageParams = ({ slug, ...params }) => JSON.stringify(params)
+
 function samePage(to, from) {
-  return to.name === from.name && JSON.stringify(to.params) === JSON.stringify(from.params)
+  return to.name === from.name && pageParams(to.params) === pageParams(from.params)
 }
 
 function findHeading() {

@@ -40,4 +40,30 @@ router.get('/u/:username/image.jpg', publicLimiter, async (req, res) => {
   }
 })
 
+/** GET /meta/u/:username/lists/:id → <head> da página pública de uma lista. */
+router.get('/u/:username/lists/:id', metaLimiter, async (req, res) => {
+  try {
+    const head = await metaService.listHead(req.params.username, req.params.id)
+    res.set('Cache-Control', 'no-store')
+    res.type('html').send(head)
+  } catch (error) {
+    logger.error('Erro ao montar meta da lista pública', { error: error.message })
+    res.status(500).type('html').send('')
+  }
+})
+
+/** GET /meta/u/:username/lists/:id/image.jpg → mosaico das capas da lista. */
+router.get('/u/:username/lists/:id/image.jpg', publicLimiter, async (req, res) => {
+  try {
+    const image = await metaService.listImage(req.params.username, req.params.id)
+    if (!image) return res.status(404).type('text').send('Not found')
+    res.set('Cache-Control', 'public, max-age=86400')
+    res.set('ETag', `"${image.version}"`)
+    res.type('jpeg').send(image.buffer)
+  } catch (error) {
+    logger.error('Erro ao montar a imagem da lista', { error: error.message })
+    res.status(500).type('text').send('')
+  }
+})
+
 export default router

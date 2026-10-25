@@ -16,6 +16,7 @@ import metaRoutes from './routes/meta.js'
 import emailRoutes from './routes/email.js'
 import reviewRoutes from './routes/reviews.js'
 import moderationRoutes from './routes/moderation.js'
+import listRoutes from './routes/lists.js'
 import errorHandler from './middlewares/errorHandler.js'
 import corsOptions from './config/corsOptions.js'
 import trustProxy from './config/trustProxy.js'
@@ -45,6 +46,7 @@ app.use('/meta', metaRoutes)
 app.use('/email', emailRoutes)
 app.use('/reviews', reviewRoutes)
 app.use('/moderation', moderationRoutes)
+app.use('/lists', listRoutes)
 app.get('/ping', (req, res) => { res.json({ message: 'pong' }) })
 
 app.use(errorHandler)

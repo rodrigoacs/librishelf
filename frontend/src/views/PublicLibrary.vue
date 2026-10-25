@@ -280,6 +280,24 @@
       </div>
 
       <div
+        v-if="lists.length"
+        class="panel lists-panel"
+      >
+        <h2>{{ t('lists.profileTitle', { n: lists.length }, lists.length) }}</h2>
+        <ul class="list-grid">
+          <li
+            v-for="list in lists"
+            :key="list.id"
+          >
+            <ListCard
+              :list="list"
+              :to="{ name: 'public-list', params: { username, id: list.id, slug: slugify(list.title) || undefined } }"
+            />
+          </li>
+        </ul>
+      </div>
+
+      <div
         v-if="reviews.items.length"
         class="panel reviews-panel"
       >
@@ -392,6 +410,8 @@
 
 <script setup>
 import ReviewCard from '../components/review/ReviewCard.vue'
+import ListCard from '../components/list/ListCard.vue'
+import { slugify } from '../utils/slug.js'
 import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -426,6 +446,7 @@ const bookDialogVisible = ref(false)
 const stats = computed(() => profile.value?.stats ?? {})
 const viewer = computed(() => profile.value?.viewer ?? null)
 const reviews = computed(() => profile.value?.reviews ?? { total: 0, items: [] })
+const lists = computed(() => profile.value?.lists ?? [])
 const followStatus = computed(() => viewer.value?.followStatus ?? null)
 
 // Barras dos últimos anos com leitura, proporcionais ao ano com mais livros.
@@ -753,8 +774,27 @@ watch(username, () => {
   font-weight: 600;
 }
 
-.reviews-panel {
+.reviews-panel,
+.lists-panel {
   margin-top: 1rem;
+}
+
+.list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list-grid > li {
+  display: flex;
+  min-width: 0;
+}
+
+.list-grid > li > * {
+  flex: 1;
 }
 
 .review-grid {

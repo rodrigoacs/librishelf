@@ -1,5 +1,5 @@
 import { db } from '../database/connection.js'
-import { DATA_QUERIES as q, REVIEW_QUERIES } from '../database/queries.js'
+import { DATA_QUERIES as q, REVIEW_QUERIES, LIST_QUERIES } from '../database/queries.js'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import { normalizeBookInput } from './libraryService.js'
 import * as readingService from './readingService.js'
@@ -32,17 +32,18 @@ export const CSV_COLUMNS = [
 const LIST_SEPARATOR = '; '
 
 async function loadExport(userId) {
-  const [user, goals, books] = await Promise.all([
+  const [user, goals, books, lists] = await Promise.all([
     db.query(q.EXPORT_USER, [userId]),
     db.query(q.EXPORT_GOALS, [userId]),
-    db.query(q.EXPORT_BOOKS, [userId])
+    db.query(q.EXPORT_BOOKS, [userId]),
+    db.query(LIST_QUERIES.EXPORT, [userId])
   ])
   if (!user.rows[0]) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
-  return { user: user.rows[0], goals: goals.rows, books: books.rows }
+  return { user: user.rows[0], goals: goals.rows, books: books.rows, lists: lists.rows }
 }
 
 export async function exportJson(userId) {
-  const { user, goals, books } = await loadExport(userId)
+  const { user, goals, books, lists } = await loadExport(userId)
   return {
     app: 'Librishelf',
     version: 1,
@@ -77,6 +78,15 @@ export async function exportJson(userId) {
       readings: book.readings,
       review: book.review,
       addedAt: book.added_at
+    })),
+    // Listas: livros na ordem da lista (título + ISBN para achar na estante)
+    lists: lists.map(list => ({
+      title: list.title,
+      description: list.description,
+      isPublic: list.is_public,
+      ranked: list.ranked,
+      createdAt: list.created_at,
+      books: list.books
     }))
   }
 }

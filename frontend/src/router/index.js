@@ -25,6 +25,8 @@ const router = createRouter({
     { path: '/authors', name: 'authors', component: () => import('../views/Author.vue'), meta: { requiresAuth: true, title: 'authors' } },
     { path: '/publishers', name: 'publishers', component: () => import('../views/Publisher.vue'), meta: { requiresAuth: true, title: 'publishers' } },
     { path: '/tags', name: 'tags', component: () => import('../views/Tags.vue'), meta: { requiresAuth: true, title: 'tags' } },
+    { path: '/lists', name: 'lists', component: () => import('../views/Lists.vue'), meta: { requiresAuth: true, title: 'lists' } },
+    { path: '/lists/:id(\\d+)', name: 'list', component: () => import('../views/ListDetail.vue'), meta: { requiresAuth: true, title: 'list' } },
     { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { requiresAuth: true, title: 'dashboard' } },
     { path: '/community', name: 'community', component: () => import('../views/Community.vue'), meta: { requiresAuth: true, title: 'community' } },
     { path: '/settings', name: 'settings', component: () => import('../views/Settings.vue'), meta: { requiresAuth: true, title: 'settings' } },
@@ -39,6 +41,7 @@ const router = createRouter({
     { path: '/moderation', name: 'moderation', component: () => import('../views/Moderation.vue'), meta: { standalone: true, title: 'moderation', noindex: true } },
 
     { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, public: true, title: 'publicLibrary', noindex: 'server' } },
+    { path: '/u/:username/lists/:id(\\d+)/:slug?', name: 'public-list', component: () => import('../views/PublicList.vue'), meta: { standalone: true, public: true, title: 'publicList', noindex: 'server' } },
     { path: '/privacy', name: 'privacy', component: () => import('../views/Privacy.vue'), meta: { public: true, title: 'privacy' } },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFound.vue'), meta: { public: true, title: 'notFound' } }

@@ -151,6 +151,46 @@ export default {
     return client.patch(`/library/${id}/status`, date ? { status, date } : { status })
   },
 
+  // --- Listas ---
+  /** Minhas listas; com bookId, cada uma vem com hasBook. */
+  getLists(bookId) {
+    return client.get(`/lists${bookId ? `?book=${bookId}` : ''}`)
+  },
+
+  /** { title, description?, isPublic?, ranked?, bookId? } */
+  createList(list) {
+    return client.post('/lists', list)
+  },
+
+  getList(id) {
+    return client.get(`/lists/${id}`)
+  },
+
+  updateList(id, changes) {
+    return client.patch(`/lists/${id}`, changes)
+  },
+
+  deleteList(id) {
+    return client.delete(`/lists/${id}`)
+  },
+
+  addToList(id, bookId) {
+    return client.post(`/lists/${id}/items`, { bookId })
+  },
+
+  removeFromList(id, bookId) {
+    return client.delete(`/lists/${id}/items/${bookId}`)
+  },
+
+  /** Todos os livros da lista, na ordem nova. */
+  reorderList(id, bookIds) {
+    return client.put(`/lists/${id}/order`, { bookIds })
+  },
+
+  getPublicList(username, id) {
+    return client.get(`/library/public/u/${enc(username)}/lists/${id}`)
+  },
+
   // --- Resenhas ---
   getReview(bookId) {
     return client.get(`/library/${bookId}/review`)
