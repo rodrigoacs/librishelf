@@ -235,7 +235,8 @@ export const AUTH_QUERIES = {
     WHERE id = $1
     RETURNING is_public, show_in_community, show_activity, allow_indexing
   `,
-  MARK_LOGIN: 'UPDATE librishelf.users SET last_login_at = now() WHERE id = $1',
+  MARK_LOGIN: 'UPDATE librishelf.users SET last_login_at = now(), last_seen_at = now() WHERE id = $1',
+  MARK_SEEN: 'UPDATE librishelf.users SET last_seen_at = now() WHERE id = $1',
   // books.user_id tem ON DELETE CASCADE: livros e vínculos vão junto.
   DELETE_USER: 'DELETE FROM librishelf.users WHERE id = $1',
   LIST_BOOK_IDS_BY_USER: 'SELECT id FROM librishelf.books WHERE user_id = $1'
@@ -1119,7 +1120,10 @@ export const ADMIN_QUERIES = {
     SELECT
       (SELECT count(*) FROM librishelf.users)::int AS users,
       (SELECT count(*) FROM librishelf.users WHERE email_verified_at IS NOT NULL)::int AS verified,
-      (SELECT count(*) FROM librishelf.users WHERE last_login_at > now() - interval '30 days')::int AS active30,
+      (SELECT count(*) FROM librishelf.users WHERE GREATEST(last_seen_at, last_login_at) > now() - interval '30 days')::int AS active30,
+      (SELECT count(*) FROM librishelf.users WHERE GREATEST(last_seen_at, last_login_at) > now() - interval '7 days')::int AS active7,
+      (SELECT count(*) FROM librishelf.users
+        WHERE email_verified_at IS NULL AND is_active IS NOT FALSE AND created_at < now() - interval '7 days')::int AS stale_signups,
       (SELECT count(*) FROM librishelf.users WHERE created_at > now() - interval '7 days')::int AS signups7,
       (SELECT count(*) FROM librishelf.users WHERE created_at > now() - interval '30 days')::int AS signups30,
       (SELECT count(*) FROM librishelf.users WHERE is_active = false)::int AS suspended,
@@ -1174,7 +1178,7 @@ export const ADMIN_QUERIES = {
   // Contas: $1 trecho do nome ou e-mail (padrão ILIKE já escapado), $2 'all' ou 'suspended'
   USERS: `
     SELECT u.id, u.name, u.email, u.role, (u.is_active IS NOT FALSE) AS active,
-           u.suspended_at, u.suspended_reason, u.created_at, u.last_login_at,
+           u.suspended_at, u.suspended_reason, u.created_at, GREATEST(u.last_seen_at, u.last_login_at) AS last_login_at,
            (u.email_verified_at IS NOT NULL) AS email_verified, u.is_public,
            (SELECT count(*) FROM librishelf.books b WHERE b.user_id = u.id)::int AS books,
            (SELECT count(*) FROM librishelf.reviews r WHERE r.user_id = u.id)::int AS reviews,
@@ -1184,10 +1188,11 @@ export const ADMIN_QUERIES = {
     FROM librishelf.users u
     WHERE ($1::text IS NULL OR u.name ILIKE $1 OR u.email ILIKE $1)
       AND ($2 <> 'suspended' OR u.is_active = false)
+      AND ($2 <> 'unverified' OR (u.email_verified_at IS NULL AND u.is_active IS NOT FALSE AND u.created_at < now() - interval '7 days'))
     ORDER BY u.created_at DESC, u.id DESC
     LIMIT $3 OFFSET $4
   `,
-  USER_TARGET: 'SELECT id, name, role, (is_active IS NOT FALSE) AS active FROM librishelf.users WHERE id = $1',
+  USER_TARGET: 'SELECT id, name, role, (is_active IS NOT FALSE) AS active, email_verified_at, email_locale FROM librishelf.users WHERE id = $1',
   SUSPEND: `
     UPDATE librishelf.users
     SET is_active = false, suspended_at = now(), suspended_reason = $2, updated_at = now()
@@ -1199,6 +1204,152 @@ export const ADMIN_QUERIES = {
     SET is_active = true, suspended_at = NULL, suspended_reason = NULL, updated_at = now()
     WHERE id = $1 AND is_active = false
     RETURNING id
+  `,
+  // Funil: cadastrou → confirmou → 1 livro → 10 livros; voltou depois de 7 dias
+  ENGAGEMENT: `
+    WITH shelf AS (SELECT user_id, count(*) AS n FROM librishelf.books GROUP BY user_id)
+    SELECT
+      count(*)::int AS users,
+      count(*) FILTER (WHERE u.email_verified_at IS NOT NULL)::int AS verified,
+      count(*) FILTER (WHERE shelf.n >= 1)::int AS with_book,
+      count(*) FILTER (WHERE shelf.n >= 10)::int AS with_10_books,
+      count(*) FILTER (WHERE u.created_at < now() - interval '7 days')::int AS older_than_week,
+      count(*) FILTER (WHERE u.created_at < now() - interval '7 days'
+        AND GREATEST(u.last_seen_at, u.last_login_at) > u.created_at + interval '7 days')::int AS returned,
+      (SELECT count(*) FROM librishelf.books WHERE created_at > now() - interval '7 days')::int AS books7,
+      (SELECT count(*) FROM librishelf.books WHERE created_at > now() - interval '30 days')::int AS books30,
+      (SELECT count(*) FROM librishelf.readings WHERE finished_on > current_date - 30)::int AS finished30,
+      (SELECT count(*) FROM librishelf.reviews WHERE created_at > now() - interval '30 days')::int AS reviews30
+    FROM librishelf.users u
+    LEFT JOIN shelf ON shelf.user_id = u.id
+  `,
+  // Quantas pessoas usam cada recurso (contas, não ações)
+  ADOPTION: `
+    SELECT
+      (SELECT count(*) FROM librishelf.users)::int AS users,
+      (SELECT count(DISTINCT user_id) FROM librishelf.lists)::int AS lists,
+      (SELECT count(DISTINCT user_id) FROM librishelf.reviews)::int AS reviews,
+      (SELECT count(DISTINCT user_id) FROM librishelf.reading_goals WHERE year = extract(year FROM now())::int)::int AS goals,
+      (SELECT count(DISTINCT user_id) FROM librishelf.books WHERE series IS NOT NULL)::int AS series,
+      (SELECT count(DISTINCT user_id) FROM librishelf.books WHERE notes IS NOT NULL AND btrim(notes) <> '')::int AS notes,
+      (SELECT count(DISTINCT user_id) FROM librishelf.books WHERE reading_status = 'reading')::int AS reading_now,
+      (SELECT count(DISTINCT b.user_id) FROM librishelf.books b
+        WHERE (SELECT count(*) FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NOT NULL) >= 2)::int AS rereads,
+      (SELECT count(*) FROM librishelf.users WHERE is_public)::int AS public_library,
+      (SELECT count(*) FROM librishelf.users WHERE is_public AND show_in_community)::int AS community,
+      (SELECT count(*) FROM librishelf.users WHERE show_activity)::int AS accepts_followers,
+      (SELECT count(DISTINCT follower_id) FROM librishelf.follows WHERE status = 'accepted')::int AS following,
+      (SELECT count(*) FROM librishelf.users WHERE follow_emails)::int AS follow_emails,
+      (SELECT count(DISTINCT blocker_id) FROM librishelf.blocks)::int AS blocks,
+      (SELECT count(*) FROM librishelf.users WHERE allow_indexing AND is_public)::int AS indexing
+  `,
+  // Contadores dos últimos $1 dias, por evento
+  COUNTERS: `
+    SELECT event, sum(count)::int AS total
+    FROM librishelf.usage_counters
+    WHERE day > current_date - $1::int
+    GROUP BY event
+  `,
+  // Série diária (com zeros) dos eventos que começam com $1, últimos $2 dias
+  COUNTER_SERIES: `
+    SELECT to_char(d, 'YYYY-MM-DD') AS day, e.event, COALESCE(c.count, 0)::int AS total
+    FROM generate_series(current_date - ($2::int - 1), current_date, interval '1 day') AS d
+    CROSS JOIN unnest($1::text[]) AS e(event)
+    LEFT JOIN librishelf.usage_counters c ON c.day = d::date AND c.event = e.event
+    ORDER BY d, e.event
+  `,
+  OPENLIBRARY_BOOKS: `
+    SELECT
+      count(*) FILTER (WHERE ol_work_key IS NOT NULL)::int AS linked,
+      count(*) FILTER (WHERE ol_work_key IS NULL AND isbn13 IS NOT NULL)::int AS linkable,
+      count(*) FILTER (WHERE ol_work_key IS NULL AND isbn13 IS NULL)::int AS unlinked
+    FROM librishelf.books
+  `,
+  DB_INFO: `
+    SELECT current_setting('server_version') AS version,
+           pg_database_size(current_database())::bigint AS size,
+           (SELECT count(*) FROM pg_stat_activity WHERE datname = current_database())::int AS connections
+  `,
+  LAST_MIGRATION: 'SELECT version, applied_at FROM librishelf.schema_migrations ORDER BY version DESC LIMIT 1',
+  // Moderação: quem denuncia muito, e quanto do que denunciou foi mantido no ar
+  SERIAL_REPORTERS: `
+    SELECT u.id, u.name, (u.is_active IS NOT FALSE) AS active, u.created_at,
+           count(*)::int AS reports,
+           count(*) FILTER (WHERE r.hidden_at IS NOT NULL)::int AS upheld,
+           count(*) FILTER (WHERE r.hidden_at IS NULL AND r.reviewed_at IS NOT NULL AND rr.created_at <= r.reviewed_at)::int AS rejected,
+           count(*) FILTER (WHERE rr.created_at > now() - interval '7 days')::int AS last7
+    FROM librishelf.review_reports rr
+    JOIN librishelf.users u ON u.id = rr.reporter_id
+    JOIN librishelf.reviews r ON r.id = rr.review_id
+    GROUP BY u.id
+    HAVING count(*) >= 3
+    ORDER BY reports DESC, last7 DESC
+    LIMIT 15
+  `,
+  // Contas com até 30 dias que já recebem denúncias
+  NEW_REPORTED: `
+    SELECT u.id, u.name, (u.is_active IS NOT FALSE) AS active, u.created_at,
+           count(rr.id)::int AS reports, count(DISTINCT r.id)::int AS reviews_reported
+    FROM librishelf.users u
+    JOIN librishelf.reviews r ON r.user_id = u.id
+    JOIN librishelf.review_reports rr ON rr.review_id = r.id
+    WHERE u.created_at > now() - interval '30 days'
+    GROUP BY u.id
+    ORDER BY reports DESC
+    LIMIT 15
+  `,
+  MOST_REPORTED: `
+    SELECT u.id, u.name, (u.is_active IS NOT FALSE) AS active, u.created_at,
+           count(rr.id)::int AS reports, count(DISTINCT r.id)::int AS reviews_reported,
+           count(DISTINCT r.id) FILTER (WHERE r.hidden_at IS NOT NULL)::int AS hidden
+    FROM librishelf.users u
+    JOIN librishelf.reviews r ON r.user_id = u.id
+    JOIN librishelf.review_reports rr ON rr.review_id = r.id
+    GROUP BY u.id
+    ORDER BY reports DESC
+    LIMIT 10
+  `,
+  USER_DETAIL: `
+    SELECT u.id, u.name, u.email, u.role, (u.is_active IS NOT FALSE) AS active, u.suspended_at, u.suspended_reason,
+           u.created_at, u.last_login_at, GREATEST(u.last_seen_at, u.last_login_at) AS last_seen_at, u.email_verified_at,
+           u.is_public, u.show_in_community, u.show_activity, u.allow_indexing, u.follow_emails, u.email_locale,
+           (SELECT count(*) FROM librishelf.books WHERE user_id = u.id)::int AS books,
+           (SELECT count(*) FROM librishelf.books WHERE user_id = u.id AND read_date IS NOT NULL)::int AS read_books,
+           (SELECT max(created_at) FROM librishelf.books WHERE user_id = u.id) AS last_book_at,
+           (SELECT count(*) FROM librishelf.reviews WHERE user_id = u.id)::int AS reviews,
+           (SELECT count(*) FROM librishelf.reviews WHERE user_id = u.id AND hidden_at IS NOT NULL)::int AS hidden_reviews,
+           (SELECT count(*) FROM librishelf.lists WHERE user_id = u.id)::int AS lists,
+           (SELECT count(*) FROM librishelf.lists WHERE user_id = u.id AND is_public)::int AS public_lists,
+           (SELECT count(*) FROM librishelf.follows WHERE followee_id = u.id AND status = 'accepted')::int AS followers,
+           (SELECT count(*) FROM librishelf.follows WHERE follower_id = u.id AND status = 'accepted')::int AS following,
+           (SELECT count(*) FROM librishelf.blocks WHERE blocker_id = u.id)::int AS blocks_made,
+           (SELECT count(*) FROM librishelf.blocks WHERE blocked_id = u.id)::int AS blocked_by,
+           (SELECT count(*) FROM librishelf.review_reports rr JOIN librishelf.reviews r ON r.id = rr.review_id
+             WHERE r.user_id = u.id)::int AS reports_received,
+           (SELECT count(*) FROM librishelf.review_reports WHERE reporter_id = u.id)::int AS reports_made
+    FROM librishelf.users u
+    WHERE u.id = $1
+  `,
+  USER_REPORTED_REVIEWS: `
+    SELECT r.id, b.title, (r.hidden_at IS NOT NULL) AS hidden, r.hidden_reason,
+           count(rr.id)::int AS reports,
+           count(rr.id) FILTER (WHERE r.reviewed_at IS NULL OR rr.created_at > r.reviewed_at)::int AS open,
+           max(rr.created_at) AS last_report_at
+    FROM librishelf.reviews r
+    JOIN librishelf.books b ON b.id = r.book_id
+    JOIN librishelf.review_reports rr ON rr.review_id = r.id
+    WHERE r.user_id = $1
+    GROUP BY r.id, b.title
+    ORDER BY last_report_at DESC
+    LIMIT 20
+  `,
+  USER_ACTIONS: `
+    SELECT a.id, a.action, a.target_review_id, a.details, a.created_at, adm.name AS admin
+    FROM librishelf.admin_actions a
+    LEFT JOIN librishelf.users adm ON adm.id = a.admin_id
+    WHERE a.target_user_id = $1
+    ORDER BY a.created_at DESC, a.id DESC
+    LIMIT 30
   `,
   LOG: `
     INSERT INTO librishelf.admin_actions (admin_id, action, target_user_id, target_review_id, details)

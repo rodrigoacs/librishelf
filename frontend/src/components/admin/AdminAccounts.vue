@@ -74,15 +74,12 @@
           >
             <td>
               <div class="user-cell">
-                <span class="username">
-                  <a
-                    v-if="user.isPublic && user.active"
-                    :href="`/u/${encodeURIComponent(user.username)}`"
-                    target="_blank"
-                    rel="noopener"
-                  >{{ user.username }}</a>
-                  <template v-else>{{ user.username }}</template>
-                </span>
+                <button
+                  type="button"
+                  class="username"
+                  :aria-label="t('admin.accounts.openWho', { name: user.username })"
+                  @click="emit('open-user', user.id)"
+                >{{ user.username }}</button>
                 <span
                   v-if="user.isAdmin"
                   class="tag admin"
@@ -111,24 +108,13 @@
               :class="{ warn: user.reportsReceived > 0 }"
             >{{ formatNumber(user.reportsReceived, locale) }}</td>
             <td class="actions">
-              <template v-if="!user.isAdmin">
-                <AppButton
-                  v-if="user.active"
-                  :label="t('admin.accounts.suspend')"
-                  :aria-label="t('admin.accounts.suspendWho', { name: user.username })"
-                  icon="pi pi-ban"
-                  class="btn-text btn-sm btn-danger"
-                  @click="openDialog('suspend', user)"
-                />
-                <AppButton
-                  v-else
-                  :label="t('admin.accounts.reactivate')"
-                  :aria-label="t('admin.accounts.reactivateWho', { name: user.username })"
-                  icon="pi pi-replay"
-                  class="btn-text btn-sm"
-                  @click="openDialog('reactivate', user)"
-                />
-              </template>
+              <AppButton
+                :label="t('admin.accounts.open')"
+                :aria-label="t('admin.accounts.openWho', { name: user.username })"
+                icon="pi pi-angle-right"
+                class="btn-text btn-sm btn-secondary"
+                @click="emit('open-user', user.id)"
+              />
             </td>
           </tr>
         </tbody>
@@ -170,94 +156,39 @@
       />
     </nav>
 
-    <AppDialog
-      v-model:visible="dialog.visible"
-      size="sm"
-      :header="dialog.mode === 'suspend' ? t('admin.accounts.suspendTitle', { name: dialog.user?.username }) : t('admin.accounts.reactivateTitle', { name: dialog.user?.username })"
-      :closable="!dialog.busy"
-    >
-      <form
-        class="stack"
-        novalidate
-        @submit.prevent="confirmDialog"
-      >
-        <p class="desc">{{ dialog.mode === 'suspend' ? t('admin.accounts.suspendDesc') : t('admin.accounts.reactivateDesc') }}</p>
-        <TextField
-          v-if="dialog.mode === 'suspend'"
-          id="admin-suspend-reason"
-          ref="reasonField"
-          v-model="dialog.reason"
-          :label="t('admin.accounts.reason')"
-          :hint="t('admin.accounts.reasonHint')"
-          :error="dialog.reasonError"
-          maxlength="500"
-          multiline
-          rows="3"
-          required
-        />
-        <PasswordField
-          id="admin-confirm-password"
-          ref="passwordField"
-          v-model="dialog.password"
-          :label="t('admin.accounts.password')"
-          autocomplete="current-password"
-          :error="dialog.passwordError"
-          required
-        />
-        <div class="dialog-actions">
-          <AppButton
-            :label="t('common.cancel')"
-            class="btn-text btn-secondary"
-            :disabled="dialog.busy"
-            @click="dialog.visible = false"
-          />
-          <AppButton
-            type="submit"
-            :label="dialog.mode === 'suspend' ? t('admin.accounts.suspend') : t('admin.accounts.reactivate')"
-            :icon="dialog.mode === 'suspend' ? 'pi pi-ban' : 'pi pi-replay'"
-            :class="dialog.mode === 'suspend' ? 'btn-danger' : ''"
-            :loading="dialog.busy"
-          />
-        </div>
-      </form>
-    </AppDialog>
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
-import AppDialog from '../ui/AppDialog.vue'
-import TextField from '../form/TextField.vue'
-import PasswordField from '../form/PasswordField.vue'
 import api from '../../services/api.js'
-import { useToast } from '../../services/toast.js'
-import { LockedError, useAdminCall, formatDate, formatShortDate, formatDateTime, formatNumber } from './adminCall.js'
+import { LockedError, useAdminCall, formatShortDate, formatDateTime, formatNumber, formatDate } from './adminCall.js'
 
 const props = defineProps({
-  initialQuery: { type: String, default: '' }
+  initialStatus: { type: String, default: 'all' },
+  // Muda quando uma conta é alterada na gaveta: recarrega a lista
+  version: { type: Number, default: 0 }
 })
+const emit = defineEmits(['open-user'])
 
 const { t, locale } = useI18n()
-const toast = useToast()
 const call = useAdminCall()
 const LIMIT = 25
 
-const query = ref(props.initialQuery)
-const status = ref('all')
+const query = ref('')
+const status = ref(props.initialStatus)
 const page = ref(1)
 const total = ref(0)
 const users = ref([])
 const loading = ref(true)
 const failed = ref(false)
-const reasonField = ref(null)
-const passwordField = ref(null)
-const dialog = reactive({ visible: false, mode: 'suspend', user: null, reason: '', password: '', reasonError: '', passwordError: '', busy: false })
 
 const pages = computed(() => Math.max(1, Math.ceil(total.value / LIMIT)))
 const filters = computed(() => [
   { value: 'all', label: t('admin.accounts.filters.all') },
+  { value: 'unverified', label: t('admin.accounts.filters.unverified') },
   { value: 'suspended', label: t('admin.accounts.filters.suspended') }
 ])
 
@@ -283,7 +214,8 @@ watch(query, () => {
   clearTimeout(debounce)
   debounce = setTimeout(() => { page.value = 1; load() }, 300)
 })
-watch(() => props.initialQuery, value => { query.value = value })
+watch(() => props.initialStatus, value => { status.value = value; page.value = 1; load() })
+watch(() => props.version, load)
 onBeforeUnmount(() => clearTimeout(debounce))
 
 function setStatus(value) {
@@ -296,55 +228,6 @@ function setStatus(value) {
 function goTo(target) {
   page.value = target
   load()
-}
-
-async function openDialog(mode, user) {
-  Object.assign(dialog, { visible: true, mode, user, reason: '', password: '', reasonError: '', passwordError: '', busy: false })
-  await nextTick()
-  ;(mode === 'suspend' ? reasonField : passwordField).value?.focus()
-}
-
-async function confirmDialog() {
-  dialog.reasonError = ''
-  dialog.passwordError = ''
-  const reason = dialog.reason.trim()
-  if (dialog.mode === 'suspend' && reason.length < 3) {
-    dialog.reasonError = t('admin.accounts.reasonRequired')
-    reasonField.value?.focus()
-    return
-  }
-  if (!dialog.password) {
-    dialog.passwordError = t('errors.CURRENT_PASSWORD_REQUIRED')
-    passwordField.value?.focus()
-    return
-  }
-  dialog.busy = true
-  try {
-    if (dialog.mode === 'suspend') {
-      await call(() => api.adminSuspendUser(dialog.user.id, dialog.password, reason))
-    } else {
-      await call(() => api.adminReactivateUser(dialog.user.id, dialog.password))
-    }
-    toast.add({
-      severity: 'success',
-      summary: t(dialog.mode === 'suspend' ? 'admin.accounts.suspendedDone' : 'admin.accounts.reactivatedDone', { name: dialog.user.username }),
-      life: 3000
-    })
-    dialog.visible = false
-    load()
-  } catch (error) {
-    if (error instanceof LockedError) {
-      dialog.visible = false
-    } else if (error.code === 'CURRENT_PASSWORD_WRONG' || error.code === 'CURRENT_PASSWORD_REQUIRED') {
-      dialog.passwordError = error.message
-      dialog.password = ''
-      passwordField.value?.focus()
-    } else {
-      toast.add({ severity: 'error', summary: t('common.error'), detail: error.message })
-    }
-  } finally {
-    dialog.busy = false
-  }
 }
 
 onMounted(load)
@@ -508,14 +391,30 @@ td.warn {
 }
 
 .username {
+  font: inherit;
   font-weight: 600;
-}
-
-.username a {
   color: var(--text-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   text-decoration: underline;
   text-decoration-color: var(--border-hover);
   text-underline-offset: 2px;
+}
+
+.username:hover {
+  text-decoration-color: currentColor;
+}
+
+.username:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+tbody tr {
+  cursor: default;
 }
 
 .tag {
@@ -568,22 +467,4 @@ td.warn {
   font-size: var(--fs-sm);
 }
 
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.desc {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
 </style>

@@ -1,6 +1,7 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
 import STATUS from '../utils/statusCodes.js'
 import { errorBody } from '../utils/httpError.js'
+import { rateLimited } from '../utils/metrics.js'
 
 function buildLimiter({ windowMs, max, message, code, perUser = false }) {
   return rateLimit({
@@ -15,6 +16,7 @@ function buildLimiter({ windowMs, max, message, code, perUser = false }) {
       ? (req) => (req.user?.id ? `user:${req.user.id}` : ipKeyGenerator(req.ip))
       : (req) => ipKeyGenerator(req.ip),
     handler: (req, res) => {
+      rateLimited(code, req.ip)
       res.status(STATUS.TOO_MANY_REQUESTS).json(errorBody(message, code))
     }
   })

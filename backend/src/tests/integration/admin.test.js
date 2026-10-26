@@ -4,6 +4,8 @@ import { db } from '../../database/connection.js'
 import { confirmEmail } from '../helpers/confirmEmail.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
+import { testOutbox } from '../../services/mailService.js'
+import * as metrics from '../../utils/metrics.js'
 
 const PASSWORD = 'senha12345'
 const tokens = {}
@@ -25,6 +27,9 @@ const ids = {}
 
 beforeAll(async () => {
   await clearDatabase()
+  // Contadores e erros de outras suítes não entram aqui
+  await db.query('TRUNCATE librishelf.usage_counters')
+  metrics.resetMetrics()
   await signUp('chefe')
   await db.query("UPDATE librishelf.users SET role = 'admin' WHERE name = 'chefe'")
   await signUp('ana', { isPublic: true, showInCommunity: true, showActivity: true })
@@ -202,13 +207,90 @@ describe('contas', () => {
   })
 })
 
+describe('engajamento, cadastros parados e conta individual', () => {
+  test('funil e último acesso', async () => {
+    const res = await request(app).get('/admin/stats').set(asAdmin())
+    expect(res.body.engagement.funnel).toEqual({ signedUp: 5, verified: 5, withBook: 1, with10Books: 0 })
+    expect(res.body.engagement.books7).toBe(1)
+    expect(res.body.users.active7).toBe(5)
+    const { rows } = await db.query("SELECT last_seen_at FROM librishelf.users WHERE name = 'bia'")
+    expect(rows[0].last_seen_at).not.toBeNull()
+  })
+
+  test('cadastro parado: aparece no filtro e dá para reenviar a confirmação', async () => {
+    await db.query("UPDATE librishelf.users SET email_verified_at = NULL, created_at = now() - interval '10 days' WHERE name = 'caio'")
+    expect((await request(app).get('/admin/stats').set(asAdmin())).body.users.staleSignups).toBe(1)
+    const list = await request(app).get('/admin/users?status=unverified').set(asAdmin())
+    expect(list.body.users.map(u => u.username)).toEqual(['caio'])
+
+    testOutbox().length = 0
+    const caio = await userId('caio')
+    const res = await request(app).post(`/admin/users/${caio}/resend-verification`).set(asAdmin())
+    expect(res.status).toBe(200)
+    expect(testOutbox().map(m => m.to)).toEqual(['caio@example.com'])
+    const again = await request(app).post(`/admin/users/${ids.ana}/resend-verification`).set(asAdmin())
+    expect(again.body.code).toBe('EMAIL_ALREADY_VERIFIED')
+    await db.query("UPDATE librishelf.users SET email_verified_at = now() WHERE name = 'caio'")
+  })
+
+  test('conta individual: totais, resenhas denunciadas e histórico', async () => {
+    const res = await request(app).get(`/admin/users/${ids.ana}`).set(asAdmin())
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ username: 'ana', email: 'ana@example.com', active: true, privacy: { isPublic: true, showInCommunity: true } })
+    expect(res.body.totals).toMatchObject({ books: 1, reviews: 1, reportsReceived: 2, reportsMade: 0 })
+    expect(res.body.reportedReviews).toEqual([expect.objectContaining({ id: ids.review, book: 'Fantastic Mr. Fox', reports: 2, open: 0 })])
+    expect(res.body.history.map(h => h.action)).toEqual(['user.reactivate', 'user.suspend', 'review.show', 'review.hide'])
+    expect(res.body).not.toHaveProperty('password_hash')
+    expect((await request(app).get('/admin/users/99999').set(asAdmin())).status).toBe(404)
+  })
+})
+
+describe('uso, sistema e sinais de moderação', () => {
+  test('uso dos recursos: contas por recurso e contadores do servidor', async () => {
+    const res = await request(app).get('/admin/usage').set(asAdmin())
+    expect(res.status).toBe(200)
+    expect(res.body.adoption).toMatchObject({ users: 5, reviews: 1, publicLibrary: 4, community: 1, lists: 0 })
+    expect(res.body.events.find(e => e.event === 'book.add').last7).toBe(1)
+  })
+
+  test('sistema: banco, migrations, e-mail, limites e erros 500', async () => {
+    metrics.serverError({ method: 'GET', path: '/library/12345', context: 'teste', message: 'falha simulada' })
+    metrics.rateLimited('RATE_LIMIT_LOGIN', '203.0.113.9')
+    const res = await request(app).get('/admin/system').set(asAdmin())
+    expect(res.status).toBe(200)
+    expect(res.body.database).toMatchObject({ ok: true, pendingMigrations: [] })
+    expect(res.body.database.lastMigration.version).toMatch(/^\d{3}_/)
+    expect(res.body.email).toMatchObject({ configured: false })
+    expect(res.body.errors.recent[0]).toMatchObject({ path: '/library/:id', message: 'falha simulada' })
+    expect(res.body.errors.today).toBeGreaterThanOrEqual(1)
+    expect(res.body.rateLimits.topIps[0]).toMatchObject({ ip: '203.0.113.9', total: 1 })
+    expect(res.body.rateLimits.today).toEqual([{ code: 'RATE_LIMIT_LOGIN', total: 1 }])
+    expect(res.body.openLibrary.books).toEqual({ linked: 0, linkable: 1, unlinked: 0 })
+  })
+
+  test('e-mail de teste vai para o próprio admin', async () => {
+    testOutbox().length = 0
+    const res = await request(app).post('/admin/email/test').set(asAdmin())
+    expect(res.status).toBe(200)
+    expect(testOutbox()[0]).toMatchObject({ to: 'chefe@example.com', subject: 'Librishelf — e-mail de teste' })
+  })
+
+  test('sinais: contas novas denunciadas e as mais denunciadas', async () => {
+    const res = await request(app).get('/admin/moderation/insights').set(asAdmin())
+    expect(res.status).toBe(200)
+    expect(res.body.serialReporters).toEqual([])
+    expect(res.body.newAccountsReported).toEqual([expect.objectContaining({ username: 'ana', reports: 2, reviewsReported: 1 })])
+    expect(res.body.mostReported[0]).toMatchObject({ username: 'ana', reports: 2, hidden: 0 })
+  })
+})
+
 describe('registro', () => {
   test('lista o que foi feito, do mais novo ao mais antigo', async () => {
     const res = await request(app).get('/admin/actions').set(asAdmin())
     expect(res.status).toBe(200)
-    expect(res.body.actions.map(a => a.action)).toEqual(['user.reactivate', 'user.suspend', 'review.show', 'review.hide', 'admin.unlock'])
-    expect(res.body.actions[1]).toMatchObject({ admin: 'chefe', targetUser: 'ana', details: { reason: 'Spam repetido' } })
-    expect(res.body.actions[3]).toMatchObject({ action: 'review.hide', targetUser: 'ana', targetReviewId: ids.review, book: 'Fantastic Mr. Fox' })
+    expect(res.body.actions.map(a => a.action)).toEqual(['email.test', 'user.resend_verification', 'user.reactivate', 'user.suspend', 'review.show', 'review.hide', 'admin.unlock'])
+    expect(res.body.actions[3]).toMatchObject({ admin: 'chefe', targetUser: 'ana', details: { reason: 'Spam repetido' } })
+    expect(res.body.actions[5]).toMatchObject({ action: 'review.hide', targetUser: 'ana', targetReviewId: ids.review, book: 'Fantastic Mr. Fox' })
   })
 
   test('conta excluída: o registro deixa de apontar para ela e não guarda nada dela', async () => {

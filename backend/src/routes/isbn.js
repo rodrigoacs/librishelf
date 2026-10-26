@@ -5,6 +5,7 @@ import * as openLibrary from '../services/openLibraryService.js'
 import STATUS from '../utils/statusCodes.js'
 import { errorBody } from '../utils/httpError.js'
 import sendError from '../utils/sendError.js'
+import { track } from '../utils/metrics.js'
 
 const router = express.Router()
 
@@ -26,7 +27,7 @@ router.get('/cover/:coverId', coverProxyLimiter, async (req, res) => {
 })
 
 // Busca por título/autor: GET /isbn/search?q=dom+casmurro&lang=pt
-router.get('/search', bookSearchLimiter, async (req, res) => {
+router.get('/search', bookSearchLimiter, track('search.title'), async (req, res) => {
   try {
     const result = await openLibrary.searchBooks(req.query.q, req.query.lang)
     res.set('Cache-Control', 'private, max-age=3600')
@@ -36,7 +37,8 @@ router.get('/search', bookSearchLimiter, async (req, res) => {
   }
 })
 
-router.get('/:isbn', isbnLimiter, async (req, res) => {
+// ?via=scan quando o ISBN veio da câmera (só para contar o uso do leitor)
+router.get('/:isbn', isbnLimiter, track(req => (req.query.via === 'scan' ? 'isbn.scan' : 'isbn.typed')), async (req, res) => {
   try {
     const book = await openLibrary.lookupIsbn(req.params.isbn)
     if (!book) return res.status(STATUS.NOT_FOUND).json(errorBody('Nenhum livro encontrado para este ISBN.', 'ISBN_NOT_FOUND'))

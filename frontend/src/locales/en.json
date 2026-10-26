@@ -531,13 +531,14 @@
         "paragraphs": [
           "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
           "Content you add: your books and their details (title, authors, publisher, ISBN, series, tags, dates, ratings, reading status, reading history and progress, and goals), personal notes and the covers you upload. Personal notes are yours only: they never appear in your public library.",
-          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts. We also keep the date and time of your last sign-in, to know how many accounts are in use."
+          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts. We also keep the date and time of your last sign-in and last visit, to know how many accounts are in use."
         ]
       },
       {
         "title": "How we use it",
         "paragraphs": [
           "Only to run Librishelf: keep you signed in, store and show your library, and protect your account.",
+          "We also count, per day, how often some features are used (for example book searches, camera scans and imports), without recording who used them. This helps us know what to improve.",
           "We do not sell or share your data with anyone, and we use no advertising or tracking tools."
         ]
       },
@@ -570,7 +571,7 @@
       {
         "title": "Moderation and account suspension",
         "paragraphs": [
-          "The Librishelf team can hide reviews and suspend accounts that misuse the site, such as spam or offensive content. To do that, it sees each account’s username, email, sign-up and last sign-in dates and its totals of books, reviews and reports, never the password or personal notes.",
+          "The Librishelf team can hide reviews and suspend accounts that misuse the site, such as spam or offensive content. To do that, it sees each account’s username, email, sign-up and last visit dates and its totals of books, reviews and reports, never the password or personal notes.",
           "A suspended account can’t sign in, and what was public (library, profile, reviews and lists) stops showing to others. Nothing is deleted: if the suspension is lifted, everything comes back as it was.",
           "Every admin action is logged (what, when and the reason). If the account is deleted, the log no longer points to it."
         ]
@@ -1125,7 +1126,9 @@
     "ADMIN_TARGET": "Admin accounts can't be suspended here.",
     "ACCOUNT_SUSPENDED": "This account is suspended. Contact the Librishelf team.",
     "ACCOUNT_ALREADY_SUSPENDED": "This account is already suspended.",
-    "ACCOUNT_NOT_SUSPENDED": "This account isn't suspended."
+    "ACCOUNT_NOT_SUSPENDED": "This account isn't suspended.",
+    "EMAIL_ALREADY_VERIFIED": "This account has already confirmed its email.",
+    "EMAIL_TEST_FAILED": "The mail server refused to send: {message}"
   },
   "block": {
     "block": "Block {name}",
@@ -1370,7 +1373,9 @@
       "overview": "Overview",
       "moderation": "Moderation",
       "accounts": "Accounts",
-      "log": "Log"
+      "log": "Log",
+      "usage": "Usage",
+      "system": "System"
     },
     "overview": {
       "users": "Accounts",
@@ -1389,7 +1394,23 @@
       "suspended": "{n} suspended account | {n} suspended accounts",
       "signupsByWeek": "Sign-ups per week",
       "signupsLabel": "Sign-ups",
-      "chartLabel": "Sign-ups per week, last 12: {list}"
+      "chartLabel": "Sign-ups per week, last 12: {list}",
+      "active7": "{n} in 7 days · {p}% of accounts",
+      "staleSignups": "Stalled sign-ups",
+      "staleHint": "Email unconfirmed for over 7 days",
+      "funnel": "From sign-up to use",
+      "funnelSteps": {
+        "signedUp": "Signed up",
+        "verified": "Confirmed email",
+        "withBook": "Added 1 book",
+        "with10Books": "Have 10+ books"
+      },
+      "returned": "{n} of {total} accounts older than a week came back after their first 7 days ({p}%).",
+      "activity": "Recent activity",
+      "books7": "Books added (7 days)",
+      "books30": "Books added (30 days)",
+      "finished30": "Readings finished (30 days)",
+      "reviews30": "New reviews (30 days)"
     },
     "moderation": {
       "filter": "Show",
@@ -1412,7 +1433,21 @@
       "totalCount": "{n} reviewed report | {n} reviewed reports",
       "viewAuthor": "See {name}'s account",
       "authorSuspended": "The author's account is suspended: the review isn't shown to anyone meanwhile.",
-      "reviewedBefore": "before the last review"
+      "reviewedBefore": "before the last review",
+      "insights": {
+        "title": "Moderation signals",
+        "summary": "{serial} frequent reporters · {fresh} new accounts reported",
+        "serialReporters": "Report a lot",
+        "serialReportersHint": "3 reports or more. Many kept visible may mean the button is being abused.",
+        "newAccountsReported": "New accounts already reported",
+        "newAccountsReportedHint": "Created in the last 30 days.",
+        "mostReported": "Most reported",
+        "mostReportedHint": "All accounts, by reports received.",
+        "none": "Nobody here.",
+        "serialDetail": "{n} reports · {upheld} hidden · {rejected} kept · {week} this week",
+        "freshDetail": "{n} reports on {reviews} reviews · account from {date}",
+        "mostDetail": "{n} reports on {reviews} reviews · {hidden} hidden"
+      }
     },
     "accounts": {
       "search": "Search accounts",
@@ -1420,7 +1455,8 @@
       "filter": "Show",
       "filters": {
         "all": "All",
-        "suspended": "Suspended"
+        "suspended": "Suspended",
+        "unverified": "Stalled email"
       },
       "total": "{n} account | {n} accounts",
       "cols": {
@@ -1430,7 +1466,8 @@
         "books": "Books",
         "reviews": "Reviews",
         "reports": "Reports",
-        "actions": "Actions"
+        "actions": "Actions",
+        "email": "Email"
       },
       "adminTag": "admin",
       "suspendedTag": "suspended",
@@ -1450,7 +1487,9 @@
       "reasonRequired": "Explain the reason (at least 3 characters).",
       "password": "Your password, to confirm",
       "suspendedDone": "{name}’s account was suspended.",
-      "reactivatedDone": "{name}’s account was reactivated."
+      "reactivatedDone": "{name}’s account was reactivated.",
+      "open": "Open",
+      "openWho": "Open {name}'s account"
     },
     "log": {
       "intro": "Everything done in this area, newest first.",
@@ -1466,11 +1505,200 @@
         "review_hide": "Hid review",
         "review_show": "Kept/restored review",
         "user_suspend": "Suspended account",
-        "user_reactivate": "Reactivated account"
+        "user_reactivate": "Reactivated account",
+        "user_resend_verification": "Resent confirmation",
+        "email_test": "Sent test email"
       },
       "review": "review #{id}",
       "deleted": "deleted account",
       "empty": "Nothing logged yet."
+    },
+    "usage": {
+      "adoption": "Who uses each feature",
+      "adoptionHint": "Accounts using it, out of {n}.",
+      "feature": "Feature",
+      "accounts": "Accounts",
+      "share": "Share of accounts",
+      "features": {
+        "readingNow": "Reading something now",
+        "rereads": "Logged rereads",
+        "goals": "Yearly goal",
+        "series": "Series",
+        "notes": "Personal notes",
+        "reviews": "Reviews",
+        "lists": "Lists",
+        "publicLibrary": "Public library",
+        "community": "Community",
+        "acceptsFollowers": "Accepts followers",
+        "following": "Follows someone",
+        "followEmails": "Email notices",
+        "indexing": "Shows in search engines",
+        "blocks": "Blocked someone"
+      },
+      "events": "Actions counted on the server",
+      "eventsHint": "Daily totals, without identifying anyone. Counting starts with this version.",
+      "action": "Action",
+      "last7": "7 days",
+      "last30": "30 days",
+      "eventNames": {
+        "book_add": "Books added",
+        "isbn_typed": "Typed ISBN lookup",
+        "isbn_scan": "Camera ISBN lookup",
+        "search_title": "Title search",
+        "cover_upload": "Covers uploaded",
+        "import_csv": "CSV imports",
+        "export_json": "JSON exports",
+        "export_csv": "CSV exports",
+        "year_view": "\"Your year in books\" opened"
+      },
+      "scanShare": "{p}% of ISBN lookups in the last 30 days came from the camera."
+    },
+    "system": {
+      "loadedAt": "Updated {time}",
+      "refresh": "Refresh",
+      "yes": "yes",
+      "no": "no",
+      "notSet": "not set",
+      "sinceBoot": "Nothing since the server started",
+      "service": {
+        "title": "Service",
+        "backend": "Backend",
+        "since": "up since {date} ({uptime})",
+        "frontend": "Frontend",
+        "built": "built {date}",
+        "version": "Version",
+        "runtime": "Runtime",
+        "memory": "Backend memory",
+        "load": "Load (1/5/15 min)",
+        "cpus": "{n} CPU | {n} CPUs",
+        "appUrl": "APP_URL",
+        "proxy": "Proxy and cookie",
+        "proxyValue": "TRUST_PROXY = {trust} · Secure cookie: {secure}",
+        "olContact": "Open Library contact",
+        "olContactMissing": "not set (slower queue)"
+      },
+      "db": {
+        "title": "Database",
+        "ok": "Responding in {ms} ms",
+        "down": "No response: {error}",
+        "version": "Version",
+        "size": "Size",
+        "connections": "Connections",
+        "pool": "pool: {total} open, {idle} idle, {waiting} waiting · {all} in the database",
+        "migration": "Last migration",
+        "pending": "Pending migrations: {list}"
+      },
+      "storage": {
+        "title": "Storage",
+        "covers": "Uploaded covers",
+        "files": "{n} files · {size}",
+        "disk": "Disk (where covers live)",
+        "free": "{free} free of {total} ({p}%)",
+        "used": "{p}% of the disk in use",
+        "lowDisk": "Less than 10% of the disk is free.",
+        "hint": "Cover size is recalculated every 5 minutes."
+      },
+      "email": {
+        "title": "Email",
+        "configured": "SMTP configured ({host})",
+        "notConfigured": "SMTP not configured: emails only go to the log",
+        "from": "Sender",
+        "reports": "Reports by email (ADMIN_EMAIL)",
+        "noAdminEmail": "not set",
+        "week": "Last 7 days",
+        "sentFailed": "{sent} sent · {failed} failed",
+        "lastOk": "Last sent",
+        "lastFailure": "Last failure",
+        "test": "Send test email",
+        "testSent": "Test email sent to {to}.",
+        "testLogged": "SMTP not configured: the test email only went to the server log."
+      },
+      "ol": {
+        "week": "Last 7 days",
+        "calls": "{ok} ok · {error} errors · {timeout} timed out",
+        "errorRate": "Failure rate",
+        "latency": "Response time",
+        "ms": "avg {avg} ms · p95 {p95} ms",
+        "lastFailure": "Last failure",
+        "books": "Books linked to Open Library",
+        "booksDetail": "{linked} linked · {linkable} with ISBN, not linked yet · {unlinked} without ISBN",
+        "enrichHint": "To link books that have an ISBN, run enrich:isbn (see the README).",
+        "series": {
+          "ok": "OK",
+          "error": "Error",
+          "timeout": "Timed out"
+        },
+        "chartLabel": "Open Library calls per day (ok/error/timeout): {list}"
+      },
+      "limits": {
+        "title": "Rate limits",
+        "none": "Nobody hit a limit in the last 7 days.",
+        "code": "Limit",
+        "today": "Today",
+        "week": "7 days",
+        "ips": "IPs in the last 2 hours",
+        "noIps": "No IP hit a limit in the last 2 hours.",
+        "hint": "IPs stay only in server memory, for at most 2 hours, and vanish on restart.",
+        "codes": {
+          "RATE_LIMIT": "General",
+          "RATE_LIMIT_LOGIN": "Sign-in",
+          "RATE_LIMIT_REGISTER": "Sign-up",
+          "RATE_LIMIT_ATTEMPTS": "Password and links",
+          "RATE_LIMIT_UPLOAD": "Cover uploads",
+          "RATE_LIMIT_SEARCH": "Title search",
+          "RATE_LIMIT_ISBN": "ISBN lookup",
+          "RATE_LIMIT_REPORTS": "Reports",
+          "RATE_LIMIT_ACTIONS": "Follow and actions",
+          "RATE_LIMIT_EMAIL": "Email requests"
+        }
+      },
+      "errors": {
+        "title": "Recent 500 errors",
+        "counts": "{today} today · {week} in the last 7 days",
+        "none": "No errors since the server started.",
+        "when": "When",
+        "route": "Route",
+        "context": "Context",
+        "message": "Message",
+        "hint": "Kept in memory (the latest 50) and cleared on restart; full details are in the log."
+      }
+    },
+    "user": {
+      "title": "Account",
+      "active": "active",
+      "openPublic": "View public library",
+      "account": "Account",
+      "created": "Joined",
+      "verified": "Email confirmed",
+      "notVerified": "not yet",
+      "lastLogin": "Last sign-in",
+      "lastSeen": "Last seen",
+      "privacy": "Privacy",
+      "flags": {
+        "isPublic": "Public library",
+        "showInCommunity": "In the community",
+        "showActivity": "Accepts followers",
+        "allowIndexing": "Shows in search engines",
+        "followEmails": "Email notices"
+      },
+      "totals": "Numbers",
+      "t": {
+        "books": "Books",
+        "read": "{n} read",
+        "reviews": "Reviews",
+        "hidden": "{n} hidden",
+        "lists": "Lists",
+        "public": "{n} public",
+        "follow": "Followers / following",
+        "blocks": "Blocked / blocked by",
+        "reports": "Reports received / made"
+      },
+      "lastBook": "Last book added on {date}.",
+      "reportedReviews": "Reported reviews",
+      "reviewReports": "{n} reports · {open} open",
+      "history": "Admin history",
+      "resend": "Resend confirmation",
+      "resent": "Confirmation resent to {email}."
     }
   }
 }

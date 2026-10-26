@@ -94,7 +94,9 @@ const ICONS = {
   'review.hide': 'pi pi-eye-slash',
   'review.show': 'pi pi-eye',
   'user.suspend': 'pi pi-ban',
-  'user.reactivate': 'pi pi-replay'
+  'user.reactivate': 'pi pi-replay',
+  'user.resend_verification': 'pi pi-envelope',
+  'email.test': 'pi pi-send'
 }
 
 const actions = ref([])

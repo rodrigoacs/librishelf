@@ -5,6 +5,17 @@ import STATUS from '../utils/statusCodes.js'
 import * as authRepository from '../repositories/authRepository.js'
 
 const SECRET_KEY = process.env.SECRET_KEY
+// Último acesso: grava no máximo uma vez por hora por pessoa
+const SEEN_EVERY_MS = 60 * 60 * 1000
+const seenAt = new Map()
+
+function markSeen(userId) {
+  const now = Date.now()
+  if (now - (seenAt.get(userId) || 0) < SEEN_EVERY_MS) return
+  seenAt.set(userId, now)
+  if (seenAt.size > 10_000) seenAt.clear()
+  authRepository.markSeen(userId).catch(() => seenAt.delete(userId))
+}
 
 function extractToken(req) {
   const cookieToken = req.cookies?.[AUTH_COOKIE_NAME]
@@ -45,6 +56,7 @@ export async function resolveSession(req) {
     if (decoded.iat < changedAtSeconds) return { error: 'Sua sessão foi encerrada. Entre de novo.', code: 'SESSION_REVOKED' }
   }
 
+  markSeen(decoded.id)
   // O papel vem do banco a cada requisição: rebaixar alguém vale na hora.
   return { user: { ...decoded, role: session.role || 'user' } }
 }

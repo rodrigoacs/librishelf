@@ -22,6 +22,10 @@ async function markLogin(id) {
   await db.query(q.MARK_LOGIN, [id])
 }
 
+async function markSeen(id) {
+  await db.query(q.MARK_SEEN, [id])
+}
+
 async function getSessionById(id) {
   const result = await db.query(q.FIND_SESSION_BY_ID, [id])
   return result.rows[0] || null
@@ -107,6 +111,7 @@ export {
   getUserByUsername,
   getUserByName,
   markLogin,
+  markSeen,
   getUserById,
   getUserByEmail,
   markEmailVerified,

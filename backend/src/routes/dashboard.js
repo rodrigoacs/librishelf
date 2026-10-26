@@ -4,6 +4,7 @@ import * as yearService from '../services/yearService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
+import { track } from '../utils/metrics.js'
 
 const router = express.Router()
 
@@ -19,7 +20,7 @@ router.get('/stats', async (req, res) => {
 })
 
 // "Seu ano em livros" (retrospectiva): GET /dashboard/year/2026
-router.get('/year/:year', async (req, res) => {
+router.get('/year/:year', track('year.view'), async (req, res) => {
   try {
     res.status(STATUS.OK).json(await yearService.yearInBooks(req.user.id, req.params.year))
   } catch (error) {

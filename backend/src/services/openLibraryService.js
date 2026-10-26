@@ -2,6 +2,7 @@ import logger from '../utils/logger.js'
 import STATUS from '../utils/statusCodes.js'
 import { normalizeIsbn13 } from '../utils/isbn.js'
 import { httpError } from '../utils/httpError.js'
+import { count, timing, failure } from '../utils/metrics.js'
 
 /**
  * Busca de livros no Open Library (por ISBN e por título/autor), feita sempre
@@ -99,20 +100,37 @@ function cacheSet(cache, key, value, ttl, max) {
   cache.set(key, { value, expiresAt: Date.now() + ttl })
 }
 
+// Para a área administrativa: chamadas, falhas e tempo de resposta
+function record(startedAt, outcome, message) {
+  if (outcome === 'ok') timing('openlibrary', Date.now() - startedAt)
+  count(`openlibrary.${outcome}`)
+  if (outcome !== 'ok') failure('openlibrary', message)
+}
+
 async function getJson(path, timeoutMs = TIMEOUT_MS) {
   let response
+  let startedAt = Date.now()
   try {
-    response = await throttled(() => fetchImpl(`${API_BASE}${path}`, {
-      headers: { 'User-Agent': userAgent(), Accept: 'application/json' },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(timeoutMs)
-    }))
+    response = await throttled(() => {
+      // o tempo conta só a requisição, não a espera na fila
+      startedAt = Date.now()
+      return fetchImpl(`${API_BASE}${path}`, {
+        headers: { 'User-Agent': userAgent(), Accept: 'application/json' },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(timeoutMs)
+      })
+    })
   } catch (err) {
+    record(startedAt, err?.name === 'TimeoutError' ? 'timeout' : 'error', err?.message)
     throw unavailable(err)
   }
 
-  if (response.status === 404) return null
-  if (!response.ok) throw unavailable(new Error(`HTTP ${response.status} em ${path}`))
+  if (response.status === 404) { record(startedAt, 'ok'); return null }
+  if (!response.ok) {
+    record(startedAt, 'error', `HTTP ${response.status}`)
+    throw unavailable(new Error(`HTTP ${response.status} em ${path}`))
+  }
+  record(startedAt, 'ok')
 
   try {
     return await response.json()
@@ -278,6 +296,7 @@ export async function fetchCover(coverId, size = 'L') {
   if (cached !== undefined) return cached
 
   let response
+  const startedAt = Date.now()
   try {
     response = await fetchImpl(`${COVERS_BASE}/b/id/${id}-${suffix}.jpg?default=false`, {
       headers: { 'User-Agent': userAgent() },
@@ -285,11 +304,16 @@ export async function fetchCover(coverId, size = 'L') {
       signal: AbortSignal.timeout(TIMEOUT_MS)
     })
   } catch (err) {
+    record(startedAt, err?.name === 'TimeoutError' ? 'timeout' : 'error', err?.message)
     throw unavailable(err)
   }
 
-  if (response.status === 404) return null
-  if (!response.ok) throw unavailable(new Error(`HTTP ${response.status} na capa ${id}`))
+  if (response.status === 404) { record(startedAt, 'ok'); return null }
+  if (!response.ok) {
+    record(startedAt, 'error', `HTTP ${response.status}`)
+    throw unavailable(new Error(`HTTP ${response.status} na capa ${id}`))
+  }
+  record(startedAt, 'ok')
 
   const declared = Number(response.headers.get('content-length'))
   if (declared > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502, 'COVER_TOO_LARGE')

@@ -458,14 +458,15 @@ function parseApiDate(value) {
 }
 
 // Preenche só os campos vazios: o que a pessoa já digitou tem prioridade.
-async function lookupIsbn() {
+// via = 'scan' quando veio da câmera (o servidor só conta, para saber se o leitor é usado)
+async function lookupIsbn(via) {
   const isbn = form.isbn.trim()
   if (!isbn || lookingUp.value) return
 
   lookingUp.value = true
   delete errors.isbn
   try {
-    const found = await api.lookupIsbn(isbn)
+    const found = await api.lookupIsbn(isbn, via === 'scan' ? 'scan' : undefined)
     if (!form.title.trim() && found.title) form.title = found.title
     if (form.authorNames.length === 0 && found.authors?.length) form.authorNames = [...found.authors]
     if (!form.publisher.trim() && found.publisher) form.publisher = found.publisher
@@ -516,7 +517,7 @@ watch(() => errors.isbn, value => {
 
 function onScanned(isbn) {
   form.isbn = isbn
-  lookupIsbn()
+  lookupIsbn('scan')
 }
 
 // Resultado da busca por título: mesma regra do ISBN (só campos vazios)

@@ -105,6 +105,7 @@
           @open-tab="selectTab"
           @loaded="stats => openReports = stats.moderation.openReports"
         />
+        <AdminUsage v-else-if="activeTab === 'usage'" />
         <AdminModeration
           v-else-if="activeTab === 'moderation'"
           @open-user="openUser"
@@ -112,10 +113,19 @@
         />
         <AdminAccounts
           v-else-if="activeTab === 'accounts'"
-          :initial-query="accountQuery"
+          :initial-status="accountStatus"
+          :version="accountsVersion"
+          @open-user="openUser"
         />
+        <AdminSystem v-else-if="activeTab === 'system'" />
         <AdminLog v-else-if="activeTab === 'log'" />
       </section>
+
+      <AdminUserDrawer
+        :user-id="drawerUserId"
+        @close="drawerUserId = null"
+        @changed="onUserChanged"
+      />
     </template>
   </div>
 </template>
@@ -130,6 +140,9 @@ import AdminOverview from '../components/admin/AdminOverview.vue'
 import AdminModeration from '../components/admin/AdminModeration.vue'
 import AdminAccounts from '../components/admin/AdminAccounts.vue'
 import AdminLog from '../components/admin/AdminLog.vue'
+import AdminUsage from '../components/admin/AdminUsage.vue'
+import AdminSystem from '../components/admin/AdminSystem.vue'
+import AdminUserDrawer from '../components/admin/AdminUserDrawer.vue'
 import api from '../services/api.js'
 import { useToast } from '../services/toast.js'
 import { ADMIN_CALL, LockedError } from '../components/admin/adminCall.js'
@@ -144,7 +157,7 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
-const TAB_KEYS = ['overview', 'moderation', 'accounts', 'log']
+const TAB_KEYS = ['overview', 'usage', 'moderation', 'accounts', 'system', 'log']
 const state = ref('loading') // loading | locked | unlocked
 const minutes = ref(30)
 const password = ref('')
@@ -153,13 +166,17 @@ const unlocking = ref(false)
 const locking = ref(false)
 const passwordField = ref(null)
 const openReports = ref(0)
-const accountQuery = ref('')
+const accountStatus = ref(['all', 'suspended', 'unverified'].includes(route.query.status) ? route.query.status : 'all')
+const accountsVersion = ref(0)
+const drawerUserId = ref(null)
 const activeTab = ref(TAB_KEYS.includes(route.query.tab) ? route.query.tab : 'overview')
 
 const tabs = computed(() => [
   { key: 'overview', label: t('admin.tabs.overview'), icon: 'pi pi-chart-line' },
+  { key: 'usage', label: t('admin.tabs.usage'), icon: 'pi pi-th-large' },
   { key: 'moderation', label: t('admin.tabs.moderation'), icon: 'pi pi-flag', count: openReports.value },
   { key: 'accounts', label: t('admin.tabs.accounts'), icon: 'pi pi-users' },
+  { key: 'system', label: t('admin.tabs.system'), icon: 'pi pi-server' },
   { key: 'log', label: t('admin.tabs.log'), icon: 'pi pi-history' }
 ])
 
@@ -183,9 +200,11 @@ provide(ADMIN_CALL, async (fn) => {
   }
 })
 
-function selectTab(key) {
+// options.status: abre Contas já filtrada (ex.: cadastros parados)
+function selectTab(key, options = {}) {
+  if (key === 'accounts' && options.status) accountStatus.value = options.status
   activeTab.value = key
-  router.replace({ query: { ...route.query, tab: key === 'overview' ? undefined : key } })
+  router.replace({ query: { tab: key === 'overview' ? undefined : key } })
 }
 
 function moveTab(step) {
@@ -194,9 +213,13 @@ function moveTab(step) {
   document.getElementById(`admin-tab-${next}`)?.focus()
 }
 
-function openUser(username) {
-  accountQuery.value = username
-  selectTab('accounts')
+function openUser(id) {
+  drawerUserId.value = id
+}
+
+function onUserChanged() {
+  accountsVersion.value++
+  refreshCount()
 }
 
 async function refreshCount() {

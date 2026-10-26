@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [vue(), preloadIconFont(), serviceWorker()],
+    // Hora do build: a área administrativa mostra qual versão do frontend está no ar
+    define: {
+      __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString())
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url))

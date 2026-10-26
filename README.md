@@ -16,7 +16,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Your year in books** — a yearly recap (available all year; "so far" for the current one): books and pages read, month by month, goal, best rated, most-read authors and records (longest, fastest…), plus a 9:16 story image drawn in the browser to download or share.
 - **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf (with a link preview on WhatsApp and social networks: title, book count and a mosaic of your covers), with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.
 - **Community (opt-in)** — see who else has a book, their average rating and what people who have it also have. Follow other readers (they approve each request) and get a feed of what they add and finish. Everything is off until the user turns it on.
-- **Admin area** (`/admin`, desktop) — for accounts with `role = 'admin'`, after re-entering the password (unlocked for 30 idle minutes): site numbers and weekly sign-ups, the queue of reported reviews (hide / keep), account search with suspend / reactivate (nothing is deleted; a suspended account can't sign in and its public pages disappear) and a log of every admin action.
+- **Admin area** (`/admin`, desktop) — for accounts with `role = 'admin'`, after re-entering the password (unlocked for 30 idle minutes): site numbers and weekly sign-ups, the queue of reported reviews (hide / keep), account search with suspend / reactivate (nothing is deleted; a suspended account can't sign in and its public pages disappear) a log of every admin action, usage (sign-up funnel, who uses each feature, daily counters such as camera scans and imports), moderation signals (frequent reporters, new accounts already reported), a per-account drawer (totals, privacy flags, history; resend confirmation) and a **System** tab: backend/frontend versions, database and pending migrations, disk and covers, SMTP status with a test email, Open Library calls and failure rate, rate-limit hits and the latest 500 errors. Optional: set `APP_VERSION` (e.g. the git commit) to show it there.
 - **Account control** — email confirmation, password recovery by email, change your password (signs out other sessions) and delete your account with all its data.
 - **Portuguese and English**, light and dark themes, six accent colors.
 
@@ -194,7 +194,7 @@ Then sign out and in again (or reload) and **Admin** shows in the menu. `npm run
 
 ## Privacy
 
-Libraries are private unless the owner turns on sharing; community and followers are separate opt-ins, both off by default. ISBN lookups go from the server to Open Library with only the ISBN. Session uses a single essential httpOnly cookie (admins get a second one, `admin_unlock`, while the admin area is unlocked); fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
+Libraries are private unless the owner turns on sharing; community and followers are separate opt-ins, both off by default. ISBN lookups go from the server to Open Library with only the ISBN. Session uses a single essential httpOnly cookie (admins get a second one, `admin_unlock`, while the admin area is unlocked); usage is counted as daily totals with no user or IP attached (IPs that hit a rate limit stay only in memory, for at most 2 hours); fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
 
 ---
 

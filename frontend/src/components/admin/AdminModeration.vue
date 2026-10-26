@@ -17,6 +17,51 @@
       >{{ option.label }}</button>
     </div>
 
+    <details
+      v-if="insights"
+      class="insights"
+    >
+      <summary>
+        <i
+          class="pi pi-chart-bar"
+          aria-hidden="true"
+        ></i>
+        {{ t('admin.moderation.insights.title') }}
+        <span class="muted">{{ t('admin.moderation.insights.summary', { serial: insights.serialReporters.length, fresh: insights.newAccountsReported.length }) }}</span>
+      </summary>
+      <div class="insight-grid">
+        <section
+          v-for="group in insightGroups"
+          :key="group.key"
+          :aria-labelledby="`ins-${group.key}`"
+        >
+          <h2 :id="`ins-${group.key}`">{{ t(`admin.moderation.insights.${group.key}`) }}</h2>
+          <p class="hint">{{ t(`admin.moderation.insights.${group.key}Hint`) }}</p>
+          <p
+            v-if="!group.rows.length"
+            class="muted"
+          >{{ t('admin.moderation.insights.none') }}</p>
+          <ul v-else>
+            <li
+              v-for="row in group.rows"
+              :key="row.id"
+            >
+              <button
+                type="button"
+                class="person"
+                @click="emit('open-user', row.id)"
+              >@{{ row.username }}</button>
+              <span
+                v-if="!row.active"
+                class="state-tag hidden"
+              >{{ t('admin.accounts.suspendedTag') }}</span>
+              <span class="muted">{{ group.describe(row) }}</span>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </details>
+
     <div class="layout">
       <section
         class="queue"
@@ -115,7 +160,7 @@
               :label="t('admin.moderation.viewAuthor', { name: detail.author.username })"
               icon="pi pi-user"
               class="btn-text btn-sm"
-              @click="emit('open-user', detail.author.username)"
+              @click="emit('open-user', detail.author.id)"
             />
           </div>
           <p
@@ -200,6 +245,25 @@ const detail = ref(null)
 const detailLoading = ref(false)
 const busy = ref('')
 
+const insights = ref(null)
+
+const insightGroups = computed(() => [
+  { key: 'serialReporters', rows: insights.value.serialReporters,
+    describe: row => t('admin.moderation.insights.serialDetail', { n: row.reports, upheld: row.upheld, rejected: row.rejected, week: row.last7 }) },
+  { key: 'newAccountsReported', rows: insights.value.newAccountsReported,
+    describe: row => t('admin.moderation.insights.freshDetail', { n: row.reports, reviews: row.reviewsReported, date: formatDateTime(row.createdAt, locale.value) }) },
+  { key: 'mostReported', rows: insights.value.mostReported,
+    describe: row => t('admin.moderation.insights.mostDetail', { n: row.reports, reviews: row.reviewsReported, hidden: row.hidden }) }
+])
+
+async function loadInsights() {
+  try {
+    insights.value = await call(() => api.adminModerationInsights())
+  } catch {
+    // os sinais são um extra: a fila funciona sem eles
+  }
+}
+
 const filters = computed(() => [
   { value: 'open', label: t('admin.moderation.filters.open') },
   { value: 'hidden', label: t('admin.moderation.filters.hidden') },
@@ -259,6 +323,7 @@ async function act(hide) {
     detail.value = await call(() => api.adminModerateReview(selectedId.value, hide))
     toast.add({ severity: 'success', summary: hide ? t('moderation.hiddenDone') : t('moderation.keptDone'), life: 3000 })
     emit('changed')
+    loadInsights()
     // Mantém a resenha aberta; a fila reflete o novo estado
     const keep = selectedId.value
     await loadQueue()
@@ -270,7 +335,10 @@ async function act(hide) {
   }
 }
 
-onMounted(loadQueue)
+onMounted(() => {
+  loadQueue()
+  loadInsights()
+})
 </script>
 
 <style scoped>
@@ -558,6 +626,92 @@ onMounted(loadQueue)
   color: var(--text-secondary);
   padding: 2rem 1rem;
   margin: 0;
+}
+
+.insights {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.insights summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.insights summary:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.insights summary .muted {
+  font-weight: 400;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.insight-grid h2 {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+}
+
+.insight-grid .hint {
+  margin: 0.2rem 0 0.6rem;
+}
+
+.insight-grid ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: var(--fs-sm);
+}
+
+.insight-grid li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.5rem;
+}
+
+.insight-grid .muted {
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  margin: 0;
+}
+
+.person {
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--border-hover);
+  text-underline-offset: 2px;
+}
+
+.person:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
 }
 
 @media (max-width: 900px) {

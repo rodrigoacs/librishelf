@@ -18,6 +18,7 @@ import { saveBookCover, isValidImage } from '../utils/imageProcessor.js'
 import { uploadLimiter, publicLimiter } from '../middlewares/rateLimiter.js'
 import sendError from '../utils/sendError.js'
 import logger from '../utils/logger.js'
+import { track } from '../utils/metrics.js'
 
 const MAX_UPLOAD_MB = 10
 
@@ -155,7 +156,7 @@ router.get('/series', async (req, res) => {
 })
 
 // Importar livros de um CSV (campo "file"): Goodreads ou o CSV exportado do Librishelf.
-router.post('/import', uploadLimiter, handleUpload(csvUpload.single('file')), async (req, res) => {
+router.post('/import', uploadLimiter, handleUpload(csvUpload.single('file')), track('import.csv'), async (req, res) => {
   try {
     const summary = await dataService.importCsv(req.user.id, req.file?.buffer)
     res.status(STATUS.OK).json(summary)
@@ -185,7 +186,7 @@ router.get('/:id', validateNumericId(), async (req, res) => {
   }
 })
 
-router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), async (req, res) => {
+router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), track(req => (req.file ? 'cover.upload' : null)), track('book.add'), async (req, res) => {
   try {
     // Autores chegam como campo repetido (authors=A&authors=B) ou um só valor.
     const bookData = {
@@ -252,7 +253,7 @@ router.put('/:id', validateNumericId(), async (req, res) => {
   }
 })
 
-router.post('/:id/cover', validateNumericId(), uploadLimiter, handleUpload(upload.single('coverImage')), async (req, res) => {
+router.post('/:id/cover', validateNumericId(), uploadLimiter, handleUpload(upload.single('coverImage')), track('cover.upload'), async (req, res) => {
   try {
     const { id } = req.params
     const userId = req.user.id

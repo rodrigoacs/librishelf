@@ -7,6 +7,7 @@ import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimi
 import { authenticateToken } from '../middlewares/auth.js'
 import { AUTH_COOKIE_NAME, authCookieOptions } from '../config/cookieOptions.js'
 import { clearUnlockCookie } from '../middlewares/admin.js'
+import { track } from '../utils/metrics.js'
 
 const router = express.Router()
 
@@ -147,7 +148,7 @@ router.patch('/me/username', authenticateToken, sensitiveLimiter, async (req, re
 })
 
 // Exportar todos os dados: ?format=json (padrão) ou csv (só os livros).
-router.get('/me/export', authenticateToken, sensitiveLimiter, async (req, res) => {
+router.get('/me/export', authenticateToken, sensitiveLimiter, track(req => (req.query.format === 'csv' ? 'export.csv' : 'export.json')), async (req, res) => {
   try {
     const stamp = new Date().toISOString().slice(0, 10)
     if (req.query.format === 'csv') {

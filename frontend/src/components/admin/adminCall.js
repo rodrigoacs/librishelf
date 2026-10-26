@@ -47,3 +47,21 @@ export function formatShortDate(value, locale) {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(tag(locale), { dateStyle: 'short' })
 }
+
+export function formatBytes(bytes, locale) {
+  if (bytes === null || bytes === undefined) return '—'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let value = Number(bytes)
+  let unit = 0
+  while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit++ }
+  return `${value.toLocaleString(tag(locale), { maximumFractionDigits: value < 10 && unit > 0 ? 1 : 0 })} ${units[unit]}`
+}
+
+/** 93784 → "1d 2h 3min" */
+export function formatDuration(seconds) {
+  const s = Math.max(0, Math.round(seconds))
+  const d = Math.floor(s / 86400)
+  const h = Math.floor((s % 86400) / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  return [d && `${d}d`, (d || h) && `${h}h`, `${m}min`].filter(Boolean).join(' ')
+}

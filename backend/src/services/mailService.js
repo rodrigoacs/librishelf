@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import logger from '../utils/logger.js'
+import { count, failure, succeeded } from '../utils/metrics.js'
 
 /**
  * Envio de e-mail por SMTP (nodemailer).
@@ -64,8 +65,28 @@ export async function sendMail({ to, subject, text, html, unsubscribeUrl }) {
     return
   }
 
-  const info = await getTransport().sendMail({ from: sender(), to, subject, text, html, headers, list })
+  let info
+  try {
+    info = await getTransport().sendMail({ from: sender(), to, subject, text, html, headers, list })
+  } catch (err) {
+    count('email.failed')
+    failure('email', err.message)
+    throw err
+  }
+  count('email.sent')
+  succeeded('email')
   logger.info('E-mail enviado', { to, subject, messageId: info.messageId })
+}
+
+/** Para a área administrativa: o que está configurado (sem senha nem usuário). */
+export function mailConfig() {
+  return {
+    configured: smtpConfigured(),
+    host: smtpConfigured() ? process.env.SMTP_HOST.trim() : null,
+    port: smtpConfigured() ? Number(process.env.SMTP_PORT) || 587 : null,
+    from: sender(),
+    adminEmail: Boolean(process.env.ADMIN_EMAIL?.trim())
+  }
 }
 
 /** Checa a conexão com o servidor SMTP (usado no boot, só para avisar). */

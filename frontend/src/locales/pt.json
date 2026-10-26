@@ -531,13 +531,14 @@
         "paragraphs": [
           "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
           "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, série, tags, datas, notas, status de leitura, histórico de leituras e progresso, e metas), anotações pessoais e as capas que você enviar. As anotações pessoais são só suas: nunca aparecem na biblioteca pública.",
-          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login. Também guardamos a data e a hora do seu último login, para sabermos quantas contas estão em uso."
+          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login. Também guardamos a data e a hora do seu último login e do seu último acesso, para sabermos quantas contas estão em uso."
         ]
       },
       {
         "title": "Para que usamos",
         "paragraphs": [
           "Só para o Librishelf funcionar: manter você conectado, guardar e mostrar sua biblioteca e proteger sua conta.",
+          "Também contamos, por dia, quantas vezes alguns recursos são usados (por exemplo, buscas de livros, leituras pela câmera e importações), sem guardar quem usou. Isso nos ajuda a saber o que melhorar.",
           "Não vendemos nem compartilhamos seus dados com ninguém, e não usamos publicidade nem ferramentas de rastreamento."
         ]
       },
@@ -570,7 +571,7 @@
       {
         "title": "Moderação e suspensão de contas",
         "paragraphs": [
-          "A administração do Librishelf pode ocultar resenhas e suspender contas que desrespeitem o uso esperado do site, como spam ou conteúdo ofensivo. Para isso, ela vê o nome de usuário, o e-mail, as datas de cadastro e de último login e os totais de livros, resenhas e denúncias de cada conta, nunca a senha nem as anotações pessoais.",
+          "A administração do Librishelf pode ocultar resenhas e suspender contas que desrespeitem o uso esperado do site, como spam ou conteúdo ofensivo. Para isso, ela vê o nome de usuário, o e-mail, as datas de cadastro e de último acesso e os totais de livros, resenhas e denúncias de cada conta, nunca a senha nem as anotações pessoais.",
           "Uma conta suspensa não consegue entrar, e o que era público (biblioteca, perfil, resenhas e listas) deixa de aparecer para os outros. Nada é apagado: se a suspensão for desfeita, tudo volta como estava.",
           "Cada ação da administração fica registrada (o quê, quando e o motivo). Se a conta for excluída, o registro deixa de apontar para ela."
         ]
@@ -1125,7 +1126,9 @@
     "ADMIN_TARGET": "Contas de administração não podem ser suspensas por aqui.",
     "ACCOUNT_SUSPENDED": "Esta conta está suspensa. Fale com a administração do Librishelf.",
     "ACCOUNT_ALREADY_SUSPENDED": "Esta conta já está suspensa.",
-    "ACCOUNT_NOT_SUSPENDED": "Esta conta não está suspensa."
+    "ACCOUNT_NOT_SUSPENDED": "Esta conta não está suspensa.",
+    "EMAIL_ALREADY_VERIFIED": "Esta conta já confirmou o e-mail.",
+    "EMAIL_TEST_FAILED": "O servidor de e-mail recusou o envio: {message}"
   },
   "block": {
     "block": "Bloquear {name}",
@@ -1370,7 +1373,9 @@
       "overview": "Visão geral",
       "moderation": "Moderação",
       "accounts": "Contas",
-      "log": "Registro"
+      "log": "Registro",
+      "usage": "Uso",
+      "system": "Sistema"
     },
     "overview": {
       "users": "Contas",
@@ -1389,7 +1394,23 @@
       "suspended": "{n} conta suspensa | {n} contas suspensas",
       "signupsByWeek": "Cadastros por semana",
       "signupsLabel": "Cadastros",
-      "chartLabel": "Cadastros por semana, das últimas 12: {list}"
+      "chartLabel": "Cadastros por semana, das últimas 12: {list}",
+      "active7": "{n} em 7 dias · {p}% das contas",
+      "staleSignups": "Cadastros parados",
+      "staleHint": "E-mail não confirmado há mais de 7 dias",
+      "funnel": "Do cadastro ao uso",
+      "funnelSteps": {
+        "signedUp": "Cadastraram",
+        "verified": "Confirmaram o e-mail",
+        "withBook": "Adicionaram 1 livro",
+        "with10Books": "Têm 10 livros ou mais"
+      },
+      "returned": "{n} de {total} contas com mais de uma semana voltaram depois dos primeiros 7 dias ({p}%).",
+      "activity": "Atividade recente",
+      "books7": "Livros adicionados (7 dias)",
+      "books30": "Livros adicionados (30 dias)",
+      "finished30": "Leituras terminadas (30 dias)",
+      "reviews30": "Resenhas novas (30 dias)"
     },
     "moderation": {
       "filter": "Mostrar",
@@ -1412,7 +1433,21 @@
       "totalCount": "{n} denúncia revisada | {n} denúncias revisadas",
       "viewAuthor": "Ver a conta de {name}",
       "authorSuspended": "A conta de quem escreveu está suspensa: a resenha não aparece para ninguém enquanto isso.",
-      "reviewedBefore": "antes da última revisão"
+      "reviewedBefore": "antes da última revisão",
+      "insights": {
+        "title": "Sinais de moderação",
+        "summary": "{serial} denunciantes frequentes · {fresh} contas novas denunciadas",
+        "serialReporters": "Denunciam muito",
+        "serialReportersHint": "3 denúncias ou mais. Muitas mantidas no ar podem indicar abuso do botão.",
+        "newAccountsReported": "Contas novas já denunciadas",
+        "newAccountsReportedHint": "Criadas nos últimos 30 dias.",
+        "mostReported": "Mais denunciadas",
+        "mostReportedHint": "Todas as contas, pelo total de denúncias recebidas.",
+        "none": "Ninguém por aqui.",
+        "serialDetail": "{n} denúncias · {upheld} ocultas · {rejected} mantidas · {week} nesta semana",
+        "freshDetail": "{n} denúncias em {reviews} resenhas · conta de {date}",
+        "mostDetail": "{n} denúncias em {reviews} resenhas · {hidden} ocultas"
+      }
     },
     "accounts": {
       "search": "Buscar contas",
@@ -1420,7 +1455,8 @@
       "filter": "Mostrar",
       "filters": {
         "all": "Todas",
-        "suspended": "Suspensas"
+        "suspended": "Suspensas",
+        "unverified": "E-mail parado"
       },
       "total": "{n} conta | {n} contas",
       "cols": {
@@ -1430,7 +1466,8 @@
         "books": "Livros",
         "reviews": "Resenhas",
         "reports": "Denúncias",
-        "actions": "Ações"
+        "actions": "Ações",
+        "email": "E-mail"
       },
       "adminTag": "admin",
       "suspendedTag": "suspensa",
@@ -1450,7 +1487,9 @@
       "reasonRequired": "Explique o motivo (pelo menos 3 caracteres).",
       "password": "Sua senha, para confirmar",
       "suspendedDone": "Conta de {name} suspensa.",
-      "reactivatedDone": "Conta de {name} reativada."
+      "reactivatedDone": "Conta de {name} reativada.",
+      "open": "Abrir",
+      "openWho": "Abrir a conta de {name}"
     },
     "log": {
       "intro": "Tudo o que foi feito nesta área, do mais recente para o mais antigo.",
@@ -1466,11 +1505,200 @@
         "review_hide": "Ocultou resenha",
         "review_show": "Manteve/reexibiu resenha",
         "user_suspend": "Suspendeu conta",
-        "user_reactivate": "Reativou conta"
+        "user_reactivate": "Reativou conta",
+        "user_resend_verification": "Reenviou confirmação",
+        "email_test": "Enviou e-mail de teste"
       },
       "review": "resenha #{id}",
       "deleted": "conta excluída",
       "empty": "Nada registrado ainda."
+    },
+    "usage": {
+      "adoption": "Quem usa cada recurso",
+      "adoptionHint": "Contas que usam, de {n} no total.",
+      "feature": "Recurso",
+      "accounts": "Contas",
+      "share": "Parcela das contas",
+      "features": {
+        "readingNow": "Lendo algo agora",
+        "rereads": "Releituras registradas",
+        "goals": "Meta do ano",
+        "series": "Séries",
+        "notes": "Anotações pessoais",
+        "reviews": "Resenhas",
+        "lists": "Listas",
+        "publicLibrary": "Biblioteca pública",
+        "community": "Comunidade",
+        "acceptsFollowers": "Aceita seguidores",
+        "following": "Segue alguém",
+        "followEmails": "Avisos por e-mail",
+        "indexing": "Aparece em buscadores",
+        "blocks": "Bloqueou alguém"
+      },
+      "events": "Ações contadas no servidor",
+      "eventsHint": "Totais por dia, sem identificar ninguém. A contagem começa com esta versão.",
+      "action": "Ação",
+      "last7": "7 dias",
+      "last30": "30 dias",
+      "eventNames": {
+        "book_add": "Livros adicionados",
+        "isbn_typed": "Busca por ISBN digitado",
+        "isbn_scan": "Busca por ISBN pela câmera",
+        "search_title": "Busca por título",
+        "cover_upload": "Capas enviadas",
+        "import_csv": "Importações de CSV",
+        "export_json": "Exportações em JSON",
+        "export_csv": "Exportações em CSV",
+        "year_view": "\"Seu ano em livros\" aberto"
+      },
+      "scanShare": "{p}% das buscas por ISBN nos últimos 30 dias vieram da câmera."
+    },
+    "system": {
+      "loadedAt": "Atualizado em {time}",
+      "refresh": "Atualizar",
+      "yes": "sim",
+      "no": "não",
+      "notSet": "não definido",
+      "sinceBoot": "Nada desde que o servidor iniciou",
+      "service": {
+        "title": "Serviço",
+        "backend": "Backend",
+        "since": "no ar desde {date} ({uptime})",
+        "frontend": "Frontend",
+        "built": "build de {date}",
+        "version": "Versão",
+        "runtime": "Execução",
+        "memory": "Memória do backend",
+        "load": "Carga (1/5/15 min)",
+        "cpus": "{n} CPU | {n} CPUs",
+        "appUrl": "APP_URL",
+        "proxy": "Proxy e cookie",
+        "proxyValue": "TRUST_PROXY = {trust} · cookie Secure: {secure}",
+        "olContact": "Contato no Open Library",
+        "olContactMissing": "não definido (fila mais lenta)"
+      },
+      "db": {
+        "title": "Banco de dados",
+        "ok": "Respondendo em {ms} ms",
+        "down": "Sem resposta: {error}",
+        "version": "Versão",
+        "size": "Tamanho",
+        "connections": "Conexões",
+        "pool": "pool: {total} abertas, {idle} livres, {waiting} esperando · {all} no banco",
+        "migration": "Última migration",
+        "pending": "Migrations pendentes: {list}"
+      },
+      "storage": {
+        "title": "Armazenamento",
+        "covers": "Capas enviadas",
+        "files": "{n} arquivos · {size}",
+        "disk": "Disco (onde ficam as capas)",
+        "free": "{free} livres de {total} ({p}%)",
+        "used": "{p}% do disco em uso",
+        "lowDisk": "Menos de 10% do disco livre.",
+        "hint": "O tamanho das capas é recalculado a cada 5 minutos."
+      },
+      "email": {
+        "title": "E-mail",
+        "configured": "SMTP configurado ({host})",
+        "notConfigured": "SMTP não configurado: os e-mails só aparecem no log",
+        "from": "Remetente",
+        "reports": "Denúncias por e-mail (ADMIN_EMAIL)",
+        "noAdminEmail": "não definido",
+        "week": "Últimos 7 dias",
+        "sentFailed": "{sent} enviados · {failed} falharam",
+        "lastOk": "Último envio",
+        "lastFailure": "Última falha",
+        "test": "Enviar e-mail de teste",
+        "testSent": "E-mail de teste enviado para {to}.",
+        "testLogged": "SMTP não configurado: o e-mail de teste foi só para o log do servidor."
+      },
+      "ol": {
+        "week": "Últimos 7 dias",
+        "calls": "{ok} ok · {error} erros · {timeout} sem resposta",
+        "errorRate": "Taxa de falha",
+        "latency": "Tempo de resposta",
+        "ms": "média {avg} ms · p95 {p95} ms",
+        "lastFailure": "Última falha",
+        "books": "Livros ligados ao Open Library",
+        "booksDetail": "{linked} ligados · {linkable} com ISBN, ainda sem ligação · {unlinked} sem ISBN",
+        "enrichHint": "Para ligar os livros que têm ISBN, rode o enrich:isbn (veja o README).",
+        "series": {
+          "ok": "OK",
+          "error": "Erro",
+          "timeout": "Sem resposta"
+        },
+        "chartLabel": "Chamadas ao Open Library por dia (ok/erro/sem resposta): {list}"
+      },
+      "limits": {
+        "title": "Limites de requisição",
+        "none": "Ninguém bateu em limite nos últimos 7 dias.",
+        "code": "Limite",
+        "today": "Hoje",
+        "week": "7 dias",
+        "ips": "IPs nas últimas 2 horas",
+        "noIps": "Nenhum IP bateu em limite nas últimas 2 horas.",
+        "hint": "Os IPs ficam só na memória do servidor, por no máximo 2 horas, e somem ao reiniciar.",
+        "codes": {
+          "RATE_LIMIT": "Geral",
+          "RATE_LIMIT_LOGIN": "Login",
+          "RATE_LIMIT_REGISTER": "Cadastro",
+          "RATE_LIMIT_ATTEMPTS": "Senha e links",
+          "RATE_LIMIT_UPLOAD": "Envio de capas",
+          "RATE_LIMIT_SEARCH": "Busca por título",
+          "RATE_LIMIT_ISBN": "Busca por ISBN",
+          "RATE_LIMIT_REPORTS": "Denúncias",
+          "RATE_LIMIT_ACTIONS": "Seguir e ações",
+          "RATE_LIMIT_EMAIL": "Pedidos de e-mail"
+        }
+      },
+      "errors": {
+        "title": "Erros 500 recentes",
+        "counts": "{today} hoje · {week} nos últimos 7 dias",
+        "none": "Nenhum erro desde que o servidor iniciou.",
+        "when": "Quando",
+        "route": "Rota",
+        "context": "Contexto",
+        "message": "Mensagem",
+        "hint": "A lista fica na memória (os 50 mais recentes) e zera quando o servidor reinicia; os detalhes completos estão no log."
+      }
+    },
+    "user": {
+      "title": "Conta",
+      "active": "ativa",
+      "openPublic": "Ver biblioteca pública",
+      "account": "Conta",
+      "created": "Cadastro",
+      "verified": "E-mail confirmado",
+      "notVerified": "ainda não",
+      "lastLogin": "Último login",
+      "lastSeen": "Último acesso",
+      "privacy": "Privacidade",
+      "flags": {
+        "isPublic": "Biblioteca pública",
+        "showInCommunity": "Na comunidade",
+        "showActivity": "Aceita seguidores",
+        "allowIndexing": "Aparece em buscadores",
+        "followEmails": "Avisos por e-mail"
+      },
+      "totals": "Números",
+      "t": {
+        "books": "Livros",
+        "read": "{n} lidos",
+        "reviews": "Resenhas",
+        "hidden": "{n} ocultas",
+        "lists": "Listas",
+        "public": "{n} públicas",
+        "follow": "Seguidores / seguindo",
+        "blocks": "Bloqueou / bloqueada por",
+        "reports": "Denúncias recebidas / feitas"
+      },
+      "lastBook": "Último livro adicionado em {date}.",
+      "reportedReviews": "Resenhas denunciadas",
+      "reviewReports": "{n} denúncias · {open} abertas",
+      "history": "Histórico na administração",
+      "resend": "Reenviar confirmação",
+      "resent": "Confirmação reenviada para {email}."
     }
   }
 }

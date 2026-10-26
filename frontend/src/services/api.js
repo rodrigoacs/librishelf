@@ -265,8 +265,8 @@ export default {
   },
 
   // --- ISBN (Open Library, sempre via servidor) ---
-  lookupIsbn(isbn) {
-    return client.get(`/isbn/${enc(isbn)}`)
+  lookupIsbn(isbn, via) {
+    return client.get(`/isbn/${enc(isbn)}${toQuery({ via })}`)
   },
 
   /** size 'M' = miniatura (lista da busca por título). */
@@ -431,6 +431,30 @@ export default {
 
   adminReactivateUser(id, password) {
     return client.post(`/admin/users/${id}/reactivate`, { password })
+  },
+
+  adminUser(id) {
+    return client.get(`/admin/users/${id}`)
+  },
+
+  adminResendVerification(id) {
+    return client.post(`/admin/users/${id}/resend-verification`, {})
+  },
+
+  adminUsage() {
+    return client.get('/admin/usage')
+  },
+
+  adminSystem() {
+    return client.get('/admin/system')
+  },
+
+  adminEmailTest() {
+    return client.post('/admin/email/test', {})
+  },
+
+  adminModerationInsights() {
+    return client.get('/admin/moderation/insights')
   },
 
   adminActions(params = {}) {

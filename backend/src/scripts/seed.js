@@ -313,7 +313,7 @@ function buildUsers(count) {
 async function resetDatabase() {
   logger.warn('Apagando todos os dados do librishelf', { db: process.env.DB_NAME })
   await db.query(`
-    TRUNCATE librishelf.follows, librishelf.books_authors_link, librishelf.books_tags_link,
+    TRUNCATE librishelf.usage_counters, librishelf.follows, librishelf.books_authors_link, librishelf.books_tags_link,
              librishelf.books, librishelf.authors, librishelf.publishers, librishelf.tags,
              librishelf.users RESTART IDENTITY CASCADE
   `)
@@ -787,6 +787,28 @@ async function insertAdminData() {
     }
     if (count >= 3) await db.query("UPDATE librishelf.reviews SET hidden_at = now(), hidden_reason = 'reports' WHERE id = $1", [review.id])
   }
+
+  // Último acesso: um pouco depois do último login
+  await db.query("UPDATE librishelf.users SET last_seen_at = last_login_at + (random() * interval '5 days') WHERE last_login_at IS NOT NULL")
+  await db.query("UPDATE librishelf.users SET last_seen_at = LEAST(last_seen_at, now())")
+
+  // Contadores de uso dos últimos 30 dias (a área administrativa mostra 7 e 30)
+  const daily = { 'book.add': [2, 25], 'isbn.typed': [1, 12], 'isbn.scan': [0, 6], 'search.title': [2, 30], 'cover.upload': [0, 4], 'import.csv': [0, 1],
+    'export.json': [0, 1], 'export.csv': [0, 1], 'year.view': [0, 5], 'openlibrary.ok': [10, 80], 'openlibrary.error': [0, 3], 'openlibrary.timeout': [0, 1],
+    'email.sent': [0, 6], 'ratelimit.RATE_LIMIT_LOGIN': [0, 2], 'error.500': [0, 1] }
+  const rows = []
+  for (let day = 0; day < 30; day++) {
+    const date = new Date(NOW - day * DAY).toISOString().slice(0, 10)
+    for (const [event, [min, max]] of Object.entries(daily)) {
+      const n = int(min, max)
+      if (n > 0) rows.push([date, event, n])
+    }
+  }
+  await db.query(`
+    INSERT INTO librishelf.usage_counters (day, event, count)
+    SELECT * FROM unnest($1::date[], $2::text[], $3::int[])
+    ON CONFLICT (day, event) DO UPDATE SET count = EXCLUDED.count
+  `, [rows.map(r => r[0]), rows.map(r => r[1]), rows.map(r => r[2])])
 
   await db.query(`
     UPDATE librishelf.users SET is_active = false, suspended_at = now() - interval '3 days',

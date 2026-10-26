@@ -32,7 +32,7 @@
           :type="card.tab ? 'button' : undefined"
           class="kpi-card"
           :class="[card.key, { clickable: card.tab, alert: card.alert }]"
-          @click="card.tab && emit('open-tab', card.tab)"
+          @click="card.tab && emit('open-tab', card.tab, card.tabOptions)"
         >
           <i
             v-if="card.tab"
@@ -52,6 +52,43 @@
             >{{ card.sub }}</span>
           </div>
         </component>
+      </div>
+
+      <div class="two-cols">
+        <section
+          class="chart-card"
+          aria-labelledby="admin-funnel-title"
+        >
+          <h2 id="admin-funnel-title">{{ t('admin.overview.funnel') }}</h2>
+          <ol class="funnel">
+            <li
+              v-for="step in funnel"
+              :key="step.key"
+            >
+              <div class="funnel-row">
+                <span class="funnel-label">{{ step.label }}</span>
+                <span class="funnel-value">{{ formatNumber(step.value, locale) }} <small>{{ step.percent }}%</small></span>
+              </div>
+              <div
+                class="bar"
+                aria-hidden="true"
+              ><span :style="{ width: `${step.percent}%` }"></span></div>
+            </li>
+          </ol>
+          <p class="note">{{ t('admin.overview.returned', { n: stats.engagement.returned, total: stats.engagement.olderThanWeek, p: percent(stats.engagement.returned, stats.engagement.olderThanWeek) }) }}</p>
+        </section>
+        <section
+          class="chart-card"
+          aria-labelledby="admin-activity-title"
+        >
+          <h2 id="admin-activity-title">{{ t('admin.overview.activity') }}</h2>
+          <dl class="activity">
+            <div><dt>{{ t('admin.overview.books7') }}</dt><dd>{{ formatNumber(stats.engagement.books7, locale) }}</dd></div>
+            <div><dt>{{ t('admin.overview.books30') }}</dt><dd>{{ formatNumber(stats.engagement.books30, locale) }}</dd></div>
+            <div><dt>{{ t('admin.overview.finished30') }}</dt><dd>{{ formatNumber(stats.engagement.finished30, locale) }}</dd></div>
+            <div><dt>{{ t('admin.overview.reviews30') }}</dt><dd>{{ formatNumber(stats.engagement.reviews30, locale) }}</dd></div>
+          </dl>
+        </section>
       </div>
 
       <div class="chart-card">
@@ -96,7 +133,7 @@ const cards = computed(() => {
     { key: 'users', icon: 'pi pi-users', label: t('admin.overview.users'), value: s.users.total,
       sub: t('admin.overview.verified', { n: percent(s.users.verified, s.users.total) }), tab: 'accounts' },
     { key: 'active', icon: 'pi pi-bolt', label: t('admin.overview.active30'), value: s.users.active30,
-      sub: t('admin.overview.ofAccounts', { n: percent(s.users.active30, s.users.total) }) },
+      sub: t('admin.overview.active7', { n: s.users.active7, p: percent(s.users.active30, s.users.total) }) },
     { key: 'signups', icon: 'pi pi-user-plus', label: t('admin.overview.signups7'), value: s.users.signups7,
       sub: t('admin.overview.signups30', { n: s.users.signups30 }) },
     { key: 'public', icon: 'pi pi-globe', label: t('admin.overview.publicLibraries'), value: s.community.publicLibraries,
@@ -105,9 +142,21 @@ const cards = computed(() => {
     { key: 'reviews', icon: 'pi pi-comment', label: t('admin.overview.reviews'), value: s.content.reviews,
       sub: t('admin.overview.hiddenReviews', { n: s.content.hiddenReviews }) },
     { key: 'lists', icon: 'pi pi-list', label: t('admin.overview.lists'), value: s.content.lists },
+    { key: 'stale', icon: 'pi pi-envelope', label: t('admin.overview.staleSignups'), value: s.users.staleSignups,
+      sub: t('admin.overview.staleHint'), tab: 'accounts', tabOptions: { status: 'unverified' }, alert: s.users.staleSignups > 0 },
     { key: 'reports', icon: 'pi pi-flag', label: t('admin.overview.openReports'), value: s.moderation.openReports,
       sub: t('admin.overview.suspended', { n: s.users.suspended }, s.users.suspended), tab: 'moderation', alert: s.moderation.openReports > 0 }
   ]
+})
+
+const funnel = computed(() => {
+  const f = stats.value.engagement.funnel
+  return [
+    { key: 'signedUp', label: t('admin.overview.funnelSteps.signedUp'), value: f.signedUp },
+    { key: 'verified', label: t('admin.overview.funnelSteps.verified'), value: f.verified },
+    { key: 'withBook', label: t('admin.overview.funnelSteps.withBook'), value: f.withBook },
+    { key: 'with10Books', label: t('admin.overview.funnelSteps.with10Books'), value: f.with10Books }
+  ].map(step => ({ ...step, percent: percent(step.value, f.signedUp) }))
 })
 
 const palette = computed(() => {
@@ -255,6 +304,8 @@ onMounted(load)
 .kpi-card.books { --kpi-color: var(--green); --kpi-rgb: var(--green-rgb); }
 .kpi-card.reviews { --kpi-color: var(--blue); --kpi-rgb: var(--blue-rgb); }
 .kpi-card.lists { --kpi-color: var(--purple); --kpi-rgb: var(--purple-rgb); }
+.kpi-card.stale { --kpi-color: var(--text-secondary); --kpi-rgb: 128, 128, 128; }
+.kpi-card.stale.alert { --kpi-color: var(--yellow); --kpi-rgb: var(--yellow-rgb); }
 .kpi-card.reports { --kpi-color: var(--text-secondary); --kpi-rgb: 128, 128, 128; }
 .kpi-card.reports.alert { --kpi-color: var(--orange); --kpi-rgb: var(--orange-rgb); border-color: rgba(var(--orange-rgb), 0.45); }
 
@@ -273,6 +324,91 @@ onMounted(load)
 
 .chart-wrapper {
   height: 260px;
+}
+
+.two-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.funnel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.funnel-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--fs-sm);
+  margin-bottom: 0.3rem;
+}
+
+.funnel-label {
+  color: var(--text-secondary);
+}
+
+.funnel-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.funnel-value small {
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-input);
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--main-color);
+}
+
+.note {
+  margin: 1rem 0 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.activity {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.activity div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.activity dt {
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.activity dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .empty {
