@@ -143,7 +143,7 @@
                 class="username"
                 :title="displayName"
               >{{ truncateName(displayName) }}</span>
-              <span class="user-role">{{ $t('menu.role') }}</span>
+              <span class="user-role">{{ currentUser?.isAdmin ? $t('menu.adminRole') : $t('menu.role') }}</span>
             </div>
           </div>
 
@@ -234,7 +234,8 @@ const items = computed(() => [
   { label: t('menu.categories'), icon: 'pi pi-tags', route: '/tags' },
   { label: t('menu.dashboard'), icon: 'pi pi-chart-bar', route: '/dashboard' },
   { label: t('menu.community'), icon: 'pi pi-globe', route: '/community', badge: pendingRequests.value },
-  { label: t('menu.settings'), icon: 'pi pi-user', route: '/settings' }
+  { label: t('menu.settings'), icon: 'pi pi-user', route: '/settings' },
+  ...(currentUser.value?.isAdmin ? [{ label: t('menu.admin'), icon: 'pi pi-shield', route: '/admin' }] : [])
 ])
 </script>
 

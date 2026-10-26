@@ -102,7 +102,7 @@ export const LIBRARY_QUERIES = {
 
   // Quem pode ver a capa: o dono, ou qualquer um se a biblioteca for pública.
   COVER_ACCESS: `
-    SELECT b.user_id, u.is_public
+    SELECT b.user_id, (u.is_public AND u.is_active IS NOT FALSE) AS is_public
     FROM librishelf.books b
     JOIN librishelf.users u ON u.id = b.user_id
     WHERE b.id = $1
@@ -153,7 +153,7 @@ export const LIBRARY_QUERIES = {
     SELECT b.id
     FROM librishelf.books b
     JOIN librishelf.users u ON u.id = b.user_id
-    WHERE u.is_public = true
+    WHERE u.is_public = true AND u.is_active IS NOT FALSE
     ORDER BY random()
     LIMIT $1
   `
@@ -161,18 +161,19 @@ export const LIBRARY_QUERIES = {
 
 export const AUTH_QUERIES = {
   FIND_USER_BY_USERNAME: `
-    SELECT id, name, password_hash, email
+    SELECT id, name, password_hash, email, is_active
     FROM librishelf.users
     WHERE name = $1 OR email = $1
   `,
-  // Só por nome (sem e-mail), usado nas rotas públicas.
+  // Só por nome (sem e-mail), usado nas rotas públicas. Conta suspensa
+  // responde como inexistente.
   FIND_USER_BY_NAME: `
     SELECT id, name, is_public, show_in_community, show_activity, allow_indexing, is_active
     FROM librishelf.users
-    WHERE name = $1
+    WHERE name = $1 AND is_active IS NOT FALSE
   `,
   FIND_USER_BY_ID: `
-    SELECT id, name, email, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at
+    SELECT id, name, email, role, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at
     FROM librishelf.users
     WHERE id = $1
   `,
@@ -188,12 +189,12 @@ export const AUTH_QUERIES = {
   UPDATE_EMAIL: `
     UPDATE librishelf.users SET email = $2, email_verified_at = NULL, updated_at = now()
     WHERE id = $1
-    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity, allow_indexing, follow_emails
+    RETURNING id, name, email, role, email_verified_at, is_public, show_in_community, show_activity, allow_indexing, follow_emails
   `,
   UPDATE_NAME: `
     UPDATE librishelf.users SET name = $2, updated_at = now()
     WHERE id = $1
-    RETURNING id, name, email, email_verified_at, is_public, show_in_community, show_activity, allow_indexing, follow_emails
+    RETURNING id, name, email, role, email_verified_at, is_public, show_in_community, show_activity, allow_indexing, follow_emails
   `,
   MARK_EMAIL_VERIFIED: `
     UPDATE librishelf.users
@@ -203,7 +204,7 @@ export const AUTH_QUERIES = {
   `,
   // Usado pelo middleware de auth a cada requisição autenticada.
   FIND_SESSION_BY_ID: `
-    SELECT id, password_changed_at
+    SELECT id, role, password_changed_at
     FROM librishelf.users
     WHERE id = $1 AND is_active IS NOT FALSE
   `,
@@ -234,6 +235,7 @@ export const AUTH_QUERIES = {
     WHERE id = $1
     RETURNING is_public, show_in_community, show_activity, allow_indexing
   `,
+  MARK_LOGIN: 'UPDATE librishelf.users SET last_login_at = now() WHERE id = $1',
   // books.user_id tem ON DELETE CASCADE: livros e vínculos vão junto.
   DELETE_USER: 'DELETE FROM librishelf.users WHERE id = $1',
   LIST_BOOK_IDS_BY_USER: 'SELECT id FROM librishelf.books WHERE user_id = $1'
@@ -407,7 +409,7 @@ export const COMMUNITY_QUERIES = {
     FROM me
     JOIN librishelf.books b ON ${SAME_BOOK('me', 'b')}
     JOIN librishelf.users u ON u.id = b.user_id
-    WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
+    WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND u.is_active IS NOT FALSE AND ${NOT_BLOCKED('u.id', '$2')}
     ORDER BY u.id, b.rating DESC NULLS LAST
   `,
 
@@ -422,7 +424,7 @@ export const COMMUNITY_QUERIES = {
       FROM me
       JOIN librishelf.books b ON ${SAME_BOOK('me', 'b')}
       JOIN librishelf.users u ON u.id = b.user_id
-      WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
+      WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND u.is_active IS NOT FALSE AND ${NOT_BLOCKED('u.id', '$2')}
     ),
     candidates AS (
       SELECT b.id, b.title, b.user_id, COALESCE(b.ol_work_key, 'isbn:' || b.isbn13) AS book_key
@@ -536,7 +538,7 @@ export const COMMUNITY_QUERIES = {
     FROM librishelf.books b
     JOIN librishelf.users u ON u.id = b.user_id
     LEFT JOIN librishelf.publishers p ON p.id = b.publisher_id
-    WHERE b.id = $1 AND b.user_id <> $2 AND u.is_public AND u.show_in_community AND ${NOT_BLOCKED('u.id', '$2')}
+    WHERE b.id = $1 AND b.user_id <> $2 AND u.is_public AND u.show_in_community AND u.is_active IS NOT FALSE AND ${NOT_BLOCKED('u.id', '$2')}
   `,
 
   // Livros de $2 que $1 também tem.
@@ -705,15 +707,19 @@ export const SOCIAL_QUERIES = {
     WHERE bl.blocker_id = $1
     ORDER BY bl.created_at DESC
   `,
-  PENDING_COUNT: `SELECT count(*)::int AS count FROM librishelf.follows WHERE followee_id = $1 AND status = 'pending'`,
+  PENDING_COUNT: `
+    SELECT count(*)::int AS count
+    FROM librishelf.follows f JOIN librishelf.users u ON u.id = f.follower_id
+    WHERE f.followee_id = $1 AND f.status = 'pending' AND u.is_active IS NOT FALSE
+  `,
   CONNECTIONS: `
     SELECT 'following' AS kind, u.name AS username, f.status, f.created_at, u.is_public
     FROM librishelf.follows f JOIN librishelf.users u ON u.id = f.followee_id
-    WHERE f.follower_id = $1
+    WHERE f.follower_id = $1 AND u.is_active IS NOT FALSE
     UNION ALL
     SELECT CASE WHEN f.status = 'pending' THEN 'request' ELSE 'follower' END, u.name, f.status, f.created_at, u.is_public
     FROM librishelf.follows f JOIN librishelf.users u ON u.id = f.follower_id
-    WHERE f.followee_id = $1
+    WHERE f.followee_id = $1 AND u.is_active IS NOT FALSE
     ORDER BY created_at DESC
   `,
   // Feed: leituras concluídas e livros adicionados por quem $1 segue (pedido
@@ -723,7 +729,7 @@ export const SOCIAL_QUERIES = {
       SELECT f.followee_id
       FROM librishelf.follows f
       JOIN librishelf.users u ON u.id = f.followee_id
-      WHERE f.follower_id = $1 AND f.status = 'accepted' AND u.show_activity
+      WHERE f.follower_id = $1 AND f.status = 'accepted' AND u.show_activity AND u.is_active IS NOT FALSE
     ),
     events AS (
       SELECT 'read' AS type, (r.finished_on::timestamp AT TIME ZONE 'UTC') AS at, b.id AS book_id, b.user_id, b.title, b.rating,
@@ -1102,4 +1108,112 @@ export const YEAR_QUERIES = {
   `,
   GOAL: 'SELECT target FROM librishelf.reading_goals WHERE user_id = $1 AND year = $2',
   REVIEWS: `SELECT count(*)::int AS total FROM librishelf.reviews WHERE user_id = $1 AND ${IN_YEAR('created_at')}`
+}
+
+// Área administrativa. Denúncia "aberta" = feita depois da última revisão
+// (ocultar ou manter zera a conta, como no link do e-mail).
+const OPEN_REPORT = 'rr.review_id = r.id AND (r.reviewed_at IS NULL OR rr.created_at > r.reviewed_at)'
+
+export const ADMIN_QUERIES = {
+  STATS: `
+    SELECT
+      (SELECT count(*) FROM librishelf.users)::int AS users,
+      (SELECT count(*) FROM librishelf.users WHERE email_verified_at IS NOT NULL)::int AS verified,
+      (SELECT count(*) FROM librishelf.users WHERE last_login_at > now() - interval '30 days')::int AS active30,
+      (SELECT count(*) FROM librishelf.users WHERE created_at > now() - interval '7 days')::int AS signups7,
+      (SELECT count(*) FROM librishelf.users WHERE created_at > now() - interval '30 days')::int AS signups30,
+      (SELECT count(*) FROM librishelf.users WHERE is_active = false)::int AS suspended,
+      (SELECT count(*) FROM librishelf.users WHERE is_public AND is_active IS NOT FALSE)::int AS public_libraries,
+      (SELECT count(*) FROM librishelf.users WHERE is_public AND show_in_community AND is_active IS NOT FALSE)::int AS community,
+      (SELECT count(*) FROM librishelf.books)::int AS books,
+      (SELECT count(*) FROM librishelf.reviews)::int AS reviews,
+      (SELECT count(*) FROM librishelf.reviews WHERE hidden_at IS NOT NULL)::int AS hidden_reviews,
+      (SELECT count(*) FROM librishelf.lists)::int AS lists,
+      (SELECT count(DISTINCT r.id) FROM librishelf.reviews r JOIN librishelf.review_reports rr ON ${OPEN_REPORT})::int AS open_reports
+  `,
+  // Cadastros por semana (segunda a domingo), as últimas 12, com zeros
+  SIGNUPS_BY_WEEK: `
+    SELECT to_char(w, 'YYYY-MM-DD') AS week, count(u.id)::int AS total
+    FROM generate_series(date_trunc('week', now()::timestamp) - interval '11 weeks', date_trunc('week', now()::timestamp), interval '1 week') AS w
+    LEFT JOIN librishelf.users u ON u.created_at >= w AND u.created_at < w + interval '1 week'
+    GROUP BY w
+    ORDER BY w
+  `,
+  // Fila: $1 = 'open' (denúncia sem revisão), 'hidden' (ocultas) ou 'all'
+  REPORT_QUEUE: `
+    SELECT r.id, r.body, r.has_spoiler, r.visibility, r.created_at, r.hidden_at, r.hidden_reason, r.reviewed_at,
+           u.name AS username, (u.is_active IS NOT FALSE) AS author_active, b.title,
+           rep.open_count, rep.total_count, rep.last_report_at, rep.reasons
+    FROM librishelf.reviews r
+    JOIN librishelf.users u ON u.id = r.user_id
+    JOIN librishelf.books b ON b.id = r.book_id
+    CROSS JOIN LATERAL (
+      SELECT count(*) FILTER (WHERE r.reviewed_at IS NULL OR rr.created_at > r.reviewed_at)::int AS open_count,
+             count(*)::int AS total_count,
+             max(rr.created_at) AS last_report_at,
+             COALESCE(array_agg(DISTINCT rr.reason) FILTER (WHERE rr.reason IS NOT NULL), '{}') AS reasons
+      FROM librishelf.review_reports rr
+      WHERE rr.review_id = r.id
+    ) rep
+    WHERE (EXISTS (SELECT 1 FROM librishelf.review_reports rr WHERE rr.review_id = r.id) OR r.hidden_at IS NOT NULL)
+      AND CASE $1
+            WHEN 'open' THEN rep.open_count > 0
+            WHEN 'hidden' THEN r.hidden_at IS NOT NULL
+            ELSE true
+          END
+    ORDER BY rep.open_count > 0 DESC, rep.last_report_at DESC NULLS LAST, r.id DESC
+    LIMIT 100
+  `,
+  REVIEW_TARGET: `
+    SELECT r.id, r.user_id, u.name AS username, b.title
+    FROM librishelf.reviews r
+    JOIN librishelf.users u ON u.id = r.user_id
+    JOIN librishelf.books b ON b.id = r.book_id
+    WHERE r.id = $1
+  `,
+  // Contas: $1 trecho do nome ou e-mail (padrão ILIKE já escapado), $2 'all' ou 'suspended'
+  USERS: `
+    SELECT u.id, u.name, u.email, u.role, (u.is_active IS NOT FALSE) AS active,
+           u.suspended_at, u.suspended_reason, u.created_at, u.last_login_at,
+           (u.email_verified_at IS NOT NULL) AS email_verified, u.is_public,
+           (SELECT count(*) FROM librishelf.books b WHERE b.user_id = u.id)::int AS books,
+           (SELECT count(*) FROM librishelf.reviews r WHERE r.user_id = u.id)::int AS reviews,
+           (SELECT count(*) FROM librishelf.review_reports rr JOIN librishelf.reviews r ON r.id = rr.review_id
+             WHERE r.user_id = u.id)::int AS reports_received,
+           count(*) OVER()::int AS total
+    FROM librishelf.users u
+    WHERE ($1::text IS NULL OR u.name ILIKE $1 OR u.email ILIKE $1)
+      AND ($2 <> 'suspended' OR u.is_active = false)
+    ORDER BY u.created_at DESC, u.id DESC
+    LIMIT $3 OFFSET $4
+  `,
+  USER_TARGET: 'SELECT id, name, role, (is_active IS NOT FALSE) AS active FROM librishelf.users WHERE id = $1',
+  SUSPEND: `
+    UPDATE librishelf.users
+    SET is_active = false, suspended_at = now(), suspended_reason = $2, updated_at = now()
+    WHERE id = $1 AND is_active IS NOT FALSE
+    RETURNING id
+  `,
+  REACTIVATE: `
+    UPDATE librishelf.users
+    SET is_active = true, suspended_at = NULL, suspended_reason = NULL, updated_at = now()
+    WHERE id = $1 AND is_active = false
+    RETURNING id
+  `,
+  LOG: `
+    INSERT INTO librishelf.admin_actions (admin_id, action, target_user_id, target_review_id, details)
+    VALUES ($1, $2, $3, $4, $5)
+  `,
+  ACTIONS: `
+    SELECT a.id, a.action, a.target_review_id, a.details, a.created_at,
+           adm.name AS admin, tgt.name AS target_user, bk.title AS book,
+           count(*) OVER()::int AS total
+    FROM librishelf.admin_actions a
+    LEFT JOIN librishelf.users adm ON adm.id = a.admin_id
+    LEFT JOIN librishelf.users tgt ON tgt.id = a.target_user_id
+    LEFT JOIN librishelf.reviews rv ON rv.id = a.target_review_id
+    LEFT JOIN librishelf.books bk ON bk.id = rv.book_id
+    ORDER BY a.created_at DESC, a.id DESC
+    LIMIT $1 OFFSET $2
+  `
 }

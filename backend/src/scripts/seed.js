@@ -755,6 +755,47 @@ async function insertLists() {
   return total
 }
 
+// Área administrativa: demo vira admin, últimos acessos espalhados, algumas
+// denúncias (as com 3 ou mais ficam ocultas, como no app) e uma conta suspensa
+const REPORT_REASONS = ['spoiler', 'offensive', 'spam', 'other']
+const REPORT_NOTES = [null, null, 'Conta o final do livro sem aviso.', 'Parece propaganda.', 'Linguagem agressiva.']
+
+async function insertAdminData() {
+  await db.query("UPDATE librishelf.users SET role = 'admin', last_login_at = now() WHERE name = 'demo'")
+  const { rows: users } = await db.query("SELECT id, created_at FROM librishelf.users WHERE name <> 'demo' ORDER BY id")
+  for (const user of users) {
+    if (!chance(0.7)) continue
+    const from = Math.max(new Date(user.created_at).getTime(), NOW - 90 * DAY)
+    await db.query('UPDATE librishelf.users SET last_login_at = $2 WHERE id = $1', [user.id, new Date(from + random() * (NOW - from)).toISOString()])
+  }
+
+  const { rows: reviews } = await db.query(`
+    SELECT r.id, r.user_id FROM librishelf.reviews r JOIN librishelf.users u ON u.id = r.user_id
+    WHERE r.visibility = 'public' AND u.name <> 'demo' ORDER BY r.id
+  `)
+  const reporters = users.map(user => user.id)
+  let total = 0
+  for (const review of pickSome(reviews, Math.min(14, reviews.length))) {
+    const count = pick([1, 1, 1, 2, 2, 3])
+    const reason = pick(REPORT_REASONS)
+    for (const reporter of pickSome(reporters.filter(id => id !== review.user_id), count)) {
+      await db.query(`
+        INSERT INTO librishelf.review_reports (review_id, reporter_id, reason, note, created_at)
+        VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING
+      `, [review.id, reporter, chance(0.7) ? reason : pick(REPORT_REASONS), pick(REPORT_NOTES), new Date(NOW - int(0, 20) * DAY - int(0, 86400) * 1000).toISOString()])
+      total++
+    }
+    if (count >= 3) await db.query("UPDATE librishelf.reviews SET hidden_at = now(), hidden_reason = 'reports' WHERE id = $1", [review.id])
+  }
+
+  await db.query(`
+    UPDATE librishelf.users SET is_active = false, suspended_at = now() - interval '3 days',
+           suspended_reason = 'Exemplo do seed: spam em resenhas.'
+    WHERE id = (SELECT id FROM librishelf.users WHERE name <> 'demo' AND NOT is_public ORDER BY id DESC LIMIT 1)
+  `)
+  return total
+}
+
 async function main() {
   await checkSafety()
   logger.info('Populando banco local', { db: process.env.DB_NAME, host: process.env.DB_HOST || 'localhost', ...CONFIG })
@@ -773,6 +814,7 @@ async function main() {
   const reviews = await insertReviews()
   const lists = await insertLists()
   const follows = await insertFollows(users)
+  const reports = await insertAdminData()
   const covers = CONFIG.covers ? await generateCovers(catalog) : 0
 
   const { rows: [summary] } = await db.query(`
@@ -797,9 +839,10 @@ async function main() {
     seguir: follows,
     resenhas: reviews,
     listas: lists,
+    denuncias: reports,
     capas: covers,
     segundos: Math.round((Date.now() - startedAt) / 1000),
-    login: `demo / ${PASSWORD} (todas as contas usam a mesma senha)`
+    login: `demo / ${PASSWORD} (todas as contas usam a mesma senha; demo é admin)`
   })
 }
 

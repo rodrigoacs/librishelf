@@ -197,7 +197,11 @@ function moderationId(token) {
 }
 
 export async function forModeration(token) {
-  const id = moderationId(token)
+  return forModerationById(moderationId(token))
+}
+
+/** Resenha com as denúncias, para revisar (link do e-mail ou área administrativa). */
+export async function forModerationById(id) {
   const { rows: [row] } = await db.query(q.FOR_MODERATION, [id])
   if (!row) throw httpError('Resenha não encontrada.', STATUS.NOT_FOUND, 'REVIEW_NOT_FOUND')
   const { rows: reports } = await db.query(q.REPORTS_OF, [id])
@@ -209,8 +213,11 @@ export async function forModeration(token) {
 
 /** Ocultar (hide = true) ou manter visível (hide = false, zera as denúncias). */
 export async function moderate(token, hide) {
-  const id = moderationId(token)
+  return moderateById(moderationId(token), hide)
+}
+
+export async function moderateById(id, hide) {
   const { rows } = await db.query(hide ? q.HIDE : q.SHOW, [id])
   if (!rows[0]) throw httpError('Resenha não encontrada.', STATUS.NOT_FOUND, 'REVIEW_NOT_FOUND')
-  return forModeration(token)
+  return forModerationById(id)
 }

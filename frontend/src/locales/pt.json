@@ -56,7 +56,9 @@
     "closeMenu": "Fechar menu",
     "community": "Comunidade",
     "pending_requests": "{n} pedido para seguir | {n} pedidos para seguir",
-    "lists": "Listas"
+    "lists": "Listas",
+    "admin": "Administração",
+    "adminRole": "Administração"
   },
   "common": {
     "save": "Salvar",
@@ -529,7 +531,7 @@
         "paragraphs": [
           "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
           "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, série, tags, datas, notas, status de leitura, histórico de leituras e progresso, e metas), anotações pessoais e as capas que você enviar. As anotações pessoais são só suas: nunca aparecem na biblioteca pública.",
-          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login."
+          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login. Também guardamos a data e a hora do seu último login, para sabermos quantas contas estão em uso."
         ]
       },
       {
@@ -563,6 +565,14 @@
           "Diferente das anotações, que são só suas, a resenha é feita para outros lerem. Você escolhe quem pode ler: todos que veem sua biblioteca pública (e, se você participa da comunidade, outros leitores do mesmo livro) ou só seus seguidores aprovados. Com a biblioteca privada, ninguém vê.",
           "Leitores logados podem curtir e denunciar resenhas. Quem escreveu não fica sabendo quem denunciou. A denúncia (motivo, detalhes e quem enviou) vai para a moderação do Librishelf, que pode ocultar a resenha; com várias denúncias ela é ocultada automaticamente até a revisão.",
           "Você pode editar ou apagar sua resenha a qualquer momento. Ela também vai junto quando você baixa seus dados e é apagada com o livro ou com a conta."
+        ]
+      },
+      {
+        "title": "Moderação e suspensão de contas",
+        "paragraphs": [
+          "A administração do Librishelf pode ocultar resenhas e suspender contas que desrespeitem o uso esperado do site, como spam ou conteúdo ofensivo. Para isso, ela vê o nome de usuário, o e-mail, as datas de cadastro e de último login e os totais de livros, resenhas e denúncias de cada conta, nunca a senha nem as anotações pessoais.",
+          "Uma conta suspensa não consegue entrar, e o que era público (biblioteca, perfil, resenhas e listas) deixa de aparecer para os outros. Nada é apagado: se a suspensão for desfeita, tudo volta como estava.",
+          "Cada ação da administração fica registrada (o quê, quando e o motivo). Se a conta for excluída, o registro deixa de apontar para ela."
         ]
       },
       {
@@ -966,7 +976,8 @@
     "lists": "Listas",
     "list": "Lista",
     "publicList": "Lista de {name}",
-    "year": "Seu ano em livros"
+    "year": "Seu ano em livros",
+    "admin": "Administração"
   },
   "password": {
     "show": "Mostrar senha",
@@ -1107,7 +1118,14 @@
     "LIST_DESCRIPTION_TOO_LONG": "A descrição pode ter no máximo {max} caracteres.",
     "LIST_LIMIT": "Você pode ter no máximo {max} listas.",
     "LIST_FULL": "Uma lista pode ter no máximo {max} livros.",
-    "LIST_ORDER_MISMATCH": "A lista mudou enquanto você reordenava. Recarregamos a versão atual."
+    "LIST_ORDER_MISMATCH": "A lista mudou enquanto você reordenava. Recarregamos a versão atual.",
+    "ADMIN_REQUIRED": "Você não tem permissão para isso.",
+    "ADMIN_LOCKED": "Confirme sua senha para continuar.",
+    "ADMIN_SELF": "Você não pode suspender a sua própria conta.",
+    "ADMIN_TARGET": "Contas de administração não podem ser suspensas por aqui.",
+    "ACCOUNT_SUSPENDED": "Esta conta está suspensa. Fale com a administração do Librishelf.",
+    "ACCOUNT_ALREADY_SUSPENDED": "Esta conta já está suspensa.",
+    "ACCOUNT_NOT_SUSPENDED": "Esta conta não está suspensa."
   },
   "block": {
     "block": "Bloquear {name}",
@@ -1333,5 +1351,126 @@
     "storyAuthor": "Autor mais lido: {name}",
     "storyMonth": "Mês mais intenso: {month}",
     "storyLongest": "Mais longo: {title} ({n} págs.)"
+  },
+  "admin": {
+    "title": "Administração",
+    "subtitle": "Números do Librishelf, denúncias e contas.",
+    "lock": "Bloquear",
+    "pager": "Páginas",
+    "prev": "Página anterior",
+    "next": "Próxima página",
+    "pageOf": "Página {page} de {pages}",
+    "unlock": {
+      "title": "Confirme que é você",
+      "description": "Digite sua senha para entrar. A área fica liberada por {minutes} minutos sem uso.",
+      "password": "Sua senha",
+      "submit": "Entrar"
+    },
+    "tabs": {
+      "overview": "Visão geral",
+      "moderation": "Moderação",
+      "accounts": "Contas",
+      "log": "Registro"
+    },
+    "overview": {
+      "users": "Contas",
+      "verified": "{n}% com e-mail confirmado",
+      "active30": "Ativas em 30 dias",
+      "ofAccounts": "{n}% das contas",
+      "signups7": "Cadastros em 7 dias",
+      "signups30": "{n} em 30 dias",
+      "publicLibraries": "Bibliotecas públicas",
+      "inCommunity": "{n} na comunidade",
+      "books": "Livros",
+      "reviews": "Resenhas",
+      "hiddenReviews": "{n} ocultas",
+      "lists": "Listas",
+      "openReports": "Denúncias abertas",
+      "suspended": "{n} conta suspensa | {n} contas suspensas",
+      "signupsByWeek": "Cadastros por semana",
+      "signupsLabel": "Cadastros",
+      "chartLabel": "Cadastros por semana, das últimas 12: {list}"
+    },
+    "moderation": {
+      "filter": "Mostrar",
+      "filters": {
+        "open": "Abertas",
+        "hidden": "Ocultas",
+        "all": "Todas"
+      },
+      "queue": "Resenhas denunciadas",
+      "detail": "Resenha selecionada",
+      "empty": {
+        "open": "Nenhuma denúncia esperando revisão.",
+        "hidden": "Nenhuma resenha oculta.",
+        "all": "Nenhuma resenha denunciada até agora."
+      },
+      "pick": "Escolha uma resenha na lista.",
+      "visible": "Visível",
+      "hidden": "Oculta",
+      "openCount": "{n} denúncia nova | {n} denúncias novas",
+      "totalCount": "{n} denúncia revisada | {n} denúncias revisadas",
+      "viewAuthor": "Ver a conta de {name}",
+      "authorSuspended": "A conta de quem escreveu está suspensa: a resenha não aparece para ninguém enquanto isso.",
+      "reviewedBefore": "antes da última revisão"
+    },
+    "accounts": {
+      "search": "Buscar contas",
+      "searchPh": "Nome de usuário ou e-mail",
+      "filter": "Mostrar",
+      "filters": {
+        "all": "Todas",
+        "suspended": "Suspensas"
+      },
+      "total": "{n} conta | {n} contas",
+      "cols": {
+        "user": "Usuário e e-mail",
+        "created": "Cadastro",
+        "lastLogin": "Último acesso",
+        "books": "Livros",
+        "reviews": "Resenhas",
+        "reports": "Denúncias",
+        "actions": "Ações"
+      },
+      "adminTag": "admin",
+      "suspendedTag": "suspensa",
+      "unverifiedTag": "e-mail não confirmado",
+      "suspendedOn": "Suspensa em {date}",
+      "never": "Nunca",
+      "suspend": "Suspender",
+      "reactivate": "Reativar",
+      "suspendWho": "Suspender {name}",
+      "reactivateWho": "Reativar {name}",
+      "suspendTitle": "Suspender {name}",
+      "reactivateTitle": "Reativar {name}",
+      "suspendDesc": "A pessoa sai da conta na hora e não consegue entrar de novo. A biblioteca, o perfil, as resenhas e as listas deixam de aparecer para os outros. Nada é apagado: reativar devolve tudo como estava.",
+      "reactivateDesc": "A pessoa volta a entrar normalmente e o que era público volta a aparecer.",
+      "reason": "Motivo",
+      "reasonHint": "Fica no registro (não é enviado para a pessoa).",
+      "reasonRequired": "Explique o motivo (pelo menos 3 caracteres).",
+      "password": "Sua senha, para confirmar",
+      "suspendedDone": "Conta de {name} suspensa.",
+      "reactivatedDone": "Conta de {name} reativada."
+    },
+    "log": {
+      "intro": "Tudo o que foi feito nesta área, do mais recente para o mais antigo.",
+      "cols": {
+        "when": "Quando",
+        "who": "Quem",
+        "action": "Ação",
+        "target": "Alvo",
+        "details": "Detalhes"
+      },
+      "actions": {
+        "admin_unlock": "Entrou na área",
+        "review_hide": "Ocultou resenha",
+        "review_show": "Manteve/reexibiu resenha",
+        "user_suspend": "Suspendeu conta",
+        "user_reactivate": "Reativou conta"
+      },
+      "review": "resenha #{id}",
+      "deleted": "conta excluída",
+      "empty": "Nada registrado ainda."
+    }
   }
 }

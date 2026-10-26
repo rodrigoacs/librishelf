@@ -67,7 +67,8 @@ function toProfile(user) {
     showActivity: Boolean(user.show_activity),
     allowIndexing: Boolean(user.allow_indexing),
     followEmails: Boolean(user.follow_emails),
-    emailVerified: Boolean(user.email_verified_at)
+    emailVerified: Boolean(user.email_verified_at),
+    isAdmin: user.role === 'admin'
   }
 }
 
@@ -98,6 +99,13 @@ async function loginUser(username, password) {
   if (!user || !isPasswordValid) {
     throw httpError('Usuário ou senha inválidos.', STATUS.UNAUTHORIZED, 'INVALID_CREDENTIALS')
   }
+
+  // Só depois da senha certa: não revela a suspensão a quem não é o dono.
+  if (user.is_active === false) {
+    throw httpError('Esta conta está suspensa. Fale com a administração do Librishelf.', STATUS.FORBIDDEN, 'ACCOUNT_SUSPENDED')
+  }
+
+  await authRepository.markLogin(user.id)
 
   return {
     token: issueToken(user),
@@ -452,6 +460,7 @@ async function deleteAccount(userId, password) {
 }
 
 export {
+  verifyCurrentPassword,
   loginUser,
   registerUser,
   resendVerification,

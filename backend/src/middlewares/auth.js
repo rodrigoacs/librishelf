@@ -45,7 +45,8 @@ export async function resolveSession(req) {
     if (decoded.iat < changedAtSeconds) return { error: 'Sua sessão foi encerrada. Entre de novo.', code: 'SESSION_REVOKED' }
   }
 
-  return { user: decoded }
+  // O papel vem do banco a cada requisição: rebaixar alguém vale na hora.
+  return { user: { ...decoded, role: session.role || 'user' } }
 }
 
 /** Exige sessão válida: 401 caso contrário (403 fica para "sem permissão"). */

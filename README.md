@@ -16,6 +16,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Your year in books** — a yearly recap (available all year; "so far" for the current one): books and pages read, month by month, goal, best rated, most-read authors and records (longest, fastest…), plus a 9:16 story image drawn in the browser to download or share.
 - **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf (with a link preview on WhatsApp and social networks: title, book count and a mosaic of your covers), with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.
 - **Community (opt-in)** — see who else has a book, their average rating and what people who have it also have. Follow other readers (they approve each request) and get a feed of what they add and finish. Everything is off until the user turns it on.
+- **Admin area** (`/admin`, desktop) — for accounts with `role = 'admin'`, after re-entering the password (unlocked for 30 idle minutes): site numbers and weekly sign-ups, the queue of reported reviews (hide / keep), account search with suspend / reactivate (nothing is deleted; a suspended account can't sign in and its public pages disappear) and a log of every admin action.
 - **Account control** — email confirmation, password recovery by email, change your password (signs out other sessions) and delete your account with all its data.
 - **Portuguese and English**, light and dark themes, six accent colors.
 
@@ -181,11 +182,19 @@ docker compose exec backend npm run enrich:isbn:docker -- --dry-run   # preview
 docker compose exec backend npm run enrich:isbn:docker
 ```
 
+To use the admin area, promote your account once (there is no sign-up path to admin):
+
+```sh
+psql -h <DB_HOST> -U <DB_USER> -d <DB_NAME> -c "UPDATE librishelf.users SET role = 'admin' WHERE name = '<your-username>';"
+```
+
+Then sign out and in again (or reload) and **Admin** shows in the menu. `npm run db:seed` makes `demo` an admin.
+
 `db/manual/drop-legacy-public-schema.sql` removes the old tables left in the `public` schema by earlier versions. It is destructive and optional; back up before running it by hand.
 
 ## Privacy
 
-Libraries are private unless the owner turns on sharing; community and followers are separate opt-ins, both off by default. ISBN lookups go from the server to Open Library with only the ISBN. Session uses a single essential httpOnly cookie; fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
+Libraries are private unless the owner turns on sharing; community and followers are separate opt-ins, both off by default. ISBN lookups go from the server to Open Library with only the ISBN. Session uses a single essential httpOnly cookie (admins get a second one, `admin_unlock`, while the admin area is unlocked); fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
 
 ---
 

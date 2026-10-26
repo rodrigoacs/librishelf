@@ -6,6 +6,7 @@ import sendError from '../utils/sendError.js'
 import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimiter } from '../middlewares/rateLimiter.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import { AUTH_COOKIE_NAME, authCookieOptions } from '../config/cookieOptions.js'
+import { clearUnlockCookie } from '../middlewares/admin.js'
 
 const router = express.Router()
 
@@ -25,6 +26,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
 router.post('/logout', (req, res) => {
   res.clearCookie(AUTH_COOKIE_NAME, { ...authCookieOptions, maxAge: undefined })
+  clearUnlockCookie(res)
   res.status(STATUS.OK).json({ message: 'Logout realizado com sucesso' })
 })
 

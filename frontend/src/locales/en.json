@@ -18,7 +18,9 @@
     "closeMenu": "Close menu",
     "community": "Community",
     "pending_requests": "{n} follow request | {n} follow requests",
-    "lists": "Lists"
+    "lists": "Lists",
+    "admin": "Admin",
+    "adminRole": "Admin"
   },
   "common": {
     "save": "Save",
@@ -529,7 +531,7 @@
         "paragraphs": [
           "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
           "Content you add: your books and their details (title, authors, publisher, ISBN, series, tags, dates, ratings, reading status, reading history and progress, and goals), personal notes and the covers you upload. Personal notes are yours only: they never appear in your public library.",
-          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts."
+          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts. We also keep the date and time of your last sign-in, to know how many accounts are in use."
         ]
       },
       {
@@ -563,6 +565,14 @@
           "Unlike notes, which are only yours, a review is meant to be read by others. You choose who can read it: everyone who sees your public library (and, if you take part in the community, other readers of the same book) or only your approved followers. With a private library, nobody sees it.",
           "Signed-in readers can like and report reviews. The author doesn't find out who reported. A report (reason, details and who sent it) goes to Librishelf moderation, which may hide the review; after several reports it is hidden automatically until it's reviewed.",
           "You can edit or delete your review at any time. It is included when you download your data and is deleted along with the book or the account."
+        ]
+      },
+      {
+        "title": "Moderation and account suspension",
+        "paragraphs": [
+          "The Librishelf team can hide reviews and suspend accounts that misuse the site, such as spam or offensive content. To do that, it sees each account’s username, email, sign-up and last sign-in dates and its totals of books, reviews and reports, never the password or personal notes.",
+          "A suspended account can’t sign in, and what was public (library, profile, reviews and lists) stops showing to others. Nothing is deleted: if the suspension is lifted, everything comes back as it was.",
+          "Every admin action is logged (what, when and the reason). If the account is deleted, the log no longer points to it."
         ]
       },
       {
@@ -966,7 +976,8 @@
     "lists": "Lists",
     "list": "List",
     "publicList": "{name}'s list",
-    "year": "Your year in books"
+    "year": "Your year in books",
+    "admin": "Admin"
   },
   "password": {
     "show": "Show password",
@@ -1107,7 +1118,14 @@
     "LIST_DESCRIPTION_TOO_LONG": "The description can have at most {max} characters.",
     "LIST_LIMIT": "You can have at most {max} lists.",
     "LIST_FULL": "A list can have at most {max} books.",
-    "LIST_ORDER_MISMATCH": "The list changed while you were reordering. We reloaded the current version."
+    "LIST_ORDER_MISMATCH": "The list changed while you were reordering. We reloaded the current version.",
+    "ADMIN_REQUIRED": "You don't have permission to do that.",
+    "ADMIN_LOCKED": "Confirm your password to continue.",
+    "ADMIN_SELF": "You can't suspend your own account.",
+    "ADMIN_TARGET": "Admin accounts can't be suspended here.",
+    "ACCOUNT_SUSPENDED": "This account is suspended. Contact the Librishelf team.",
+    "ACCOUNT_ALREADY_SUSPENDED": "This account is already suspended.",
+    "ACCOUNT_NOT_SUSPENDED": "This account isn't suspended."
   },
   "block": {
     "block": "Block {name}",
@@ -1333,5 +1351,126 @@
     "storyAuthor": "Most-read author: {name}",
     "storyMonth": "Busiest month: {month}",
     "storyLongest": "Longest: {title} ({n} pp.)"
+  },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "Librishelf numbers, reports and accounts.",
+    "lock": "Lock",
+    "pager": "Pages",
+    "prev": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {page} of {pages}",
+    "unlock": {
+      "title": "Confirm it's you",
+      "description": "Enter your password. The area stays unlocked for {minutes} minutes of inactivity.",
+      "password": "Your password",
+      "submit": "Enter"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "moderation": "Moderation",
+      "accounts": "Accounts",
+      "log": "Log"
+    },
+    "overview": {
+      "users": "Accounts",
+      "verified": "{n}% with confirmed email",
+      "active30": "Active in 30 days",
+      "ofAccounts": "{n}% of accounts",
+      "signups7": "Sign-ups in 7 days",
+      "signups30": "{n} in 30 days",
+      "publicLibraries": "Public libraries",
+      "inCommunity": "{n} in the community",
+      "books": "Books",
+      "reviews": "Reviews",
+      "hiddenReviews": "{n} hidden",
+      "lists": "Lists",
+      "openReports": "Open reports",
+      "suspended": "{n} suspended account | {n} suspended accounts",
+      "signupsByWeek": "Sign-ups per week",
+      "signupsLabel": "Sign-ups",
+      "chartLabel": "Sign-ups per week, last 12: {list}"
+    },
+    "moderation": {
+      "filter": "Show",
+      "filters": {
+        "open": "Open",
+        "hidden": "Hidden",
+        "all": "All"
+      },
+      "queue": "Reported reviews",
+      "detail": "Selected review",
+      "empty": {
+        "open": "No reports waiting for review.",
+        "hidden": "No hidden reviews.",
+        "all": "No reviews reported so far."
+      },
+      "pick": "Pick a review from the list.",
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "openCount": "{n} new report | {n} new reports",
+      "totalCount": "{n} reviewed report | {n} reviewed reports",
+      "viewAuthor": "See {name}'s account",
+      "authorSuspended": "The author's account is suspended: the review isn't shown to anyone meanwhile.",
+      "reviewedBefore": "before the last review"
+    },
+    "accounts": {
+      "search": "Search accounts",
+      "searchPh": "Username or email",
+      "filter": "Show",
+      "filters": {
+        "all": "All",
+        "suspended": "Suspended"
+      },
+      "total": "{n} account | {n} accounts",
+      "cols": {
+        "user": "User and email",
+        "created": "Joined",
+        "lastLogin": "Last sign-in",
+        "books": "Books",
+        "reviews": "Reviews",
+        "reports": "Reports",
+        "actions": "Actions"
+      },
+      "adminTag": "admin",
+      "suspendedTag": "suspended",
+      "unverifiedTag": "email not confirmed",
+      "suspendedOn": "Suspended on {date}",
+      "never": "Never",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "suspendWho": "Suspend {name}",
+      "reactivateWho": "Reactivate {name}",
+      "suspendTitle": "Suspend {name}",
+      "reactivateTitle": "Reactivate {name}",
+      "suspendDesc": "They're signed out right away and can't sign in again. Their library, profile, reviews and lists stop showing to others. Nothing is deleted: reactivating brings everything back.",
+      "reactivateDesc": "They can sign in again and what was public shows up again.",
+      "reason": "Reason",
+      "reasonHint": "Kept in the log (not sent to them).",
+      "reasonRequired": "Explain the reason (at least 3 characters).",
+      "password": "Your password, to confirm",
+      "suspendedDone": "{name}’s account was suspended.",
+      "reactivatedDone": "{name}’s account was reactivated."
+    },
+    "log": {
+      "intro": "Everything done in this area, newest first.",
+      "cols": {
+        "when": "When",
+        "who": "Who",
+        "action": "Action",
+        "target": "Target",
+        "details": "Details"
+      },
+      "actions": {
+        "admin_unlock": "Entered the area",
+        "review_hide": "Hid review",
+        "review_show": "Kept/restored review",
+        "user_suspend": "Suspended account",
+        "user_reactivate": "Reactivated account"
+      },
+      "review": "review #{id}",
+      "deleted": "deleted account",
+      "empty": "Nothing logged yet."
+    }
   }
 }

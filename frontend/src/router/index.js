@@ -7,6 +7,7 @@ import { installRouteFocus } from '../services/routeFocus.js'
 /**
  * meta:
  *   requiresAuth — precisa de sessão; sem ela vai para /login?redirect=...
+ *   requiresAdmin — só para admin; os outros veem a página "não encontrada"
  *   guestOnly    — login/cadastro; quem já está logado vai para o início
  *   standalone   — tela cheia, sem o menu lateral
  *   public       — acessível com ou sem sessão: carrega a sessão, se houver (e
@@ -31,6 +32,7 @@ const router = createRouter({
     { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { requiresAuth: true, title: 'dashboard' } },
     { path: '/community', name: 'community', component: () => import('../views/Community.vue'), meta: { requiresAuth: true, title: 'community' } },
     { path: '/settings', name: 'settings', component: () => import('../views/Settings.vue'), meta: { requiresAuth: true, title: 'settings' } },
+    { path: '/admin', name: 'admin', component: () => import('../views/Admin.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'admin', noindex: true } },
 
     { path: '/login', name: 'login', component: () => import('../views/Login.vue'), meta: { guestOnly: true, standalone: true, title: 'login' } },
     { path: '/register', name: 'register', component: () => import('../views/Register.vue'), meta: { guestOnly: true, standalone: true, title: 'register' } },
@@ -62,6 +64,10 @@ router.beforeEach(async (to) => {
     const user = await loadSession()
     if (!user) {
       return { name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : {} }
+    }
+    // Não confirma que a área existe: mesma tela de endereço inexistente, sem mudar a URL
+    if (to.meta.requiresAdmin && !user.isAdmin) {
+      return { name: 'not-found', params: { pathMatch: to.path.slice(1).split('/') }, query: to.query, hash: to.hash }
     }
     return true
   }

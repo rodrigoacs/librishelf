@@ -388,5 +388,52 @@ export default {
 
   getPublicBook(username, id) {
     return client.get(`/library/public/u/${enc(username)}/book/${id}`)
+  },
+
+  // --- Área administrativa (só admin; as rotas pedem a senha a cada 30 min sem uso) ---
+  adminSession() {
+    return client.get('/admin/session')
+  },
+
+  adminUnlock(password) {
+    return client.post('/admin/unlock', { password })
+  },
+
+  adminLock() {
+    return client.post('/admin/lock', {})
+  },
+
+  adminStats() {
+    return client.get('/admin/stats')
+  },
+
+  /** status: 'open' | 'hidden' | 'all' */
+  adminReports(status = 'open') {
+    return client.get(`/admin/reports${toQuery({ status })}`)
+  },
+
+  adminReview(id) {
+    return client.get(`/admin/reviews/${id}`)
+  },
+
+  adminModerateReview(id, hide) {
+    return client.post(`/admin/reviews/${id}/${hide ? 'hide' : 'show'}`, {})
+  },
+
+  /** { q?, status?: 'all' | 'suspended', page?, limit? } */
+  adminUsers(params = {}) {
+    return client.get(`/admin/users${toQuery(params)}`)
+  },
+
+  adminSuspendUser(id, password, reason) {
+    return client.post(`/admin/users/${id}/suspend`, { password, reason })
+  },
+
+  adminReactivateUser(id, password) {
+    return client.post(`/admin/users/${id}/reactivate`, { password })
+  },
+
+  adminActions(params = {}) {
+    return client.get(`/admin/actions${toQuery(params)}`)
   }
 }

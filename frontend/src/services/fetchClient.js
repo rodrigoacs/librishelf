@@ -50,6 +50,17 @@ async function parseError(response) {
   }
 }
 
+// Fora de /auth/ também há rotas que pedem a senha de novo (área
+// administrativa): senha errada ali não é sessão expirada.
+const PASSWORD_CODES = ['CURRENT_PASSWORD_WRONG', 'CURRENT_PASSWORD_REQUIRED']
+async function isWrongPassword(response) {
+  try {
+    return PASSWORD_CODES.includes((await response.clone().json())?.code)
+  } catch {
+    return false
+  }
+}
+
 async function client(endpoint, { body, ...customConfig } = {}) {
   const config = {
     method: body ? 'POST' : 'GET',
@@ -90,7 +101,7 @@ async function client(endpoint, { body, ...customConfig } = {}) {
 
   if (response.status === 401) {
     const isSessionCheck = endpoint === SESSION_ENDPOINT
-    const isCredentialCheck = endpoint.startsWith(AUTH_ENDPOINT_PREFIX) && !isSessionCheck
+    const isCredentialCheck = (endpoint.startsWith(AUTH_ENDPOINT_PREFIX) && !isSessionCheck) || await isWrongPassword(response)
 
     if (!isCredentialCheck) {
       onSessionExpired({ silent: isSessionCheck })
