@@ -19,10 +19,11 @@ router.get('/stats', async (req, res) => {
   }
 })
 
-// "Seu ano em livros" (retrospectiva): GET /dashboard/year/2026
+// "Seu ano em livros" (retrospectiva): GET /dashboard/year/2026?current=2026
+// (current: o ano no aparelho da pessoa, para "ano corrente" e "até agora")
 router.get('/year/:year', track('year.view'), async (req, res) => {
   try {
-    res.status(STATUS.OK).json(await yearService.yearInBooks(req.user.id, req.params.year))
+    res.status(STATUS.OK).json(await yearService.yearInBooks(req.user.id, req.params.year, req.query.current))
   } catch (error) {
     sendError(res, error, 'Erro ao montar a retrospectiva')
   }

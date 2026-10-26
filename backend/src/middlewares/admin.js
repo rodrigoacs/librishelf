@@ -2,14 +2,15 @@ import jwt from 'jsonwebtoken'
 import { errorBody } from '../utils/httpError.js'
 import STATUS from '../utils/statusCodes.js'
 import { authCookieOptions } from '../config/cookieOptions.js'
+import { purposeKey, JWT_ALGORITHMS } from '../utils/keys.js'
 
 /**
  * Área administrativa: além de role = 'admin' (lido do banco em
  * resolveSession), pede a senha de novo e libera por 30 minutos sem uso.
  * A liberação é um JWT próprio num cookie httpOnly separado, renovado a cada
- * requisição; sair da conta ou bloquear de novo apaga o cookie.
+ * requisição; sair da conta ou bloquear de novo apaga o cookie. A chave é
+ * só desta finalidade: o token não serve como sessão nem o contrário.
  */
-const SECRET_KEY = process.env.SECRET_KEY
 export const ADMIN_UNLOCK_COOKIE = 'admin_unlock'
 export const ADMIN_UNLOCK_MINUTES = 30
 const PURPOSE = 'admin-unlock'
@@ -17,7 +18,7 @@ const PURPOSE = 'admin-unlock'
 const unlockCookieOptions = { ...authCookieOptions, maxAge: ADMIN_UNLOCK_MINUTES * 60 * 1000 }
 
 export function setUnlockCookie(res, userId) {
-  const token = jwt.sign({ id: userId, purpose: PURPOSE }, SECRET_KEY, { expiresIn: `${ADMIN_UNLOCK_MINUTES}m` })
+  const token = jwt.sign({ id: userId, purpose: PURPOSE }, purposeKey(PURPOSE), { expiresIn: `${ADMIN_UNLOCK_MINUTES}m`, algorithm: 'HS256' })
   res.cookie(ADMIN_UNLOCK_COOKIE, token, unlockCookieOptions)
   return new Date(Date.now() + ADMIN_UNLOCK_MINUTES * 60 * 1000).toISOString()
 }
@@ -31,7 +32,7 @@ export function isUnlocked(req) {
   const token = req.cookies?.[ADMIN_UNLOCK_COOKIE]
   if (!token || !req.user) return false
   try {
-    const decoded = jwt.verify(token, SECRET_KEY)
+    const decoded = jwt.verify(token, purposeKey(PURPOSE), { algorithms: JWT_ALGORITHMS })
     return decoded.purpose === PURPOSE && decoded.id === req.user.id
   } catch {
     return false

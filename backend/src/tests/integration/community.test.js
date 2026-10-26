@@ -116,8 +116,8 @@ describe('Avaliação', () => {
     expect((await request(app).get(`/library/${bookId}`).set(auth('ana'))).body.rating).toBe(null)
   })
 
-    it('não deixa avaliar livro de outra pessoa', async () => {
-    expect((await request(app).patch(`/library/${bookId}/rating`).set(auth('bia')).send({ rating: 1 })).statusCode).toBe(403)
+    it('não deixa avaliar livro de outra pessoa (404, como livro inexistente)', async () => {
+    expect((await request(app).patch(`/library/${bookId}/rating`).set(auth('bia')).send({ rating: 1 })).statusCode).toBe(404)
   })
 
   it('ordena por nota com os sem nota no fim', async () => {

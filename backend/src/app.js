@@ -19,6 +19,7 @@ import moderationRoutes from './routes/moderation.js'
 import listRoutes from './routes/lists.js'
 import adminRoutes from './routes/admin.js'
 import errorHandler from './middlewares/errorHandler.js'
+import { errorBody } from './utils/httpError.js'
 import corsOptions from './config/corsOptions.js'
 import trustProxy from './config/trustProxy.js'
 
@@ -50,6 +51,11 @@ app.use('/moderation', moderationRoutes)
 app.use('/lists', listRoutes)
 app.use('/admin', adminRoutes)
 app.get('/ping', (req, res) => { res.json({ message: 'pong' }) })
+
+// Rota inexistente: JSON com código, como todo erro da API (antes, HTML do Express)
+app.use((req, res) => {
+  res.status(404).json(errorBody('Rota não encontrada.', 'ROUTE_NOT_FOUND'))
+})
 
 app.use(errorHandler)
 

@@ -52,7 +52,7 @@
             :key="index"
           >
             <span class="reason">{{ t(`review.reasons.${report.reason}`) }}</span>
-            <span class="by">@{{ report.reporter }} · {{ formatDate(report.createdAt) }}</span>
+            <span class="by">{{ report.reporter ? `@${report.reporter} · ` : '' }}{{ formatDate(report.createdAt) }}</span>
             <p
               v-if="report.note"
               class="note"

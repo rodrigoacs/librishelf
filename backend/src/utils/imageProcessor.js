@@ -2,6 +2,7 @@ import sharp from 'sharp'
 import path from 'path'
 import fs from 'fs/promises'
 import UPLOAD_DIR from '../config/uploadDir.js'
+import { httpError } from './httpError.js'
 
 const MAX_WIDTH = 356
 const MAX_HEIGHT = 500
@@ -22,9 +23,7 @@ async function saveBookCover(buffer, bookId) {
   const valid = await isValidImage(buffer)
 
   if (!valid) {
-    const error = new Error('Arquivo enviado não é uma imagem válida.')
-    error.status = 400
-    throw error
+    throw httpError('Arquivo enviado não é uma imagem válida.', 400, 'IMAGE_INVALID')
   }
 
   const jpgPath = path.join(UPLOAD_DIR, `${bookId}.jpg`)

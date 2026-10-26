@@ -8,6 +8,7 @@ import { normalizeIsbn13 } from '../utils/isbn.js'
 import STATUS from '../utils/statusCodes.js'
 import logger from '../utils/logger.js'
 import { httpError } from '../utils/httpError.js'
+import { PUB_MIN_YEAR, PUB_MAX_YEAR, READ_MIN_YEAR } from '../utils/bookFields.js'
 
 /**
  * Seus dados: exportar tudo (JSON ou CSV) e importar livros de um CSV — do
@@ -42,23 +43,59 @@ async function loadExport(userId) {
   return { user: user.rows[0], goals: goals.rows, books: books.rows, lists: lists.rows }
 }
 
+/** Seguir, bloqueios, curtidas e denúncias da pessoa (só no JSON). */
+async function loadSocial(userId) {
+  const [follows, blocks, likes, reports] = await Promise.all([
+    db.query(q.EXPORT_FOLLOWS, [userId]),
+    db.query(q.EXPORT_BLOCKS, [userId]),
+    db.query(q.EXPORT_LIKES, [userId]),
+    db.query(q.EXPORT_REPORTS, [userId])
+  ])
+  const pick = (direction, status) => follows.rows
+    .filter(row => row.direction === direction && row.status === status)
+    .map(row => ({ username: row.username, since: row.accepted_at ?? row.created_at }))
+  return {
+    following: pick('following', 'accepted'),
+    followers: pick('follower', 'accepted'),
+    requests: {
+      sent: pick('following', 'pending').map(({ username, since }) => ({ username, requestedAt: since })),
+      received: pick('follower', 'pending').map(({ username, since }) => ({ username, requestedAt: since }))
+    },
+    blocked: blocks.rows.map(row => ({ username: row.username, blockedAt: row.created_at })),
+    likesGiven: likes.rows.map(row => ({ review: { author: row.author, book: row.book }, likedAt: row.created_at })),
+    reportsMade: reports.rows.map(row => ({ review: { author: row.author, book: row.book }, reason: row.reason, note: row.note, reportedAt: row.created_at }))
+  }
+}
+
+/**
+ * Exportação completa (LGPD, art. 18, II e V). version 2 só acrescenta campos
+ * à version 1: account.lastLoginAt/lastSeenAt, notifications, following,
+ * followers, requests, blocked, likesGiven e reportsMade.
+ */
 export async function exportJson(userId) {
-  const { user, goals, books, lists } = await loadExport(userId)
+  const [{ user, goals, books, lists }, social] = await Promise.all([loadExport(userId), loadSocial(userId)])
   return {
     app: 'Librishelf',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     account: {
       username: user.name,
       email: user.email,
       emailVerified: user.email_verified,
       createdAt: user.created_at,
+      lastLoginAt: user.last_login_at,
+      lastSeenAt: user.last_seen_at,
       isPublic: user.is_public,
       showInCommunity: user.show_in_community,
       showActivity: user.show_activity,
       allowIndexing: user.allow_indexing,
       followEmails: user.follow_emails
     },
+    notifications: {
+      followEmails: user.follow_emails,
+      locale: user.email_locale
+    },
+    ...social,
     readingGoals: goals,
     books: books.map(book => ({
       title: book.title,
@@ -132,12 +169,14 @@ function cleanIsbn(value) {
   return text || null
 }
 
-/** 2019/05/14, 2019-05-14 → '2019-05-14'; vazio ou inválido → null. */
+/** 2019/05/14, 2019-05-14 → '2019-05-14'; vazio, inválido ou dia que não existe → null. */
 function cleanDate(value) {
   const match = String(value ?? '').trim().match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/)
   if (!match) return null
-  const [, y, m, d] = match
-  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  const [y, m, d] = match.slice(1).map(Number)
+  const check = new Date(Date.UTC(y, m - 1, d))
+  if (check.getUTCFullYear() !== y || check.getUTCMonth() !== m - 1 || check.getUTCDate() !== d) return null
+  return `${match[1]}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 }
 
 function cleanYear(value) {
@@ -145,9 +184,20 @@ function cleanYear(value) {
   return /^\d{4}$/.test(year) ? `${year}-01-01` : null
 }
 
-/** Data no futuro (relógio errado, ano digitado errado) vira hoje. */
+/**
+ * Publicação fora de PUB_MIN_YEAR–PUB_MAX_YEAR (clássicos com o ano da obra
+ * original, ano digitado errado) fica sem data em vez de recusar a linha.
+ */
+function pubDateInRange(date) {
+  if (!date) return null
+  const year = Number(date.slice(0, 4))
+  return year >= PUB_MIN_YEAR && year <= PUB_MAX_YEAR ? date : null
+}
+
+/** Data no futuro (relógio errado, ano digitado errado) vira hoje; antes de 1900 sai. */
 function notFuture(date) {
   if (!date) return null
+  if (Number(date.slice(0, 4)) < READ_MIN_YEAR) return null
   const today = new Date().toISOString().slice(0, 10)
   return date > today ? today : date
 }
@@ -207,7 +257,7 @@ function fromGoodreads(record) {
     // Lido sem data no Goodreads: usa o dia em que foi adicionado.
     readDate: status === 'read' ? notFuture(cleanDate(record['Date Read']) || added) : null,
     startedAt: status === 'reading' ? notFuture(added) : null,
-    pubDate: cleanYear(record['Year Published']) || cleanYear(record['Original Publication Year']),
+    pubDate: pubDateInRange(cleanYear(record['Year Published'])) || pubDateInRange(cleanYear(record['Original Publication Year'])),
     pages: cleanPages(record['Number of Pages']),
     series,
     seriesIndex,
@@ -228,7 +278,7 @@ function fromLibrishelf(record) {
     status,
     readDate: status === 'read' || record.read_date ? notFuture(cleanDate(record.read_date)) : null,
     startedAt: status === 'reading' ? notFuture(cleanDate(record.started_at)) : null,
-    pubDate: cleanDate(record.publication_date),
+    pubDate: pubDateInRange(cleanDate(record.publication_date)),
     // Releituras (CSV novo); sem a coluna, a data de leitura de sempre
     readDates: status === 'read' || record.read_date || record.read_dates
       ? uniqueDates([...splitList(record.read_dates, ';').map(cleanDate), cleanDate(record.read_date)])

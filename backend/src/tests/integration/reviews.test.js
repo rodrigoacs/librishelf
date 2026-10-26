@@ -5,6 +5,7 @@ import { testOutbox } from '../../services/mailService.js'
 import { confirmEmail } from '../helpers/confirmEmail.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
+import { signId } from '../../utils/signedToken.js'
 
 const tokens = {}
 const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
@@ -29,6 +30,8 @@ const publicBook = (owner, id, viewer) => {
 }
 const community = (user, id) => request(app).get(`/community/books/${id}`).set(auth(user)).then(res => res.body)
 const report = (user, id, body) => request(app).post(`/reviews/${id}/report`).set(auth(user)).send(body)
+// Contas criadas há mais de 7 dias (só elas contam para ocultar sozinho)
+const backdate = names => db.query("UPDATE librishelf.users SET created_at = now() - interval '8 days' WHERE name = ANY($1)", [names])
 const waitMail = async () => { for (let i = 0; i < 50 && !testOutbox().length; i++) await new Promise(r => setTimeout(r, 20)) }
 
 const ids = {}
@@ -56,7 +59,7 @@ describe('Escrever', () => {
     expect(long.body).toMatchObject({ code: 'REVIEW_TOO_LONG', params: { max: 5000 } })
     expect((await putReview('ana', ids.ana, { body: 'ok', visibility: 'todos' })).statusCode).toBe(400)
     expect((await putReview('ana', ids.ana, { body: 'ok', hasSpoiler: 'sim' })).statusCode).toBe(400)
-    expect((await putReview('bia', ids.ana, { body: 'ok' })).statusCode).toBe(403)
+    expect((await putReview('bia', ids.ana, { body: 'ok' })).statusCode).toBe(404)
   })
 
   it('cria e altera (uma por livro); o dono lê a sua', async () => {
@@ -127,6 +130,17 @@ describe('Curtir', () => {
     expect((await request(app).post(`/reviews/${reviewId}/like`)).statusCode).toBe(401)
   })
 
+  it('sem e-mail confirmado não curte (descurtir pode)', async () => {
+    const reviewId = (await publicBook('ana', ids.ana)).review.id
+    await request(app).post(`/reviews/${reviewId}/like`).set(auth('bia'))
+    await db.query("UPDATE librishelf.users SET email_verified_at = NULL WHERE name = 'bia'")
+    const res = await request(app).post(`/reviews/${reviewId}/like`).set(auth('bia'))
+    expect(res.statusCode).toBe(403)
+    expect(res.body.code).toBe('EMAIL_NOT_VERIFIED_REVIEWS')
+    expect((await request(app).delete(`/reviews/${reviewId}/like`).set(auth('bia'))).body).toEqual({ liked: false, likeCount: 0 })
+    await confirmEmail('bia')
+  })
+
   it('bloqueio esconde e impede curtir', async () => {
     const reviewId = (await publicBook('ana', ids.ana)).review.id
     await request(app).post('/social/blocks/eva').set(auth('ana'))
@@ -142,6 +156,14 @@ describe('Denunciar e moderar', () => {
 
   beforeAll(async () => {
     reviewId = (await publicBook('ana', ids.ana)).review.id
+  })
+
+  it('sem e-mail confirmado não denuncia', async () => {
+    await db.query("UPDATE librishelf.users SET email_verified_at = NULL WHERE name = 'davi'")
+    const res = await report('davi', reviewId, { reason: 'spam' })
+    expect(res.statusCode).toBe(403)
+    expect(res.body.code).toBe('EMAIL_NOT_VERIFIED_REVIEWS')
+    await confirmEmail('davi')
   })
 
   it('valida o motivo; denúncia vai por e-mail com link de moderação; uma por pessoa', async () => {
@@ -160,8 +182,15 @@ describe('Denunciar e moderar', () => {
     expect((await report('davi', reviewId, { reason: 'spam' })).body.duplicate).toBe(true)
   })
 
-  it('três pessoas denunciando: some até a revisão; o dono vê "oculta"', async () => {
+  it('denúncias de contas novas não ocultam sozinhas', async () => {
     await report('caio', reviewId, { reason: 'offensive' })
+    const { rows: [counts] } = await db.query('SELECT count(*)::int AS n FROM librishelf.review_reports WHERE review_id = $1', [reviewId])
+    expect(counts.n).toBe(2)
+    expect((await publicBook('ana', ids.ana)).review).not.toBeNull()
+  })
+
+  it('três pessoas (contas confirmadas com mais de 7 dias) denunciando: some até a revisão; o dono vê "oculta"', async () => {
+    await backdate(['davi', 'caio', 'bia'])
     await report('bia', reviewId, { reason: 'other' })
     expect((await publicBook('ana', ids.ana)).review).toBeNull()
     expect((await community('bia', ids.bia)).reviews).toEqual([])
@@ -176,6 +205,12 @@ describe('Denunciar e moderar', () => {
     const view = (await request(app).get(`/moderation/review?token=${encodeURIComponent(moderationToken)}`)).body
     expect(view.review).toMatchObject({ id: reviewId, hidden: true, hiddenReason: 'reports' })
     expect(view.reports).toHaveLength(3)
+    // O link pode ser encaminhado: não mostra quem denunciou
+    expect(view.reports.every(item => item.reporter === undefined)).toBe(true)
+    // Link sem prazo (formato antigo) ou vencido não vale
+    for (const token of [signId('moderate:review', reviewId), signId('moderate:review', reviewId, { ttlDays: -1 })]) {
+      expect((await request(app).get(`/moderation/review?token=${encodeURIComponent(token)}`)).body.code).toBe('MODERATION_TOKEN_INVALID')
+    }
 
     const kept = (await request(app).post(`/moderation/review/show?token=${encodeURIComponent(moderationToken)}`)).body
     expect(kept.review.hidden).toBe(false)

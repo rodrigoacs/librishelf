@@ -19,6 +19,6 @@ describe('CORS', () => {
     const res = await request(app).get('/ping').set('Origin', 'https://site-malicioso.com')
 
     expect(res.statusCode).toBe(403)
-    expect(res.body.status).toBe('error')
+    expect(res.body.code).toBe('CORS_ORIGIN')
   })
 })

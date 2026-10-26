@@ -2,9 +2,12 @@ import * as dashboardRepository from '../repositories/dashboardRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { httpError } from '../utils/httpError.js'
 
-/** Ano do painel (gráfico mensal e meta). Padrão: o ano atual. */
+/**
+ * Ano do painel (gráfico mensal e meta). O app sempre manda o ano do
+ * aparelho; sem ele (clientes antigos), o ano atual do servidor (UTC).
+ */
 function normalizeYear(value) {
-  if (value === undefined || value === null || value === '') return new Date().getFullYear()
+  if (value === undefined || value === null || value === '') return new Date().getUTCFullYear()
   const year = Number(value)
   if (!Number.isInteger(year) || year < 1900 || year > 2200) {
     throw httpError("Ano inválido: use um ano com 4 dígitos.", STATUS.BAD_REQUEST, 'YEAR_INVALID')

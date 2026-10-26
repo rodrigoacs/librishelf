@@ -118,6 +118,9 @@ export async function feed(viewerId, page) {
       type: row.type,
       reread: Boolean(row.reread),
       at: row.at,
+      // Leitura: o dia escolhido ('YYYY-MM-DD'), para agrupar sem o fuso
+      // mover a leitura para a véspera (at é meia-noite UTC e só ordena)
+      ...(row.day ? { date: row.day } : {}),
       username: row.username,
       isPublic: row.is_public,
       bookId: row.book_id,

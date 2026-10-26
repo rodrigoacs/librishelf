@@ -12,12 +12,12 @@ import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail } from './email
 import * as followEmailService from './followEmailService.js'
 import { httpError } from '../utils/httpError.js'
 import { isReservedUsername } from '../utils/reservedNames.js'
+import { isValidEmail, normalizeEmail } from '../utils/email.js'
+import { sessionKey } from '../utils/keys.js'
 
-const SECRET_KEY = process.env.SECRET_KEY
 const TOKEN_TTL = '7d'
 const BCRYPT_ROUNDS = 10
 const UNIQUE_VIOLATION = '23505'
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MAX_USERNAME_LENGTH = 50
 // Mesmo formato aceito pela rota pública /u/:username no frontend.
 const USERNAME_PATTERN = /^[\p{L}\p{N}._-]+$/u
@@ -53,8 +53,16 @@ async function consumeLinkToken(raw, purpose) {
   return tokenRepository.consumeToken(hashToken(raw), purpose)
 }
 
+/**
+ * Token da sessão (cookie httpOnly). O jti identifica esta sessão: "Sair"
+ * guarda o jti em revoked_sessions e o middleware passa a recusá-lo.
+ */
 function issueToken(user) {
-  return jwt.sign({ id: user.id, username: user.name }, SECRET_KEY, { expiresIn: TOKEN_TTL })
+  return jwt.sign(
+    { id: user.id, username: user.name },
+    sessionKey(),
+    { expiresIn: TOKEN_TTL, algorithm: 'HS256', jwtid: crypto.randomBytes(16).toString('base64url') }
+  )
 }
 
 function toProfile(user) {
@@ -92,7 +100,8 @@ async function loginUser(username, password) {
     throw httpError('Informe usuário e senha.', STATUS.BAD_REQUEST, 'CREDENTIALS_REQUIRED')
   }
 
-  const user = await authRepository.getUserByUsername(username.trim())
+  // Usuário ou e-mail, sem diferenciar maiúsculas (como o cadastro)
+  const user = await authRepository.getUserByLogin(username.trim())
 
   const isPasswordValid = await bcrypt.compare(password, user?.password_hash || DUMMY_HASH)
 
@@ -124,7 +133,7 @@ async function registerUser(username, password, email, locale) {
   }
 
   const cleanUsername = username.trim()
-  const cleanEmail = email.trim()
+  const cleanEmail = normalizeEmail(email)
 
   if (cleanUsername.length > MAX_USERNAME_LENGTH) {
     throw httpError(`O usuário pode ter no máximo ${MAX_USERNAME_LENGTH} caracteres.`, STATUS.BAD_REQUEST, 'USERNAME_TOO_LONG', { max: MAX_USERNAME_LENGTH })
@@ -140,7 +149,7 @@ async function registerUser(username, password, email, locale) {
     throw httpError('Este nome de usuário é reservado. Escolha outro.', STATUS.BAD_REQUEST, 'USERNAME_RESERVED')
   }
 
-  if (!EMAIL_PATTERN.test(cleanEmail)) {
+  if (!isValidEmail(cleanEmail)) {
     throw httpError('E-mail inválido.', STATUS.BAD_REQUEST, 'EMAIL_INVALID')
   }
 
@@ -149,8 +158,8 @@ async function registerUser(username, password, email, locale) {
     throw httpError(passwordCheck.reason, STATUS.BAD_REQUEST, passwordCheck.code, passwordCheck.params)
   }
 
-  const existingUser = await authRepository.getUserByUsername(cleanUsername)
-  if (existingUser) {
+  // "Demo" e "demo" são o mesmo nome (índice único em lower(name), migration 015)
+  if (await authRepository.isNameTaken(cleanUsername, 0)) {
     throw httpError('Este nome de usuário já está em uso.', STATUS.CONFLICT, 'USERNAME_TAKEN')
   }
 
@@ -160,8 +169,9 @@ async function registerUser(username, password, email, locale) {
   try {
     created = await authRepository.createUser(cleanUsername, hashedPassword, cleanEmail)
   } catch (err) {
-    // Duas requisições simultâneas passam pela checagem acima; a constraint
-    // UNIQUE do banco é quem decide, e a violação vira 409 em vez de 500.
+    // Duas requisições simultâneas passam pela checagem acima; os índices
+    // únicos do banco (lower(name), lower(email)) decidem, e a violação vira
+    // 409 em vez de 500. E-mail repetido também chega aqui.
     if (err.code === UNIQUE_VIOLATION) {
       throw httpError('Usuário ou e-mail já em uso.', STATUS.CONFLICT, 'USERNAME_OR_EMAIL_TAKEN')
     }
@@ -215,11 +225,11 @@ async function verifyEmail(token) {
  * para não revelar quais e-mails estão cadastrados.
  */
 async function requestPasswordReset(email, locale) {
-  if (!isNonEmptyString(email) || !EMAIL_PATTERN.test(email.trim())) {
+  if (!isNonEmptyString(email) || !isValidEmail(normalizeEmail(email))) {
     throw httpError('E-mail inválido.', STATUS.BAD_REQUEST, 'EMAIL_INVALID')
   }
 
-  const user = await authRepository.getUserByEmail(email.trim())
+  const user = await authRepository.getUserByEmail(normalizeEmail(email))
   if (!user) {
     logger.info('Recuperação de senha para e-mail sem conta')
     return
@@ -370,14 +380,14 @@ function maskEmail(email) {
 async function changeEmail(userId, password, newEmail, locale) {
   await verifyCurrentPassword(userId, password)
 
-  const email = typeof newEmail === 'string' ? newEmail.trim() : ''
-  if (!EMAIL_PATTERN.test(email) || email.length > 254) {
+  const email = normalizeEmail(newEmail)
+  if (!isValidEmail(email)) {
     throw httpError('E-mail inválido.', STATUS.BAD_REQUEST, 'EMAIL_INVALID')
   }
 
   const current = await authRepository.getUserById(userId)
   if (!current) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
-  if (current.email.toLowerCase() === email.toLowerCase()) {
+  if (current.email.toLowerCase() === email) {
     throw httpError('Este já é o seu e-mail.', STATUS.BAD_REQUEST, 'EMAIL_SAME')
   }
   if (await authRepository.isEmailTaken(email, userId)) {

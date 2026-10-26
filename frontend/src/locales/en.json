@@ -20,7 +20,8 @@
     "pending_requests": "{n} follow request | {n} follow requests",
     "lists": "Lists",
     "admin": "Admin",
-    "adminRole": "Admin"
+    "adminRole": "Admin",
+    "logoutPending": "You're signed out on this device. Without a connection the session is still open on the server: it will be closed as soon as the app is back online."
   },
   "common": {
     "save": "Save",
@@ -531,7 +532,7 @@
         "paragraphs": [
           "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
           "Content you add: your books and their details (title, authors, publisher, ISBN, series, tags, dates, ratings, reading status, reading history and progress, and goals), personal notes and the covers you upload. Personal notes are yours only: they never appear in your public library.",
-          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts. We also keep the date and time of your last sign-in and last visit, to know how many accounts are in use."
+          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts. We also keep the date and time of your last sign-in and last visit, to know how many accounts are in use. When you sign out, we keep an identifier of that session until it expires (at most 7 days), only so it can no longer be used. Server logs do not keep your email address: for emails we send, only the domain (such as gmail.com)."
         ]
       },
       {
@@ -564,7 +565,7 @@
         "title": "Reviews",
         "paragraphs": [
           "Unlike notes, which are only yours, a review is meant to be read by others. You choose who can read it: everyone who sees your public library (and, if you take part in the community, other readers of the same book) or only your approved followers. With a private library, nobody sees it.",
-          "Signed-in readers can like and report reviews. The author doesn't find out who reported. A report (reason, details and who sent it) goes to Librishelf moderation, which may hide the review; after several reports it is hidden automatically until it's reviewed.",
+          "Signed-in readers with a confirmed email can like and report reviews. The author doesn't find out who reported. A report (reason, details and who sent it) goes to Librishelf moderation, which may hide the review; the link moderation gets by email is valid for 30 days and doesn't show who reported. After reports from several confirmed accounts that are more than a week old, the review is hidden automatically until it's reviewed.",
           "You can edit or delete your review at any time. It is included when you download your data and is deleted along with the book or the account."
         ]
       },
@@ -596,7 +597,7 @@
         "paragraphs": [
           "We only use one essential cookie, which keeps you signed in. It isn't used for tracking or advertising.",
           "Your theme and language preferences are saved only in your browser.",
-          "So the app can open without internet, your browser keeps the last version of the screens you saw (such as your library and the books you opened), the covers and your username. This stays on this device only and is deleted when you sign out."
+          "So the app can open without internet, your browser keeps the last version of the screens you saw (such as your library and the books you opened), the covers and your username. This stays on this device only, is kept for up to 7 days after the app last reached the server and is deleted when you sign out. If you sign out without internet, the app remembers it and closes the session on the server as soon as the connection is back."
         ]
       },
       {
@@ -609,7 +610,7 @@
       {
         "title": "Your rights (LGPD)",
         "paragraphs": [
-          "You can view, correct, download a copy of or delete your data at any time, all from the app: in Account → Your data you download everything as JSON or CSV, and deleting your account erases everything right away. For any other request, contact us below."
+          "You can view, correct, download a copy of or delete your data at any time, all from the app: in Account → Your data you download everything as JSON (account, books, readings, reviews, lists, goals, who you follow and who follows you, follow requests, blocks, likes and reports you made, and your email notification settings) or just your books as CSV, and deleting your account erases everything right away. For any other request, contact us below."
         ]
       },
       {
@@ -1092,7 +1093,10 @@
       "description": "description",
       "ranked": "numbered",
       "bookId": "book",
-      "bookIds": "book order"
+      "bookIds": "book order",
+      "publisher": "publisher",
+      "startedOn": "start date",
+      "finishedOn": "end date"
     },
     "OPENLIBRARY_UNAVAILABLE": "Open Library is unavailable right now. Try again later.",
     "SEARCH_QUERY_INVALID": "Type {min} to {max} characters to search.",
@@ -1111,7 +1115,7 @@
     "REVIEW_TOO_LONG": "A review can have at most {max} characters.",
     "REVIEW_OWN": "You can't like or report your own review.",
     "REVIEW_NOT_FOUND": "Review not found.",
-    "MODERATION_TOKEN_INVALID": "This moderation link is invalid.",
+    "MODERATION_TOKEN_INVALID": "This moderation link is invalid or has expired. Open the review from the admin area.",
     "RATE_LIMIT_REPORTS": "Too many reports in a short time. Try again later.",
     "LIST_NOT_FOUND": "List not found.",
     "LIST_TITLE_REQUIRED": "Give the list a name.",
@@ -1128,7 +1132,17 @@
     "ACCOUNT_ALREADY_SUSPENDED": "This account is already suspended.",
     "ACCOUNT_NOT_SUSPENDED": "This account isn't suspended.",
     "EMAIL_ALREADY_VERIFIED": "This account has already confirmed its email.",
-    "EMAIL_TEST_FAILED": "The mail server refused to send: {message}"
+    "EMAIL_TEST_FAILED": "The mail server refused to send: {message}",
+    "EMAIL_NOT_VERIFIED_REVIEWS": "Confirm your email to like or report reviews.",
+    "LOGOUT_FAILED": "Couldn't sign out right now. Try again.",
+    "CORS_ORIGIN": "Origin not allowed.",
+    "DATE_OUT_OF_RANGE": "Date out of range in {field}: use a year from {min} to {max}.",
+    "FIELD_TOO_LONG": "The {field} field can have at most {max} characters.",
+    "JSON_INVALID": "The data sent was incomplete. Try again.",
+    "PAYLOAD_TOO_LARGE": "The data sent is too large.",
+    "ENCODING_UNSUPPORTED": "Unsupported request encoding.",
+    "ROUTE_NOT_FOUND": "Address not found.",
+    "UPLOAD_INVALID": "Invalid upload. Check the files and try again."
   },
   "block": {
     "block": "Block {name}",

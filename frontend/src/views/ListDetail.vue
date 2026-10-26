@@ -66,6 +66,7 @@
               :label="t('lists.addBooks')"
               icon="pi pi-plus"
               class="btn-primary"
+              :disabled="isOffline"
               @click="pickerOpen = true"
             />
             <AppButton
@@ -122,13 +123,14 @@
             :label="t('lists.addBooks')"
             icon="pi pi-plus"
             class="btn-primary"
+            :disabled="isOffline"
             @click="pickerOpen = true"
           />
         </div>
 
         <template v-else>
           <p
-            v-if="list.items.length > 1"
+            v-if="list.items.length > 1 && !isOffline"
             :id="`${uid}-help`"
             class="reorder-help"
           >
@@ -155,7 +157,7 @@
               >
                 <template #handle>
                   <button
-                    v-if="list.items.length > 1"
+                    v-if="list.items.length > 1 && !isOffline"
                     type="button"
                     class="drag-handle"
                     :aria-label="t('lists.moveBook', { title: item.title, n: index + 1, total: list.items.length })"
@@ -170,6 +172,7 @@
                 </template>
                 <template #actions>
                   <IconButton
+                    v-if="!isOffline"
                     icon="pi pi-times"
                     :label="t('lists.removeBook', { title: item.title })"
                     class="remove-btn"
@@ -226,6 +229,7 @@ import ListFormDialog from '../components/list/ListFormDialog.vue'
 import AddBooksDialog from '../components/list/AddBooksDialog.vue'
 import api from '../services/api.js'
 import { currentUser } from '../services/session.js'
+import { isOffline } from '../services/network.js'
 import { useToast } from '../services/toast.js'
 import { useConfirm } from '../services/confirm.js'
 import { shareLink } from '../utils/share.js'
@@ -234,6 +238,7 @@ import { slugify } from '../utils/slug.js'
 /**
  * Uma lista do dono: arrastar pela alça (mouse ou toque) ou usar as setas
  * com a alça em foco para mudar a ordem; a ordem é salva logo em seguida.
+ * Sem conexão (modo leitura) não há alças, "×", adicionar, editar nem excluir.
  */
 const { t } = useI18n()
 const route = useRoute()
@@ -263,12 +268,12 @@ const publicUrl = computed(() => {
 })
 
 const moreItems = computed(() => [
-  { label: t('lists.edit'), icon: 'pi pi-pencil', command: () => { formOpen.value = true } },
+  { label: t('lists.edit'), icon: 'pi pi-pencil', disabled: isOffline.value, command: () => { formOpen.value = true } },
   ...(list.value?.isPublic && currentUser.value?.isPublic
     ? [{ label: t('lists.viewPublic'), icon: 'pi pi-external-link', command: () => window.open(publicUrl.value, '_blank', 'noopener') }]
     : []),
   { separator: true },
-  { label: t('lists.delete'), icon: 'pi pi-trash', command: askDelete }
+  { label: t('lists.delete'), icon: 'pi pi-trash', disabled: isOffline.value, command: askDelete }
 ])
 
 async function load() {

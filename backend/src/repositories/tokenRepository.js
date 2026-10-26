@@ -24,7 +24,9 @@ export async function consumeToken(tokenHash, purpose) {
 }
 
 /** Limpeza: links vencidos ou usados há mais de 7 dias. */
+/** Links de e-mail velhos e sessões encerradas já vencidas. → linhas removidas */
 export async function deleteStale() {
   const { rowCount } = await db.query(q.DELETE_STALE)
-  return rowCount
+  const { rowCount: revoked } = await db.query(q.DELETE_EXPIRED_REVOCATIONS)
+  return rowCount + revoked
 }

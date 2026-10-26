@@ -2,8 +2,10 @@
  * Feed da comunidade agrupado por dia, juntando eventos repetidos:
  * "@lalmeida adicionou 4 livros" em vez de quatro linhas iguais.
  *
- * events: [{ type, at, username, isPublic, bookId, title, authors, rating }]
- * (do mais novo para o mais antigo, como vem de GET /social/feed)
+ * events: [{ type, at, date?, username, isPublic, bookId, title, authors, rating }]
+ * (do mais novo para o mais antigo, como vem de GET /social/feed). Leituras
+ * trazem `date` ('YYYY-MM-DD', o dia escolhido): agrupam por ele, não por
+ * `at` (meia-noite UTC, que no Brasil cai na véspera).
  *
  * Devolve [{ key, date, items: [{ key, type, username, isPublic, at, books: [evento…] }] }]
  */
@@ -11,12 +13,19 @@ function dayKey(date) {
   return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
 }
 
+/** Dia local do evento: `date` (leituras) ou o instante `at` no fuso do aparelho. */
+function eventDay(event) {
+  const match = typeof event.date === 'string' && event.date.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  return new Date(event.at)
+}
+
 export function groupFeed(events = []) {
   const days = []
   const byDay = new Map()
 
   for (const event of events) {
-    const at = new Date(event.at)
+    const at = eventDay(event)
     if (Number.isNaN(at.getTime())) continue
     const key = dayKey(at)
 

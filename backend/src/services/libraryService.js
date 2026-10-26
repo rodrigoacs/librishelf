@@ -5,15 +5,21 @@ import { deleteBookCover } from '../utils/imageProcessor.js'
 import logger from '../utils/logger.js'
 import { parseNameList, parseTagList, nameListError } from '../utils/nameList.js'
 import { httpError } from '../utils/httpError.js'
-import { normalizeDate, normalizeReadDate, normalizeRating, normalizePageCount } from '../utils/bookFields.js'
+import {
+  normalizeDate, normalizeReadDate, normalizeRating, normalizePageCount, checkLength,
+  MAX_TITLE_LENGTH, MAX_ISBN_LENGTH, MAX_PUBLISHER_LENGTH
+} from '../utils/bookFields.js'
 import * as readingService from './readingService.js'
 
 const READ_YEAR_PATTERN = /^\d{4}$/
 
 function normalizeIsbn(isbn) {
-  if (typeof isbn !== 'string') return isbn ?? null
-  const trimmed = isbn.trim()
-  return trimmed ? trimmed : null
+  if (isbn === undefined || isbn === null) return null
+  if (typeof isbn !== 'string' && typeof isbn !== 'number') {
+    throw httpError("Campo 'isbn' inválido.", STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: 'isbn' })
+  }
+  const trimmed = String(isbn).trim()
+  return trimmed ? checkLength(trimmed, 'isbn', MAX_ISBN_LENGTH) : null
 }
 
 const READ_STATES = ['all', 'read', 'unread', 'true', 'false', 'reading', 'want']
@@ -172,9 +178,10 @@ function normalizeBookInput(raw = {}) {
   if (listError) throw httpError(listError.message, STATUS.BAD_REQUEST, listError.code, listError.params)
 
   const publisher = typeof raw.publisher === 'string' ? raw.publisher.trim() : ''
+  checkLength(publisher, 'publisher', MAX_PUBLISHER_LENGTH)
 
   return {
-    title: requireText(raw.title, 'Title'),
+    title: checkLength(requireText(raw.title, 'Title'), 'title', MAX_TITLE_LENGTH),
     authors,
     tags,
     publisher: publisher || null,
@@ -244,15 +251,15 @@ async function updateBookDetails(bookId, userId, rawBook) {
   return true
 }
 
+/**
+ * Livro de outra pessoa responde igual a livro inexistente (404): 403 aqui
+ * confirmaria que o id existe (o GET já respondia 404).
+ */
 async function checkBookOwnership(bookId, userId) {
   const bookOwner = await libraryRepository.getBookOwner(bookId)
 
-  if (!bookOwner) {
+  if (!bookOwner || bookOwner.user_id !== userId) {
     throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
-  }
-
-  if (bookOwner.user_id !== userId) {
-    throw httpError('Sem permissão.', STATUS.FORBIDDEN, 'PERMISSION_DENIED')
   }
 
   return true
@@ -319,7 +326,7 @@ async function batchUpdate(userId, body = {}) {
 
   const owned = await libraryRepository.filterOwnedIds(userId, ids)
   if (owned.length !== ids.length) {
-    throw httpError('Alguns livros não foram encontrados na sua biblioteca.', STATUS.FORBIDDEN, 'BATCH_BOOKS_NOT_FOUND')
+    throw httpError('Alguns livros não foram encontrados na sua biblioteca.', STATUS.NOT_FOUND, 'BATCH_BOOKS_NOT_FOUND')
   }
 
   if (action === 'status') {

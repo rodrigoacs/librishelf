@@ -20,10 +20,10 @@ import { normalizeReadDate, normalizeRating, normalizePageCount, today, MAX_PAGE
 
 const READING_STATUSES = ['none', 'want', 'reading', 'read']
 
+// Livro de outra pessoa = livro inexistente (404), como no GET
 async function ensureOwner(bookId, userId) {
   const owner = await libraryRepository.getBookOwner(bookId)
-  if (!owner) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
-  if (owner.user_id !== userId) throw httpError('Sem permissão.', STATUS.FORBIDDEN, 'PERMISSION_DENIED')
+  if (!owner || owner.user_id !== userId) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
 }
 
 function checkOrder(startedOn, finishedOn) {
@@ -72,11 +72,14 @@ async function finish(client, bookId, date, { keepExisting }) {
   }
 }
 
-/** Começa (ou ajusta o início da) leitura em andamento. */
-async function start(client, bookId, date) {
+/**
+ * Começa (ou ajusta o início da) leitura em andamento. keepExisting (ação em
+ * lote): quem já está lendo continua com o início que tinha.
+ */
+async function start(client, bookId, date, { keepExisting = false } = {}) {
   const open = await readingRepository.getOpen(client, bookId)
   if (open) {
-    if (date && open.started_on !== date) await readingRepository.update(client, open.id, { startedOn: date })
+    if (date && !keepExisting && open.started_on !== date) await readingRepository.update(client, open.id, { startedOn: date })
     return
   }
   await readingRepository.insert(client, bookId, { startedOn: date || today() })
@@ -84,7 +87,7 @@ async function start(client, bookId, date) {
 
 async function applyStatus(client, bookId, status, date, { keepExisting }) {
   if (status === 'read') return finish(client, bookId, date || today(), { keepExisting })
-  if (status === 'reading') return start(client, bookId, date)
+  if (status === 'reading') return start(client, bookId, date, { keepExisting })
   await readingRepository.removeAll(client, bookId)
   await readingRepository.setWant(client, bookId, status === 'want')
 }
@@ -142,14 +145,18 @@ export async function markUnread(bookId, userId) {
   })
 }
 
-/** Ações em lote (ids já conferidos). "Lido" não muda a data de quem já leu. */
+/**
+ * Ações em lote (ids já conferidos). "Lido" não muda a data de quem já leu;
+ * "Lendo" não muda o início de quem já está lendo. A data é a que o app
+ * manda (dia local da pessoa); sem ela, hoje no servidor.
+ */
 export async function batchStatus(ids, rawStatus, rawDate) {
   const status = parseStatus(rawStatus)
   const date = normalizeReadDate(rawDate) ?? today()
   return readingRepository.withTransaction(async client => {
     for (const id of ids) {
       await readingRepository.lockBook(client, id)
-      await applyStatus(client, id, status, status === 'reading' ? null : date, { keepExisting: true })
+      await applyStatus(client, id, status, date, { keepExisting: true })
     }
     return ids.length
   })

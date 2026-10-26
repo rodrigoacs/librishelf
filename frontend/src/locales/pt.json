@@ -58,7 +58,8 @@
     "pending_requests": "{n} pedido para seguir | {n} pedidos para seguir",
     "lists": "Listas",
     "admin": "Administração",
-    "adminRole": "Administração"
+    "adminRole": "Administração",
+    "logoutPending": "Você saiu neste aparelho. Sem conexão, a sessão continua aberta no servidor: ela será encerrada assim que o app voltar a ter internet."
   },
   "common": {
     "save": "Salvar",
@@ -531,7 +532,7 @@
         "paragraphs": [
           "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
           "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, série, tags, datas, notas, status de leitura, histórico de leituras e progresso, e metas), anotações pessoais e as capas que você enviar. As anotações pessoais são só suas: nunca aparecem na biblioteca pública.",
-          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login. Também guardamos a data e a hora do seu último login e do seu último acesso, para sabermos quantas contas estão em uso."
+          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login. Também guardamos a data e a hora do seu último login e do seu último acesso, para sabermos quantas contas estão em uso. Quando você sai da conta, guardamos um identificador daquela sessão até ela vencer (no máximo 7 dias), só para que ela não possa mais ser usada. Os registros do servidor não guardam o seu e-mail: dos e-mails enviados, só o domínio (como gmail.com)."
         ]
       },
       {
@@ -564,7 +565,7 @@
         "title": "Resenhas",
         "paragraphs": [
           "Diferente das anotações, que são só suas, a resenha é feita para outros lerem. Você escolhe quem pode ler: todos que veem sua biblioteca pública (e, se você participa da comunidade, outros leitores do mesmo livro) ou só seus seguidores aprovados. Com a biblioteca privada, ninguém vê.",
-          "Leitores logados podem curtir e denunciar resenhas. Quem escreveu não fica sabendo quem denunciou. A denúncia (motivo, detalhes e quem enviou) vai para a moderação do Librishelf, que pode ocultar a resenha; com várias denúncias ela é ocultada automaticamente até a revisão.",
+          "Leitores logados, com o e-mail confirmado, podem curtir e denunciar resenhas. Quem escreveu não fica sabendo quem denunciou. A denúncia (motivo, detalhes e quem enviou) vai para a moderação do Librishelf, que pode ocultar a resenha; o link que a moderação recebe por e-mail vale por 30 dias e não mostra quem denunciou. Com denúncias de várias contas confirmadas há mais de uma semana, a resenha é ocultada automaticamente até a revisão.",
           "Você pode editar ou apagar sua resenha a qualquer momento. Ela também vai junto quando você baixa seus dados e é apagada com o livro ou com a conta."
         ]
       },
@@ -596,7 +597,7 @@
         "paragraphs": [
           "Usamos apenas um cookie essencial, que mantém você conectado. Ele não serve para rastreamento nem publicidade.",
           "Suas preferências de tema e idioma ficam salvas só no seu navegador.",
-          "Para o app abrir sem internet, o navegador guarda a última versão das telas que você viu (como sua biblioteca e os livros que abriu), as capas e seu nome de usuário. Isso fica só neste aparelho e é apagado quando você sai da conta."
+          "Para o app abrir sem internet, o navegador guarda a última versão das telas que você viu (como sua biblioteca e os livros que abriu), as capas e seu nome de usuário. Isso fica só neste aparelho, vale por até 7 dias depois da última vez que o app falou com o servidor e é apagado quando você sai da conta. Se você sair sem internet, o app guarda o pedido e encerra a sessão no servidor assim que a conexão voltar."
         ]
       },
       {
@@ -609,7 +610,7 @@
       {
         "title": "Seus direitos (LGPD)",
         "paragraphs": [
-          "Você pode consultar, corrigir, baixar uma cópia ou excluir seus dados a qualquer momento, tudo pelo próprio app: em Conta → Seus dados você baixa tudo em JSON ou CSV, e a exclusão da conta apaga tudo na hora. Para qualquer outro pedido, fale com a gente pelo contato abaixo."
+          "Você pode consultar, corrigir, baixar uma cópia ou excluir seus dados a qualquer momento, tudo pelo próprio app: em Conta → Seus dados você baixa tudo em JSON (conta, livros, leituras, resenhas, listas, metas, quem você segue e quem segue você, pedidos para seguir, bloqueios, curtidas e denúncias que você fez e as preferências de aviso por e-mail) ou só os livros em CSV, e a exclusão da conta apaga tudo na hora. Para qualquer outro pedido, fale com a gente pelo contato abaixo."
         ]
       },
       {
@@ -1092,7 +1093,10 @@
       "description": "descrição",
       "ranked": "numerada",
       "bookId": "livro",
-      "bookIds": "ordem dos livros"
+      "bookIds": "ordem dos livros",
+      "publisher": "editora",
+      "startedOn": "data de início",
+      "finishedOn": "data de fim"
     },
     "OPENLIBRARY_UNAVAILABLE": "O Open Library está indisponível agora. Tente de novo mais tarde.",
     "SEARCH_QUERY_INVALID": "Digite de {min} a {max} caracteres para buscar.",
@@ -1111,7 +1115,7 @@
     "REVIEW_TOO_LONG": "A resenha pode ter no máximo {max} caracteres.",
     "REVIEW_OWN": "Você não pode curtir nem denunciar a sua própria resenha.",
     "REVIEW_NOT_FOUND": "Resenha não encontrada.",
-    "MODERATION_TOKEN_INVALID": "Este link de moderação é inválido.",
+    "MODERATION_TOKEN_INVALID": "Este link de moderação é inválido ou venceu. Abra a resenha pela área administrativa.",
     "RATE_LIMIT_REPORTS": "Muitas denúncias em pouco tempo. Tente novamente mais tarde.",
     "LIST_NOT_FOUND": "Lista não encontrada.",
     "LIST_TITLE_REQUIRED": "Dê um nome para a lista.",
@@ -1128,7 +1132,17 @@
     "ACCOUNT_ALREADY_SUSPENDED": "Esta conta já está suspensa.",
     "ACCOUNT_NOT_SUSPENDED": "Esta conta não está suspensa.",
     "EMAIL_ALREADY_VERIFIED": "Esta conta já confirmou o e-mail.",
-    "EMAIL_TEST_FAILED": "O servidor de e-mail recusou o envio: {message}"
+    "EMAIL_TEST_FAILED": "O servidor de e-mail recusou o envio: {message}",
+    "EMAIL_NOT_VERIFIED_REVIEWS": "Confirme seu e-mail para curtir ou denunciar resenhas.",
+    "LOGOUT_FAILED": "Não foi possível sair agora. Tente de novo.",
+    "CORS_ORIGIN": "Origem não permitida.",
+    "DATE_OUT_OF_RANGE": "Data fora do intervalo em {field}: use um ano de {min} a {max}.",
+    "FIELD_TOO_LONG": "O campo {field} pode ter no máximo {max} caracteres.",
+    "JSON_INVALID": "Os dados enviados estão incompletos. Tente de novo.",
+    "PAYLOAD_TOO_LARGE": "Os dados enviados são grandes demais.",
+    "ENCODING_UNSUPPORTED": "Formato de envio não suportado.",
+    "ROUTE_NOT_FOUND": "Endereço não encontrado.",
+    "UPLOAD_INVALID": "Envio inválido. Confira os arquivos e tente de novo."
   },
   "block": {
     "block": "Bloquear {name}",

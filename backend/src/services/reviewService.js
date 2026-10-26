@@ -1,6 +1,7 @@
 import { db } from '../database/connection.js'
 import { REVIEW_QUERIES as q } from '../database/queries.js'
 import * as libraryRepository from '../repositories/libraryRepository.js'
+import * as authRepository from '../repositories/authRepository.js'
 import { sendMail } from './mailService.js'
 import { reviewReportEmail } from './emailTemplates.js'
 import { signId, readSignedId } from '../utils/signedToken.js'
@@ -17,13 +18,17 @@ import logger from '../utils/logger.js'
  *   visibility "followers" → só seguidores aprovados
  *   has_spoiler            → o texto aparece borrado até a pessoa pedir
  *
- * Curtidas e denúncias são de leitores logados que podem ver a resenha.
- * Denúncia vai por e-mail para ADMIN_EMAIL (com link para revisar); com
- * AUTO_HIDE_REPORTS pessoas diferentes denunciando, ela some até a revisão.
+ * Curtidas e denúncias são de leitores logados, com e-mail confirmado, que
+ * podem ver a resenha. Denúncia vai por e-mail para ADMIN_EMAIL (com link
+ * para revisar, válido por MODERATION_LINK_DAYS); com AUTO_HIDE_REPORTS
+ * pessoas diferentes denunciando — contas confirmadas criadas há mais de
+ * AUTO_HIDE_MIN_ACCOUNT_DAYS — ela some até a revisão.
  */
 export const MAX_BODY = 5000
 const MAX_NOTE = 500
 const AUTO_HIDE_REPORTS = 3
+const AUTO_HIDE_MIN_ACCOUNT_DAYS = 7
+const MODERATION_LINK_DAYS = 30
 const PROFILE_LIMIT = 6
 const COMMUNITY_LIMIT = 20
 const VISIBILITIES = ['public', 'followers']
@@ -55,8 +60,8 @@ export function toApi(row, { own = false } = {}) {
 
 async function ensureOwner(bookId, userId) {
   const owner = await libraryRepository.getBookOwner(bookId)
-  if (!owner) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
-  if (owner.user_id !== userId) throw httpError('Sem permissão.', STATUS.FORBIDDEN, 'PERMISSION_DENIED')
+  // Livro de outra pessoa = livro inexistente (404), como no GET
+  if (!owner || owner.user_id !== userId) throw httpError('Livro não encontrado.', STATUS.NOT_FOUND, 'BOOK_NOT_FOUND')
 }
 
 function reviewInput(body = {}) {
@@ -119,6 +124,14 @@ export async function forSameBook(bookId, viewerId) {
   return rows.map(row => toApi(row))
 }
 
+/** Curtir e denunciar exigem e-mail confirmado (o mesmo critério de seguir). */
+async function ensureVerified(viewerId) {
+  const viewer = await authRepository.getUserById(viewerId)
+  if (!viewer?.email_verified_at) {
+    throw httpError('Confirme seu e-mail para curtir ou denunciar resenhas.', STATUS.FORBIDDEN, 'EMAIL_NOT_VERIFIED_REVIEWS')
+  }
+}
+
 async function visibleTo(reviewId, viewerId) {
   const { rows } = await db.query(q.VISIBLE_TO, [reviewId, viewerId])
   if (!rows[0]) throw httpError('Resenha não encontrada.', STATUS.NOT_FOUND, 'REVIEW_NOT_FOUND')
@@ -126,6 +139,8 @@ async function visibleTo(reviewId, viewerId) {
 }
 
 export async function like(reviewId, viewerId, liked) {
+  // Descurtir sempre pode (desfaz o que já estava feito)
+  if (liked) await ensureVerified(viewerId)
   const review = await visibleTo(reviewId, viewerId)
   if (review.user_id === viewerId) throw httpError('Você não pode curtir a sua própria resenha.', STATUS.BAD_REQUEST, 'REVIEW_OWN')
   await db.query(liked ? q.LIKE : q.UNLIKE, [reviewId, viewerId])
@@ -136,11 +151,13 @@ export async function like(reviewId, viewerId, liked) {
 // ------------------------------------------------------------------ denúncias
 
 export function moderationLink(reviewId) {
-  return `${siteUrl()}/moderation?token=${encodeURIComponent(signId(MODERATION_PURPOSE, reviewId))}`
+  const token = signId(MODERATION_PURPOSE, reviewId, { ttlDays: MODERATION_LINK_DAYS })
+  return `${siteUrl()}/moderation?token=${encodeURIComponent(token)}`
 }
 
 /** POST /reviews/:id/report — { reason, note? }. Uma denúncia por pessoa. */
 export async function report(reviewId, viewerId, raw = {}) {
+  await ensureVerified(viewerId)
   const review = await visibleTo(reviewId, viewerId)
   if (review.user_id === viewerId) throw httpError('Você não pode denunciar a sua própria resenha.', STATUS.BAD_REQUEST, 'REVIEW_OWN')
   if (!REASONS.includes(raw.reason)) {
@@ -151,9 +168,9 @@ export async function report(reviewId, viewerId, raw = {}) {
   const { rows } = await db.query(q.REPORT, [reviewId, viewerId, raw.reason, note || null])
   if (rows.length === 0) return { reported: true, duplicate: true }
 
-  const { rows: [{ total }] } = await db.query(q.OPEN_REPORTS, [reviewId])
+  const { rows: [{ total, trusted }] } = await db.query(q.OPEN_REPORTS, [reviewId, AUTO_HIDE_MIN_ACCOUNT_DAYS])
   let hidden = false
-  if (total >= AUTO_HIDE_REPORTS) {
+  if (trusted >= AUTO_HIDE_REPORTS) {
     hidden = (await db.query(q.AUTO_HIDE, [reviewId])).rows.length > 0
   }
 
@@ -191,13 +208,21 @@ async function notifyAdmin(reviewId, { reason, note, total, hidden }) {
 // ------------------------------------------------------------------ moderação
 
 function moderationId(token) {
-  const id = readSignedId(MODERATION_PURPOSE, token)
-  if (!id) throw httpError('Link de moderação inválido.', STATUS.BAD_REQUEST, 'MODERATION_TOKEN_INVALID')
+  const id = readSignedId(MODERATION_PURPOSE, token, { requireExpiry: true })
+  if (!id) throw httpError('Link de moderação inválido ou vencido.', STATUS.BAD_REQUEST, 'MODERATION_TOKEN_INVALID')
   return id
 }
 
+/**
+ * Pelo link do e-mail (sem login): as denúncias vão sem o nome de quem
+ * denunciou — o link pode ser encaminhado. A área administrativa mostra.
+ */
 export async function forModeration(token) {
-  return forModerationById(moderationId(token))
+  return withoutReporters(await forModerationById(moderationId(token)))
+}
+
+function withoutReporters(result) {
+  return { ...result, reports: result.reports.map(({ reporter, ...report }) => report) }
 }
 
 /** Resenha com as denúncias, para revisar (link do e-mail ou área administrativa). */
@@ -213,7 +238,7 @@ export async function forModerationById(id) {
 
 /** Ocultar (hide = true) ou manter visível (hide = false, zera as denúncias). */
 export async function moderate(token, hide) {
-  return moderateById(moderationId(token), hide)
+  return withoutReporters(await moderateById(moderationId(token), hide))
 }
 
 export async function moderateById(id, hide) {

@@ -4,10 +4,12 @@ import * as dataService from '../services/dataService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimiter } from '../middlewares/rateLimiter.js'
-import { authenticateToken } from '../middlewares/auth.js'
+import { authenticateToken, revokeSession } from '../middlewares/auth.js'
 import { AUTH_COOKIE_NAME, authCookieOptions } from '../config/cookieOptions.js'
 import { clearUnlockCookie } from '../middlewares/admin.js'
 import { track } from '../utils/metrics.js'
+import logger from '../utils/logger.js'
+import { errorBody, httpError } from '../utils/httpError.js'
 
 const router = express.Router()
 
@@ -25,7 +27,17 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 })
 
-router.post('/logout', (req, res) => {
+// Encerra a sessão no servidor (o token deixa de valer mesmo se alguém tiver
+// copiado o cookie) e apaga os cookies. Sem sessão válida, só apaga.
+router.post('/logout', async (req, res) => {
+  try {
+    await revokeSession(req)
+  } catch (error) {
+    // Sem o banco a sessão não foi encerrada: o cookie fica para o app tentar
+    // de novo (ele guarda o pedido de saída e repete quando puder).
+    logger.error('Falha ao encerrar sessão no logout', { message: error.message })
+    return res.status(503).json(errorBody('Não foi possível sair agora. Tente de novo.', 'LOGOUT_FAILED'))
+  }
   res.clearCookie(AUTH_COOKIE_NAME, { ...authCookieOptions, maxAge: undefined })
   clearUnlockCookie(res)
   res.status(STATUS.OK).json({ message: 'Logout realizado com sucesso' })
@@ -35,11 +47,7 @@ router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await authService.getUserProfile(req.user.id)
 
-    if (!user) {
-      const error = new Error('Usuário não encontrado.')
-      error.status = STATUS.NOT_FOUND
-      throw error
-    }
+    if (!user) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
 
     res.status(STATUS.OK).json({ user })
   } catch (error) {
@@ -52,9 +60,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     const { username, password, email, locale } = req.body ?? {}
 
     if (!username || !password || !email) {
-      const error = new Error('Informe usuário, senha e e-mail.')
-      error.status = STATUS.BAD_REQUEST
-      throw error
+      throw httpError('Informe usuário, senha e e-mail.', STATUS.BAD_REQUEST, 'REGISTER_FIELDS_REQUIRED')
     }
 
     const user = await authService.registerUser(username, password, email, locale)

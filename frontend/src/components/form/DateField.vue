@@ -9,6 +9,7 @@
         type="date"
         class="field-control native"
         :value="toApiDate(modelValue) || ''"
+        :min="minDate ? toApiDate(minDate) : undefined"
         :max="maxDate ? toApiDate(maxDate) : undefined"
         :aria-invalid="error ? 'true' : undefined"
         :aria-describedby="describedBy"
@@ -53,6 +54,7 @@ const props = defineProps({
   id: { type: String, required: true },
   label: { type: String, required: true },
   error: { type: String, default: '' },
+  minDate: { type: Date, default: null },
   maxDate: { type: Date, default: null }
 })
 

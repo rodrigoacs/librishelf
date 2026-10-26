@@ -331,7 +331,7 @@ async function insertUsers(users) {
       INSERT INTO librishelf.users (name, email, password_hash, is_public, show_in_community, show_activity, created_at, email_verified_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id
-    `, [user.name, `${user.name}@exemplo.test`, hash, user.isPublic, user.showInCommunity, user.showActivity,
+    `, [user.name, `${user.name.toLowerCase()}@exemplo.test`, hash, user.isPublic, user.showInCommunity, user.showActivity,
       new Date(user.createdAt), user.unverified ? null : new Date(user.createdAt)])
     user.id = row.id
   }

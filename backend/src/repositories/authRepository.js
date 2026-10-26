@@ -1,8 +1,8 @@
 import { db } from "../database/connection.js"
 import { AUTH_QUERIES as q } from "../database/queries.js"
 
-async function getUserByUsername(username) {
-  const result = await db.query(q.FIND_USER_BY_USERNAME, [username])
+async function getUserByLogin(login) {
+  const result = await db.query(q.FIND_USER_FOR_LOGIN, [login])
   return result.rows[0] || null
 }
 
@@ -26,9 +26,14 @@ async function markSeen(id) {
   await db.query(q.MARK_SEEN, [id])
 }
 
-async function getSessionById(id) {
-  const result = await db.query(q.FIND_SESSION_BY_ID, [id])
+async function getSessionById(id, jti) {
+  const result = await db.query(q.FIND_SESSION_BY_ID, [id, jti])
   return result.rows[0] || null
+}
+
+/** expiresAt: o exp do JWT (segundos Unix). */
+async function revokeSession(jti, userId, expiresAt) {
+  await db.query(q.REVOKE_SESSION, [jti, userId, expiresAt])
 }
 
 async function getPasswordHashById(id) {
@@ -108,7 +113,7 @@ export {
   isNameTaken,
   updateEmail,
   updateName,
-  getUserByUsername,
+  getUserByLogin,
   getUserByName,
   markLogin,
   markSeen,
@@ -116,6 +121,7 @@ export {
   getUserByEmail,
   markEmailVerified,
   getSessionById,
+  revokeSession,
   getPasswordHashById,
   createUser,
   updatePassword,

@@ -3,6 +3,7 @@ import { LIBRARY_QUERIES as q, META_QUERIES } from "../database/queries.js"
 import { resolvePagination } from "../utils/pagination.js"
 import STATUS from "../utils/statusCodes.js"
 import { parseNameList } from "../utils/nameList.js"
+import { httpError } from "../utils/httpError.js"
 
 const UNIQUE_VIOLATION = '23505'
 const ISBN_CONSTRAINT = 'idx_books_isbn_user'
@@ -11,9 +12,7 @@ const ISBN_CONSTRAINT = 'idx_books_isbn_user'
 // 23505 (ex.: tag repetida no mesmo livro) aparecia como conflito de ISBN.
 function toIsbnConflictError(err) {
   if (err.code === UNIQUE_VIOLATION && err.constraint === ISBN_CONSTRAINT) {
-    const conflictError = new Error('Você já tem um livro com este ISBN.')
-    conflictError.status = STATUS.CONFLICT
-    return conflictError
+    return httpError('Você já tem um livro com este ISBN.', STATUS.CONFLICT, 'ISBN_TAKEN')
   }
 
   return err

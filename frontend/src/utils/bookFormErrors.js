@@ -43,14 +43,26 @@ const CODE_FIELDS = {
 }
 
 // params.field da API → campo do formulário
-const PARAM_FIELDS = { title: 'title', isbn: 'isbn', pubDate: 'pubDate', publicationDate: 'pubDate', readDate: 'statusDate', startedAt: 'statusDate', series: 'series', notes: 'notes' }
+const PARAM_FIELDS = {
+  title: 'title',
+  isbn: 'isbn',
+  publisher: 'publisher',
+  pubDate: 'pubDate',
+  publicationDate: 'pubDate',
+  readDate: 'statusDate',
+  startedAt: 'statusDate',
+  startedOn: 'statusDate',
+  finishedOn: 'statusDate',
+  series: 'series',
+  notes: 'notes'
+}
 
 function fieldFromCode(error) {
   const code = error?.code
   if (!code) return null
   if (CODE_FIELDS[code]) return CODE_FIELDS[code]
   const param = error.body?.params?.field
-  if (['FIELD_REQUIRED', 'FIELD_INVALID', 'DATE_INVALID'].includes(code) && PARAM_FIELDS[param]) return PARAM_FIELDS[param]
+  if (['FIELD_REQUIRED', 'FIELD_INVALID', 'FIELD_TOO_LONG', 'DATE_INVALID', 'DATE_OUT_OF_RANGE'].includes(code) && PARAM_FIELDS[param]) return PARAM_FIELDS[param]
   return null
 }
 

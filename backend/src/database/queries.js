@@ -160,17 +160,19 @@ export const LIBRARY_QUERIES = {
 }
 
 export const AUTH_QUERIES = {
-  FIND_USER_BY_USERNAME: `
+  // Login: com "@" é e-mail, sem é nome de usuário (o nome não aceita "@").
+  // Sem diferenciar maiúsculas; os índices únicos em lower() garantem uma conta só.
+  FIND_USER_FOR_LOGIN: `
     SELECT id, name, password_hash, email, is_active
     FROM librishelf.users
-    WHERE name = $1 OR email = $1
+    WHERE CASE WHEN strpos($1, '@') > 0 THEN lower(email) = lower($1) ELSE lower(name) = lower($1) END
   `,
-  // Só por nome (sem e-mail), usado nas rotas públicas. Conta suspensa
-  // responde como inexistente.
+  // Só por nome (sem e-mail), usado nas rotas públicas: /u/Demo e /u/demo são
+  // a mesma biblioteca. Conta suspensa responde como inexistente.
   FIND_USER_BY_NAME: `
     SELECT id, name, is_public, show_in_community, show_activity, allow_indexing, is_active
     FROM librishelf.users
-    WHERE name = $1 AND is_active IS NOT FALSE
+    WHERE lower(name) = lower($1) AND is_active IS NOT FALSE
   `,
   FIND_USER_BY_ID: `
     SELECT id, name, email, role, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at
@@ -202,11 +204,18 @@ export const AUTH_QUERIES = {
     WHERE id = $1
     RETURNING email_verified_at
   `,
-  // Usado pelo middleware de auth a cada requisição autenticada.
+  // Usado pelo middleware de auth a cada requisição autenticada ($2 = jti).
   FIND_SESSION_BY_ID: `
-    SELECT id, role, password_changed_at
-    FROM librishelf.users
-    WHERE id = $1 AND is_active IS NOT FALSE
+    SELECT u.id, u.role, u.password_changed_at,
+           EXISTS (SELECT 1 FROM librishelf.revoked_sessions s WHERE s.jti = $2) AS revoked
+    FROM librishelf.users u
+    WHERE u.id = $1 AND u.is_active IS NOT FALSE
+  `,
+  // "Sair": o token vale até exp; até lá o jti fica na lista de encerrados.
+  REVOKE_SESSION: `
+    INSERT INTO librishelf.revoked_sessions (jti, user_id, expires_at)
+    VALUES ($1, $2, to_timestamp($3))
+    ON CONFLICT (jti) DO NOTHING
   `,
   FIND_PASSWORD_HASH_BY_ID: `
     SELECT id, password_hash
@@ -558,8 +567,44 @@ export const DATA_QUERIES = {
   EXPORT_USER: `
     SELECT name, email, to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at,
            is_public, show_in_community, show_activity, allow_indexing, follow_emails,
-           email_verified_at IS NOT NULL AS email_verified
+           email_locale,
+           email_verified_at IS NOT NULL AS email_verified,
+           last_login_at, last_seen_at
     FROM librishelf.users WHERE id = $1
+  `,
+  // Exportação (LGPD, art. 18, II e V): vínculos e ações da pessoa. Os outros
+  // aparecem só pelo nome de usuário; conta excluída some pelo ON DELETE CASCADE.
+  EXPORT_FOLLOWS: `
+    SELECT CASE WHEN f.follower_id = $1 THEN 'following' ELSE 'follower' END AS direction,
+           f.status, u.name AS username, f.created_at, f.accepted_at
+    FROM librishelf.follows f
+    JOIN librishelf.users u ON u.id = CASE WHEN f.follower_id = $1 THEN f.followee_id ELSE f.follower_id END
+    WHERE f.follower_id = $1 OR f.followee_id = $1
+    ORDER BY f.created_at, u.name
+  `,
+  EXPORT_BLOCKS: `
+    SELECT u.name AS username, b.created_at
+    FROM librishelf.blocks b JOIN librishelf.users u ON u.id = b.blocked_id
+    WHERE b.blocker_id = $1
+    ORDER BY b.created_at, u.name
+  `,
+  EXPORT_LIKES: `
+    SELECT a.name AS author, bk.title AS book, l.created_at
+    FROM librishelf.review_likes l
+    JOIN librishelf.reviews r ON r.id = l.review_id
+    JOIN librishelf.users a ON a.id = r.user_id
+    JOIN librishelf.books bk ON bk.id = r.book_id
+    WHERE l.user_id = $1
+    ORDER BY l.created_at
+  `,
+  EXPORT_REPORTS: `
+    SELECT a.name AS author, bk.title AS book, rr.reason, rr.note, rr.created_at
+    FROM librishelf.review_reports rr
+    JOIN librishelf.reviews r ON r.id = rr.review_id
+    JOIN librishelf.users a ON a.id = r.user_id
+    JOIN librishelf.books bk ON bk.id = r.book_id
+    WHERE rr.reporter_id = $1
+    ORDER BY rr.created_at
   `,
   EXPORT_GOALS: 'SELECT year, target FROM librishelf.reading_goals WHERE user_id = $1 ORDER BY year',
   EXPORT_BOOKS: `
@@ -733,17 +778,19 @@ export const SOCIAL_QUERIES = {
       WHERE f.follower_id = $1 AND f.status = 'accepted' AND u.show_activity AND u.is_active IS NOT FALSE
     ),
     events AS (
-      SELECT 'read' AS type, (r.finished_on::timestamp AT TIME ZONE 'UTC') AS at, b.id AS book_id, b.user_id, b.title, b.rating,
+      -- day: a data da leitura como foi escolhida (sem fuso); at só ordena
+      SELECT 'read' AS type, (r.finished_on::timestamp AT TIME ZONE 'UTC') AS at, to_char(r.finished_on, 'YYYY-MM-DD') AS day,
+             b.id AS book_id, b.user_id, b.title, b.rating,
              (row_number() OVER (PARTITION BY r.book_id ORDER BY r.finished_on, r.id) > 1) AS reread
       FROM librishelf.readings r
       JOIN librishelf.books b ON b.id = r.book_id
       WHERE b.user_id IN (SELECT followee_id FROM followed) AND r.finished_on IS NOT NULL
       UNION ALL
-      SELECT 'added', b.created_at, b.id, b.user_id, b.title, b.rating, false
+      SELECT 'added', b.created_at, NULL, b.id, b.user_id, b.title, b.rating, false
       FROM librishelf.books b
       WHERE b.user_id IN (SELECT followee_id FROM followed)
     )
-    SELECT e.type, e.at, e.book_id, e.title, e.rating, e.reread, u.name AS username, u.is_public,
+    SELECT e.type, e.at, e.day, e.book_id, e.title, e.rating, e.reread, u.name AS username, u.is_public,
            ${AUTHORS_OF('e.book_id')} AS authors
     FROM events e
     JOIN librishelf.users u ON u.id = e.user_id
@@ -768,7 +815,9 @@ export const TOKEN_QUERIES = {
   DELETE_STALE: `
     DELETE FROM librishelf.user_tokens
     WHERE expires_at < now() - interval '7 days' OR used_at < now() - interval '7 days'
-  `
+  `,
+  // Sessões encerradas cujo token já venceu (o JWT vencido é recusado sozinho)
+  DELETE_EXPIRED_REVOCATIONS: 'DELETE FROM librishelf.revoked_sessions WHERE expires_at < now()'
 }
 
 // Prévia das bibliotecas públicas (Open Graph, metaService)
@@ -937,11 +986,20 @@ export const REVIEW_QUERIES = {
     ON CONFLICT (review_id, reporter_id) DO NOTHING
     RETURNING id
   `,
-  // Denúncias desde a última revisão (quem revisou e manteve "zera a conta")
+  // Denúncias desde a última revisão (quem revisou e manteve "zera a conta").
+  // total: todas; trusted: só as que contam para ocultar sozinho — de contas
+  // com e-mail confirmado, ativas e criadas há mais de $2 dias (três contas
+  // descartáveis não escondem a resenha de ninguém).
   OPEN_REPORTS: `
-    SELECT count(DISTINCT rr.reporter_id)::int AS total
+    SELECT count(DISTINCT rr.reporter_id)::int AS total,
+           count(DISTINCT rr.reporter_id) FILTER (
+             WHERE u.email_verified_at IS NOT NULL
+               AND u.is_active IS NOT FALSE
+               AND u.created_at < now() - make_interval(days => $2)
+           )::int AS trusted
     FROM librishelf.review_reports rr
     JOIN librishelf.reviews r ON r.id = rr.review_id
+    JOIN librishelf.users u ON u.id = rr.reporter_id
     WHERE rr.review_id = $1 AND (r.reviewed_at IS NULL OR rr.created_at > r.reviewed_at)
   `,
   AUTO_HIDE: `

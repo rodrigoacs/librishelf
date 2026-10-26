@@ -10,12 +10,14 @@
         :id="`${idPrefix}-start`"
         v-model="startedOn"
         :label="t('history.startedOn')"
+        :min-date="READ_MIN_DATE"
         :max-date="today"
       />
       <DateField
         :id="`${idPrefix}-end`"
         v-model="finishedOn"
         :label="requireFinish || reading?.finishedOn ? t('history.finishedOnLabel') : t('history.finishedOnOptional')"
+        :min-date="READ_MIN_DATE"
         :max-date="today"
         :error="localError"
       />
@@ -59,7 +61,7 @@ import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
 import DateField from '../form/DateField.vue'
 import StarRating from '../StarRating.vue'
-import { fromApiDate, toApiDate } from '../../utils/dates.js'
+import { fromApiDate, toApiDate, READ_MIN_DATE } from '../../utils/dates.js'
 
 /** Datas e nota de uma leitura (editar uma do histórico ou registrar uma antiga). */
 const props = defineProps({

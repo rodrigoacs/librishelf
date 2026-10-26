@@ -140,7 +140,8 @@ describe('Ações em lote', () => {
   it('não mexe em livro de outra pessoa (nem nos próprios, na mesma chamada)', async () => {
     const alien = await addBook({ title: 'Alheio', authors: 'Z' }, otherAuth)
     const res = await batch({ ids: [ids[0], alien], action: 'delete' })
-    expect(res.statusCode).toBe(403)
+    expect(res.statusCode).toBe(404)
+    expect(res.body.code).toBe('BATCH_BOOKS_NOT_FOUND')
     expect((await getBook(ids[0])).title).toBe('Lote A')
   })
 

@@ -92,7 +92,7 @@ describe('Status de leitura', () => {
     expect((await setStatus(a, 'talvez')).statusCode).toBe(400)
     expect((await setStatus(a, 'reading', 'ontem')).statusCode).toBe(400)
     expect((await setStatus(a, 'read', '2999-01-01')).statusCode).toBe(400)
-    expect((await setStatus(a, 'want', null, otherAuth)).statusCode).toBe(403)
+    expect((await setStatus(a, 'want', null, otherAuth)).statusCode).toBe(404)
     expect((await request(app).get('/library').set(auth).query({ readState: 'qualquer' })).statusCode).toBe(400)
   })
 })

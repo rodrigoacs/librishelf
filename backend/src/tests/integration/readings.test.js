@@ -189,8 +189,8 @@ describe('Releituras', () => {
   it('páginas inválidas e livro de outra pessoa', async () => {
     const res = await request(app).post('/library').set(auth('lia')).field({ title: 'X', authors: 'A', pageCount: '0' })
     expect(res.body.code).toBe('PAGE_COUNT_INVALID')
-    expect((await request(app).get(`/library/${bookId}/readings`).set(auth('teo'))).statusCode).toBe(403)
-    expect((await progress('teo', bookId, { page: 1 })).statusCode).toBe(403)
+    expect((await request(app).get(`/library/${bookId}/readings`).set(auth('teo'))).statusCode).toBe(404)
+    expect((await progress('teo', bookId, { page: 1 })).statusCode).toBe(404)
     expect((await request(app).get('/library/999999/readings').set(auth('lia'))).statusCode).toBe(404)
   })
 })

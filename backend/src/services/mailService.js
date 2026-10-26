@@ -9,7 +9,12 @@ import { count, failure, succeeded } from '../utils/metrics.js'
  *   SMTP_USER, SMTP_PASS, MAIL_FROM ("Librishelf <noreply@librishelf.com>")
  *
  * Sem SMTP_HOST (desenvolvimento): o e-mail não sai; o conteúdo vai para o log,
- * para dar para copiar o link. Nos testes, fica guardado em memória.
+ * para dar para copiar o link. Em produção, sem SMTP, só um aviso — o texto
+ * leva links de redefinir senha, que no log dariam a conta a quem lê o log.
+ * Nos testes, fica guardado em memória.
+ *
+ * O log nunca leva o endereço de quem recebe (dado pessoal; a política de
+ * privacidade só fala de IP): só o domínio.
  */
 
 const outbox = []
@@ -33,6 +38,13 @@ function getTransport() {
     })
   }
   return transport
+}
+
+/** joao@gmail.com → gmail.com (para o log) */
+export function recipientDomain(to) {
+  const address = String(to ?? '')
+  const at = address.lastIndexOf('@')
+  return at === -1 ? null : address.slice(at + 1).replace(/[>\s].*$/, '').toLowerCase()
 }
 
 function sender() {
@@ -61,7 +73,11 @@ export async function sendMail({ to, subject, text, html, unsubscribeUrl }) {
   }
 
   if (!smtpConfigured()) {
-    logger.warn('SMTP não configurado: e-mail não enviado (conteúdo abaixo)', { to, subject, text })
+    if (process.env.NODE_ENV === 'production') {
+      logger.warn('SMTP não configurado: e-mail não enviado', { toDomain: recipientDomain(to) })
+    } else {
+      logger.warn('SMTP não configurado: e-mail não enviado (conteúdo abaixo, só fora de produção)', { to, subject, text })
+    }
     return
   }
 
@@ -75,7 +91,7 @@ export async function sendMail({ to, subject, text, html, unsubscribeUrl }) {
   }
   count('email.sent')
   succeeded('email')
-  logger.info('E-mail enviado', { to, subject, messageId: info.messageId })
+  logger.info('E-mail enviado', { toDomain: recipientDomain(to), messageId: info.messageId })
 }
 
 /** Para a área administrativa: o que está configurado (sem senha nem usuário). */

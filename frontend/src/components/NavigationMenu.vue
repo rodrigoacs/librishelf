@@ -176,13 +176,14 @@ import { useI18n } from 'vue-i18n'
 import AppButton from './ui/AppButton.vue'
 import ThemeSwitcher from './ThemeSwitcher.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
-import api from '../services/api.js'
-import { currentUser, clearSession } from '../services/session.js'
+import { currentUser, logout } from '../services/session.js'
+import { useToast } from '../services/toast.js'
 import { pendingRequests, refreshPendingRequests, resetPendingRequests } from '../services/social.js'
 
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
+const toast = useToast()
 
 const mobileMenuOpen = ref(false)
 const menuButton = ref(null)
@@ -208,15 +209,12 @@ function truncateName(name) {
 }
 
 async function handleLogout() {
-  try {
-    await api.logout()
-  } catch {
-    // mesmo se a chamada falhar, seguimos limpando o estado local e redirecionando
-  } finally {
-    clearSession()
-    resetPendingRequests()
-    router.push('/login')
-  }
+  // Mesmo se a chamada falhar, este aparelho sai; o pedido fica guardado e
+  // o servidor encerra a sessão quando o app voltar a ter conexão.
+  const { serverDone } = await logout()
+  resetPendingRequests()
+  if (!serverDone) toast.add({ severity: 'warn', detail: t('menu.logoutPending'), life: 10000 })
+  router.push('/login')
 }
 
 watch(() => route.path, () => {

@@ -21,10 +21,14 @@ import logger from '../utils/logger.js'
 import { track } from '../utils/metrics.js'
 
 const MAX_UPLOAD_MB = 10
+// Campos de texto do multipart (título, autores, anotação...): o padrão do
+// multer é 1 MB por campo; o maior campo válido (anotação de 5.000
+// caracteres, 30 autores de 200) cabe com folga em 100 KB.
+const FIELD_LIMITS = { fieldSize: 100 * 1024, fields: 50, fieldNameSize: 100 }
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 1024 * 1024 * MAX_UPLOAD_MB, files: 1 },
+  limits: { fileSize: 1024 * 1024 * MAX_UPLOAD_MB, files: 1, ...FIELD_LIMITS },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
       return cb(new Error('Apenas arquivos de imagem são permitidos.'))
@@ -38,7 +42,7 @@ const MAX_CSV_MB = 5
 // Importação: um CSV (Goodreads ou Librishelf), em memória.
 const csvUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 1024 * 1024 * MAX_CSV_MB, files: 1 },
+  limits: { fileSize: 1024 * 1024 * MAX_CSV_MB, files: 1, ...FIELD_LIMITS },
   fileFilter: (req, file, cb) => {
     const isCsv = /\.csv$/i.test(file.originalname) || /csv|excel|text\/plain/.test(file.mimetype)
     if (!isCsv) return cb(new Error('Envie um arquivo .csv.'))
@@ -55,6 +59,13 @@ function handleUpload(uploadMiddleware) {
           return res.status(STATUS.BAD_REQUEST).json(isImport
             ? errorBody(`O arquivo pode ter no máximo ${MAX_CSV_MB} MB.`, 'FILE_TOO_LARGE', { max: MAX_CSV_MB })
             : errorBody(`A imagem pode ter no máximo ${MAX_UPLOAD_MB} MB.`, 'IMAGE_TOO_LARGE', { max: MAX_UPLOAD_MB }))
+        }
+        if (err.code === 'LIMIT_FIELD_VALUE') {
+          return res.status(STATUS.BAD_REQUEST).json(errorBody(`O campo '${err.field}' é grande demais.`, 'FIELD_TOO_LONG', { field: err.field, max: FIELD_LIMITS.fieldSize }))
+        }
+        // Outros limites do multer (campos demais, arquivo a mais...)
+        if (err instanceof multer.MulterError) {
+          return res.status(STATUS.BAD_REQUEST).json(errorBody('Envio inválido.', 'UPLOAD_INVALID'))
         }
         return res.status(STATUS.BAD_REQUEST).json(errorBody(err.message, isImport ? 'CSV_REQUIRED' : 'IMAGE_ONLY'))
       }

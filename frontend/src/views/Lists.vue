@@ -11,6 +11,7 @@
           :label="t('lists.new')"
           icon="pi pi-plus"
           class="btn-primary"
+          :disabled="isOffline"
           @click="formOpen = true"
         />
       </div>
@@ -55,6 +56,7 @@
           :label="t('lists.createFirst')"
           icon="pi pi-plus"
           class="btn-primary"
+          :disabled="isOffline"
           @click="formOpen = true"
         />
       </div>
@@ -92,6 +94,7 @@ import AppSkeleton from '../components/ui/AppSkeleton.vue'
 import ListCard from '../components/list/ListCard.vue'
 import ListFormDialog from '../components/list/ListFormDialog.vue'
 import api from '../services/api.js'
+import { isOffline } from '../services/network.js'
 
 /** Minhas listas ("Melhores de 2026", "Para as férias"…). */
 const { t } = useI18n()

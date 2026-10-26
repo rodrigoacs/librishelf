@@ -6,6 +6,7 @@ import { clearDatabase, closeDatabase } from '../../utils/db.js'
 import { testOutbox } from '../../services/mailService.js'
 import { parseCsv } from '../../utils/csv.js'
 import { splitSeries } from '../../services/dataService.js'
+import { db } from '../../database/connection.js'
 
 const PASSWORD = 'senha12345'
 let auth
@@ -130,6 +131,37 @@ describe('Exportar', () => {
 
   it('exige login', async () => {
     expect((await request(app).get('/auth/me/export')).statusCode).toBe(401)
+  })
+
+  it('JSON version 2: seguir, pedidos, bloqueios, curtidas, denúncias e avisos (LGPD)', async () => {
+    const amiga = await signUp('amiga')
+    await signUp('pedinte')
+    await signUp('chato')
+    const id = async name => (await db.query('SELECT id FROM librishelf.users WHERE name = $1', [name])).rows[0].id
+    const [leitorId, amigaId, pedinteId, chatoId] = await Promise.all(['leitor', 'amiga', 'pedinte', 'chato'].map(id))
+
+    await db.query("INSERT INTO librishelf.follows (follower_id, followee_id, status, accepted_at) VALUES ($1, $2, 'accepted', now())", [leitorId, amigaId])
+    await db.query("INSERT INTO librishelf.follows (follower_id, followee_id, status) VALUES ($1, $2, 'pending')", [pedinteId, leitorId])
+    await db.query('INSERT INTO librishelf.blocks (blocker_id, blocked_id) VALUES ($1, $2)', [leitorId, chatoId])
+    const bookId = (await request(app).post('/library').set(amiga).field({ title: 'Livro da Amiga', authors: 'Autora' })).body.bookId
+    const { rows: [review] } = await db.query("INSERT INTO librishelf.reviews (book_id, user_id, body) VALUES ($1, $2, 'Gostei') RETURNING id", [bookId, amigaId])
+    await db.query('INSERT INTO librishelf.review_likes (review_id, user_id) VALUES ($1, $2)', [review.id, leitorId])
+    await db.query("INSERT INTO librishelf.review_reports (review_id, reporter_id, reason, note) VALUES ($1, $2, 'spoiler', 'conta o fim')", [review.id, leitorId])
+    await db.query("UPDATE librishelf.users SET follow_emails = true, email_locale = 'en' WHERE id = $1", [leitorId])
+
+    const data = (await request(app).get('/auth/me/export').set(auth)).body
+    expect(data.version).toBe(2)
+    expect(data.following).toEqual([{ username: 'amiga', since: expect.any(String) }])
+    expect(data.followers).toEqual([])
+    expect(data.requests).toEqual({ sent: [], received: [{ username: 'pedinte', requestedAt: expect.any(String) }] })
+    expect(data.blocked).toEqual([{ username: 'chato', blockedAt: expect.any(String) }])
+    expect(data.likesGiven).toEqual([{ review: { author: 'amiga', book: 'Livro da Amiga' }, likedAt: expect.any(String) }])
+    expect(data.reportsMade).toEqual([{ review: { author: 'amiga', book: 'Livro da Amiga' }, reason: 'spoiler', note: 'conta o fim', reportedAt: expect.any(String) }])
+    expect(data.notifications).toEqual({ followEmails: true, locale: 'en' })
+    expect(data.account).toHaveProperty('lastLoginAt')
+    expect(data.account).toHaveProperty('lastSeenAt')
+    // Só acréscimos: o que a version 1 tinha continua
+    expect(Object.keys(data)).toEqual(expect.arrayContaining(['account', 'readingGoals', 'books', 'lists']))
   })
 })
 

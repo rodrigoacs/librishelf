@@ -63,8 +63,7 @@ import { useToast } from '../services/toast.js'
 import AppButton from '../components/ui/AppButton.vue'
 import { useI18n } from 'vue-i18n'
 import AuthLayout from '../components/AuthLayout.vue'
-import api from '../services/api.js'
-import { loadSession } from '../services/session.js'
+import { login } from '../services/session.js'
 import { safeRedirect } from '../router/index.js'
 
 const { t } = useI18n()
@@ -85,8 +84,7 @@ async function handleLogin() {
   loading.value = true
 
   try {
-    await api.login({ username: username.value.trim(), password: password.value })
-    await loadSession({ force: true })
+    await login({ username: username.value.trim(), password: password.value })
 
     // Sem toast de boas-vindas: a tela de Início já mostra que entrou
     router.replace(safeRedirect(route.query.redirect))

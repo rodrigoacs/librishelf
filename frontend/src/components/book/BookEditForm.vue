@@ -63,6 +63,7 @@
             :label="t('bookForm.isbn')"
             inputmode="numeric"
             :error="errors.isbn"
+            maxlength="32"
             :hint="isCreate ? lookupMessage : ''"
             hint-live
             :input-attrs="isCreate ? { onKeydown: onIsbnKeydown, enterkeyhint: 'search' } : {}"
@@ -104,6 +105,7 @@
           v-model="form.title"
           :label="t('bookForm.title')"
           :error="errors.title"
+          maxlength="500"
           required
           large
         />
@@ -125,11 +127,14 @@
               v-model="form.publisher"
               :label="t('bookForm.publisher')"
               :error="errors.publisher"
+              maxlength="200"
             />
             <DateField
               :id="`${idPrefix}-pubdate`"
               v-model="form.pubdate"
               :label="t('bookForm.pubDate')"
+              :min-date="PUB_MIN_DATE"
+              :max-date="PUB_MAX_DATE"
               :error="errors.pubDate"
             />
           </div>
@@ -205,6 +210,7 @@
             :id="`${idPrefix}-status-date`"
             v-model="statusDate"
             :label="status === 'read' ? t('bookForm.readOn') : t('bookForm.startedOn')"
+            :min-date="READ_MIN_DATE"
             :max-date="today"
             :error="errors.statusDate"
           />
@@ -273,7 +279,7 @@ import IconButton from '../form/IconButton.vue'
 import BookSearch from './BookSearch.vue'
 import BarcodeScanner from './BarcodeScanner.vue'
 import { hasCamera } from '../../services/barcode.js'
-import { toApiDate } from '../../utils/dates.js'
+import { toApiDate, PUB_MIN_DATE, PUB_MAX_DATE, READ_MIN_DATE } from '../../utils/dates.js'
 import { statusOf, STATUS_OPTIONS, STATUS_ICONS } from '../../utils/readingStatus.js'
 import { validateImageFile, createPreviewHandle } from '../../utils/files.js'
 import { coverUrl } from '../../utils/covers.js'

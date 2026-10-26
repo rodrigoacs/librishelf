@@ -31,7 +31,9 @@ function validateEnv() {
     logger.warn('APP_URL não definido: os links dos e-mails vão apontar para http://localhost:5173')
   }
   if (!process.env.SMTP_HOST?.trim()) {
-    logger.warn('SMTP_HOST não definido: e-mails de senha e confirmação só aparecem no log')
+    logger.warn(process.env.NODE_ENV === 'production'
+      ? 'SMTP_HOST não definido: e-mails de senha e confirmação NÃO são enviados (nem aparecem no log)'
+      : 'SMTP_HOST não definido: e-mails de senha e confirmação só aparecem no log')
   }
 }
 

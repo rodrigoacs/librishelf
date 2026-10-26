@@ -360,8 +360,9 @@ export default {
     return client.get('/tags')
   },
 
-  getDashboardStats(year) {
-    return client.get(`/dashboard/stats${toQuery(year ? { year } : {})}`)
+  // Sem ano: o do aparelho (o servidor está em UTC; em 31/12 à noite já é o ano seguinte lá)
+  getDashboardStats(year = new Date().getFullYear()) {
+    return client.get(`/dashboard/stats${toQuery({ year })}`)
   },
 
   setReadingGoal(year, target) {
@@ -375,7 +376,7 @@ export default {
   // --- Público ---
   /** "Seu ano em livros" (retrospectiva do ano). */
   getYearInBooks(year) {
-    return client.get(`/dashboard/year/${year}`)
+    return client.get(`/dashboard/year/${year}${toQuery({ current: new Date().getFullYear() })}`)
   },
 
   getRandomCovers() {

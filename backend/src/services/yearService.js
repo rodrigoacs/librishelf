@@ -12,6 +12,17 @@ const DAY = 24 * 60 * 60 * 1000
 const TOP_RATED = 5
 const COVERS = 9
 
+/**
+ * Ano corrente da pessoa (o app manda ?current=AAAA, do relógio do aparelho):
+ * em 31/12 à noite no Brasil o servidor (UTC) já está no ano seguinte. Só
+ * vale um ano a mais ou a menos que o do servidor; fora disso, o do servidor.
+ */
+export function currentYearOf(value) {
+  const serverYear = new Date().getUTCFullYear()
+  const year = Number(value)
+  return Number.isInteger(year) && Math.abs(year - serverYear) <= 1 ? year : serverYear
+}
+
 function normalizeYear(value) {
   const year = Number(value)
   if (!Number.isInteger(year) || year < 1900 || year > 2200) {
@@ -45,7 +56,7 @@ function toBook(row) {
   }
 }
 
-export async function yearInBooks(userId, rawYear) {
+export async function yearInBooks(userId, rawYear, rawCurrentYear) {
   const year = normalizeYear(rawYear)
   const [finished, authors, tags, years, previous, goal, reviews] = await Promise.all([
     db.query(q.FINISHED, [userId, year]),
@@ -57,7 +68,7 @@ export async function yearInBooks(userId, rawYear) {
     db.query(q.REVIEWS, [userId, year])
   ])
   const rows = finished.rows
-  const currentYear = new Date().getFullYear()
+  const currentYear = currentYearOf(rawCurrentYear)
 
   const months = Array.from({ length: 12 }, () => 0)
   for (const row of rows) months[Number(isoDate(row.finished_on).slice(5, 7)) - 1]++
