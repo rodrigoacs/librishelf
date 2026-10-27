@@ -14,6 +14,7 @@
         class="stack-cover"
         :style="{ '--i': index }"
         :book-id="cover.bookId"
+        :version="cover.coverVersion"
         :title="cover.title"
         :author="cover.authors || ''"
       />

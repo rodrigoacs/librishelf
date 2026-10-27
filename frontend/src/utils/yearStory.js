@@ -53,9 +53,10 @@ function loadImage(src) {
   })
 }
 
-/** Capa enviada (AVIF, depois JPG) ou null para desenhar uma. */
-async function loadCover(bookId) {
-  const avif = coverUrl(bookId)
+/** Capa enviada (AVIF, depois JPG) ou null para desenhar uma (cover_version null = nem tenta). */
+async function loadCover(bookId, version) {
+  const avif = coverUrl(bookId, version)
+  if (!avif) return null
   return (await loadImage(avif)) || loadImage(avif.replace(/\.avif(\?.*)?$/, '.jpg'))
 }
 
@@ -155,7 +156,7 @@ export async function drawYearStory(canvas, { year, covers, text }) {
   const light = accent.map(c => Math.round(c + (255 - c) * 0.45))
 
   await loadFonts()
-  const images = await Promise.all(covers.map(cover => loadCover(cover.bookId)))
+  const images = await Promise.all(covers.map(cover => loadCover(cover.bookId, cover.coverVersion)))
 
   // Fundo: quase preto com um brilho da cor de destaque no alto
   ctx.fillStyle = '#0e0e11'

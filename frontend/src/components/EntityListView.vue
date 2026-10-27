@@ -809,7 +809,7 @@ button.entity-card {
   justify-content: center;
   border: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent);
   flex-shrink: 0;
-  color: var(--accent-color);
+  color: color-mix(in srgb, var(--accent-color) var(--tint-text), var(--text-primary));
   font-size: var(--fs-lg);
 }
 

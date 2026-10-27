@@ -30,15 +30,18 @@ const props = defineProps({
   bookId: { type: Number, required: true },
   title: { type: String, default: '' },
   author: { type: String, default: '' },
-  version: { type: Number, default: 0 }
+  // books.cover_version: número = tem capa; null = não tem (desenha sem pedir
+  // a imagem); sem o campo = tenta a imagem
+  version: { type: [Number, null], default: undefined }
 })
 
 const src = computed(() => coverUrl(props.bookId, props.version))
-const missing = ref(false)
-watch(src, () => { missing.value = false })
+const failed = ref(false)
+watch(src, () => { failed.value = false })
+const missing = computed(() => !src.value || failed.value)
 
 function onError(event) {
-  if (coverFallbackExhausted(event)) missing.value = true
+  if (coverFallbackExhausted(event)) failed.value = true
 }
 </script>
 

@@ -201,6 +201,7 @@
                 <BookCover
                   class="top-cover"
                   :book-id="book.bookId"
+                  :version="book.coverVersion"
                   :title="book.title"
                   :author="book.authors || ''"
                 />
@@ -669,6 +670,8 @@ onBeforeUnmount(() => {
 
 .hero-card:not(.main) .hero-note {
   color: var(--text-muted);
+  /* text-muted já está no limite (5,7:1); com a transparência caía para 4,1 */
+  opacity: 1;
 }
 
 /* Painéis */
@@ -911,7 +914,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--tag-color) 45%, transparent);
   background: color-mix(in srgb, var(--tag-color) 12%, transparent);
-  color: var(--tag-color);
+  color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
   font-size: var(--fs-sm);
   font-weight: 600;
 }

@@ -1,6 +1,6 @@
 import express from 'express'
 import { tokenLimiter } from '../middlewares/rateLimiter.js'
-import { readUnsubscribeToken } from '../utils/unsubscribeToken.js'
+import { readSignedId } from '../utils/signedToken.js'
 import * as followEmailService from '../services/followEmailService.js'
 import STATUS from '../utils/statusCodes.js'
 import { errorBody } from '../utils/httpError.js'
@@ -18,7 +18,7 @@ const router = express.Router()
  * link abrem URLs sozinhos): quem abre o link pelo navegador cai na página do app.
  */
 function userFromToken(req) {
-  return readUnsubscribeToken(String(req.query.token ?? req.body?.token ?? ''))
+  return readSignedId(followEmailService.UNSUBSCRIBE_PURPOSE, String(req.query.token ?? req.body?.token ?? ''))
 }
 
 function invalidToken(res) {

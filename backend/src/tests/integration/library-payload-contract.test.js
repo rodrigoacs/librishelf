@@ -1,4 +1,5 @@
 import request from 'supertest'
+import sharp from 'sharp'
 import app from '../../app.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
@@ -105,5 +106,57 @@ describe('Book payload contract (item 12 — authors/pubDate/readDate unificados
 
     const check = await request(app).get(`/library/${bookId}`).set('Authorization', `Bearer ${token}`)
     expect(check.body.read_date).toBeNull()
+  })
+})
+
+describe('cover_version no payload do livro (M8 — substitui o coverVersions local do front)', () => {
+  const auth = () => ({ Authorization: `Bearer ${token}` })
+  let image
+
+  beforeAll(async () => {
+    image = await sharp({ create: { width: 40, height: 60, channels: 3, background: { r: 20, g: 90, b: 160 } } }).jpeg().toBuffer()
+  })
+
+  it('livro sem capa: cover_version null na lista e no livro', async () => {
+    const created = await request(app).post('/library').set(auth()).field({ title: 'Sem Capa', authors: 'Autor' })
+    expect(created.statusCode).toBe(201)
+    expect(created.body).toEqual({ bookId: expect.any(Number), coverSaved: false })
+
+    const book = await request(app).get(`/library/${created.body.bookId}`).set(auth())
+    expect(book.body).toHaveProperty('cover_version', null)
+
+    const list = await request(app).get('/library').set(auth()).query({ search: 'Sem Capa' })
+    expect(list.body.result[0]).toHaveProperty('cover_version', null)
+  })
+
+  it('capa enviada no cadastro: cover_version numérico, igual na resposta, na lista e no livro', async () => {
+    const created = await request(app).post('/library').set(auth())
+      .field('title', 'Com Capa').field('authors', 'Autor')
+      .attach('coverImage', image, { filename: 'capa.jpg', contentType: 'image/jpeg' })
+    expect(created.statusCode).toBe(201)
+    expect(created.body).toEqual({ bookId: expect.any(Number), coverSaved: true, coverVersion: expect.any(Number) })
+
+    const book = await request(app).get(`/library/${created.body.bookId}`).set(auth())
+    expect(book.body.cover_version).toBe(created.body.coverVersion)
+
+    const list = await request(app).get('/library').set(auth()).query({ search: 'Com Capa' })
+    expect(list.body.result[0].cover_version).toBe(created.body.coverVersion)
+  })
+
+  it('trocar a capa devolve versão nova (maior), e o PUT devolve o livro com ela', async () => {
+    const created = await request(app).post('/library').set(auth()).field({ title: 'Troca Capa', authors: 'Autor' })
+    const id = created.body.bookId
+
+    const first = await request(app).post(`/library/${id}/cover`).set(auth())
+      .attach('coverImage', image, { filename: 'a.jpg', contentType: 'image/jpeg' })
+    expect(first.statusCode).toBe(200)
+    expect(first.body.coverVersion).toEqual(expect.any(Number))
+
+    const second = await request(app).post(`/library/${id}/cover`).set(auth())
+      .attach('coverImage', image, { filename: 'b.jpg', contentType: 'image/jpeg' })
+    expect(second.body.coverVersion).toBeGreaterThan(first.body.coverVersion)
+
+    const updated = await request(app).put(`/library/${id}`).set(auth()).send({ title: 'Troca Capa 2', authors: ['Autor'] })
+    expect(updated.body.book.cover_version).toBe(second.body.coverVersion)
   })
 })

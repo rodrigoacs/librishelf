@@ -48,6 +48,7 @@ function daysBetween(start, end) {
 function toBook(row) {
   return {
     bookId: row.book_id,
+    coverVersion: row.cover_version,
     title: row.title,
     authors: row.authors,
     rating: row.rating,
@@ -121,6 +122,6 @@ export async function yearInBooks(userId, rawYear, rawCurrentYear) {
     first: rows.length ? toBook(rows[0]) : null,
     last: rows.length > 1 ? toBook(rows[rows.length - 1]) : null,
     // Capas para a imagem: as mais bem avaliadas primeiro, sem repetir
-    covers: byRating.slice(0, COVERS).map(row => ({ bookId: row.book_id, title: row.title, authors: row.authors }))
+    covers: byRating.slice(0, COVERS).map(row => ({ bookId: row.book_id, coverVersion: row.cover_version, title: row.title, authors: row.authors }))
   }
 }

@@ -7,12 +7,40 @@ import * as reviewService from './reviewService.js'
 import * as listService from './listService.js'
 import STATUS from '../utils/statusCodes.js'
 import { httpError } from '../utils/httpError.js'
+import { createTtlCache } from '../utils/ttlCache.js'
 
 const MAX_READERS_LISTED = 20
 const FIND_LIMIT = 24
 const RECOMMENDATION_LIMIT = 6
 const ALSO_HAVE_LIMIT = 5
 const COMMON_LIMIT = 24
+
+// Classificações caras (busca de leitores, recomendações, "também têm") ficam
+// alguns minutos em memória, por usuário. O que muda na hora — privacidade,
+// bloqueio, conta ativa, "seguir", livro posto na estante — é conferido a cada
+// pedido (READERS_LIVE e SAMPLE_BOOKS), por isso guardamos uma folga além do
+// limite. Nos testes começa desligado (ttlMs = 0), como os rate limits.
+const TEST = process.env.NODE_ENV === 'test'
+export const rankingCache = {
+  readers: createTtlCache({ ttlMs: TEST ? 0 : 60 * 1000 }),
+  books: createTtlCache({ ttlMs: TEST ? 0 : 5 * 60 * 1000 })
+}
+const SPARE = 2
+
+/** Esquece as classificações de um usuário (estante mudou, por exemplo). */
+export function forgetRankings(userId) {
+  rankingCache.readers.forget(`${userId}:`)
+  rankingCache.books.forget(`${userId}:`)
+}
+
+/** Completa a classificação de livros com o que pode ser mostrado agora. */
+async function withLiveBooks(userId, ranked, limit) {
+  const live = await communityRepository.liveSampleBooks(userId, ranked.map(row => row.sample_book_id))
+  return ranked
+    .filter(row => live.has(row.sample_book_id))
+    .slice(0, limit)
+    .map(row => ({ ...row, ...live.get(row.sample_book_id) }))
+}
 
 /**
  * Painel "comunidade" de um livro do próprio usuário: outros leitores
@@ -25,8 +53,14 @@ export async function bookCommunity(bookId, userId) {
   const readers = await communityRepository.readersOfBook(bookId, userId)
   const ratings = readers.map(r => r.rating).filter(r => r !== null)
 
+  const alsoHaveFor = async () => {
+    const ranked = await rankingCache.books.wrap(`${userId}:also:${bookId}`,
+      () => communityRepository.alsoHave(bookId, userId, ALSO_HAVE_LIMIT * SPARE))
+    return withLiveBooks(userId, ranked, ALSO_HAVE_LIMIT)
+  }
+
   const [alsoHave, reviews] = await Promise.all([
-    readers.length > 0 ? communityRepository.alsoHave(bookId, userId, ALSO_HAVE_LIMIT) : [],
+    readers.length > 0 ? alsoHaveFor() : [],
     reviewService.forSameBook(bookId, userId)
   ])
 
@@ -44,7 +78,8 @@ export async function bookCommunity(bookId, userId) {
       authors: item.authors,
       readers: item.readers,
       bookId: item.sample_book_id,
-      owner: item.sample_owner
+      coverVersion: item.cover_version,
+      owner: item.owner
     }))
   }
 }
@@ -114,20 +149,31 @@ export async function publicProfile(username, viewerId) {
  */
 export async function findReaders(viewerId, rawText) {
   const text = typeof rawText === 'string' ? rawText.trim().slice(0, 50) : ''
-  const rows = await communityRepository.findReaders(viewerId, text, FIND_LIMIT)
-  return rows.map(row => ({
-    username: row.username,
-    acceptsFollowers: Boolean(row.accepts_followers),
-    totalBooks: row.total_books,
-    readBooks: row.read_books,
-    commonBooks: row.common_books,
-    followStatus: row.follow_status ?? null
-  }))
+  const ranked = await rankingCache.readers.wrap(`${viewerId}:readers:${text.toLowerCase()}`,
+    () => communityRepository.findReaders(viewerId, text, FIND_LIMIT * SPARE))
+  const live = await communityRepository.liveReaders(viewerId, ranked.map(row => row.id))
+
+  return ranked
+    .filter(row => live.has(row.id))
+    .slice(0, FIND_LIMIT)
+    .map(row => {
+      const person = live.get(row.id)
+      return {
+        username: person.username,
+        acceptsFollowers: Boolean(person.accepts_followers),
+        totalBooks: row.total_books,
+        readBooks: row.read_books,
+        commonBooks: row.common_books,
+        followStatus: person.follow_status ?? null
+      }
+    })
 }
 
 /** "Recomendados para você" no Início. */
 export async function recommendations(userId) {
-  const rows = await communityRepository.recommendations(userId, RECOMMENDATION_LIMIT)
+  const ranked = await rankingCache.books.wrap(`${userId}:recommendations`,
+    () => communityRepository.recommendations(userId, RECOMMENDATION_LIMIT * SPARE))
+  const rows = await withLiveBooks(userId, ranked, RECOMMENDATION_LIMIT)
   return rows.map(row => ({
     title: row.title,
     authors: row.authors,
@@ -135,7 +181,8 @@ export async function recommendations(userId) {
     similarReaders: row.similar_readers,
     averageRating: row.average_rating,
     bookId: row.sample_book_id,
-    owner: row.sample_owner
+    coverVersion: row.cover_version,
+    owner: row.owner
   }))
 }
 
@@ -159,5 +206,6 @@ export async function addToWantList(sourceId, userId) {
     olEditionKey: source.ol_edition_key
   })
   await readingService.importReadings(bookId, { status: 'want' })
+  forgetRankings(userId)
   return { bookId }
 }

@@ -6,7 +6,6 @@
     <button
       type="button"
       class="row-main"
-      :aria-label="ariaLabel"
       :aria-pressed="selectable ? selected : undefined"
       @click="onRowClick"
     >
@@ -42,11 +41,9 @@
       <span class="col publisher">{{ book.publisher_name || '—' }}</span>
       <span class="col year">{{ pubYear || '—' }}</span>
 
-      <span
-        class="col rating"
-        :aria-label="book.rating ? t('library.row_rating', { n: book.rating }) : undefined"
-      >
+      <span class="col rating">
         <template v-if="book.rating">
+          <span class="sr-only">{{ t('library.row_rating', { n: book.rating }) }}</span>
           <i
             v-for="n in 5"
             :key="n"
@@ -86,6 +83,7 @@
     <BookDialog
       v-if="displayDialog"
       :bookId="bookId"
+      :coverVersion="book.cover_version"
       :modelValue="displayDialog"
       @update:modelValue="displayDialog = $event"
       @updated="payload => emit('updated', payload)"
@@ -108,7 +106,6 @@ import { seriesText } from '../utils/series.js'
 /** Linha da biblioteca no modo lista: mais livros por tela, com os dados principais. */
 const props = defineProps({
   book: { type: Object, required: true },
-  coverVersion: { type: Number, default: 0 },
   selectable: { type: Boolean, default: false },
   selected: { type: Boolean, default: false }
 })
@@ -125,13 +122,15 @@ const displayDialog = ref(false)
 const bookId = computed(() => props.book.book_id ?? props.book.id)
 const status = computed(() => statusOf(props.book))
 const isRead = computed(() => status.value === 'read')
-const bookCoverUrl = computed(() => coverUrl(bookId.value, props.coverVersion))
+// cover_version null = sem capa: desenha direto, sem pedir a imagem
+const bookCoverUrl = computed(() => coverUrl(bookId.value, props.book.cover_version))
 const { saving, toggleRead } = useReadToggle(() => props.book, payload => emit('updated', payload))
 
-const coverMissing = ref(false)
-watch(bookCoverUrl, () => { coverMissing.value = false })
+const coverFailed = ref(false)
+watch(bookCoverUrl, () => { coverFailed.value = false })
+const coverMissing = computed(() => !bookCoverUrl.value || coverFailed.value)
 function onCoverError(event) {
-  if (coverFallbackExhausted(event)) coverMissing.value = true
+  if (coverFallbackExhausted(event)) coverFailed.value = true
 }
 
 const pubYear = computed(() => {
@@ -151,11 +150,6 @@ const statusLabel = computed(() => {
   return t(`status.${status.value}`)
 })
 
-const ariaLabel = computed(() => {
-  const parts = [props.book.title, props.book.authors].filter(Boolean)
-  parts.push(status.value === 'read' ? t('library.read') : statusLabel.value)
-  return parts.join(' — ')
-})
 </script>
 
 <style scoped>

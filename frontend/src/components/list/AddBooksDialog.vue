@@ -54,6 +54,7 @@
             <BookCover
               class="thumb"
               :book-id="book.book_id"
+              :version="book.cover_version"
               :title="book.title"
               :author="book.authors || ''"
             />

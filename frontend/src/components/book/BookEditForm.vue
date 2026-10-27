@@ -297,7 +297,7 @@ const props = defineProps({
   // Livro no formato do BookDialog (authorNames, read_date, pubdate…)
   initial: { type: Object, default: null },
   // Versão da capa atual (cache-buster), só na edição
-  coverVersion: { type: Number, default: 0 },
+  coverVersion: { type: [Number, null], default: undefined },
   idPrefix: { type: String, default: 'book-form' },
   // Pergunta antes de salvar (usado na edição)
   confirmMessage: { type: String, default: '' }
@@ -398,7 +398,8 @@ function onCoverSelect(file) {
 const coverPreview = computed(() => {
   if (filePreviewUrl.value) return filePreviewUrl.value
   if (lookup.coverId) return api.isbnCoverUrl(lookup.coverId)
-  if (!isCreate.value && props.bookId) return coverUrl(props.bookId, props.coverVersion)
+  // Sem capa (cover_version null): mostra o espaço vazio de "enviar capa"
+  if (!isCreate.value && props.bookId) return coverUrl(props.bookId, props.coverVersion) || ''
   return ''
 })
 
@@ -760,7 +761,9 @@ async function update() {
   if (selectedFile.value) {
     const data = new FormData()
     data.append('coverImage', selectedFile.value)
-    await api.updateCover(props.bookId, data)
+    const cover = await api.updateCover(props.bookId, data)
+    // Versão nova: a URL muda (?v=) e a capa nova aparece sem cache velho
+    book.cover_version = cover?.coverVersion ?? book.cover_version
     coverChanged = true
   }
 

@@ -1,7 +1,7 @@
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
-import { deleteBookCover } from '../utils/imageProcessor.js'
+import { deleteBookCover, saveBookCover } from '../utils/imageProcessor.js'
 import logger from '../utils/logger.js'
 import { parseNameList, parseTagList, nameListError } from '../utils/nameList.js'
 import { httpError } from '../utils/httpError.js'
@@ -302,6 +302,12 @@ async function touchBook(bookId) {
   await libraryRepository.touchBook(bookId)
 }
 
+/** Grava a capa (AVIF + JPG) e devolve a versão nova (books.cover_version). */
+async function storeCover(buffer, bookId) {
+  await saveBookCover(buffer, bookId)
+  return libraryRepository.markCover(bookId)
+}
+
 async function getSeries(userId) {
   return await libraryRepository.getSeriesByUser(userId)
 }
@@ -373,6 +379,7 @@ export {
   setReadingStatus,
   getSeries,
   touchBook,
+  storeCover,
   batchUpdate,
   setRating,
   getPublicLibraryByUsername,

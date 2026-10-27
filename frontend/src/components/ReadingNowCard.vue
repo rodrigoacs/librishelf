@@ -8,6 +8,7 @@
     >
       <BookCover
         :book-id="book.book_id"
+        :version="book.cover_version"
         :title="book.title"
         :author="book.authors"
       />
@@ -55,6 +56,7 @@
       v-if="dialogOpen"
       :model-value="dialogOpen"
       :book-id="book.book_id"
+      :cover-version="book.cover_version"
       @update:model-value="dialogOpen = $event"
       @updated="emit('updated')"
       @deleted="emit('updated')"

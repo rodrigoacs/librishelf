@@ -124,6 +124,7 @@ export async function feed(viewerId, page) {
       username: row.username,
       isPublic: row.is_public,
       bookId: row.book_id,
+      coverVersion: row.cover_version,
       title: row.title,
       authors: row.authors,
       rating: row.rating

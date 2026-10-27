@@ -85,7 +85,8 @@
     "inviteTitle": "What are you reading?",
     "inviteText": "Mark a book as Reading and it shows up here, with the date you started.",
     "inviteWant": "Pick from my Want to read list",
-    "yearInBooks": "Your {year} in books: see your recap | Your {year} in books: 1 book so far — see your recap | Your {year} in books: {n} books so far — see your recap"
+    "yearInBooks": "Your {year} in books: see your recap | Your {year} in books: 1 book so far — see your recap | Your {year} in books: {n} books so far — see your recap",
+    "loadError": "Could not load your shelf. Your books are still saved."
   },
   "book": {
     "new_title": "New Book",
@@ -299,7 +300,7 @@
     "readBooks": "Books Read",
     "unreadBooks": "To Read",
     "readingRate": "Reading Rate",
-    "readingByYear": "Books read per year",
+    "readingByYear": "Readings per year",
     "favoriteGenres": "Favorite Genres",
     "topAuthors": "Top Authors",
     "noTagsData": "No tag data available",
@@ -312,12 +313,20 @@
     "readingNow": "Reading now",
     "wantToRead": "Want to read",
     "ofShelf": "{n}% of your shelf",
-    "readingByMonth": "Books read per month in {year}",
+    "readingByMonth": "Readings per month in {year}",
     "noMonthData": "No books read in {year}",
-    "clickHint": "Click a bar to see the books.",
+    "clickHint": "Rereads count again. Click a bar to see the books.",
     "topPublishers": "Top publishers",
     "noPublishersData": "No publisher data available",
-    "booksCount": "{n} book | {n} books"
+    "booksCount": "{n} book | {n} books",
+    "readings": "Readings",
+    "showData": "Show the numbers",
+    "month": "Month",
+    "year": "Year",
+    "category": "Category",
+    "monthSummary": "No readings in {year} | {n} reading in {year}; most in {month}: {top} | {n} readings in {year}; most in {month}: {top}",
+    "yearSummary": "Readings per year: {list}",
+    "tagsSummary": "Categories with the most books: {list}"
   },
   "login": {
     "header": "Your personal library, everywhere.",
@@ -504,7 +513,8 @@
     "errors": {
       "required": "Fill in this field.",
       "email": "Enter a valid email, like name{'@'}example.com."
-    }
+    },
+    "exportFailed": "Could not export your data."
   },
   "discover": {
     "tab": "Discover",

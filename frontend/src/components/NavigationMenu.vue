@@ -1,7 +1,8 @@
 <template>
   <div class="navigation-container">
 
-    <div class="mobile-header">
+    <!-- Barra do topo no celular: landmark próprio para o logo não ficar solto -->
+    <header class="mobile-header">
       <AppButton
         ref="menuButton"
         icon="pi pi-bars"
@@ -23,7 +24,7 @@
         </div>
       </div>
       <div style="width: 40px"></div>
-    </div>
+    </header>
 
     <Transition name="fade">
       <div
@@ -349,7 +350,7 @@ button.nav-item {
 
 .nav-item.active {
   background-color: rgba(var(--main-color-rgb), 0.15);
-  color: var(--main-color);
+  color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
   font-weight: 600;
 }
 

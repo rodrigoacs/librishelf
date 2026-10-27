@@ -35,7 +35,8 @@
     "inviteTitle": "O que você está lendo?",
     "inviteText": "Marque um livro como Lendo e ele aparece aqui, com a data em que você começou.",
     "inviteWant": "Escolher na minha lista Quero ler",
-    "yearInBooks": "Seu ano em livros {year}: veja a retrospectiva | Seu ano em livros {year}: 1 livro até agora — veja a retrospectiva | Seu ano em livros {year}: {n} livros até agora — veja a retrospectiva"
+    "yearInBooks": "Seu ano em livros {year}: veja a retrospectiva | Seu ano em livros {year}: 1 livro até agora — veja a retrospectiva | Seu ano em livros {year}: {n} livros até agora — veja a retrospectiva",
+    "loadError": "Não foi possível carregar sua estante. Seus livros continuam salvos."
   },
   "menu": {
     "home": "Início",
@@ -314,10 +315,18 @@
     "ofShelf": "{n}% da estante",
     "readingByMonth": "Leituras mês a mês em {year}",
     "noMonthData": "Nenhuma leitura registrada em {year}",
-    "clickHint": "Clique numa barra para ver os livros.",
+    "clickHint": "Releituras contam de novo. Clique numa barra para ver os livros.",
     "topPublishers": "Editoras mais presentes",
     "noPublishersData": "Nenhum dado de editoras disponível",
-    "booksCount": "{n} livro | {n} livros"
+    "booksCount": "{n} livro | {n} livros",
+    "readings": "Leituras",
+    "showData": "Ver os números",
+    "month": "Mês",
+    "year": "Ano",
+    "category": "Categoria",
+    "monthSummary": "Nenhuma leitura em {year} | {n} leitura em {year}; mais em {month}: {top} | {n} leituras em {year}; mais em {month}: {top}",
+    "yearSummary": "Leituras por ano: {list}",
+    "tagsSummary": "Categorias com mais livros: {list}"
   },
   "login": {
     "header": "Sua biblioteca pessoal, em todo lugar.",
@@ -504,7 +513,8 @@
     "errors": {
       "required": "Preencha este campo.",
       "email": "Digite um e-mail válido, como nome{'@'}exemplo.com."
-    }
+    },
+    "exportFailed": "Não foi possível exportar."
   },
   "discover": {
     "tab": "Encontrar",

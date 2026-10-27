@@ -25,7 +25,7 @@
         mode="edit"
         :book-id="bookId"
         :initial="book"
-        :cover-version="coverVersion"
+        :cover-version="currentCoverVersion"
         :confirm-message="t('bookDialog.confirmSave')"
         id-prefix="book-edit"
         @saved="onSaved"
@@ -208,10 +208,12 @@ import { setOverlayTitle } from '../services/pageTitle.js'
 const { t } = useI18n()
 const props = defineProps({
   modelValue: Boolean,
-  bookId: Number,
+  bookId: { type: Number, default: null },
   isReadOnly: { type: Boolean, default: false },
   // Dono da biblioteca pública; obrigatório quando isReadOnly for true.
-  ownerUsername: { type: String, default: '' }
+  ownerUsername: { type: String, default: '' },
+  // cover_version de quem abriu (card da lista), usado até o livro carregar
+  coverVersion: { type: [Number, null], default: undefined }
 })
 
 const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])
@@ -222,7 +224,6 @@ const visible = ref(props.modelValue)
 const loading = ref(true)
 const loadFailed = ref(false)
 const isEditing = ref(false)
-const coverVersion = ref(0)
 const ratingSaving = ref(false)
 const readSaving = ref(false)
 const addToListOpen = ref(false)
@@ -234,14 +235,18 @@ function emptyBook() {
 
 const book = ref(emptyBook())
 
-const displayCoverUrl = computed(() => coverUrl(props.bookId, coverVersion.value))
+// Versão da capa: a do livro carregado; antes disso, a do card que abriu
+const currentCoverVersion = computed(() =>
+  book.value.cover_version !== undefined ? book.value.cover_version : props.coverVersion)
+const displayCoverUrl = computed(() => coverUrl(props.bookId, currentCoverVersion.value))
 
 // Sem imagem: capa desenhada e fundo na cor do livro, em vez do quadro cinza.
-const coverMissing = ref(false)
-watch(displayCoverUrl, () => { coverMissing.value = false })
+const coverFailed = ref(false)
+watch(displayCoverUrl, () => { coverFailed.value = false })
+const coverMissing = computed(() => !displayCoverUrl.value || coverFailed.value)
 
 function onCoverError(event) {
-  if (coverFallbackExhausted(event)) coverMissing.value = true
+  if (coverFallbackExhausted(event)) coverFailed.value = true
 }
 
 /**
@@ -366,7 +371,6 @@ function closeDialog() {
 }
 
 function onSaved({ book: saved, coverChanged }) {
-  if (coverChanged) coverVersion.value = Date.now()
   applyResponse(saved)
   isEditing.value = false
   refreshReadingFields()
@@ -396,7 +400,8 @@ function applyResponse(data) {
     current_page: data.current_page ?? null,
     progress_percent: data.progress_percent ?? null,
     // Só na biblioteca pública de outra pessoa (a do dono carrega no ReviewEditor)
-    review: data.review ?? null
+    review: data.review ?? null,
+    cover_version: data.cover_version
   }
 }
 

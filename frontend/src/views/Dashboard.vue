@@ -274,9 +274,17 @@
               type="bar"
               :data="monthChartData"
               :options="monthChartOptions"
+              :aria-label="monthSummary"
               class="h-full"
             />
           </div>
+          <ChartDataTable
+            v-if="readInYear > 0"
+            :caption="t('dashboard.readingByMonth', { year })"
+            :label-header="t('dashboard.month')"
+            :value-header="t('dashboard.readings')"
+            :rows="monthRows"
+          />
         </div>
 
         <div class="chart-card main-chart">
@@ -291,9 +299,17 @@
               type="bar"
               :data="yearChartData"
               :options="yearChartOptions"
+              :aria-label="yearSummary"
               class="h-full"
             />
           </div>
+          <ChartDataTable
+            v-if="stats.readingByYear.length"
+            :caption="t('dashboard.readingByYear')"
+            :label-header="t('dashboard.year')"
+            :value-header="t('dashboard.readings')"
+            :rows="yearRows"
+          />
         </div>
 
       </div>
@@ -311,6 +327,7 @@
               type="doughnut"
               :data="tagsChartData"
               :options="doughnutOptions"
+              :aria-label="tagsSummary"
               class="h-full w-full"
             />
             <!-- Mais de 5 categorias: barras leem melhor que a rosca (6 cores só) -->
@@ -391,6 +408,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
 import ChartCanvas from '../components/ui/ChartCanvas.vue'
+import ChartDataTable from '../components/ui/ChartDataTable.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSelect from '../components/ui/AppSelect.vue'
@@ -544,10 +562,31 @@ const monthLabels = computed(() =>
     new Date(2000, i, 1).toLocaleDateString(dateLocale.value, { month: 'short' }).replace('.', ''))
 )
 
+// Texto alternativo dos gráficos (o canvas não tem conteúdo para leitor de tela)
+const monthNames = computed(() =>
+  Array.from({ length: 12 }, (_, i) => new Date(2000, i, 1).toLocaleDateString(dateLocale.value, { month: 'long' })))
+
+const monthRows = computed(() =>
+  stats.value.readingByMonth.map((item, i) => ({ label: monthNames.value[i], value: item.count })))
+
+const monthSummary = computed(() => {
+  const n = readInYear.value
+  const top = stats.value.readingByMonth.reduce((best, item, i) => (item.count > best.count ? { count: item.count, i } : best), { count: 0, i: 0 })
+  return t('dashboard.monthSummary', { n, year: year.value, month: monthNames.value[top.i], top: top.count }, n)
+})
+
+const yearRows = computed(() => sortedYears.value.map(item => ({ label: String(item.year), value: item.count })))
+const yearSummary = computed(() =>
+  t('dashboard.yearSummary', { list: yearRows.value.map(row => `${row.label}: ${row.value}`).join(', ') }))
+
+const tagsSummary = computed(() =>
+  t('dashboard.tagsSummary', { list: stats.value.topTags.map(tag => `${tag.name}: ${tag.count}`).join(', ') }))
+
 const monthChartData = computed(() => ({
   labels: monthLabels.value,
   datasets: [{
-    label: t('dashboard.readBooks'),
+    // Conta leituras (releitura conta de novo), não livros
+    label: t('dashboard.readings'),
     data: stats.value.readingByMonth.map(item => item.count),
     backgroundColor: cssVar(`--${tagColorName(String(year.value))}`) || palette.value.main,
     borderRadius: 6
@@ -580,7 +619,7 @@ const sortedYears = computed(() => [...stats.value.readingByYear].sort((a, b) =>
 const yearChartData = computed(() => ({
   labels: sortedYears.value.map(item => item.year),
   datasets: [{
-    label: t('dashboard.readBooks'),
+    label: t('dashboard.readings'),
     data: sortedYears.value.map(item => item.count),
     // Cada ano com a sua cor — a mesma das barras do perfil público.
     backgroundColor: sortedYears.value.map(item => cssVar(`--${tagColorName(String(item.year))}`) || palette.value.main),
@@ -644,14 +683,12 @@ async function loadStats() {
   }
 }
 
+// Troca de ano: mostra o carregando e sai de um erro anterior (antes a tela
+// de erro ficava e a troca não dava sinal nenhum)
 async function changeYear(value) {
   year.value = value
   editingGoal.value = false
-  try {
-    stats.value = await api.getDashboardStats(value)
-  } catch {
-    loadError.value = true
-  }
+  await loadStats()
 }
 
 onMounted(loadStats)
@@ -908,7 +945,7 @@ a.author-row:focus-visible {
   padding: 0.55rem 0.95rem;
   border-radius: 999px;
   background: rgba(var(--main-color-rgb), 0.12);
-  color: var(--main-color);
+  color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
   font-size: var(--fs-sm);
   font-weight: 600;
   text-decoration: none;

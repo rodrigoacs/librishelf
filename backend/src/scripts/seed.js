@@ -32,6 +32,7 @@ import bcrypt from 'bcrypt'
 import sharp from 'sharp'
 import { db } from '../database/connection.js'
 import { pendingMigrations } from '../database/migrate.js'
+import { syncCoverVersions } from '../database/coverSync.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
 import { isbn13CheckDigit, normalizeIsbn13 } from '../utils/isbn.js'
 import logger from '../utils/logger.js'
@@ -838,6 +839,8 @@ async function main() {
   const follows = await insertFollows(users)
   const reports = await insertAdminData()
   const covers = CONFIG.covers ? await generateCovers(catalog) : 0
+  // books.cover_version (migration 016) a partir dos arquivos gerados
+  await syncCoverVersions(db)
 
   const { rows: [summary] } = await db.query(`
     SELECT

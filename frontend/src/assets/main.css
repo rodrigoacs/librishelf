@@ -20,6 +20,11 @@
   --main-solid-rgb: var(--blue-solid-rgb);
   --main-solid: rgb(var(--main-solid-rgb));
   --on-main: #ffffff;
+  /* Texto colorido sobre o próprio tingido (selos, iniciais, item ativo):
+     color-mix(in srgb, var(--cor) var(--tint-text), var(--text-primary)).
+     70% puxa para o branco no escuro e para o quase preto no claro: ≥ 4,7:1
+     nas 6 cores, nos dois temas, com tingido de até 20% em qualquer fundo. */
+  --tint-text: 70%;
 
   --bg-app: #121212;
   --bg-panel: #18181b;
@@ -357,13 +362,50 @@ body {
   width: 100%;
 }
 
+/* Toque: alvos de pelo menos 44 × 44 px (WCAG 2.5.5). O !important fica só em
+   min-height/min-width: o CSS com escopo dos componentes empata em
+   especificidade com estas classes e entraria depois. */
 @media (pointer: coarse) {
-  .btn {
-    min-height: 2.75rem;
+  .btn,
+  .btn.btn-sm,
+  .pill,
+  .tab,
+  .year-pill,
+  .year-link,
+  .app-select-trigger,
+  .spoiler-btn,
+  .link-btn,
+  .record-book,
+  .title-btn,
+  .tag-bar-row,
+  .author-row,
+  .skip-link {
+    min-height: 2.75rem !important;
   }
 
-  .btn.btn-icon-only {
-    width: 2.75rem;
+  .btn.btn-icon-only,
+  .view-btn,
+  .rename-btn,
+  .reveal-btn,
+  .star-btn {
+    min-width: 2.75rem !important;
+    min-height: 2.75rem !important;
+  }
+
+  .pill,
+  .year-pill,
+  .link-btn {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Fita de "lido" e chave liga/desliga: a área de toque cresce sem mudar o
+     desenho (o clique no ::after conta como clique no botão) */
+  .quick-read::after,
+  .app-switch::after {
+    content: '';
+    position: absolute;
+    inset: -9px -8px;
   }
 }
 

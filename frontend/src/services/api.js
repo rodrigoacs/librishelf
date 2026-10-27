@@ -1,4 +1,5 @@
-import client from './fetchClient.js'
+import client, { translateApiError } from './fetchClient.js'
+import i18n from '../i18n.js'
 import { API_URL } from '../config/site.js'
 
 const enc = encodeURIComponent
@@ -75,7 +76,7 @@ export default {
     return client.post(`/email/resubscribe?token=${enc(token)}`, {})
   },
 
-  /** Qualquer combinação de { isPublic, showInCommunity, showActivity }. */
+  /** Troca o e-mail (pede a senha atual); locale = idioma do e-mail de confirmação. */
   changeEmail(email, password, locale) {
     return client.patch('/auth/me/email', { email, password, locale })
   },
@@ -88,8 +89,11 @@ export default {
   async exportData(format = 'json') {
     const response = await fetch(`${API_URL}/auth/me/export?format=${format}`, { credentials: 'include' })
     if (!response.ok) {
-      let message = 'Não foi possível exportar.'
-      try { message = (await response.json()).error || message } catch { /* corpo vazio */ }
+      let message = i18n.global.t('settings.exportFailed')
+      try {
+        const body = await response.json()
+        message = translateApiError(body.code, body.params, body.error || message)
+      } catch { /* corpo vazio */ }
       throw new Error(message)
     }
     const disposition = response.headers.get('Content-Disposition') || ''
@@ -104,6 +108,7 @@ export default {
     return client.post('/library/import', formData)
   },
 
+  /** Qualquer combinação de { isPublic, showInCommunity, showActivity, allowIndexing }. */
   setPrivacy(settings) {
     return client.patch('/auth/me/visibility', settings)
   },
@@ -289,7 +294,6 @@ export default {
     return client.get(`/library/public/u/${enc(username)}/profile`)
   },
 
-  // --- Seguir / feed ---
   findReaders(q = '') {
     return client.get(`/community/readers${toQuery({ q })}`)
   },
@@ -303,6 +307,7 @@ export default {
     return client.post(`/community/books/${bookId}/want`)
   },
 
+  // --- Seguir / feed ---
   getFeed(page = 1) {
     return client.get(`/social/feed${toQuery({ page })}`)
   },
@@ -347,7 +352,7 @@ export default {
     return client.delete(`/social/followers/${enc(username)}`)
   },
 
-  // --- Listas ---
+  // --- Autores, editoras, categorias e painel ---
   getAuthors(publishers = []) {
     return client.get(`/author${toQuery({ publishers })}`)
   },
@@ -373,12 +378,12 @@ export default {
     return client.delete(`/dashboard/goal/${year}`)
   },
 
-  // --- Público ---
   /** "Seu ano em livros" (retrospectiva do ano). */
   getYearInBooks(year) {
     return client.get(`/dashboard/year/${year}${toQuery({ current: new Date().getFullYear() })}`)
   },
 
+  // --- Público ---
   getRandomCovers() {
     return client.get('/library/covers/random')
   },

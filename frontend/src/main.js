@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import i18n from './i18n'
+import i18n, { i18nReady } from './i18n'
 import App from './App.vue'
 import router from './router'
 import tooltip from './directives/tooltip.js'
@@ -28,4 +28,5 @@ app.use(router)
 app.use(i18n)
 app.directive('tooltip', tooltip)
 
-app.mount('#app')
+// Monta com o idioma já carregado (sem piscar as chaves na tela)
+i18nReady.finally(() => app.mount('#app'))

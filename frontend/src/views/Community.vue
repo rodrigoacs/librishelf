@@ -98,7 +98,7 @@
             class="feed-day"
             :aria-label="dayLabel(day.date, { t, locale })"
           >
-            <h3 class="day-title">{{ dayLabel(day.date, { t, locale }) }}</h3>
+            <h2 class="day-title">{{ dayLabel(day.date, { t, locale }) }}</h2>
             <ul class="feed-list">
               <li
                 v-for="item in day.items"
@@ -166,6 +166,7 @@
                     v-for="book in item.books.slice(0, COVERS_SHOWN)"
                     :key="book.bookId"
                     :book-id="book.bookId"
+                    :version="book.coverVersion"
                     :title="book.title"
                     :author="book.authors"
                     class="feed-cover"

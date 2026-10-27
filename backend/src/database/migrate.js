@@ -15,6 +15,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { db } from './connection.js'
+import { syncCoverVersions } from './coverSync.js'
 import logger from '../utils/logger.js'
 
 const DB_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../db')
@@ -42,10 +43,21 @@ async function listMigrations() {
   return files.filter(file => file.endsWith('.sql')).sort()
 }
 
-async function runInTransaction(client, sql) {
+// Passos em JavaScript que rodam logo depois de uma migration, na mesma
+// transação (dados que o SQL sozinho não alcança, como arquivos em disco).
+const AFTER_MIGRATION = {
+  '016_cover_version_and_fk_indexes': async (client) => {
+    const result = await syncCoverVersions(client, { clear: false })
+    if (!result.dirExists) logger.warn('Pasta de capas não encontrada; nenhum livro marcado com capa', { dir: result.dir })
+    logger.info('Capas existentes registradas em books.cover_version', { dir: result.dir, arquivos: result.files, livros: result.set })
+  }
+}
+
+async function runInTransaction(client, sql, after) {
   await client.query('BEGIN')
   try {
     await client.query(sql)
+    if (after) await after(client)
     await client.query('COMMIT')
   } catch (err) {
     await client.query('ROLLBACK')
@@ -101,7 +113,7 @@ export async function migrate() {
       if (done.has(version)) continue
 
       const sql = await fs.readFile(path.join(MIGRATIONS_DIR, file), 'utf8')
-      await runInTransaction(client, `${sql}\nINSERT INTO librishelf.schema_migrations (version) VALUES ('${version.replace(/'/g, "''")}');`)
+      await runInTransaction(client, `${sql}\nINSERT INTO librishelf.schema_migrations (version) VALUES ('${version.replace(/'/g, "''")}');`, AFTER_MIGRATION[version])
 
       logger.info('Migration aplicada', { version })
       applied.push(version)

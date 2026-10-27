@@ -21,15 +21,31 @@ export async function profileStats(userId) {
   return rows[0]
 }
 
+/** Classificação da busca de leitores: [{ id, common_books, total_books, read_books }]. */
 export async function findReaders(viewerId, text, limit) {
   const pattern = `%${text.replace(/[\\%_]/g, '\\$&')}%`
   const { rows } = await db.query(cq.FIND_READERS, [viewerId, text, pattern, limit])
   return rows
 }
 
+/** Dos ids, quem ainda aparece para viewerId agora: Map id → { username, accepts_followers, follow_status }. */
+export async function liveReaders(viewerId, ids) {
+  if (!ids.length) return new Map()
+  const { rows } = await db.query(cq.READERS_LIVE, [viewerId, ids])
+  return new Map(rows.map(row => [row.id, row]))
+}
+
+/** Classificação das recomendações: [{ book_key, readers, similar_readers, average_rating, score, sample_book_id }]. */
 export async function recommendations(userId, limit) {
   const { rows } = await db.query(cq.RECOMMENDATIONS, [userId, limit])
   return rows
+}
+
+/** Dos livros de exemplo, os que ainda podem ser mostrados a userId: Map id → { title, owner, authors }. */
+export async function liveSampleBooks(userId, ids) {
+  if (!ids.length) return new Map()
+  const { rows } = await db.query(cq.SAMPLE_BOOKS, [userId, ids])
+  return new Map(rows.map(row => [row.id, row]))
 }
 
 export async function sourceBook(bookId, userId) {

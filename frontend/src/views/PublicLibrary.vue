@@ -888,7 +888,7 @@ watch(username, () => {
   padding: 0.2rem 0.65rem;
   font-size: var(--fs-sm);
   font-weight: 500;
-  color: var(--tag-color);
+  color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
   background: color-mix(in srgb, var(--tag-color) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
 }

@@ -2,7 +2,7 @@ import { db } from '../database/connection.js'
 import { FOLLOW_EMAIL_QUERIES as q } from '../database/queries.js'
 import { sendMail } from './mailService.js'
 import { followDigestEmail } from './emailTemplates.js'
-import { createUnsubscribeToken } from '../utils/unsubscribeToken.js'
+import { signId } from '../utils/signedToken.js'
 import logger from '../utils/logger.js'
 
 /**
@@ -15,6 +15,12 @@ import logger from '../utils/logger.js'
  * conferida a cada poucos minutos). Aviso que deixou de valer (pedido
  * cancelado ou recusado, bloqueio) não é enviado.
  */
+
+// Token de descadastro: "<id>.<assinatura>" (utils/signedToken.js). Não expira
+// (o link do rodapé precisa funcionar em e-mails antigos) e não dá para forjar
+// sem a chave, como pede a RFC 8058. Mudar este texto invalida os links já enviados.
+//   https://www.rfc-editor.org/rfc/rfc8058
+export const UNSUBSCRIBE_PURPOSE = 'unsubscribe:follow-emails'
 
 const DEFAULT_INTERVAL_HOURS = 6
 const SWEEP_MS = 5 * 60 * 1000
@@ -33,7 +39,7 @@ function siteUrl() {
 }
 
 export function unsubscribeUrls(userId) {
-  const token = encodeURIComponent(createUnsubscribeToken(userId))
+  const token = encodeURIComponent(signId(UNSUBSCRIBE_PURPOSE, userId))
   return {
     // Página do app (link no corpo do e-mail)
     page: `${siteUrl()}/unsubscribe?token=${token}`,

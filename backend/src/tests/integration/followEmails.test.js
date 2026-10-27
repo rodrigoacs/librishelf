@@ -2,11 +2,13 @@ import request from 'supertest'
 import app from '../../app.js'
 import { db } from '../../database/connection.js'
 import { testOutbox } from '../../services/mailService.js'
-import { deliverDue } from '../../services/followEmailService.js'
-import { createUnsubscribeToken } from '../../utils/unsubscribeToken.js'
+import { deliverDue, UNSUBSCRIBE_PURPOSE } from '../../services/followEmailService.js'
+import { signId } from '../../utils/signedToken.js'
 import { confirmEmail } from '../helpers/confirmEmail.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
+
+const createUnsubscribeToken = id => signId(UNSUBSCRIBE_PURPOSE, id)
 
 const tokens = {}
 const ids = {}

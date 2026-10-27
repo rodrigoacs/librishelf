@@ -350,7 +350,8 @@ const { t, locale } = useI18n()
 // mudanças. Assim filtros vindos da URL, do "Limpar" do estado vazio etc.
 // aparecem aqui como chips.
 const props = defineProps({
-  booksQuantity: Number,
+  // undefined = ainda sem contagem (o selo não aparece)
+  booksQuantity: { type: Number, default: undefined },
   libraryTotal: { type: Number, default: null },
   filters: { type: Object, required: true },
   view: { type: String, default: 'grid' },
@@ -754,7 +755,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 }
 
 .custom-chip.tag-chip {
-  color: var(--tag-color);
+  color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
   background: color-mix(in srgb, var(--tag-color) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--tag-color) 40%, transparent);
 }

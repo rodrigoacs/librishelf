@@ -16,6 +16,7 @@
       <BookCover
         class="cover"
         :book-id="item.bookId"
+        :version="item.coverVersion"
         :title="item.title"
         :author="item.authors || ''"
       />

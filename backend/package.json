@@ -13,6 +13,8 @@
     "db:migrate:local": "node --env-file=./src/.env.local src/database/migrate.js",
     "db:seed": "node --env-file=./src/.env.local src/scripts/seed.js",
     "server:local": "node --env-file=./src/.env.local --watch src/server.js",
+    "covers:sync": "node --env-file=./src/.env src/database/coverSync.js",
+    "covers:sync:docker": "node src/database/coverSync.js",
     "enrich:isbn": "node --env-file=./src/.env src/scripts/enrichIsbn.js",
     "enrich:isbn:docker": "node src/scripts/enrichIsbn.js",
     "test": "cross-env NODE_ENV=test node --env-file=./src/.env.test --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
@@ -23,11 +25,11 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^5.3.0",
-    "express-rate-limit": "^8.6.2",
+    "express-rate-limit": "^8.7.1",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.5.0",
     "nodemailer": "^10.2.1",
-    "pg": "^8.16.3",
+    "pg": "^8.23.1",
     "sharp": "^0.35.3"
   },
   "devDependencies": {

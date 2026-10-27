@@ -1,6 +1,7 @@
 import express from 'express'
 import { authenticateToken } from '../middlewares/auth.js'
 import { validateNumericId } from '../middlewares/validateId.js'
+import { socialLimiter } from '../middlewares/rateLimiter.js'
 import * as communityService from '../services/communityService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
@@ -17,8 +18,9 @@ router.get('/books/:id', validateNumericId(), async (req, res) => {
   }
 })
 
-// Encontrar leitores: ?q=nome (vazio = sugestões).
-router.get('/readers', async (req, res) => {
+// Encontrar leitores: ?q=nome (vazio = sugestões). A tela busca enquanto a
+// pessoa digita; o limite é o mesmo de seguir/curtir.
+router.get('/readers', socialLimiter, async (req, res) => {
   try {
     res.status(STATUS.OK).json(await communityService.findReaders(req.user.id, req.query.q))
   } catch (error) {

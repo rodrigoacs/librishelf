@@ -9,7 +9,7 @@
         >{{ summary }}</p>
       </div>
       <AppButton
-        v-if="!isEmpty"
+        v-if="!isEmpty && !loadError"
         :label="t('home.addBook')"
         icon="pi pi-plus"
         class="btn-primary add-btn-home"
@@ -60,6 +60,26 @@
         :key="n"
         height="260px"
         border-radius="12px"
+      />
+    </div>
+
+    <!-- Falha ao carregar: não confundir com estante vazia -->
+    <div
+      v-else-if="loadError"
+      class="error-state"
+      role="alert"
+    >
+      <i
+        class="pi pi-exclamation-triangle"
+        aria-hidden="true"
+      ></i>
+      <p>{{ t('home.loadError') }}</p>
+      <AppButton
+        :label="t('common.retry')"
+        icon="pi pi-refresh"
+        class="btn-outlined btn-secondary"
+        :loading="retrying"
+        @click="retry"
       />
     </div>
 
@@ -217,7 +237,7 @@
             class="rec-item"
           >
             <BookItem
-              :book="{ book_id: rec.bookId, title: rec.title, authors: rec.authors }"
+              :book="{ book_id: rec.bookId, title: rec.title, authors: rec.authors, cover_version: rec.coverVersion }"
               read-only
               :owner-username="rec.owner"
             />
@@ -315,8 +335,11 @@ const total = ref(0)
 const readThisYear = ref(0)
 const events = ref([])
 const addDialogVisible = ref(false)
+const loadError = ref(false)
+const retrying = ref(false)
 
-const isEmpty = computed(() => !loading.value && total.value === 0)
+// Só é "vazia" se a estante carregou; falha de rede ou 500 mostra o erro
+const isEmpty = computed(() => !loading.value && !loadError.value && total.value === 0)
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
@@ -325,7 +348,7 @@ const greeting = computed(() => {
 })
 
 const summary = computed(() => {
-  if (loading.value || total.value === 0) return ''
+  if (loading.value || loadError.value || total.value === 0) return ''
   let read
   if (!goal.value) read = t('home.readThisYear', { n: readThisYear.value }, readThisYear.value)
   else if (readThisYear.value >= goal.value) read = t('home.goalDone', { n: readThisYear.value, goal: goal.value })
@@ -347,12 +370,19 @@ async function reload() {
     total.value = recent.total || 0
     const year = new Date().getFullYear()
     readThisYear.value = stats.readingByYear?.find(entry => Number(entry.year) === year)?.count ?? 0
+    loadError.value = false
   } catch {
-    recentBooks.value = []
-    readingBooks.value = []
+    // Mantém o que já estava na tela; sem nada carregado, mostra o erro
+    if (!recentBooks.value.length && !readingBooks.value.length) loadError.value = true
   } finally {
     loading.value = false
   }
+}
+
+async function retry() {
+  retrying.value = true
+  await reload()
+  retrying.value = false
 }
 
 function searchLibrary() {
@@ -404,6 +434,20 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.error-state > i {
+  font-size: var(--fs-3xl);
+}
+
 .home-container {
   width: 100%;
   min-width: 0;

@@ -40,3 +40,4 @@ uploads-test/
 # Scripts de entrega dos pacotes: rodam a partir de fora do repositório
 /pacote*.sh
 /fix*.sh
+/admin*.sh

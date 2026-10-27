@@ -1,5 +1,9 @@
 import { layoutCovers, IMAGE_WIDTH, IMAGE_HEIGHT } from '../../services/metaService.js'
-import { createUnsubscribeToken, readUnsubscribeToken } from '../../utils/unsubscribeToken.js'
+import { signId, readSignedId } from '../../utils/signedToken.js'
+import { UNSUBSCRIBE_PURPOSE } from '../../services/followEmailService.js'
+
+const createUnsubscribeToken = id => signId(UNSUBSCRIBE_PURPOSE, id)
+const readUnsubscribeToken = token => readSignedId(UNSUBSCRIBE_PURPOSE, token)
 import { followDigestEmail, verifyEmailEmail } from '../../services/emailTemplates.js'
 
 describe('layoutCovers (mosaico da prévia)', () => {

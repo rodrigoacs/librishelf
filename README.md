@@ -110,6 +110,14 @@ npm test                                  # unit + integration
 npm run test:unit                         # unit only, no database needed
 ```
 
+Frontend (no database or server needed):
+
+```sh
+cd frontend
+npm test        # Vitest: src/utils and the pt/en locale files
+npm run lint    # ESLint (eslint-plugin-vue); npm run lint -- --fix fixes what it can
+```
+
 ## Deploying with Docker
 
 The compose file expects an external Docker network named `proxy`, shared with the reverse proxy on the host.
@@ -174,6 +182,8 @@ docker compose up -d
 ```
 
 Migrations must run as the role that **owns** the tables (the same `DB_USER` the app uses, if it created them). Back up first: `003_per_user_names_and_community` moves authors, publishers and tags from shared tables to per-user ones (each user gets their own copy; case-only duplicates are merged).
+
+`016_cover_version_and_fk_indexes` records which books have a cover by reading the files in `UPLOAD_DIR` (the `./uploads` volume, mounted by `docker compose run` too). If covers were restored later or the volume was missing during the migration, run `docker compose exec backend npm run covers:sync:docker` to check again (it never clears anything when the folder is empty, unless you pass `-- --force`).
 
 Optional, after upgrading: link books that already have an ISBN to Open Library, so they match other readers' copies even across editions. Set `OPENLIBRARY_CONTACT` (an e-mail, sent in the User-Agent as Open Library asks) and run:
 

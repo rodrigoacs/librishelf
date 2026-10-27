@@ -1,4 +1,4 @@
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import api from '../services/api.js'
 
 const SEARCH_DEBOUNCE_MS = 500
@@ -98,9 +98,6 @@ export function useLibrary() {
 
   const filters = ref(defaultFilters())
 
-  // bookId → timestamp da última troca de capa; vira ?v= na URL para furar o cache.
-  const coverVersions = reactive({})
-
   // Uma busca nova (filtro, ordenação, refresh) cancela a anterior em vez de ser
   // descartada: o resultado na tela sempre corresponde aos filtros atuais.
   // `requestId` impede que a resposta de uma requisição antiga sobrescreva a nova.
@@ -152,7 +149,8 @@ export function useLibrary() {
       if (err.name === 'AbortError' || currentRequest !== requestId) return
 
       console.error('Erro no composable useLibrary:', err)
-      error.value = 'Erro ao carregar livros.'
+      // Chave de i18n (a tela mostra t('library.load_error'))
+      error.value = 'library.load_error'
     } finally {
       if (currentRequest === requestId) {
         loading.value = false
@@ -209,9 +207,10 @@ export function useLibrary() {
 
   /**
    * Troca o item editado na lista sem recarregar tudo (antes a edição voltava
-   * o scroll infinito para a página 1).
+   * o scroll infinito para a página 1). Capa trocada chega como cover_version
+   * novo no próprio livro.
    */
-  function updateBookInList(updated, { coverChanged = false } = {}) {
+  function updateBookInList(updated) {
     const id = updated.book_id ?? updated.id
     const index = books.value.findIndex(book => (book.book_id ?? book.id) === id)
 
@@ -219,7 +218,6 @@ export function useLibrary() {
       books.value[index] = { ...books.value[index], ...updated, book_id: id }
     }
 
-    if (coverChanged) coverVersions[id] = Date.now()
   }
 
   function removeBookFromList(id) {
@@ -233,7 +231,6 @@ export function useLibrary() {
 
   return {
     books,
-    coverVersions,
     totalRecords,
     libraryTotal,
     loading,

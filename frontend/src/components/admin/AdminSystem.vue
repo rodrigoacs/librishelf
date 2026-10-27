@@ -373,7 +373,6 @@ import { useToast } from '../../services/toast.js'
 import { useTheme, cssVar } from '../../composables/useTheme.js'
 import { LockedError, useAdminCall, formatBytes, formatDateTime, formatDayMonth, formatDuration, formatNumber } from './adminCall.js'
 
-/* global __APP_BUILD_TIME__ */
 const buildTime = typeof __APP_BUILD_TIME__ === 'string' ? __APP_BUILD_TIME__ : null
 
 const { t, te, locale } = useI18n()

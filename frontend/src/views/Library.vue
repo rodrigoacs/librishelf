@@ -84,7 +84,6 @@
             v-for="item in books"
             :key="item.book_id || item.id"
             :book="item"
-            :cover-version="coverVersions[item.book_id || item.id]"
             quick-actions
             :selectable="selecting"
             :selected="selectedIds.has(item.book_id || item.id)"
@@ -103,7 +102,6 @@
             v-for="item in books"
             :key="item.book_id || item.id"
             :book="item"
-            :cover-version="coverVersions[item.book_id || item.id]"
             :selectable="selecting"
             :selected="selectedIds.has(item.book_id || item.id)"
             @toggle-select="toggleSelected"
@@ -204,7 +202,6 @@ const {
   loadingMore,
   error,
   filters,
-  coverVersions,
   fetchBooks,
   loadMore,
   setFilter,
@@ -238,8 +235,8 @@ function clearFilters() {
   scrollToTop()
 }
 
-function onBookUpdated({ book, coverChanged }) {
-  updateBookInList(book, { coverChanged })
+function onBookUpdated({ book }) {
+  updateBookInList(book)
   header.value?.reloadOptions()
 }
 

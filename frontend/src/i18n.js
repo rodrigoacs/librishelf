@@ -1,8 +1,12 @@
 import { createI18n } from 'vue-i18n'
-import pt from './locales/pt.json'
-import en from './locales/en.json'
 
 const SUPPORTED = ['pt', 'en']
+// Cada idioma é um chunk separado: só o que está em uso é baixado (o service
+// worker guarda os dois para a troca funcionar offline).
+const LOADERS = {
+  pt: () => import('./locales/pt.json'),
+  en: () => import('./locales/en.json')
+}
 const HTML_LANG = { pt: 'pt-BR', en: 'en' }
 
 function readSavedLocale() {
@@ -22,15 +26,30 @@ const i18n = createI18n({
   locale: initialLocale,
   fallbackLocale: 'en',
   globalInjection: true,
-  messages: { pt, en }
+  messages: {}
 })
+
+const loaded = new Set()
+
+/** Baixa e registra as mensagens do idioma (uma vez só). */
+export async function loadLocaleMessages(locale) {
+  if (loaded.has(locale)) return
+  const messages = await LOADERS[locale]()
+  i18n.global.setLocaleMessage(locale, messages.default ?? messages)
+  loaded.add(locale)
+}
 
 export function applyDocumentLanguage(locale) {
   document.documentElement.lang = HTML_LANG[locale] || locale
 }
 
-export function setLocale(locale) {
+export async function setLocale(locale) {
   if (!SUPPORTED.includes(locale)) return
+  try {
+    await loadLocaleMessages(locale)
+  } catch {
+    return // sem rede e sem o chunk guardado: fica no idioma atual
+  }
   i18n.global.locale.value = locale
   applyDocumentLanguage(locale)
   try {
@@ -41,5 +60,8 @@ export function setLocale(locale) {
 }
 
 applyDocumentLanguage(initialLocale)
+
+/** Resolve quando o idioma inicial está carregado (o main.js espera antes de montar). */
+export const i18nReady = loadLocaleMessages(initialLocale)
 
 export default i18n

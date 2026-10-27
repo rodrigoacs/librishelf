@@ -14,7 +14,7 @@ import { validateNumericId } from '../middlewares/validateId.js'
 import STATUS from '../utils/statusCodes.js'
 import { errorBody } from '../utils/httpError.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
-import { saveBookCover, isValidImage } from '../utils/imageProcessor.js'
+import { isValidImage } from '../utils/imageProcessor.js'
 import { uploadLimiter, publicLimiter } from '../middlewares/rateLimiter.js'
 import sendError from '../utils/sendError.js'
 import logger from '../utils/logger.js'
@@ -221,8 +221,8 @@ router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), track
       try {
         const image = await fetchCover(olCoverId)
         if (image) {
-          await saveBookCover(image, newBookId)
-          return res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: true })
+          const coverVersion = await libraryService.storeCover(image, newBookId)
+          return res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: true, coverVersion })
         }
       } catch (coverError) {
         logger.warn('Capa do Open Library não foi salva', { bookId: newBookId, olCoverId, message: coverError.message })
@@ -232,7 +232,8 @@ router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), track
 
     if (req.file) {
       try {
-        await saveBookCover(req.file.buffer, newBookId)
+        const coverVersion = await libraryService.storeCover(req.file.buffer, newBookId)
+        return res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: true, coverVersion })
       } catch (coverError) {
         // Imagem válida mas falhou ao gravar (disco, permissão): o livro fica
         // salvo sem capa e o cliente é avisado.
@@ -241,7 +242,7 @@ router.post('/', uploadLimiter, handleUpload(upload.single('coverImage')), track
       }
     }
 
-    res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: Boolean(req.file) })
+    res.status(STATUS.CREATED).json({ bookId: newBookId, coverSaved: false })
   } catch (error) {
     sendError(res, error, 'Erro ao criar livro')
   }
@@ -275,13 +276,12 @@ router.post('/:id/cover', validateNumericId(), uploadLimiter, handleUpload(uploa
 
     await libraryService.checkBookOwnership(id, userId)
 
-    await saveBookCover(req.file.buffer, id)
-    // Capa nova: a prévia da biblioteca pública (mosaico) ganha versão nova
-    await libraryService.touchBook(id)
+    // Versão nova da capa; a prévia da biblioteca pública (mosaico) também muda
+    const coverVersion = await libraryService.storeCover(req.file.buffer, id)
 
     logger.info('Capa processada (jpg + avif)', { bookId: id, userId })
 
-    res.status(STATUS.OK).json({ message: 'Capa atualizada com sucesso.' })
+    res.status(STATUS.OK).json({ message: 'Capa atualizada com sucesso.', coverVersion })
   } catch (error) {
     sendError(res, error, 'Erro no upload de capa')
   }

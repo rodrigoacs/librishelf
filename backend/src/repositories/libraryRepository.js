@@ -202,6 +202,12 @@ async function getCoverAccess(bookId) {
   return result.rows[0] || null
 }
 
+/** Registra que o livro tem capa nova; devolve a versão (vai como ?v= na URL). */
+async function markCover(bookId) {
+  const result = await db.query(q.MARK_COVER, [bookId])
+  return result.rows[0]?.cover_version ?? null
+}
+
 async function getBookOwner(bookId) {
   const result = await db.query(q.GET_OWNER, [bookId])
   return result.rows[0] || null
@@ -309,5 +315,6 @@ export {
   batchRemoveTag,
   batchDelete,
   pruneUserNames,
-  touchBook
+  touchBook,
+  markCover
 }

@@ -43,7 +43,9 @@ export const LIBRARY_QUERIES = {
       (SELECT r.progress_percent FROM librishelf.readings r WHERE r.book_id = b.id AND r.finished_on IS NULL) AS progress_percent,
       b.series,
       b.series_index,
-      b.publication_date
+      b.publication_date,
+      -- Capa (migration 016): null = sem capa; o número entra como ?v= na URL
+      b.cover_version
     FROM
       librishelf.books AS b
       LEFT JOIN librishelf.users AS u ON b.user_id = u.id
@@ -72,6 +74,7 @@ export const LIBRARY_QUERIES = {
       b.series_index,
       b.notes,
       b.publication_date,
+      b.cover_version,
       p.name AS publisher_name, -- O Frontend procura por .publisher_name
       (SELECT STRING_AGG(a.name, ', ' ORDER BY bal.position, a.id)
        FROM librishelf.books_authors_link AS bal
@@ -108,6 +111,13 @@ export const LIBRARY_QUERIES = {
     WHERE b.id = $1
   `,
   GET_OWNER: 'SELECT user_id FROM librishelf.books WHERE id = $1',
+  // Capa nova gravada: versão nova (vira ?v= na URL) e prévia pública atualizada
+  MARK_COVER: `
+    UPDATE librishelf.books
+    SET cover_version = nextval('librishelf.cover_version_seq')::int, last_modified = now()
+    WHERE id = $1
+    RETURNING cover_version
+  `,
   FIND_BY_ISBN: 'SELECT * FROM librishelf.books WHERE isbn = $1 AND user_id = $2',
   DELETE_BOOK: 'DELETE FROM librishelf.books WHERE id = $1',
   UPDATE_EXTRAS: 'UPDATE librishelf.books SET series = $1, series_index = $2, notes = $3, page_count = $4 WHERE id = $5',
@@ -153,7 +163,7 @@ export const LIBRARY_QUERIES = {
     SELECT b.id
     FROM librishelf.books b
     JOIN librishelf.users u ON u.id = b.user_id
-    WHERE u.is_public = true AND u.is_active IS NOT FALSE
+    WHERE u.is_public = true AND u.is_active IS NOT FALSE AND b.cover_version IS NOT NULL
     ORDER BY random()
     LIMIT $1
   `
@@ -399,6 +409,35 @@ const NOT_BLOCKED = (a, b) => `NOT EXISTS (
   WHERE (bl.blocker_id = ${a} AND bl.blocked_id = ${b}) OR (bl.blocker_id = ${b} AND bl.blocked_id = ${a})
 )`
 
+// Usuário $X visível na comunidade para $viewer: biblioteca pública, participa da
+// comunidade, conta ativa e sem bloqueio em nenhum dos sentidos.
+const IN_COMMUNITY = (u, viewer) => `${u}.is_public AND ${u}.show_in_community AND ${u}.is_active IS NOT FALSE
+  AND ${u}.id <> ${viewer} AND ${NOT_BLOCKED(`${u}.id`, viewer)}`
+
+// Obras e ISBNs da estante de $userExpr, cada um sem repetição. Servem para
+// achar livros "iguais" com duas buscas indexadas (ol_work_key e isbn13) em vez
+// do OR do SAME_BOOK, que obriga o banco a comparar livro a livro.
+const MY_KEYS = (userExpr) => `
+    my_works AS MATERIALIZED (
+      SELECT DISTINCT ol_work_key AS k FROM librishelf.books WHERE user_id = ${userExpr} AND ol_work_key IS NOT NULL
+    ),
+    my_isbns AS MATERIALIZED (
+      SELECT DISTINCT isbn13 AS k FROM librishelf.books WHERE user_id = ${userExpr} AND isbn13 IS NOT NULL
+    )`
+
+// Livros das pessoas da CTE people (coluna id) iguais a algum de
+// my_works/my_isbns, sem repetir o livro que bate pelos dois lados.
+const MATCHING_BOOKS = (people) => `
+      SELECT b.id, b.user_id FROM my_works w JOIN librishelf.books b ON b.ol_work_key = w.k
+      WHERE b.user_id IN (SELECT id FROM ${people})
+      UNION
+      SELECT b.id, b.user_id FROM my_isbns i JOIN librishelf.books b ON b.isbn13 = i.k
+      WHERE b.user_id IN (SELECT id FROM ${people})`
+
+// O livro b não está na estante dona de my_works/my_isbns.
+const NOT_MINE = (b) => `NOT EXISTS (SELECT 1 FROM my_works w WHERE w.k = ${b}.ol_work_key)
+        AND NOT EXISTS (SELECT 1 FROM my_isbns i WHERE i.k = ${b}.isbn13)`
+
 const AUTHORS_OF = (bookExpr) => `(
   SELECT string_agg(a.name, ', ' ORDER BY bal.position, a.id)
   FROM librishelf.books_authors_link bal
@@ -424,89 +463,103 @@ export const COMMUNITY_QUERIES = {
   `,
 
   // "Quem tem este livro também tem": obras mais frequentes nas bibliotecas
-  // desses leitores que $2 ainda não tem.
+  // dos leitores do livro $1 (de $2) que $2 ainda não tem. Devolve só a
+  // classificação; título, dono e autores vêm de SAMPLE_BOOKS na hora (o
+  // resultado desta fica alguns minutos em cache).
   ALSO_HAVE: `
-    WITH me AS (
+    WITH me AS MATERIALIZED (
       SELECT ol_work_key, isbn13 FROM librishelf.books WHERE id = $1 AND user_id = $2
     ),
-    peers AS (
+    ${MY_KEYS('$2')},
+    peers AS MATERIALIZED (
       SELECT DISTINCT b.user_id
-      FROM me
-      JOIN librishelf.books b ON ${SAME_BOOK('me', 'b')}
+      FROM (
+        SELECT b.user_id FROM me JOIN librishelf.books b ON b.ol_work_key = me.ol_work_key
+        UNION
+        SELECT b.user_id FROM me JOIN librishelf.books b ON b.isbn13 = me.isbn13
+      ) b
       JOIN librishelf.users u ON u.id = b.user_id
-      WHERE b.user_id <> $2 AND u.is_public AND u.show_in_community AND u.is_active IS NOT FALSE AND ${NOT_BLOCKED('u.id', '$2')}
+      WHERE ${IN_COMMUNITY('u', '$2')}
     ),
     candidates AS (
       SELECT b.id, b.title, b.user_id, COALESCE(b.ol_work_key, 'isbn:' || b.isbn13) AS book_key
       FROM librishelf.books b
       WHERE b.user_id IN (SELECT user_id FROM peers)
         AND (b.ol_work_key IS NOT NULL OR b.isbn13 IS NOT NULL)
-        AND NOT EXISTS (
-          SELECT 1 FROM librishelf.books m WHERE m.user_id = $2 AND ${SAME_BOOK('m', 'b')}
-        )
-    ),
-    ranked AS (
-      SELECT book_key,
-             count(DISTINCT user_id)::int AS readers,
-             (array_agg(id ORDER BY id))[1] AS sample_book_id,
-             (array_agg(title ORDER BY id))[1] AS title
-      FROM candidates
-      GROUP BY book_key
-      ORDER BY readers DESC, title
-      LIMIT $3
+        AND ${NOT_MINE('b')}
     )
-    SELECT r.title, r.readers, r.sample_book_id, u.name AS sample_owner, ${AUTHORS_OF('r.sample_book_id')} AS authors
-    FROM ranked r
-    JOIN librishelf.books sb ON sb.id = r.sample_book_id
-    JOIN librishelf.users u ON u.id = sb.user_id
-    ORDER BY r.readers DESC, r.title
+    SELECT book_key,
+           count(DISTINCT user_id)::int AS readers,
+           (array_agg(id ORDER BY id))[1] AS sample_book_id
+    FROM candidates
+    GROUP BY book_key
+    ORDER BY readers DESC, (array_agg(title ORDER BY id))[1], book_key
+    LIMIT $3
   `,
 
   // Encontrar leitores: só quem tem biblioteca pública E participa da comunidade.
   // $1 = quem procura, $2 = texto (vazio = sugestões), $3 = padrão ILIKE, $4 = limite.
+  // Devolve a classificação (id e contagens); nome e "seguir" vêm de
+  // READERS_LIVE na hora. "Lidos" só é contado para quem entrou na página.
   FIND_READERS: `
-    WITH mine AS (
-      SELECT ol_work_key, isbn13 FROM librishelf.books
-      WHERE user_id = $1 AND (ol_work_key IS NOT NULL OR isbn13 IS NOT NULL)
-    ),
-    readers AS (
-      SELECT u.id, u.name, u.show_activity,
-        (SELECT count(*)::int FROM librishelf.books b WHERE b.user_id = u.id) AS total_books,
-        (SELECT count(*)::int FROM librishelf.books b WHERE b.user_id = u.id AND b.read_date IS NOT NULL) AS read_books,
-        (SELECT count(*)::int FROM librishelf.books b
-          WHERE b.user_id = u.id AND EXISTS (SELECT 1 FROM mine m WHERE ${SAME_BOOK('m', 'b')})) AS common_books
+    WITH ${MY_KEYS('$1')},
+    readers AS MATERIALIZED (
+      SELECT u.id, u.name
       FROM librishelf.users u
-      WHERE u.id <> $1 AND u.is_public AND u.show_in_community AND u.is_active IS NOT FALSE
-        AND ${NOT_BLOCKED('u.id', '$1')}
+      WHERE ${IN_COMMUNITY('u', '$1')}
         AND ($2 = '' OR u.name ILIKE $3)
+    ),
+    matches AS (${MATCHING_BOOKS('readers')}
+    ),
+    common AS (
+      SELECT user_id, count(*)::int AS n FROM matches GROUP BY user_id
+    ),
+    totals AS (
+      SELECT user_id, count(*)::int AS n FROM librishelf.books
+      WHERE user_id IN (SELECT id FROM readers)
+      GROUP BY user_id
+    ),
+    page AS (
+      SELECT r.id, r.name, COALESCE(c.n, 0) AS common_books, COALESCE(t.n, 0) AS total_books,
+             row_number() OVER (
+               ORDER BY (lower(r.name) = lower($2)) DESC, COALESCE(c.n, 0) DESC, COALESCE(t.n, 0) DESC, r.name
+             ) AS position
+      FROM readers r
+      LEFT JOIN common c ON c.user_id = r.id
+      LEFT JOIN totals t ON t.user_id = r.id
+      WHERE $2 <> '' OR c.n > 0 OR t.n > 0
+      ORDER BY position
+      LIMIT $4
     )
-    SELECT r.name AS username, r.show_activity AS accepts_followers, r.total_books, r.read_books,
-           r.common_books, f.status AS follow_status
-    FROM readers r
-    LEFT JOIN librishelf.follows f ON f.follower_id = $1 AND f.followee_id = r.id
-    WHERE $2 <> '' OR r.common_books > 0 OR r.total_books > 0
-    ORDER BY (lower(r.name) = lower($2)) DESC, r.common_books DESC, r.total_books DESC, r.name
-    LIMIT $4
+    SELECT p.id, p.common_books, p.total_books,
+           (SELECT count(*)::int FROM librishelf.books b WHERE b.user_id = p.id AND b.read_date IS NOT NULL) AS read_books
+    FROM page p
+    ORDER BY p.position
+  `,
+
+  // Parte "ao vivo" da busca de leitores: dos ids $2 já classificados, quem
+  // ainda pode aparecer para $1 agora (privacidade, bloqueio, conta ativa),
+  // com o nome atual e a situação de "seguir".
+  READERS_LIVE: `
+    SELECT u.id, u.name AS username, u.show_activity AS accepts_followers, f.status AS follow_status
+    FROM librishelf.users u
+    LEFT JOIN librishelf.follows f ON f.follower_id = $1 AND f.followee_id = u.id
+    WHERE u.id = ANY($2::int[]) AND ${IN_COMMUNITY('u', '$1')}
   `,
 
   // Recomendações para o Início: obras das bibliotecas da comunidade que $1
   // não tem. Pesa mais quem tem livros em comum com $1 e as notas altas; sem
-  // ninguém em comum, vira "populares na comunidade".
+  // ninguém em comum, vira "populares na comunidade". Devolve a classificação;
+  // título, dono e autores vêm de SAMPLE_BOOKS na hora.
   RECOMMENDATIONS: `
-    WITH mine AS (
-      SELECT ol_work_key, isbn13 FROM librishelf.books WHERE user_id = $1
+    WITH ${MY_KEYS('$1')},
+    community AS MATERIALIZED (
+      SELECT u.id FROM librishelf.users u WHERE ${IN_COMMUNITY('u', '$1')}
     ),
-    community AS (
-      SELECT id FROM librishelf.users
-      WHERE is_public AND show_in_community AND id <> $1 AND is_active IS NOT FALSE
-        AND ${NOT_BLOCKED('id', '$1')}
+    matches AS (${MATCHING_BOOKS('community')}
     ),
     peers AS (
-      SELECT b.user_id, count(*)::int AS shared
-      FROM librishelf.books b
-      JOIN mine m ON ${SAME_BOOK('m', 'b')}
-      WHERE b.user_id IN (SELECT id FROM community)
-      GROUP BY b.user_id
+      SELECT user_id, count(*)::int AS shared FROM matches GROUP BY user_id
     ),
     candidates AS (
       SELECT b.id, b.user_id, b.rating, COALESCE(p.shared, 0) AS shared,
@@ -515,26 +568,32 @@ export const COMMUNITY_QUERIES = {
       LEFT JOIN peers p ON p.user_id = b.user_id
       WHERE b.user_id IN (SELECT id FROM community)
         AND (b.ol_work_key IS NOT NULL OR b.isbn13 IS NOT NULL)
-        AND NOT EXISTS (SELECT 1 FROM librishelf.books m WHERE m.user_id = $1 AND ${SAME_BOOK('m', 'b')})
-    ),
-    ranked AS (
-      SELECT book_key,
-             count(DISTINCT user_id)::int AS readers,
-             count(DISTINCT user_id) FILTER (WHERE shared > 0)::int AS similar_readers,
-             round(avg(rating)::numeric, 1)::float AS average_rating,
-             sum(1 + LEAST(shared, 10) + CASE WHEN rating >= 4 THEN 2 ELSE 0 END) AS score,
-             (array_agg(id ORDER BY rating DESC NULLS LAST, id))[1] AS sample_book_id
-      FROM candidates
-      GROUP BY book_key
-      ORDER BY score DESC, readers DESC, book_key
-      LIMIT $2
+        AND ${NOT_MINE('b')}
     )
-    SELECT sb.title, r.readers, r.similar_readers, r.average_rating, r.sample_book_id,
-           u.name AS sample_owner, ${AUTHORS_OF('r.sample_book_id')} AS authors
-    FROM ranked r
-    JOIN librishelf.books sb ON sb.id = r.sample_book_id
+    SELECT book_key,
+           count(DISTINCT user_id)::int AS readers,
+           count(DISTINCT user_id) FILTER (WHERE shared > 0)::int AS similar_readers,
+           round(avg(rating)::numeric, 1)::float AS average_rating,
+           sum(1 + LEAST(shared, 10) + CASE WHEN rating >= 4 THEN 2 ELSE 0 END)::int AS score,
+           (array_agg(id ORDER BY rating DESC NULLS LAST, id))[1] AS sample_book_id
+    FROM candidates
+    GROUP BY book_key
+    ORDER BY score DESC, readers DESC, book_key
+    LIMIT $2
+  `,
+
+  // Parte "ao vivo" de recomendações e "também têm": dos livros de exemplo $2,
+  // os que ainda podem ser mostrados a $1 (dono visível para ele, sem bloqueio)
+  // e que $1 ainda não tem (acabou de pôr em "Quero ler", por exemplo).
+  SAMPLE_BOOKS: `
+    SELECT sb.id, sb.title, sb.cover_version, u.name AS owner, ${AUTHORS_OF('sb.id')} AS authors
+    FROM librishelf.books sb
     JOIN librishelf.users u ON u.id = sb.user_id
-    ORDER BY r.score DESC, r.readers DESC, sb.title
+    WHERE sb.id = ANY($2::int[]) AND ${IN_COMMUNITY('u', '$1')}
+      AND NOT EXISTS (
+        SELECT 1 FROM librishelf.books m
+        WHERE m.user_id = $1 AND ${SAME_BOOK('sb', 'm')}
+      )
   `,
 
   // Livro de outro leitor (público + comunidade) para copiar para "Quero ler".
@@ -780,17 +839,17 @@ export const SOCIAL_QUERIES = {
     events AS (
       -- day: a data da leitura como foi escolhida (sem fuso); at só ordena
       SELECT 'read' AS type, (r.finished_on::timestamp AT TIME ZONE 'UTC') AS at, to_char(r.finished_on, 'YYYY-MM-DD') AS day,
-             b.id AS book_id, b.user_id, b.title, b.rating,
+             b.id AS book_id, b.user_id, b.title, b.rating, b.cover_version,
              (row_number() OVER (PARTITION BY r.book_id ORDER BY r.finished_on, r.id) > 1) AS reread
       FROM librishelf.readings r
       JOIN librishelf.books b ON b.id = r.book_id
       WHERE b.user_id IN (SELECT followee_id FROM followed) AND r.finished_on IS NOT NULL
       UNION ALL
-      SELECT 'added', b.created_at, NULL, b.id, b.user_id, b.title, b.rating, false
+      SELECT 'added', b.created_at, NULL, b.id, b.user_id, b.title, b.rating, b.cover_version, false
       FROM librishelf.books b
       WHERE b.user_id IN (SELECT followee_id FROM followed)
     )
-    SELECT e.type, e.at, e.day, e.book_id, e.title, e.rating, e.reread, u.name AS username, u.is_public,
+    SELECT e.type, e.at, e.day, e.book_id, e.title, e.rating, e.cover_version, e.reread, u.name AS username, u.is_public,
            ${AUTHORS_OF('e.book_id')} AS authors
     FROM events e
     JOIN librishelf.users u ON u.id = e.user_id
@@ -1025,9 +1084,9 @@ export const REVIEW_QUERIES = {
 const LIST_SUMMARY = `
   l.id, l.user_id, l.title, l.description, l.is_public, l.ranked, l.created_at, l.updated_at,
   (SELECT count(*)::int FROM librishelf.list_items li WHERE li.list_id = l.id) AS item_count,
-  (SELECT COALESCE(json_agg(json_build_object('bookId', c.id, 'title', c.title, 'authors', c.authors) ORDER BY c.ord), '[]')
+  (SELECT COALESCE(json_agg(json_build_object('bookId', c.id, 'title', c.title, 'authors', c.authors, 'coverVersion', c.cover_version) ORDER BY c.ord), '[]')
    FROM (
-     SELECT b.id, b.title, ${AUTHORS_OF('b.id')} AS authors, row_number() OVER (ORDER BY li.position, li.added_at) AS ord
+     SELECT b.id, b.title, b.cover_version, ${AUTHORS_OF('b.id')} AS authors, row_number() OVER (ORDER BY li.position, li.added_at) AS ord
      FROM librishelf.list_items li
      JOIN librishelf.books b ON b.id = li.book_id
      WHERE li.list_id = l.id
@@ -1065,7 +1124,7 @@ export const LIST_QUERIES = {
   ITEMS: `
     SELECT li.book_id, li.position, li.added_at,
            b.title, ${AUTHORS_OF('b.id')} AS authors, b.rating, b.read_date, b.reading_status,
-           b.series, b.series_index
+           b.series, b.series_index, b.cover_version
     FROM librishelf.list_items li
     JOIN librishelf.books b ON b.id = li.book_id
     WHERE li.list_id = $1
@@ -1118,7 +1177,7 @@ export const YEAR_QUERIES = {
   FINISHED: `
     SELECT r.id, r.book_id, r.started_on, r.finished_on,
            COALESCE(r.rating, b.rating) AS rating,
-           b.title, ${AUTHORS_OF('b.id')} AS authors, b.page_count,
+           b.title, ${AUTHORS_OF('b.id')} AS authors, b.page_count, b.cover_version,
            EXISTS (
              SELECT 1 FROM librishelf.readings e
              WHERE e.book_id = r.book_id AND e.finished_on IS NOT NULL

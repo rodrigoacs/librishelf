@@ -4,7 +4,6 @@
       type="button"
       class="book-card"
       :class="{ 'is-selected': selectable && selected }"
-      :aria-label="ariaLabel"
       :aria-pressed="selectable ? selected : undefined"
       @click="onCardClick"
     >
@@ -62,6 +61,12 @@
           v-if="book.series"
           class="book-series"
         >{{ seriesText(book, t, locale) }}</span>
+        <!-- O nome do botão é o texto visível (status, título, autor, série);
+             "Lido" aparece só como fita, então vai em texto para leitor de tela -->
+        <span
+          v-if="isRead"
+          class="sr-only"
+        >, {{ t('status.read') }}</span>
       </span>
     </button>
 
@@ -85,6 +90,7 @@
     <BookDialog
       v-if="displayDialog"
       :bookId="bookId"
+      :coverVersion="book.cover_version"
       :isReadOnly="readOnly"
       :ownerUsername="ownerUsername"
       :modelValue="displayDialog"
@@ -109,7 +115,6 @@ const { t, locale } = useI18n()
 
 const props = defineProps({
   book: { type: Object, required: true },
-  coverVersion: { type: Number, default: 0 },
   readOnly: { type: Boolean, default: false },
   ownerUsername: { type: String, default: '' },
   /** Botão de marcar como lido sobre a capa (só na biblioteca do dono). */
@@ -134,21 +139,18 @@ const isRead = computed(() => status.value === 'read')
 // desmarca); não lido = fita vazada que aparece ao passar o mouse.
 const showQuick = computed(() => props.quickActions && !props.readOnly && !props.selectable)
 const { saving, toggleRead } = useReadToggle(() => props.book, payload => emit('updated', payload))
-const bookCoverUrl = computed(() => coverUrl(bookId.value, props.coverVersion))
+// cover_version null = sem capa: desenha direto, sem pedir a imagem
+const bookCoverUrl = computed(() => coverUrl(bookId.value, props.book.cover_version))
 
 // Sem imagem (ou falhou): capa desenhada com título e autor, colorida pelo título.
-const coverMissing = ref(false)
-watch(bookCoverUrl, () => { coverMissing.value = false })
+const coverFailed = ref(false)
+watch(bookCoverUrl, () => { coverFailed.value = false })
+const coverMissing = computed(() => !bookCoverUrl.value || coverFailed.value)
 
 function onCoverError(event) {
-  if (coverFallbackExhausted(event)) coverMissing.value = true
+  if (coverFallbackExhausted(event)) coverFailed.value = true
 }
 
-const ariaLabel = computed(() => {
-  const parts = [props.book.title, props.book.authors].filter(Boolean)
-  if (status.value !== 'none') parts.push(t(`status.${status.value}`))
-  return parts.join(' — ')
-})
 </script>
 
 <style scoped>
@@ -170,31 +172,43 @@ const ariaLabel = computed(() => {
   height: 42px;
   padding: 6px 0 0;
   border: none;
-  background: rgba(0, 0, 0, 0.6);
+  /* O desenho da fita fica no ::before: com o clip-path no próprio botão, a
+     área de toque também era recortada e não dava para aumentá-la */
+  background: transparent;
+  --ribbon-bg: rgba(0, 0, 0, 0.6);
   color: rgba(255, 255, 255, 0.85);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
   display: flex;
   align-items: flex-start;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.15s ease, background-color 0.15s ease, height 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.15s ease, height 0.2s ease, transform 0.2s ease;
+}
+
+.quick-read::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--ribbon-bg);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  transition: background-color 0.15s ease;
 }
 
 .quick-read .pi {
+  position: relative;
   font-size: var(--fs-sm);
   font-weight: 700;
 }
 
 .quick-read.is-read {
-  background: var(--main-solid);
+  --ribbon-bg: var(--main-solid);
   color: var(--on-main);
 }
 
 .quick-read:focus-visible {
   outline: none;
   height: 48px;
-  background: var(--main-solid);
+  --ribbon-bg: var(--main-solid);
   color: var(--on-main);
   opacity: 1;
 }
@@ -204,7 +218,10 @@ const ariaLabel = computed(() => {
     opacity: 0;
   }
 
+  /* Teclado: aparece com o foco no card ou no próprio botão (antes o
+     opacity: 0 acima vencia o :focus-visible e o botão ficava invisível) */
   .book-card-wrapper:hover .quick-read,
+  .book-card-wrapper:focus-within .quick-read,
   .quick-read.busy {
     opacity: 1;
   }
@@ -216,7 +233,7 @@ const ariaLabel = computed(() => {
   }
 
   .quick-read:not(.is-read):hover {
-    background: rgba(0, 0, 0, 0.8);
+    --ribbon-bg: rgba(0, 0, 0, 0.8);
     color: #ffffff;
   }
 

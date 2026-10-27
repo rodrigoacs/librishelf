@@ -1,4 +1,3 @@
-/* global self, caches, fetch, Response, URL */
 /**
  * Service worker do Librishelf — gerado no build a partir de frontend/sw/sw.js
  * (vite/serviceWorker.js troca __BUILD_ID__ e __PRECACHE__).

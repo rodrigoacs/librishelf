@@ -37,6 +37,7 @@ function toSummary(row) {
 function toItem(row) {
   return {
     bookId: row.book_id,
+    coverVersion: row.cover_version,
     position: row.position,
     title: row.title,
     authors: row.authors,
