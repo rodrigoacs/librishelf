@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="barEl"
     class="batch-bar"
     role="toolbar"
     :aria-label="t('batch.toolbar')"
@@ -109,7 +110,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfirm } from '../services/confirm.js'
 import { useToast } from '../services/toast.js'
@@ -139,6 +140,37 @@ const statusMenu = ref(null)
 const tagDialog = ref(false)
 const tagName = ref('')
 const tags = ref([])
+
+// No celular a barra é fixa na janela e tapava a última linha da estante.
+// Ela publica em --batch-bar-height quanto ocupa do pé da janela (altura +
+// distância da borda) para a Library reservar esse espaço no fim da lista.
+// Fora do modo fixo (desktop, onde ela segue o fluxo) vale 0.
+const BAR_VAR = '--batch-bar-height'
+const barEl = ref(null)
+let barObserver = null
+
+function publishBarHeight() {
+  const el = barEl.value
+  if (!el) return
+  const fixed = getComputedStyle(el).position === 'fixed'
+  const covered = fixed ? Math.max(0, window.innerHeight - el.getBoundingClientRect().top) : 0
+  document.documentElement.style.setProperty(BAR_VAR, `${Math.ceil(covered)}px`)
+}
+
+onMounted(() => {
+  publishBarHeight()
+  if (typeof ResizeObserver !== 'undefined' && barEl.value) {
+    barObserver = new ResizeObserver(publishBarHeight)
+    barObserver.observe(barEl.value)
+  }
+  window.addEventListener('resize', publishBarHeight)
+})
+
+onBeforeUnmount(() => {
+  barObserver?.disconnect()
+  window.removeEventListener('resize', publishBarHeight)
+  document.documentElement.style.removeProperty(BAR_VAR)
+})
 
 async function run(body, successKey) {
   busy.value = true
@@ -276,18 +308,58 @@ function confirmDelete() {
   }
 }
 
+/* Celular: os rótulos ficam (só ícones viravam três círculos sem texto). Em
+   cima, contagem e "Selecionar todos" empilhados, com o X de sair ao lado
+   (os três numa linha só não cabem a 320 px); embaixo, as três ações
+   dividindo a largura, com o ícone sobre o rótulo para caber "Categoria". */
 @media (max-width: 600px) {
   .batch-bar {
-    padding: 0.6rem 0.75rem;
-    gap: 0.5rem;
+    width: calc(100vw - 1.5rem);
+    padding: 0.5rem 0.6rem 0.6rem 0.9rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "count count close"
+      "link  link  close";
+    gap: 0.1rem 0.4rem;
+    align-items: center;
   }
 
-  .batch-btn.btn :deep(.btn-label) {
-    display: none;
+  .batch-actions {
+    display: contents;
+  }
+
+  .batch-count {
+    grid-area: count;
+  }
+
+  .batch-link {
+    grid-area: link;
+    justify-self: start;
+    padding-left: 0;
+  }
+
+  .close-btn {
+    grid-area: close;
+    justify-self: end;
+  }
+
+  .batch-btn.btn {
+    margin-top: 0.35rem;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.35rem 0.4rem;
+    border-radius: 12px;
+    line-height: 1.15;
   }
 
   .batch-btn.btn :deep(.btn-icon) {
     margin: 0;
+  }
+
+  .batch-btn.btn :deep(.btn-label) {
+    white-space: nowrap;
   }
 }
 </style>

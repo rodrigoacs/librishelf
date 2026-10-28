@@ -20,7 +20,10 @@
       />
     </div>
 
-    <div class="content-section">
+    <div
+      class="content-section"
+      :class="{ 'is-selecting': selecting }"
+    >
 
       <div
         v-if="loading && books.length === 0"
@@ -475,6 +478,15 @@ onUnmounted(() => {
 
 .book-list-move {
   transition: transform 0.4s ease;
+}
+
+/* Seleção em lote no celular: a BatchBar fica fixa no pé da janela e publica
+   em --batch-bar-height quanto ocupa; sem esta folga a última linha ficava
+   embaixo dela, sem como rolar além. */
+@media (max-width: 768px) {
+  .content-section.is-selecting {
+    padding-bottom: calc(var(--batch-bar-height, 0px) + 1rem);
+  }
 }
 
 @media (max-width: 600px) {

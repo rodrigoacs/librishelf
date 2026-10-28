@@ -28,7 +28,7 @@
             id="library-search"
             v-model="searchText"
             type="search"
-            :placeholder="t('library.search_ph')"
+            :placeholder="compact ? t('library.search_ph_short') : t('library.search_ph')"
             class="custom-search-input"
             autocomplete="off"
             @input="emitFilter('search', searchText)"
@@ -212,6 +212,36 @@
         </div>
 
         <div class="sidebar-content">
+          <!-- Celular: o alternador grade/lista sai do cabeçalho e mora aqui
+               (no cabeçalho ele empurrava o título para baixo das ações) -->
+          <div class="filter-group view-group">
+            <span
+              id="filter-view"
+              class="group-label"
+            >{{ t('library.view_label') }}</span>
+            <div
+              class="view-toggle view-toggle-wide"
+              role="group"
+              aria-labelledby="filter-view"
+            >
+              <button
+                v-for="mode in viewModes"
+                :key="mode.value"
+                type="button"
+                class="view-btn view-btn-wide"
+                :class="{ active: view === mode.value }"
+                :aria-pressed="view === mode.value"
+                @click="emit('view-change', mode.value)"
+              >
+                <i
+                  :class="mode.icon"
+                  aria-hidden="true"
+                ></i>
+                <span>{{ mode.label }}</span>
+              </button>
+            </div>
+          </div>
+
           <div class="filter-group">
             <label id="filter-read-status">{{ t('library.read_status') }}</label>
             <AppSelect
@@ -333,7 +363,7 @@
 
 <script setup>
 import { tagColor } from '../utils/tagColors.js'
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import AppButton from './ui/AppButton.vue'
 import AppDialog from './ui/AppDialog.vue'
 import IconButton from './form/IconButton.vue'
@@ -367,6 +397,15 @@ const viewModes = computed(() => [
 
 const visibleFilters = ref(false)
 const addBookDialogVisible = ref(false)
+
+// Celular (mesmo corte do CSS abaixo): placeholder curto, porque o longo
+// ("Pesquisar por título, autor ou ISBN...") era cortado no meio da palavra.
+const COMPACT_QUERY = '(max-width: 600px)'
+const compactMedia = typeof window !== 'undefined' ? window.matchMedia?.(COMPACT_QUERY) : null
+const compact = ref(Boolean(compactMedia?.matches))
+const onCompactChange = event => { compact.value = event.matches }
+compactMedia?.addEventListener?.('change', onCompactChange)
+onBeforeUnmount(() => compactMedia?.removeEventListener?.('change', onCompactChange))
 
 const searchText = ref(props.filters.search || '')
 watch(() => props.filters.search, (value) => {
@@ -638,21 +677,23 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   pointer-events: none;
 }
 
+/* 24 × 24 px no mouse (WCAG 2.5.8); no toque o ::after leva a 44 px, como
+   no .view-btn (bloco sem escopo no fim do arquivo) */
 .clear-icon {
   position: absolute;
   right: 1rem;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
   cursor: pointer;
   font-size: var(--fs-sm);
-}
-
-.clear-icon {
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  border-radius: 50%;
 }
 
 .clear-icon:hover {
@@ -797,7 +838,8 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   gap: 1.5rem;
 }
 
-.filter-group label {
+.filter-group label,
+.filter-group .group-label {
   display: block;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
@@ -828,7 +870,28 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   padding-top: 2rem;
 }
 
+/* Grade/lista dentro da gaveta: só no celular (no resto ele fica no cabeçalho) */
+.view-group {
+  display: none;
+}
+
+.view-toggle-wide {
+  display: flex;
+  width: 100%;
+}
+
+.view-btn-wide {
+  flex: 1;
+  width: auto;
+  height: 2.75rem;
+  gap: 0.5rem;
+  font: inherit;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
+
   /* Celular: duas linhas só — título e ações em cima, busca embaixo. O
      cabeçalho é fixo no topo, então cada pixel aqui é um pixel a menos de estante. */
   .library-header-wrapper {
@@ -933,6 +996,39 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   .clear-all-btn.btn {
     flex-shrink: 0;
     padding: 0.35rem 0.5rem;
+  }
+}
+
+/* Celular: a 320 px as quatro ações somavam ~290 px e cobriam o título e o
+   contador. O alternador grade/lista vai para a gaveta de filtros e o título
+   ganha a coluna de volta; se ainda faltar espaço, corta com reticências em
+   vez de passar por baixo das ações. */
+@media (max-width: 600px) {
+  .top-bar .view-toggle {
+    display: none;
+  }
+
+  .view-group {
+    display: block;
+  }
+
+  .header-title,
+  .header-title h1 {
+    max-width: 100%;
+  }
+
+  .header-title h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (pointer: coarse) {
+  .clear-icon::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
   }
 }
 </style>
