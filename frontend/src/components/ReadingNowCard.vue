@@ -127,7 +127,7 @@ async function finish() {
   padding: 1rem;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   min-width: 0;
 }
 
@@ -137,8 +137,8 @@ async function finish() {
   border: none;
   background: none;
   cursor: pointer;
-  border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-2);
   align-self: flex-start;
 }
 
@@ -211,6 +211,6 @@ async function finish() {
 .finish-btn.btn {
   margin-top: auto;
   align-self: flex-start;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 </style>

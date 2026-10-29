@@ -223,7 +223,7 @@ async function submit() {
 .suggestion {
   padding: 0.3rem 0.7rem;
   border: 1px dashed var(--border-hover);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: none;
   color: var(--text-primary);
   font: inherit;
@@ -273,7 +273,7 @@ async function submit() {
   gap: 0.5rem;
   margin: 0;
   padding: 0.6rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
   color: var(--text-secondary);
   font-size: var(--fs-sm);

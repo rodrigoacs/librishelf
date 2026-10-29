@@ -207,7 +207,7 @@ function onPanelKeydown(event) {
   flex-shrink: 0;
   min-width: 1.4rem;
   padding: 0.05rem 0.4rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--main-solid);
   color: var(--on-main);
   font-size: var(--fs-xs);
@@ -247,7 +247,7 @@ function onPanelKeydown(event) {
   height: 2.5rem;
   padding: 0 0.75rem 0 2.2rem;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;
@@ -285,7 +285,7 @@ function onPanelKeydown(event) {
   width: 1.15rem;
   height: 1.15rem;
   border: 2px solid var(--text-muted);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   color: transparent;
 }
 
@@ -319,7 +319,7 @@ function onPanelKeydown(event) {
   font-size: var(--fs-sm);
   font-weight: 600;
   padding: 0.4rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 

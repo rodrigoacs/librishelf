@@ -326,7 +326,7 @@ onMounted(async () => {
   margin: 3rem auto;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 2rem;
   text-align: center;
 }
@@ -406,7 +406,7 @@ onMounted(async () => {
 .tab-count {
   background: rgba(var(--orange-rgb), 0.18);
   color: var(--text-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0 0.45rem;
   font-size: var(--fs-xs);
   font-weight: 600;

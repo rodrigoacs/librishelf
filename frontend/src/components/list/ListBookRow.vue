@@ -99,7 +99,7 @@ const readLabel = computed(() => {
   min-width: 0;
   padding: 0.25rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: none;
   color: inherit;
   font: inherit;
@@ -119,8 +119,8 @@ const readLabel = computed(() => {
 .cover {
   flex-shrink: 0;
   width: 3.25rem;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-2);
 }
 
 .text {
@@ -211,7 +211,7 @@ const readLabel = computed(() => {
     min-width: 1.5rem;
     margin: 0;
     padding: 0.05rem 0.4rem;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--bg-panel);
     border: 1px solid var(--border-color);
     font-family: inherit;

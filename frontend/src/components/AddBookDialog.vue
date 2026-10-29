@@ -63,7 +63,7 @@ function onSaved(result) {
   max-height: min(92vh, 860px);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .book-form-dialog .app-dialog-panel {
     max-height: calc(100dvh - 2rem);
   }
@@ -86,7 +86,7 @@ function onSaved(result) {
   z-index: 10;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .dialog-shell {
     max-height: calc(100dvh - 2rem);
   }

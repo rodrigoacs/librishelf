@@ -77,7 +77,7 @@ function step(delta) {
   align-items: stretch;
   height: 2.75rem;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   overflow: hidden;
 }

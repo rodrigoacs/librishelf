@@ -42,7 +42,7 @@
           v-for="n in 3"
           :key="n"
           height="8rem"
-          border-radius="14px"
+          border-radius="var(--radius-lg)"
         />
       </div>
 
@@ -578,7 +578,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
   padding: 0.35rem 0.85rem;
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -621,7 +621,7 @@ onBeforeUnmount(() => {
   gap: 0.2rem;
   padding: 1.1rem 1.25rem;
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: var(--bg-panel);
   min-width: 0;
 }
@@ -672,7 +672,7 @@ onBeforeUnmount(() => {
 .panel {
   padding: 1.25rem 1.4rem;
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: var(--bg-panel);
   min-width: 0;
 }
@@ -727,7 +727,7 @@ onBeforeUnmount(() => {
 
 .goal-bar {
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-input);
   overflow: hidden;
 }
@@ -770,7 +770,7 @@ onBeforeUnmount(() => {
 .month-bar {
   width: 100%;
   max-width: 2.6rem;
-  border-radius: 6px 6px 2px 2px;
+  border-radius: var(--radius-sm) var(--radius-sm) 2px 2px;
   background: rgba(var(--main-color-rgb), 0.35);
 }
 
@@ -825,12 +825,12 @@ onBeforeUnmount(() => {
 .top-book:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 4px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .top-cover {
   width: 100%;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-2);
   transition: transform 0.15s ease;
 }
 
@@ -853,7 +853,7 @@ onBeforeUnmount(() => {
   color: var(--on-main);
   font-weight: 700;
   font-size: var(--fs-sm);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-2);
 }
 
 .top-title {
@@ -905,7 +905,7 @@ onBeforeUnmount(() => {
 
 .tag {
   padding: 0.25rem 0.65rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--tag-color) 45%, transparent);
   background: color-mix(in srgb, var(--tag-color) 12%, transparent);
   color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
@@ -958,7 +958,7 @@ onBeforeUnmount(() => {
 .record-book:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 /* Imagem para stories */
@@ -973,10 +973,10 @@ onBeforeUnmount(() => {
   position: relative;
   width: 15rem;
   aspect-ratio: 9 / 16;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: #0e0e11;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-3);
 }
 
 .story-canvas {
@@ -1031,7 +1031,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1023.98px) {
   .hero {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1046,7 +1046,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .year-page {
     padding: 1.25rem;
   }

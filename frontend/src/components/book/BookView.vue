@@ -334,7 +334,7 @@ const statusCaption = computed(() => {
   align-items: center;
   gap: 0.45rem;
   padding: 0.4rem 0.85rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(var(--main-color-rgb), 0.12);
   color: var(--main-color);
   font-weight: 600;
@@ -428,7 +428,7 @@ a.series-line:hover {
 
 .notes-section {
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
   background: rgba(var(--main-color-rgb), 0.05);
 }
@@ -491,7 +491,7 @@ a.series-line:hover {
   font-size: var(--fs-sm);
   font-weight: 500;
   padding: 0.25rem 0.7rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
   background: color-mix(in srgb, var(--tag-color) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
@@ -543,7 +543,7 @@ a.series-line:hover {
   margin-top: -0.25rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .book-title {
     font-size: var(--fs-xl);
   }
@@ -553,7 +553,7 @@ a.series-line:hover {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .book-title:not(.expanded) {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -565,7 +565,7 @@ a.series-line:hover {
 
 /* Celular: sem a faixa da capa em cima. As ações (Editar, ⋯) ganham uma
    linha no topo, na altura do X; o título fica logo abaixo, com a largura toda */
-@media (max-width: 600px) {
+@media (max-width: 639.98px) {
   .details-header {
     padding-right: 2.25rem;
     gap: 0.9rem;

@@ -336,7 +336,7 @@ async function confirmDialog() {
 .tag {
   font-size: var(--fs-xs);
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.1rem 0.55rem;
   color: var(--text-primary);
 }
@@ -355,7 +355,7 @@ async function confirmDialog() {
 .suspension {
   margin: 0;
   padding: 0.6rem 0.8rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: rgba(var(--red-rgb), 0.1);
   color: var(--text-primary);
   font-size: var(--fs-sm);

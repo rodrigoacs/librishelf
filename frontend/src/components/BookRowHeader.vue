@@ -123,7 +123,7 @@ function choose(field) {
   margin-left: -0.4rem;
   padding: 0.2rem 0.4rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: none;
   font-family: inherit;
   cursor: pointer;
@@ -147,7 +147,7 @@ function choose(field) {
   font-size: 0.7em;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1279.98px) {
   .header-main {
     grid-template-columns: 40px minmax(0, 2.4fr) minmax(0, 1.2fr) 6rem 6rem;
   }
@@ -161,7 +161,7 @@ function choose(field) {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1023.98px) {
   .header-main {
     grid-template-columns: 40px minmax(0, 1fr) 5.75rem;
     gap: 0.75rem;

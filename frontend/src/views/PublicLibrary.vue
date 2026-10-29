@@ -126,7 +126,7 @@
           class="stat-skeleton"
           width="140px"
           height="78px"
-          border-radius="12px"
+          border-radius="var(--radius-md)"
         />
       </div>
       <div class="profile-grid">
@@ -134,7 +134,7 @@
           v-for="n in 2"
           :key="n"
           height="220px"
-          border-radius="12px"
+          border-radius="var(--radius-md)"
         />
       </div>
     </div>
@@ -374,7 +374,7 @@
         <AppSkeleton
           class="cover-skeleton"
           height="auto"
-          border-radius="12px"
+          border-radius="var(--radius-md)"
         />
         <AppSkeleton
           width="85%"
@@ -772,7 +772,7 @@ watch(username, () => {
 .stat {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 0.9rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -805,7 +805,7 @@ watch(username, () => {
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 1.1rem 1.25rem;
   min-width: 0;
 }
@@ -886,7 +886,7 @@ watch(username, () => {
 .bar-track {
   height: 8px;
   background: var(--bg-input);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
@@ -894,7 +894,7 @@ watch(username, () => {
   display: block;
   height: 100%;
   background: var(--main-color);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bar-color, var(--main-color));
 }
 
@@ -929,7 +929,7 @@ watch(username, () => {
 }
 
 .tag-pill {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.2rem 0.65rem;
   font-size: var(--fs-sm);
   font-weight: 500;
@@ -971,7 +971,7 @@ watch(username, () => {
 .link-button:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .recent-title {
@@ -1079,7 +1079,7 @@ watch(username, () => {
   color: inherit;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .public-library-container {
     padding: 1.25rem;
   }

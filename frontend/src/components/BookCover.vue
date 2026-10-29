@@ -50,7 +50,7 @@ function onError(event) {
   display: block;
   aspect-ratio: 2 / 3;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-input);
 }
 

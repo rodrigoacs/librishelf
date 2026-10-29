@@ -30,7 +30,7 @@
           v-for="n in 4"
           :key="n"
           height="5.5rem"
-          border-radius="10px"
+          border-radius="var(--radius-md)"
         />
       </div>
 
@@ -316,7 +316,7 @@ onBeforeUnmount(() => setOverlayTitle(''))
 .item {
   padding: 0.5rem 0.75rem 0.5rem 0.5rem;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
 }
 
@@ -331,7 +331,7 @@ onBeforeUnmount(() => setOverlayTitle(''))
   color: var(--main-color);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .public-list-page {
     padding: 1.25rem;
   }

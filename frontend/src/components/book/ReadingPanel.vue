@@ -399,7 +399,7 @@ async function remove(item) {
 
 .history {
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .history summary {
@@ -412,7 +412,7 @@ async function remove(item) {
   font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--text-primary);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .history summary::-webkit-details-marker {
@@ -431,7 +431,7 @@ async function remove(item) {
 .badge {
   min-width: 1.4rem;
   padding: 0 0.4rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-input);
   color: var(--text-secondary);
   font-size: var(--fs-xs);
@@ -547,7 +547,7 @@ async function remove(item) {
 .add-btn:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 @media (pointer: coarse) {

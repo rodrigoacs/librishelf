@@ -915,7 +915,7 @@ async function deleteAccount() {
   min-height: 2.25rem;
   padding: 0.35rem 0.9rem;
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -951,7 +951,7 @@ async function deleteAccount() {
 .settings-card {
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
 }
 
@@ -978,7 +978,7 @@ async function deleteAccount() {
   align-items: flex-start;
   margin: -0.5rem 0 1.25rem;
   padding: 0.7rem 0.9rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
   color: var(--text-primary);
   font-size: var(--fs-sm);
@@ -1042,7 +1042,7 @@ async function deleteAccount() {
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   padding: 0.7rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: var(--fs-md);
 }
@@ -1134,7 +1134,7 @@ async function deleteAccount() {
   display: inline-block;
   margin-left: 0.4rem;
   padding: 0.1rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--warning);
@@ -1168,7 +1168,7 @@ async function deleteAccount() {
   gap: 0.6rem;
   padding: 1.1rem;
   border: 2px dashed var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   font-weight: 600;
   cursor: pointer;
@@ -1188,7 +1188,7 @@ async function deleteAccount() {
 .import-result {
   margin-top: 1rem;
   padding: 0.9rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
   border: 1px solid rgba(var(--main-color-rgb), 0.3);
 }
@@ -1225,7 +1225,7 @@ async function deleteAccount() {
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   padding: 0.7rem 0.9rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font: inherit;
   box-sizing: border-box;
@@ -1236,7 +1236,7 @@ async function deleteAccount() {
   outline: none;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .account-row {
     grid-template-columns: 1fr;
     gap: 0.1rem;

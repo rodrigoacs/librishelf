@@ -501,7 +501,7 @@ onMounted(load)
 .card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -580,7 +580,7 @@ dd {
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text-primary);
@@ -599,7 +599,7 @@ dd {
 
 .meter {
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-input);
   overflow: hidden;
 }
@@ -696,7 +696,7 @@ tbody tr:last-child td {
   padding: 2rem 1rem;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1023.98px) {
   .ol-layout {
     grid-template-columns: 1fr;
   }

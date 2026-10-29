@@ -104,7 +104,7 @@ function submit() {
   gap: 0.75rem;
   width: 100%;
   padding: 0.75rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.05);
   border: 1px solid var(--border-color);
 }
@@ -138,7 +138,7 @@ function submit() {
   gap: 0.4rem;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639.98px) {
   .dates {
     grid-template-columns: minmax(0, 1fr);
   }

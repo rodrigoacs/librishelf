@@ -67,7 +67,7 @@ const { t } = useI18n()
   margin-right: 0.25rem;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .offline-banner {
     padding: 0.6rem 1rem;
   }

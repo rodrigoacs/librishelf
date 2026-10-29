@@ -70,7 +70,7 @@ const { t } = useI18n()
   gap: 0.85rem;
   padding: 1rem;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
   color: var(--text-primary);
   text-decoration: none;
@@ -101,7 +101,7 @@ const { t } = useI18n()
   position: relative;
   display: block;
   height: 7.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.06);
   overflow: hidden;
 }
@@ -112,7 +112,7 @@ const { t } = useI18n()
   width: 4.4rem;
   left: calc(1rem + var(--i) * 3.1rem);
   z-index: calc(10 - var(--i));
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-2);
   transform: rotate(calc((var(--i) - 1.5) * 3deg));
 }
 

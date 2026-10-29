@@ -146,7 +146,7 @@ function onUpdate(values) {
   position: relative;
   background-color: var(--bg-input);
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -174,7 +174,7 @@ function onUpdate(values) {
   align-items: center;
   gap: 0.2rem;
   padding: 0.15rem 0.2rem 0.15rem 0.65rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background-color: rgba(var(--main-color-rgb), 0.15);
   color: var(--text-primary);
   font-size: var(--fs-sm);

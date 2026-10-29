@@ -98,7 +98,7 @@ async function resend() {
   --btn-fg: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .email-banner {
     padding: 0.6rem 1rem;
     flex-wrap: wrap;

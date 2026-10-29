@@ -126,7 +126,7 @@ defineExpose({ focus: () => field.value?.focus() })
 .strength-bar {
   flex: 1;
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-input);
   overflow: hidden;
 }
@@ -134,7 +134,7 @@ defineExpose({ focus: () => field.value?.focus() })
 .strength-bar span {
   display: block;
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   transition: width 0.2s ease;
 }
 

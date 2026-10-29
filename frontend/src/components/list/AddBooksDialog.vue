@@ -212,7 +212,7 @@ async function toggle(book) {
   height: 2.75rem;
   padding: 0 0.85rem 0 2.4rem;
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;
@@ -253,7 +253,7 @@ async function toggle(book) {
 .thumb {
   flex-shrink: 0;
   width: 2.4rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .text {
@@ -288,7 +288,7 @@ async function toggle(book) {
   min-height: 2.25rem;
   padding: 0 0.85rem;
   border: 1px solid var(--border-hover);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: none;
   color: var(--text-primary);
   font: inherit;
@@ -341,7 +341,7 @@ async function toggle(book) {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639.98px) {
   .toggle span {
     display: none;
   }

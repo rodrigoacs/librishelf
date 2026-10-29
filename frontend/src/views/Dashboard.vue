@@ -691,7 +691,7 @@ onMounted(loadStats)
   gap: 0.75rem;
   padding: 0.85rem 1.1rem;
   margin-bottom: 1.5rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
   background: color-mix(in srgb, var(--warning) 8%, transparent);
   color: var(--text-primary);
@@ -755,7 +755,7 @@ onMounted(loadStats)
   position: relative;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   display: flex;
   align-items: center;
@@ -804,7 +804,7 @@ onMounted(loadStats)
   gap: 0.75rem;
   padding: 0.4rem 0.5rem;
   margin: 0 -0.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: inherit;
   text-decoration: none;
 }
@@ -829,7 +829,7 @@ onMounted(loadStats)
 
 .tag-bar-track {
   height: 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-input);
   overflow: hidden;
 }
@@ -838,7 +838,7 @@ onMounted(loadStats)
   display: block;
   height: 100%;
   width: var(--bar-width);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bar-color);
 }
 
@@ -851,7 +851,7 @@ onMounted(loadStats)
 .kpi-icon {
   width: 50px;
   height: 50px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -936,7 +936,7 @@ a.author-row:focus-visible {
   align-items: center;
   gap: 0.45rem;
   padding: 0.55rem 0.95rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(var(--main-color-rgb), 0.12);
   color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
   font-size: var(--fs-sm);
@@ -962,7 +962,7 @@ a.author-row:focus-visible {
 .goal-card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
@@ -1000,7 +1000,7 @@ a.author-row:focus-visible {
 .goal-bar {
   position: relative;
   height: 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-hover);
   overflow: visible;
 }
@@ -1008,7 +1008,7 @@ a.author-row:focus-visible {
 .goal-fill {
   display: block;
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--main-color);
   transition: width 0.4s ease;
 }
@@ -1078,7 +1078,7 @@ a.author-row:focus-visible {
   min-width: 0;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -1141,7 +1141,7 @@ a.author-row:focus-visible {
   position: relative;
   padding: 0.5rem 0.5rem;
   margin: 0 -0.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   text-decoration: none;
   color: inherit;
 }
@@ -1179,28 +1179,28 @@ a.author-row:hover {
   top: 10%;
   height: 80%;
   background-color: color-mix(in srgb, var(--success) 15%, transparent);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   z-index: 1;
 }
 
 .kpi-skeleton {
   background-color: var(--bg-panel);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
 }
 
 .chart-skeleton {
   background-color: var(--bg-panel);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   margin-bottom: 1.5rem;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1279.98px) {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1279.98px) {
   .charts-grid.lower {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1210,7 +1210,7 @@ a.author-row:hover {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023.98px) {
   .charts-grid,
   .charts-grid.lower {
     grid-template-columns: 1fr;
@@ -1225,7 +1225,7 @@ a.author-row:hover {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 639.98px) {
   .dashboard-container {
     padding: 1.25rem 1rem;
   }
@@ -1248,7 +1248,7 @@ a.author-row:hover {
     width: 36px;
     height: 36px;
     font-size: var(--fs-lg);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
   }
 
   .kpi-info .label {

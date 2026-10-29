@@ -38,7 +38,7 @@ const emit = defineEmits(['update:modelValue'])
   height: 1.6rem;
   padding: 0;
   border: 1px solid var(--border-hover);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-hover);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
@@ -57,7 +57,7 @@ const emit = defineEmits(['update:modelValue'])
   height: 1.15rem;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-1);
   transform: translateY(-50%);
   transition: left 0.15s ease;
 }

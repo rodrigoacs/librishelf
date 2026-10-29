@@ -234,7 +234,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 .more-reviews:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 /* Comunidade recolhida */
@@ -285,7 +285,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 .community-toggle:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .avg-rating {
@@ -339,7 +339,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
   align-items: center;
   gap: 0.4rem;
   background: var(--bg-input);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.25rem 0.7rem;
   font-size: var(--fs-sm);
 }

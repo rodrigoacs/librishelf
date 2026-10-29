@@ -168,7 +168,7 @@ function onListKeydown(event) {
   min-height: 2.75rem;
   padding: 0 0.85rem 0 1rem;
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;
@@ -224,10 +224,10 @@ function onListKeydown(event) {
   overflow-y: auto;
   padding: 0.35rem;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
   color: var(--text-primary);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-3);
 }
 
 .app-select-option {
@@ -238,7 +238,7 @@ function onListKeydown(event) {
   width: 100%;
   padding: 0.6rem 0.85rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: inherit;
   font: inherit;

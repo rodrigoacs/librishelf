@@ -11,7 +11,7 @@
 defineProps({
   width: { type: String, default: '100%' },
   height: { type: String, default: '1rem' },
-  borderRadius: { type: String, default: '8px' }
+  borderRadius: { type: String, default: 'var(--radius-md)' }
 })
 </script>
 

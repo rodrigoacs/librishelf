@@ -157,7 +157,7 @@ onMounted(async () => {
   gap: 0.5rem;
   margin: 0 0 1rem;
   padding: 0.6rem 0.8rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: var(--fs-sm);
   font-weight: 600;
 }
@@ -214,7 +214,7 @@ onMounted(async () => {
   gap: 0.25rem 0.6rem;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .reason {

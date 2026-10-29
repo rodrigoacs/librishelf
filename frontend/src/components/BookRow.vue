@@ -171,7 +171,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
   gap: 0.5rem;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding-right: 0.75rem;
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
@@ -189,7 +189,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
 .row-check {
   width: 22px;
   height: 22px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 2px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -225,7 +225,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
   text-align: left;
   cursor: pointer;
   min-width: 0;
-  border-radius: 12px 0 0 12px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
 
 .row-main:focus-visible {
@@ -237,10 +237,10 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
   display: block;
   width: 40px;
   aspect-ratio: 2 / 3;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--bg-hover);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-1);
   container-type: inline-size;
 }
 
@@ -282,7 +282,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
 .status-badge {
   flex-shrink: 0;
   padding: 0.05rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: 600;
   line-height: 1.5;
@@ -373,7 +373,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
   outline-offset: var(--focus-offset);
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1279.98px) {
   .row-main {
     grid-template-columns: 40px minmax(0, 2.4fr) minmax(0, 1.2fr) 6rem 6rem;
   }
@@ -387,7 +387,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1023.98px) {
   .row-main {
     grid-template-columns: 40px minmax(0, 1fr) 5.75rem;
     gap: 0.75rem;

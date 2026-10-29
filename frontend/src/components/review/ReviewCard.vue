@@ -252,7 +252,7 @@ async function toggleLike() {
   gap: 0.6rem;
   padding: 0.9rem 1rem;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
   min-width: 0;
 }
@@ -314,7 +314,7 @@ async function toggleLike() {
 .book-link:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .book-authors {
@@ -334,7 +334,7 @@ async function toggleLike() {
   align-items: center;
   gap: 0.3rem;
   padding: 0.1rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(var(--main-color-rgb), 0.12);
   color: var(--main-color);
   font-size: var(--fs-xs);
@@ -388,14 +388,14 @@ async function toggleLike() {
   gap: 0.4rem;
   padding: 0.5rem 0.9rem;
   border: 1px solid var(--border-hover);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-panel);
   color: var(--text-primary);
   font: inherit;
   font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-2);
 }
 
 .spoiler-btn:hover {
@@ -440,7 +440,7 @@ async function toggleLike() {
   height: 2rem;
   padding: 0 0.5rem;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: none;
   color: var(--text-secondary);
   font: inherit;

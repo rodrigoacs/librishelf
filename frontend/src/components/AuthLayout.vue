@@ -109,7 +109,7 @@ onMounted(async () => {
 .mosaic-item {
   position: relative;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background-color: var(--bg-panel);
 }
 
@@ -259,7 +259,7 @@ onMounted(async () => {
   font-size: var(--fs-sm);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023.98px) {
   .auth-container {
     flex-direction: column;
   }

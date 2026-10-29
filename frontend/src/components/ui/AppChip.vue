@@ -37,7 +37,7 @@ const { t } = useI18n()
   max-width: 100%;
   min-height: 1.9rem;
   padding: 0.15rem 0.3rem 0.15rem 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-sm);
   line-height: 1.2;
 }

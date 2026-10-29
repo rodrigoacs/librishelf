@@ -76,7 +76,7 @@ body {
   flex-direction: column;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .app-layout {
     flex-direction: column;
   }

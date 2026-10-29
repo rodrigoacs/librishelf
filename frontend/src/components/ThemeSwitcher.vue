@@ -55,7 +55,7 @@ const { currentTheme, accentColor, toggleTheme, setAccent, availableColors } = u
   background-color: transparent;
   border: 1px solid transparent;
   padding: 0.25rem 0.5rem;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   width: fit-content;
   max-width: 100%;
   transition: all 0.2s ease;

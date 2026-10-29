@@ -274,7 +274,7 @@ async function save() {
 
 .bar {
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-input);
   overflow: hidden;
 }
@@ -358,7 +358,7 @@ async function save() {
 .total-btn:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .editor {
@@ -387,7 +387,7 @@ async function save() {
   height: 2.4rem;
   padding: 0 0.6rem;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;

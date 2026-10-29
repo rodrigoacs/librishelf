@@ -127,7 +127,7 @@ function onPick(event) {
   aspect-ratio: 2 / 3;
   padding: 0;
   border: 2px dashed var(--border-hover);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-secondary);
   font: inherit;
@@ -241,7 +241,7 @@ function onPick(event) {
 }
 
 /* Celular: miniatura ao lado do texto, para o formulário começar logo */
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .cover-drop {
     flex-direction: row;
     align-items: center;
@@ -251,7 +251,7 @@ function onPick(event) {
   .drop-zone {
     width: 76px;
     flex-shrink: 0;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   .empty-title,

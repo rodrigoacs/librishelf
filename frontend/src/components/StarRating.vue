@@ -104,7 +104,7 @@ function select(value) {
   padding: 0.15rem;
   cursor: pointer;
   line-height: 1;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .star-btn:disabled,

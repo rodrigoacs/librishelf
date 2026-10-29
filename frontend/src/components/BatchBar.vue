@@ -241,10 +241,10 @@ function confirmDelete() {
   gap: 0.75rem 1rem;
   flex-wrap: wrap;
   padding: 0.6rem 0.75rem 0.6rem 1.1rem;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background: var(--bg-panel);
   border: 1px solid rgba(var(--main-color-rgb), 0.45);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-3);
 }
 
 .batch-count {
@@ -273,7 +273,7 @@ function confirmDelete() {
 }
 
 .batch-btn.btn {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .tag-form {
@@ -296,7 +296,7 @@ function confirmDelete() {
 
 /* No celular a lista rola dentro de uma área mais alta que a tela: a barra
    fica presa à janela para não sumir embaixo. */
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .batch-bar {
     position: fixed;
     left: 50%;
@@ -312,7 +312,7 @@ function confirmDelete() {
    cima, contagem e "Selecionar todos" empilhados, com o X de sair ao lado
    (os três numa linha só não cabem a 320 px); embaixo, as três ações
    dividindo a largura, com o ícone sobre o rótulo para caber "Categoria". */
-@media (max-width: 600px) {
+@media (max-width: 639.98px) {
   .batch-bar {
     width: calc(100vw - 1.5rem);
     padding: 0.5rem 0.6rem 0.6rem 0.9rem;
@@ -350,7 +350,7 @@ function confirmDelete() {
     flex-direction: column;
     gap: 0.15rem;
     padding: 0.35rem 0.4rem;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     line-height: 1.15;
   }
 

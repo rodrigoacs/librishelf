@@ -157,7 +157,7 @@ onMounted(load)
   max-width: 100%;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow-x: auto;
 }
 

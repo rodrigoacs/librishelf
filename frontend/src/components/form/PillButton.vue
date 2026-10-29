@@ -38,7 +38,7 @@ defineProps({
   gap: 0.4rem;
   min-height: 2.25rem;
   padding: 0.4rem 0.9rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);

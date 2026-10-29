@@ -271,7 +271,7 @@ onBeforeUnmount(() => {
 .viewport {
   position: relative;
   aspect-ratio: 4 / 3;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: #0b0b0d;
 }
@@ -291,7 +291,7 @@ onBeforeUnmount(() => {
   top: 30%;
   bottom: 30%;
   box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .corner {
@@ -301,10 +301,10 @@ onBeforeUnmount(() => {
   border: 3px solid #fff;
 }
 
-.corner.tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; border-top-left-radius: 8px; }
-.corner.tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; border-top-right-radius: 8px; }
-.corner.bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; border-bottom-left-radius: 8px; }
-.corner.br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: 8px; }
+.corner.tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; border-top-left-radius: var(--radius-md); }
+.corner.tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; border-top-right-radius: var(--radius-md); }
+.corner.bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; border-bottom-left-radius: var(--radius-md); }
+.corner.br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: var(--radius-md); }
 
 .laser {
   position: absolute;

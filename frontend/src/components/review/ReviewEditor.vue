@@ -407,7 +407,7 @@ function remove() {
 .write-btn:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .muted {
@@ -423,7 +423,7 @@ function remove() {
   width: 100%;
   padding: 0.85rem 1rem;
   border: 1px dashed var(--border-hover);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: none;
   color: var(--text-primary);
   font: inherit;
@@ -462,7 +462,7 @@ function remove() {
   gap: 0.5rem;
   margin: 0;
   padding: 0.6rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
@@ -487,7 +487,7 @@ function remove() {
   flex-direction: column;
   gap: 0.75rem;
   padding: 0.75rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.05);
   border: 1px solid var(--border-color);
 }
@@ -498,7 +498,7 @@ function remove() {
   resize: vertical;
   padding: 0.65rem 0.75rem;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;

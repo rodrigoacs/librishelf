@@ -885,7 +885,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 
 .isbn-btn.btn {
   height: 3.25rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .form-group {
@@ -955,7 +955,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
   color: var(--text-secondary);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .form-scroll {
     grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
@@ -996,7 +996,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639.98px) {
   .grid-2 {
     grid-template-columns: minmax(0, 1fr);
   }

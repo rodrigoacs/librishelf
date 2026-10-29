@@ -146,12 +146,12 @@ onMounted(bringToFront)
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.85rem 0.9rem;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-left: 4px solid var(--toast-color);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-3);
 }
 
 .toast-success {
@@ -196,7 +196,7 @@ onMounted(bringToFront)
   min-height: 2rem;
   padding: 0.3rem 0.6rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--main-color);
   font: inherit;
@@ -250,7 +250,7 @@ onMounted(bringToFront)
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .toast-host {
     inset: auto 1rem calc(1rem + env(safe-area-inset-bottom)) 1rem;
     width: auto;

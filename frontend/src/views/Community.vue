@@ -99,7 +99,7 @@
             <AppSkeleton
               width="40px"
               height="60px"
-              border-radius="4px"
+              border-radius="var(--radius-sm)"
             />
           </li>
         </ul>
@@ -839,7 +839,7 @@ onMounted(async () => {
   align-items: flex-start;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
   margin-bottom: 1.25rem;
   color: var(--text-secondary);
@@ -923,7 +923,7 @@ onMounted(async () => {
 
 .tab-count {
   background: var(--bg-input);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0 0.45rem;
   font-size: var(--fs-xs);
 }
@@ -987,7 +987,7 @@ onMounted(async () => {
 
 .feed-cover {
   width: 40px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-2);
 }
 
 /* Vários livros: capas sobrepostas, como uma pilha */
@@ -1099,7 +1099,7 @@ onMounted(async () => {
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   padding: 0.8rem 1rem 0.8rem 2.6rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font: inherit;
 }
@@ -1144,7 +1144,7 @@ onMounted(async () => {
   font-size: var(--fs-xs);
   color: var(--text-secondary);
   background: var(--bg-input);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.15rem 0.6rem;
 }
 
@@ -1153,7 +1153,7 @@ onMounted(async () => {
   justify-content: center;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   /* Cinco abas: no celular a fileira rola para o lado (sem esticar a página). */
   .tabs {
     contain: inline-size;

@@ -120,7 +120,7 @@ defineExpose({ focus: () => control.value?.focus() })
   align-items: center;
   background-color: var(--bg-input);
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -148,7 +148,7 @@ defineExpose({ focus: () => control.value?.focus() })
   font: inherit;
   font-size: var(--fs-md);
   padding: 1.45rem 0.9rem 0.5rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .multiline .field-control {

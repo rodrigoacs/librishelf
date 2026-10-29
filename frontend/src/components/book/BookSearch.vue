@@ -44,7 +44,7 @@
           <AppSkeleton
             width="2.75rem"
             height="4rem"
-            border-radius="4px"
+            border-radius="var(--radius-sm)"
           />
           <div class="skeleton-text">
             <AppSkeleton
@@ -263,7 +263,7 @@ defineExpose({ focus: () => field.value?.focus() })
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: opacity 0.15s ease;
 }
@@ -297,7 +297,7 @@ button.result:hover {
 button.result:focus-visible {
   outline: var(--focus-ring);
   outline-offset: -2px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .thumb {
@@ -307,7 +307,7 @@ button.result:focus-visible {
   justify-content: center;
   width: 2.75rem;
   height: 4rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--bg-input);
   color: var(--text-muted);
@@ -387,7 +387,7 @@ button.result:focus-visible {
 .message {
   margin: 0;
   padding: 0.85rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-secondary);
   font-size: var(--fs-sm);

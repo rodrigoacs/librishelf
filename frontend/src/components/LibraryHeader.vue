@@ -401,7 +401,7 @@ const addBookDialogVisible = ref(false)
 
 // Celular (mesmo corte do CSS abaixo): placeholder curto, porque o longo
 // ("Pesquisar por título, autor ou ISBN...") era cortado no meio da palavra.
-const COMPACT_QUERY = '(max-width: 600px)'
+const COMPACT_QUERY = '(max-width: 639.98px)'
 const compactMedia = typeof window !== 'undefined' ? window.matchMedia?.(COMPACT_QUERY) : null
 const compact = ref(Boolean(compactMedia?.matches))
 const onCompactChange = event => { compact.value = event.matches }
@@ -577,14 +577,14 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   font-weight: 800;
   font-size: var(--fs-xs);
   padding: 0.15rem 0.6rem;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
 }
 
 .view-toggle {
   display: inline-flex;
   padding: 3px;
   gap: 2px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-color);
   background: var(--bg-app);
 }
@@ -593,7 +593,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   width: 34px;
   height: 34px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--text-secondary);
   display: flex;
@@ -637,7 +637,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
 .sort-quick :deep(.app-select-trigger) {
   min-height: 2.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0 0.85rem 0 0.95rem;
 }
 
@@ -712,7 +712,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   border: 1px solid transparent;
   color: var(--text-primary);
   padding: 0.75rem 2.5rem;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   font-family: inherit;
   font-size: var(--fs-md);
   transition: all 0.2s ease;
@@ -891,7 +891,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   font-weight: 600;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
 
   /* Celular: duas linhas só — título e ações em cima, busca embaixo. O
      cabeçalho é fixo no topo, então cada pixel aqui é um pixel a menos de estante. */
@@ -1004,7 +1004,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
    contador. O alternador grade/lista vai para a gaveta de filtros e o título
    ganha a coluna de volta; se ainda faltar espaço, corta com reticências em
    vez de passar por baixo das ações. */
-@media (max-width: 600px) {
+@media (max-width: 639.98px) {
   .top-bar .view-toggle {
     display: none;
   }

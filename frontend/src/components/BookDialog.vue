@@ -618,9 +618,9 @@ onBeforeUnmount(() => {
   width: 100%;
   max-width: 250px;
   aspect-ratio: 2/3;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  box-shadow: var(--shadow-3);
 }
 
 .main-cover {
@@ -657,14 +657,14 @@ onBeforeUnmount(() => {
 }
 
 .action-edit.btn {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .mini-cover {
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   /* Celular/tablet em pé: capa compacta em cima e só os detalhes rolam,
      para o botão de fechar e o título ficarem sempre à vista. */
   .dialog-shell {
@@ -724,7 +724,7 @@ onBeforeUnmount(() => {
 
 /* Celular: em vez da faixa de 190px em cima, uma capa pequena ao lado do
    título; sobra altura para o que importa (status, nota, notas). */
-@media (max-width: 600px) {
+@media (max-width: 639.98px) {
   .cover-section {
     display: none;
   }
@@ -745,10 +745,10 @@ onBeforeUnmount(() => {
     flex: none;
     width: 76px;
     aspect-ratio: 2 / 3;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     background: var(--bg-hover);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-2);
   }
 
   .mini-cover img {

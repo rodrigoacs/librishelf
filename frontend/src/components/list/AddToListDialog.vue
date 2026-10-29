@@ -168,7 +168,7 @@ function onCreated(list) {
   min-height: 2.75rem;
   padding: 0 0.85rem;
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 

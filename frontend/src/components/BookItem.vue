@@ -261,18 +261,18 @@ button.book-card {
   flex-direction: column;
   width: 100%;
   background-color: var(--bg-panel);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-2);
   position: relative;
 }
 
 @media (hover: hover) {
   .book-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-3);
     border-color: var(--border-hover);
   }
 }
@@ -350,14 +350,14 @@ button.book-card {
   z-index: 4;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 2px solid #ffffff;
   background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   color: transparent;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-2);
 }
 
 .select-check.checked {
@@ -382,12 +382,12 @@ button.book-card {
   bottom: 8px;
   z-index: 3;
   padding: 0.2rem 0.55rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.2px;
   line-height: 1.3;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-2);
 }
 
 .status-badge.reading {

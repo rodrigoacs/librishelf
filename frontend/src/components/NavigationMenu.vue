@@ -253,7 +253,7 @@ const items = computed(() => [
   min-width: 1.25rem;
   height: 1.25rem;
   padding: 0 0.35rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--main-solid);
   color: var(--on-main);
   font-size: var(--fs-xs);
@@ -333,7 +333,7 @@ const items = computed(() => [
   align-items: center;
   gap: 1rem;
   padding: 0.8rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
@@ -435,7 +435,7 @@ button.nav-item {
   color: var(--text-secondary);
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -465,9 +465,9 @@ button.nav-item {
   right: 1rem;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 1rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-3);
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -499,7 +499,7 @@ button.nav-item {
   margin: 0.2rem 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .navigation-container {
     width: 100%;
     height: auto;

@@ -273,7 +273,7 @@ onMounted(load)
   box-sizing: border-box;
   min-height: 2.6rem;
   padding: 0 1rem 0 2.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-color);
   background: var(--bg-input);
   color: var(--text-primary);
@@ -289,7 +289,7 @@ onMounted(load)
   display: inline-flex;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.2rem;
   gap: 0.2rem;
 }
@@ -301,7 +301,7 @@ onMounted(load)
   font-size: var(--fs-sm);
   color: var(--text-secondary);
   padding: 0.4rem 0.95rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
 }
 
@@ -327,7 +327,7 @@ onMounted(load)
   max-width: 100%;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow-x: auto;
 }
 
@@ -415,7 +415,7 @@ td.warn {
 .username:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 tbody tr {
@@ -425,7 +425,7 @@ tbody tr {
 .tag {
   font-size: var(--fs-xs);
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.05rem 0.5rem;
 }
 

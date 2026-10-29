@@ -151,7 +151,7 @@ async function submit() {
   min-height: 2.75rem;
   padding: 0 0.85rem;
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: var(--fs-md);
 }
@@ -193,7 +193,7 @@ async function submit() {
   resize: vertical;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;

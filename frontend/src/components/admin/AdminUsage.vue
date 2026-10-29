@@ -149,7 +149,7 @@ onMounted(load)
 .card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
 }
 
@@ -217,7 +217,7 @@ tbody tr:last-child td {
 .bar {
   flex: 1;
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-input);
   overflow: hidden;
 }

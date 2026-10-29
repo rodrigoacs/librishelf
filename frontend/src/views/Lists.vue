@@ -26,7 +26,7 @@
           v-for="n in 3"
           :key="n"
           height="13rem"
-          border-radius="12px"
+          border-radius="var(--radius-md)"
         />
       </div>
 
@@ -166,7 +166,7 @@ onMounted(load)
   flex: 1;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .lists-page {
     padding: 1.25rem;
   }

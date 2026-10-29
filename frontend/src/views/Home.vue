@@ -74,7 +74,7 @@
         <AppSkeleton
           class="reading-skeleton"
           height="auto"
-          border-radius="12px"
+          border-radius="var(--radius-md)"
         />
       </div>
       <div class="shelf">
@@ -93,7 +93,7 @@
             <AppSkeleton
               class="cover-skeleton"
               height="auto"
-              border-radius="12px"
+              border-radius="var(--radius-md)"
             />
             <AppSkeleton
               width="85%"
@@ -516,7 +516,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.75rem;
   padding: 0.85rem 1.1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(var(--main-color-rgb), 0.35);
   background: rgba(var(--main-color-rgb), 0.08);
   color: var(--text-primary);
@@ -613,7 +613,7 @@ onMounted(async () => {
   padding: 1.5rem;
   background: var(--bg-panel);
   border: 1px dashed var(--border-hover);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
 }
 
 .invite-icon {
@@ -655,7 +655,7 @@ onMounted(async () => {
   height: 2.75rem;
   padding: 0 1rem;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-primary);
   font: inherit;
@@ -674,7 +674,7 @@ onMounted(async () => {
 
 .invite-btn.btn {
   height: 2.75rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
 }
 
@@ -712,7 +712,7 @@ onMounted(async () => {
 
 .rec-btn.btn {
   margin-top: auto;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   justify-content: center;
 }
 
@@ -722,7 +722,7 @@ onMounted(async () => {
   padding: 0;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .activity-list li {
@@ -769,7 +769,7 @@ onMounted(async () => {
   align-items: flex-start;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.9rem 1rem;
   color: var(--text-secondary);
   line-height: 1.45;
@@ -780,7 +780,7 @@ onMounted(async () => {
   margin-top: 0.15rem;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1279.98px) {
   .shelf-row,
   .shelf-skeleton {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -792,7 +792,7 @@ onMounted(async () => {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .home-container {
     padding: 1.5rem 1rem 2.5rem;
     gap: 1.75rem;

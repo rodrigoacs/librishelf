@@ -84,7 +84,7 @@ function onNativeInput(event) {
   position: relative;
   background-color: var(--bg-input);
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -108,7 +108,7 @@ function onNativeInput(event) {
   font: inherit;
   font-size: var(--fs-md);
   padding: 1.45rem 2.5rem 0.5rem 0.9rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 

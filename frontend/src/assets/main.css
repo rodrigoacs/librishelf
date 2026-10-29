@@ -122,7 +122,7 @@
   --app-bar-height: 0px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   :root {
     --app-bar-height: 61px;
   }
@@ -197,7 +197,7 @@ h1[tabindex="-1"]:focus {
 h1[tabindex="-1"]:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .sr-only {
@@ -218,7 +218,7 @@ h1[tabindex="-1"]:focus-visible {
   top: -3rem;
   z-index: 1000;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--main-solid);
   color: var(--on-main);
   text-decoration: none;
@@ -265,7 +265,7 @@ body {
 
 *::-webkit-scrollbar-thumb {
   background-color: var(--bg-hover);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   border: 2px solid var(--bg-app);
 }
 
@@ -289,7 +289,7 @@ body {
   min-height: 2.5rem;
   padding: 0.5rem 1.1rem;
   border: 1px solid var(--btn-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--btn-bg);
   color: var(--btn-fg);
   font: inherit;
@@ -407,7 +407,7 @@ body {
   min-height: 2.1rem;
   padding: 0.35rem 0.85rem;
   font-size: var(--fs-sm);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .btn.btn-lg {
@@ -417,7 +417,7 @@ body {
 }
 
 .btn.btn-rounded {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .btn.btn-icon-only {
@@ -490,7 +490,7 @@ body {
   max-width: 240px;
   padding: 0.35rem 0.6rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--text-primary);
   color: var(--bg-panel);
   font-size: var(--fs-xs);

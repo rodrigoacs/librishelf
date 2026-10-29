@@ -50,7 +50,7 @@ const { t } = useI18n()
   cursor: pointer;
   width: fit-content;
   min-height: 24px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 @media (pointer: coarse) {

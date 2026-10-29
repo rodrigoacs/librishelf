@@ -126,7 +126,7 @@ h1 {
   margin-bottom: 1.5rem;
   padding: 0.3rem 0.3rem 0.3rem 2.5rem;
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-panel);
 }
 
@@ -154,7 +154,7 @@ h1 {
 }
 
 .search-form .btn {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .links {
@@ -165,6 +165,6 @@ h1 {
 }
 
 .links .btn {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 </style>

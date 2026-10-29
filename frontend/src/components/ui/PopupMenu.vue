@@ -123,10 +123,10 @@ defineExpose({ toggle })
   min-width: 12rem;
   padding: 0.35rem;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
   color: var(--text-primary);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-3);
 }
 
 .popup-item {
@@ -136,7 +136,7 @@ defineExpose({ toggle })
   width: 100%;
   padding: 0.6rem 0.85rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: inherit;
   font: inherit;

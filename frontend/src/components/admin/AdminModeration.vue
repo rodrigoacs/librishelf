@@ -358,7 +358,7 @@ onMounted(() => {
   align-self: flex-start;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.2rem;
   gap: 0.2rem;
 }
@@ -370,7 +370,7 @@ onMounted(() => {
   font-size: var(--fs-sm);
   color: var(--text-secondary);
   padding: 0.4rem 0.95rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
 }
 
@@ -420,7 +420,7 @@ onMounted(() => {
   color: inherit;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
   cursor: pointer;
 }
@@ -491,7 +491,7 @@ onMounted(() => {
   flex-shrink: 0;
   font-size: var(--fs-xs);
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.1rem 0.5rem;
 }
 
@@ -510,7 +510,7 @@ onMounted(() => {
 .detail {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -532,7 +532,7 @@ onMounted(() => {
   gap: 0.5rem;
   margin: 0;
   padding: 0.45rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: var(--fs-sm);
   font-weight: 600;
 }
@@ -597,7 +597,7 @@ onMounted(() => {
 
 .reports li {
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.6rem 0.8rem;
   display: flex;
   flex-wrap: wrap;
@@ -636,7 +636,7 @@ onMounted(() => {
 .insights {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
 }
 
@@ -652,7 +652,7 @@ onMounted(() => {
 .insights summary:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .insights summary .muted {
@@ -719,7 +719,7 @@ onMounted(() => {
   outline-offset: var(--focus-offset);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023.98px) {
   .layout {
     grid-template-columns: 1fr;
   }

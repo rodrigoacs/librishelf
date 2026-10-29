@@ -56,7 +56,7 @@ const { t } = useI18n()
   align-items: center;
   gap: 0.3rem;
   cursor: default;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .private .pi {

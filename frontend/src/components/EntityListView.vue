@@ -516,7 +516,7 @@ onMounted(load)
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   padding: 0.8rem 1rem 0.8rem 2.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: var(--fs-md);
   transition: all 0.2s;
@@ -553,7 +553,7 @@ onMounted(load)
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem 0.85rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
@@ -605,7 +605,7 @@ button.entity-card {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   border: 2px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -628,7 +628,7 @@ button.entity-card {
   display: block;
   height: 4px;
   margin-top: 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-hover);
   overflow: hidden;
   max-width: 10rem;
@@ -637,7 +637,7 @@ button.entity-card {
 .read-bar span {
   display: block;
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--accent-color);
 }
 
@@ -689,10 +689,10 @@ button.entity-card {
   align-items: center;
   gap: 1rem;
   padding: 0.6rem 0.75rem 0.6rem 1.1rem;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background: var(--bg-panel);
   border: 1px solid rgba(var(--main-color-rgb), 0.45);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-3);
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -724,7 +724,7 @@ button.entity-card {
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   padding: 0.7rem 0.9rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font: inherit;
 }
@@ -742,7 +742,7 @@ button.entity-card {
   font-size: var(--fs-sm);
   color: var(--text-primary);
   background: rgba(var(--main-color-rgb), 0.1);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.6rem 0.75rem;
 }
 
@@ -766,7 +766,7 @@ button.entity-card {
   --accent-color: var(--main-color);
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
   display: flex;
   align-items: center;
@@ -849,7 +849,7 @@ button.entity-card {
 .skeleton-card {
   height: 98px;
   background-color: var(--bg-hover);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   animation: pulse 1.5s infinite;
 }
 
@@ -867,7 +867,7 @@ button.entity-card {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .entity-container {
     padding: 1.25rem;
   }

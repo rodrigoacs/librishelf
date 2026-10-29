@@ -26,7 +26,7 @@
           v-for="n in 4"
           :key="n"
           height="5.5rem"
-          border-radius="10px"
+          border-radius="var(--radius-md)"
         />
       </div>
 
@@ -630,7 +630,7 @@ onBeforeUnmount(() => {
   gap: 0.5rem;
   margin: 0 0 1rem;
   padding: 0.7rem 0.85rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
@@ -667,7 +667,7 @@ onBeforeUnmount(() => {
 .item {
   padding: 0.5rem 0.6rem 0.5rem 0.35rem;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
   transition: border-color 0.2s ease, background-color 0.6s ease;
 }
@@ -684,7 +684,7 @@ onBeforeUnmount(() => {
   width: 2rem;
   height: 3rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: none;
   color: var(--text-muted);
   cursor: grab;
@@ -713,7 +713,7 @@ onBeforeUnmount(() => {
 }
 
 .drag-chosen {
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-3);
 }
 
 .remove-btn,
@@ -751,7 +751,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639.98px) {
   /* Três ações numa linha: Compartilhar fica só com o ícone (o nome segue para leitores de tela) */
   .share-btn :deep(.btn-label) {
     position: absolute;
@@ -772,7 +772,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
   .list-page {
     padding: 1.25rem;
   }

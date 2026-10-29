@@ -187,8 +187,8 @@ html.dialog-open {
   max-height: calc(100dvh - 2rem);
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
   overflow: hidden;
 }
 
@@ -280,7 +280,7 @@ html.dialog-open {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023.98px) {
   .app-dialog.is-drawer .app-dialog-panel {
     width: 90vw;
   }
