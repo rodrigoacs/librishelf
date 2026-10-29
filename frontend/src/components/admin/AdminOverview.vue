@@ -11,17 +11,14 @@
       />
     </div>
 
-    <p
+    <EmptyState
       v-else-if="failed"
-      class="empty"
-    >
-      {{ t('common.loadError') }}
-      <AppButton
-        :label="t('common.retry')"
-        class="btn-text btn-sm"
-        @click="load"
-      />
-    </p>
+      variant="error"
+      compact
+      :level="3"
+      :title="t('common.loadErrorTitle')"
+      @action="load"
+    />
 
     <template v-else-if="stats">
       <div class="kpi-grid">
@@ -109,8 +106,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AppButton from '../ui/AppButton.vue'
 import AppSkeleton from '../ui/AppSkeleton.vue'
+import EmptyState from '../ui/EmptyState.vue'
 import ChartCanvas from '../ui/ChartCanvas.vue'
 import api from '../../services/api.js'
 import { useTheme, cssVar } from '../../composables/useTheme.js'

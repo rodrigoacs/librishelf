@@ -69,24 +69,57 @@
         aria-labelledby="tab-feed"
         class="panel"
       >
-        <p
+        <ul
           v-if="feedLoading && events.length === 0"
-          class="muted"
-        >{{ t('common.loading') }}</p>
-        <p
-          v-else-if="feedError"
-          class="muted"
-        >{{ t('communityView.load_error') }}</p>
-        <div
-          v-else-if="events.length === 0"
-          class="empty"
+          class="feed-list skeleton-list"
+          aria-busy="true"
+          :aria-label="t('common.loading')"
         >
-          <i
-            class="pi pi-globe"
-            aria-hidden="true"
-          ></i>
-          <p>{{ t('communityView.feed_empty') }}</p>
-        </div>
+          <li
+            v-for="n in 4"
+            :key="n"
+            class="feed-item"
+          >
+            <AppSkeleton
+              width="40px"
+              height="40px"
+              border-radius="50%"
+            />
+            <div class="feed-body">
+              <AppSkeleton
+                width="80%"
+                height="1rem"
+              />
+              <AppSkeleton
+                width="45%"
+                height="0.8rem"
+                class="skeleton-gap"
+              />
+            </div>
+            <AppSkeleton
+              width="40px"
+              height="60px"
+              border-radius="4px"
+            />
+          </li>
+        </ul>
+        <EmptyState
+          v-else-if="feedError"
+          variant="error"
+          compact
+          :level="3"
+          :title="t('communityView.load_error')"
+          :loading="feedLoading"
+          @action="loadFeed()"
+        />
+        <EmptyState
+          v-else-if="events.length === 0"
+          compact
+          :level="3"
+          icon="pi pi-globe"
+          :title="t('communityView.feed_empty_title')"
+          :text="t('communityView.feed_empty')"
+        />
 
         <div
           v-else
@@ -199,10 +232,45 @@
         aria-labelledby="tab-requests"
         class="panel"
       >
-        <p
-          v-if="connections.requests.length === 0"
-          class="muted"
-        >{{ t('communityView.no_requests') }}</p>
+        <ul
+          v-if="connectionsLoading && !connectionsLoaded"
+          class="people-list skeleton-list"
+          aria-busy="true"
+          :aria-label="t('common.loading')"
+        >
+          <li
+            v-for="n in 3"
+            :key="n"
+          >
+            <span class="person">
+              <AppSkeleton
+                width="40px"
+                height="40px"
+                border-radius="50%"
+              />
+              <AppSkeleton
+                width="9rem"
+                height="1rem"
+              />
+            </span>
+          </li>
+        </ul>
+        <EmptyState
+          v-else-if="connectionsError"
+          variant="error"
+          compact
+          :level="3"
+          :title="t('communityView.load_error')"
+          :loading="connectionsLoading"
+          @action="loadConnections"
+        />
+        <EmptyState
+          v-else-if="connections.requests.length === 0"
+          compact
+          :level="3"
+          icon="pi pi-user-plus"
+          :title="t('communityView.no_requests')"
+        />
         <ul
           v-else
           class="people-list"
@@ -275,14 +343,44 @@
           </template>
         </p>
 
-        <p
+        <ul
           v-if="readersLoading && readers.length === 0"
-          class="muted"
-        >{{ t('common.loading') }}</p>
-        <p
+          class="people-list skeleton-list"
+          aria-busy="true"
+          :aria-label="t('common.loading')"
+        >
+          <li
+            v-for="n in 3"
+            :key="n"
+          >
+            <span class="person">
+              <AppSkeleton
+                width="40px"
+                height="40px"
+                border-radius="50%"
+              />
+              <AppSkeleton
+                width="9rem"
+                height="1rem"
+              />
+            </span>
+          </li>
+        </ul>
+        <EmptyState
+          v-else-if="readersError"
+          variant="error"
+          compact
+          :level="3"
+          :title="t('communityView.load_error')"
+          @action="loadReaders"
+        />
+        <EmptyState
           v-else-if="readers.length === 0"
-          class="muted"
-        >{{ readerQuery.trim() ? t('discover.none_found') : t('discover.none_yet') }}</p>
+          compact
+          :level="3"
+          :icon="readerQuery.trim() ? 'pi pi-search' : 'pi pi-users'"
+          :title="readerQuery.trim() ? t('discover.none_found') : t('discover.none_yet')"
+        />
         <ul
           v-else
           class="people-list"
@@ -338,10 +436,45 @@
         aria-labelledby="tab-following"
         class="panel"
       >
-        <p
-          v-if="connections.following.length === 0"
-          class="muted"
-        >{{ t('communityView.no_following') }}</p>
+        <ul
+          v-if="connectionsLoading && !connectionsLoaded"
+          class="people-list skeleton-list"
+          aria-busy="true"
+          :aria-label="t('common.loading')"
+        >
+          <li
+            v-for="n in 3"
+            :key="n"
+          >
+            <span class="person">
+              <AppSkeleton
+                width="40px"
+                height="40px"
+                border-radius="50%"
+              />
+              <AppSkeleton
+                width="9rem"
+                height="1rem"
+              />
+            </span>
+          </li>
+        </ul>
+        <EmptyState
+          v-else-if="connectionsError"
+          variant="error"
+          compact
+          :level="3"
+          :title="t('communityView.load_error')"
+          :loading="connectionsLoading"
+          @action="loadConnections"
+        />
+        <EmptyState
+          v-else-if="connections.following.length === 0"
+          compact
+          :level="3"
+          icon="pi pi-users"
+          :title="t('communityView.no_following')"
+        />
         <ul
           v-else
           class="people-list"
@@ -381,10 +514,45 @@
         aria-labelledby="tab-followers"
         class="panel"
       >
-        <p
-          v-if="connections.followers.length === 0"
-          class="muted"
-        >{{ t('communityView.no_followers') }}</p>
+        <ul
+          v-if="connectionsLoading && !connectionsLoaded"
+          class="people-list skeleton-list"
+          aria-busy="true"
+          :aria-label="t('common.loading')"
+        >
+          <li
+            v-for="n in 3"
+            :key="n"
+          >
+            <span class="person">
+              <AppSkeleton
+                width="40px"
+                height="40px"
+                border-radius="50%"
+              />
+              <AppSkeleton
+                width="9rem"
+                height="1rem"
+              />
+            </span>
+          </li>
+        </ul>
+        <EmptyState
+          v-else-if="connectionsError"
+          variant="error"
+          compact
+          :level="3"
+          :title="t('communityView.load_error')"
+          :loading="connectionsLoading"
+          @action="loadConnections"
+        />
+        <EmptyState
+          v-else-if="connections.followers.length === 0"
+          compact
+          :level="3"
+          icon="pi pi-users"
+          :title="t('communityView.no_followers')"
+        />
         <ul
           v-else
           class="people-list"
@@ -422,6 +590,8 @@ import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
 import { useConfirm } from '../services/confirm.js'
 import AppButton from '../components/ui/AppButton.vue'
+import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import api from '../services/api.js'
 import StarRating from '../components/StarRating.vue'
 import ReaderName from '../components/ReaderName.vue'
@@ -446,6 +616,9 @@ const hasMore = ref(false)
 const feedLoading = ref(false)
 const feedError = ref(false)
 const connections = ref({ following: [], followers: [], requests: [] })
+const connectionsLoading = ref(true)
+const connectionsLoaded = ref(false)
+const connectionsError = ref(false)
 const busy = ref('')
 
 const tabs = computed(() => [
@@ -530,6 +703,7 @@ async function loadFeed({ append = false } = {}) {
 const readerQuery = ref('')
 const readers = ref([])
 const readersLoading = ref(false)
+const readersError = ref(false)
 let readersLoaded = false
 let searchTimer = null
 let searchRequest = 0
@@ -537,11 +711,16 @@ let searchRequest = 0
 async function loadReaders() {
   const current = ++searchRequest
   readersLoading.value = true
+  readersError.value = false
   try {
     const result = await api.findReaders(readerQuery.value.trim())
     if (current === searchRequest) readers.value = result
   } catch {
-    if (current === searchRequest) readers.value = []
+    // Falha não é "ninguém encontrado": mostra o erro com "Tentar de novo"
+    if (current === searchRequest) {
+      readers.value = []
+      readersError.value = true
+    }
   } finally {
     if (current === searchRequest) readersLoading.value = false
     readersLoaded = true
@@ -572,10 +751,18 @@ watch(activeTab, tab => {
 })
 
 async function loadConnections() {
+  connectionsLoading.value = true
   try {
     connections.value = await api.getConnections()
+    connectionsLoaded.value = true
+    connectionsError.value = false
   } catch {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: t('communityView.load_error'), life: 4000 })
+    // Sem nada carregado: erro na própria aba (antes, só um toast e a aba
+    // dizia "ninguém"); com dados na tela, mantém e avisa
+    if (connectionsLoaded.value) toast.add({ severity: 'error', summary: t('common.error'), detail: t('communityView.load_error'), life: 4000 })
+    else connectionsError.value = true
+  } finally {
+    connectionsLoading.value = false
   }
 }
 
@@ -751,15 +938,8 @@ onMounted(async () => {
   color: var(--text-secondary);
 }
 
-.empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem 1rem;
-}
-
-.empty .pi {
-  font-size: var(--fs-2xl);
-  color: var(--text-muted);
+.skeleton-gap {
+  margin-top: 0.45rem;
 }
 
 .feed-list,

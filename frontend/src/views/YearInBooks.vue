@@ -46,33 +46,26 @@
         />
       </div>
 
-      <div
+      <EmptyState
         v-else-if="loadError"
-        class="empty"
-      >
-        <p>{{ t('year.loadFailed') }}</p>
-        <AppButton
-          :label="t('common.retry')"
-          class="btn-outlined btn-secondary"
-          @click="load"
-        />
-      </div>
+        variant="error"
+        :title="t('year.loadFailed')"
+        @action="load"
+      />
 
-      <div
+      <EmptyState
         v-else-if="data && data.totals.readings === 0"
-        class="empty"
+        icon="pi pi-book"
+        :title="data.isCurrentYear ? t('year.emptyCurrent') : t('year.emptyPast', { year })"
+        :text="t('year.emptyHint')"
       >
-        <span
-          class="empty-icon"
-          aria-hidden="true"
-        ><i class="pi pi-book"></i></span>
-        <h2>{{ data.isCurrentYear ? t('year.emptyCurrent') : t('year.emptyPast', { year }) }}</h2>
-        <p>{{ t('year.emptyHint') }}</p>
-        <router-link
-          :to="{ name: 'library' }"
-          class="link"
-        >{{ t('year.goLibrary') }}</router-link>
-      </div>
+        <template #action>
+          <router-link
+            :to="{ name: 'library' }"
+            class="btn btn-outlined btn-secondary"
+          >{{ t('year.goLibrary') }}</router-link>
+        </template>
+      </EmptyState>
 
       <template v-else-if="data">
         <!-- Números grandes -->
@@ -329,6 +322,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import BookCover from '../components/BookCover.vue'
 import StarRating from '../components/StarRating.vue'
 import BookDialog from '../components/BookDialog.vue'
@@ -1028,45 +1022,6 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: var(--fs-xs);
   color: var(--text-muted);
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 2.5rem auto;
-  max-width: 28rem;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.empty h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-xl);
-  color: var(--text-primary);
-}
-
-.empty p {
-  margin: 0;
-  line-height: 1.5;
-}
-
-.empty .link {
-  color: var(--main-color);
-}
-
-.empty-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  background: rgba(var(--main-color-rgb), 0.1);
-  color: var(--main-color);
-  font-size: 1.25rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

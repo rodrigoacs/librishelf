@@ -144,8 +144,23 @@
               tabindex="-1"
             >
               <h3 class="sub-title">{{ t('block.listTitle') }}</h3>
+              <AppSkeleton
+                v-if="blockedLoading && !blockedLoaded"
+                width="60%"
+                height="1rem"
+              />
+              <!-- Falha não é "ninguém bloqueado": erro com "Tentar de novo" -->
+              <EmptyState
+                v-else-if="blockedError"
+                variant="error"
+                compact
+                :level="4"
+                :title="t('block.listFailed')"
+                :loading="blockedLoading"
+                @action="loadBlocked"
+              />
               <p
-                v-if="blockedUsers.length === 0"
+                v-else-if="blockedUsers.length === 0"
                 class="toggle-help"
               >{{ t('block.listEmpty') }}</p>
               <ul
@@ -529,6 +544,8 @@ import { useToast } from '../services/toast.js'
 import AppButton from '../components/ui/AppButton.vue'
 import AppDialog from '../components/ui/AppDialog.vue'
 import AppSwitch from '../components/ui/AppSwitch.vue'
+import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import api from '../services/api.js'
 import { currentUser, updateUser, setUser, clearSession } from '../services/session.js'
 import { isWeakPassword } from '../utils/password.js'
@@ -627,12 +644,20 @@ async function copyLink() {
 // --- Bloqueados ---
 const blockedUsers = ref([])
 const unblocking = ref('')
+const blockedLoading = ref(false)
+const blockedLoaded = ref(false)
+const blockedError = ref(false)
 
 async function loadBlocked() {
+  blockedLoading.value = true
+  blockedError.value = false
   try {
     blockedUsers.value = (await api.getBlocked()).blocked
+    blockedLoaded.value = true
   } catch {
-    // Lista opcional: se falhar, a seção só fica vazia
+    blockedError.value = true
+  } finally {
+    blockedLoading.value = false
   }
 }
 

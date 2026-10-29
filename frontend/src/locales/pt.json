@@ -36,7 +36,8 @@
     "inviteText": "Marque um livro como Lendo e ele aparece aqui, com a data em que você começou.",
     "inviteWant": "Escolher na minha lista Quero ler",
     "yearInBooks": "Seu ano em livros {year}: veja a retrospectiva | Seu ano em livros {year}: 1 livro até agora — veja a retrospectiva | Seu ano em livros {year}: {n} livros até agora — veja a retrospectiva",
-    "loadError": "Não foi possível carregar sua estante. Seus livros continuam salvos."
+    "loadError": "Seus livros continuam salvos. Verifique sua conexão e tente de novo.",
+    "loadErrorTitle": "Não foi possível carregar sua estante"
   },
   "menu": {
     "home": "Início",
@@ -90,7 +91,9 @@
     "discardTitle": "Descartar alterações?",
     "discardMessage": "O que você mudou ainda não foi salvo e vai se perder.",
     "discard": "Descartar",
-    "keepEditing": "Continuar editando"
+    "keepEditing": "Continuar editando",
+    "loadErrorTitle": "Não foi possível carregar",
+    "loadErrorHint": "Verifique sua conexão e tente de novo."
   },
   "book": {
     "new_title": "Novo Livro",
@@ -812,7 +815,7 @@
     "tab_following": "Seguindo",
     "tab_followers": "Seguidores",
     "load_error": "Não foi possível carregar.",
-    "feed_empty": "Nada por aqui ainda. Encontre leitores na seção Comunidade de um livro e peça para seguir pela página pública deles.",
+    "feed_empty": "Encontre leitores na seção Comunidade de um livro e peça para seguir pela página pública deles.",
     "event_read": "terminou de ler",
     "event_reread": "releu",
     "event_added": "adicionou",
@@ -832,7 +835,8 @@
     "yesterday": "Ontem",
     "event_added_many": "adicionou {n} livros",
     "event_read_many": "terminou de ler {n} livros",
-    "and_more": "e mais {n}"
+    "and_more": "e mais {n}",
+    "feed_empty_title": "Nada por aqui ainda"
   },
   "forgot": {
     "title": "Esqueci minha senha",
@@ -1169,7 +1173,8 @@
     "blocked": "{name} foi bloqueado.",
     "unblocked": "{name} foi desbloqueado.",
     "listTitle": "Leitores bloqueados",
-    "listEmpty": "Ninguém bloqueado. Para bloquear, abra a biblioteca pública da pessoa e use o menu ⋯."
+    "listEmpty": "Ninguém bloqueado. Para bloquear, abra a biblioteca pública da pessoa e use o menu ⋯.",
+    "listFailed": "Não foi possível carregar a lista de bloqueados."
   },
   "review": {
     "title": "Resenha",
@@ -1323,7 +1328,8 @@
     "noListsYet": "Você ainda não tem listas. Crie uma com este livro.",
     "addedTo": "Adicionado a “{title}”",
     "removedFrom": "Tirado de “{title}”",
-    "profileTitle": "Listas | 1 lista | {n} listas"
+    "profileTitle": "Listas | 1 lista | {n} listas",
+    "loadOneFailed": "Não foi possível carregar esta lista."
   },
   "year": {
     "kicker": "Retrospectiva",

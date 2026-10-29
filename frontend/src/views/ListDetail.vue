@@ -30,13 +30,29 @@
         />
       </div>
 
-      <div
+      <EmptyState
         v-else-if="notFound"
-        class="empty"
+        icon="pi pi-list"
+        :level="1"
+        :title="t('lists.notFound')"
       >
-        <h1>{{ t('lists.notFound') }}</h1>
-        <router-link :to="{ name: 'lists' }">{{ t('lists.back') }}</router-link>
-      </div>
+        <template #action>
+          <router-link
+            :to="{ name: 'lists' }"
+            class="btn btn-outlined btn-secondary"
+          >{{ t('lists.back') }}</router-link>
+        </template>
+      </EmptyState>
+
+      <!-- Erro sem a lista na tela: mensagem e "Tentar de novo" (antes, só um toast) -->
+      <EmptyState
+        v-else-if="loadError && !list"
+        variant="error"
+        :level="1"
+        :title="t('lists.loadOneFailed')"
+        :loading="loading"
+        @action="load"
+      />
 
       <template v-else-if="list">
         <header class="list-header">
@@ -110,23 +126,16 @@
           </i18n-t>
         </p>
 
-        <div
+        <EmptyState
           v-if="!list.items.length"
-          class="empty"
-        >
-          <span
-            class="empty-icon"
-            aria-hidden="true"
-          ><i class="pi pi-book"></i></span>
-          <p>{{ t('lists.emptyList') }}</p>
-          <AppButton
-            :label="t('lists.addBooks')"
-            icon="pi pi-plus"
-            class="btn-primary"
-            :disabled="isOffline"
-            @click="pickerOpen = true"
-          />
-        </div>
+          compact
+          icon="pi pi-book"
+          :title="t('lists.emptyList')"
+          :action-label="t('lists.addBooks')"
+          action-icon="pi pi-plus"
+          :action-disabled="isOffline"
+          @action="pickerOpen = true"
+        />
 
         <template v-else>
           <p
@@ -221,6 +230,7 @@ import { useI18n } from 'vue-i18n'
 import Sortable from 'sortablejs'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import PopupMenu from '../components/ui/PopupMenu.vue'
 import IconButton from '../components/form/IconButton.vue'
 import BookDialog from '../components/BookDialog.vue'
@@ -250,6 +260,7 @@ const uid = `list-${Math.random().toString(36).slice(2, 8)}`
 const list = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
+const loadError = ref(false)
 const formOpen = ref(false)
 const pickerOpen = ref(false)
 const moreMenu = ref(null)
@@ -281,9 +292,12 @@ async function load() {
   try {
     list.value = (await api.getList(listId.value)).list
     notFound.value = false
+    loadError.value = false
   } catch (error) {
     if (error.status === 404 || error.status === 400) notFound.value = true
-    else toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    // Com a lista na tela (recarga depois de mudar), mantém e avisa
+    else if (list.value) toast.add({ severity: 'error', summary: t('common.error'), detail: t('lists.loadOneFailed'), life: 4000 })
+    else loadError.value = true
   } finally {
     loading.value = false
   }
@@ -649,32 +663,6 @@ onBeforeUnmount(() => {
 .remove-btn {
   flex-shrink: 0;
   color: var(--text-muted);
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 2.5rem auto;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.empty p {
-  margin: 0 0 0.25rem;
-}
-
-.empty-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  background: rgba(var(--main-color-rgb), 0.1);
-  color: var(--main-color);
-  font-size: 1.25rem;
 }
 
 @media (pointer: coarse) {

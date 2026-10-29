@@ -7,6 +7,13 @@
           v-if="summary"
           class="summary"
         >{{ summary }}</p>
+        <!-- Linha do resumo reservada enquanto carrega (sem empurrar a página) -->
+        <AppSkeleton
+          v-else-if="loading"
+          class="summary summary-skeleton"
+          width="16rem"
+          height="1.1rem"
+        />
       </div>
       <AppButton
         v-if="!isEmpty && !loadError"
@@ -17,8 +24,9 @@
       />
     </header>
 
+    <!-- Avisos entram junto com o conteúdo, não por cima do esqueleto -->
     <router-link
-      v-if="pendingRequests > 0"
+      v-if="!loading && pendingRequests > 0"
       :to="{ name: 'community' }"
       class="notice"
     >
@@ -49,59 +57,85 @@
       ></i>
     </router-link>
 
-    <!-- Carregando -->
+    <!-- Carregando: o mesmo desenho das seções (Lendo agora + estante) -->
     <div
       v-if="loading"
-      class="shelf-skeleton"
+      class="home-skeleton"
       aria-busy="true"
+      :aria-label="t('common.loading')"
     >
-      <AppSkeleton
-        v-for="n in 6"
-        :key="n"
-        height="260px"
-        border-radius="12px"
-      />
+      <div class="shelf">
+        <div class="shelf-head">
+          <AppSkeleton
+            width="9rem"
+            height="1.4rem"
+          />
+        </div>
+        <AppSkeleton
+          class="reading-skeleton"
+          height="auto"
+          border-radius="12px"
+        />
+      </div>
+      <div class="shelf">
+        <div class="shelf-head">
+          <AppSkeleton
+            width="11rem"
+            height="1.4rem"
+          />
+        </div>
+        <div class="shelf-skeleton">
+          <div
+            v-for="n in 6"
+            :key="n"
+            class="book-skeleton"
+          >
+            <AppSkeleton
+              class="cover-skeleton"
+              height="auto"
+              border-radius="12px"
+            />
+            <AppSkeleton
+              width="85%"
+              height="1rem"
+            />
+            <AppSkeleton
+              width="60%"
+              height="0.8rem"
+            />
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Falha ao carregar: não confundir com estante vazia -->
-    <div
+    <EmptyState
       v-else-if="loadError"
-      class="error-state"
-      role="alert"
-    >
-      <i
-        class="pi pi-exclamation-triangle"
-        aria-hidden="true"
-      ></i>
-      <p>{{ t('home.loadError') }}</p>
-      <AppButton
-        :label="t('common.retry')"
-        icon="pi pi-refresh"
-        class="btn-outlined btn-secondary"
-        :loading="retrying"
-        @click="retry"
-      />
-    </div>
+      variant="error"
+      :title="t('home.loadErrorTitle')"
+      :text="t('home.loadError')"
+      :loading="retrying"
+      @action="retry"
+    />
 
     <!-- Estante vazia: primeiro passo -->
-    <section
+    <EmptyState
       v-else-if="isEmpty"
       class="empty-start"
+      :title="t('home.emptyTitle')"
+      :text="t('home.emptyText')"
+      :action-label="t('home.addFirst')"
+      action-icon="pi pi-plus"
+      @action="addDialogVisible = true"
     >
-      <img
-        src="/bookshelf.png"
-        alt=""
-        width="96"
-        height="96"
-      />
-      <h2>{{ t('home.emptyTitle') }}</h2>
-      <p>{{ t('home.emptyText') }}</p>
-      <AppButton
-        :label="t('home.addFirst')"
-        icon="pi pi-plus"
-        class="btn-primary"
-        @click="addDialogVisible = true"
-      />
+      <template #media>
+        <img
+          src="/bookshelf.png"
+          alt=""
+          width="96"
+          height="96"
+        />
+      </template>
       <ul class="tips">
         <li>
           <i
@@ -125,7 +159,7 @@
           <span>{{ t('home.tipShare') }}</span>
         </li>
       </ul>
-    </section>
+    </EmptyState>
 
     <template v-else>
       <section
@@ -304,6 +338,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import ReadingNowCard from '../components/ReadingNowCard.vue'
@@ -440,20 +475,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 4rem 1rem;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.error-state > i {
-  font-size: var(--fs-3xl);
-}
-
 .home-container {
   width: 100%;
   min-width: 0;
@@ -547,6 +568,36 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1.25rem;
+}
+
+/* Esqueleto com as medidas das seções reais: card de "Lendo agora" e livros
+   com capa 2:3 + título e autor (antes, blocos de 260px que trocavam de altura) */
+.home-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+.reading-skeleton {
+  height: 219px !important;
+  max-width: 560px;
+}
+
+.book-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.cover-skeleton {
+  aspect-ratio: 2 / 3;
+  height: auto !important;
+  margin-bottom: 0.4rem;
+}
+
+.summary-skeleton {
+  max-width: 100%;
 }
 
 .reading-grid {
@@ -694,25 +745,11 @@ onMounted(async () => {
 }
 
 .empty-start {
-  text-align: center;
   max-width: 560px;
-  margin: 1rem auto 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.empty-start h2 {
-  font-family: var(--font-display);
-  font-size: var(--fs-2xl);
-  margin: 0.5rem 0 0;
-}
-
-.empty-start p {
-  margin: 0;
-  color: var(--text-secondary);
-  line-height: 1.55;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 0;
+  padding-top: 1rem;
 }
 
 .tips {
@@ -812,8 +849,27 @@ onMounted(async () => {
     display: flex;
   }
 
+  /* Como a estante do celular: uma fileira que continua para o lado */
   .shelf-skeleton {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    overflow: hidden;
+    gap: 0.85rem;
+  }
+
+  .shelf-skeleton > * {
+    flex: 0 0 42%;
+  }
+
+  .shelf-skeleton > :nth-child(n + 5) {
+    display: flex;
+  }
+
+  .home-skeleton {
+    gap: 1.75rem;
+  }
+
+  .reading-skeleton {
+    height: 239px !important;
   }
 
   .shelf-skeleton > :nth-child(n + 3) {

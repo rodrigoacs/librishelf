@@ -124,10 +124,14 @@
         class="empty"
         role="status"
       >{{ t('common.loading') }}</p>
-      <p
+      <EmptyState
         v-else-if="failed"
-        class="empty"
-      >{{ t('common.loadError') }}</p>
+        variant="error"
+        compact
+        :level="3"
+        :title="t('common.loadErrorTitle')"
+        @action="load"
+      />
       <p
         v-else-if="users.length === 0"
         class="empty"
@@ -163,6 +167,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
+import EmptyState from '../ui/EmptyState.vue'
 import api from '../../services/api.js'
 import { LockedError, useAdminCall, formatShortDate, formatDateTime, formatNumber, formatDate } from './adminCall.js'
 

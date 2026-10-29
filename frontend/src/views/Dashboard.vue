@@ -58,23 +58,12 @@
       </div>
     </div>
 
-    <div
+    <EmptyState
       v-else-if="loadError"
-      class="error-state"
-      role="alert"
-    >
-      <i
-        class="pi pi-exclamation-triangle"
-        aria-hidden="true"
-      ></i>
-      <p>{{ $t('dashboard.loadError') }}</p>
-      <AppButton
-        :label="$t('common.retry')"
-        icon="pi pi-refresh"
-        class="btn-outlined btn-secondary"
-        @click="loadStats"
-      />
-    </div>
+      variant="error"
+      :title="$t('dashboard.loadError')"
+      @action="loadStats"
+    />
 
     <div
       v-else
@@ -410,6 +399,7 @@ import { useToast } from '../services/toast.js'
 import ChartCanvas from '../components/ui/ChartCanvas.vue'
 import ChartDataTable from '../components/ui/ChartDataTable.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSelect from '../components/ui/AppSelect.vue'
 import NumberField from '../components/ui/NumberField.vue'
@@ -727,6 +717,9 @@ onMounted(loadStats)
   min-height: 100vh;
   min-height: 100dvh;
   background-color: var(--bg-app);
+  /* Sem width, como filho de flex encolhia até o esqueleto e esticava ao
+     carregar (tudo pulava para o lado) */
+  width: 100%;
   max-width: 1100px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -1289,18 +1282,4 @@ a.author-row:hover {
     padding: 1.1rem;
     margin-bottom: 1rem;
   }
-}
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 4rem 1rem;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.error-state > i {
-  font-size: var(--fs-3xl);
-}
-</style>
+}</style>

@@ -34,18 +34,29 @@
         />
       </div>
 
-      <div
+      <EmptyState
         v-else-if="notFound"
-        class="empty"
+        icon="pi pi-lock"
+        :level="1"
+        :title="t('lists.publicNotFound')"
+        :text="t('lists.publicNotFoundText')"
       >
-        <span
-          class="empty-icon"
-          aria-hidden="true"
-        ><i class="pi pi-lock"></i></span>
-        <h1>{{ t('lists.publicNotFound') }}</h1>
-        <p>{{ t('lists.publicNotFoundText') }}</p>
-        <router-link :to="{ name: 'public-library', params: { username } }">{{ t('lists.seeLibrary', { name: username }) }}</router-link>
-      </div>
+        <template #action>
+          <router-link
+            :to="{ name: 'public-library', params: { username } }"
+            class="btn btn-outlined btn-secondary"
+          >{{ t('lists.seeLibrary', { name: username }) }}</router-link>
+        </template>
+      </EmptyState>
+
+      <!-- Erro de rede/servidor: mensagem e "Tentar de novo" (antes, só um toast) -->
+      <EmptyState
+        v-else-if="loadError"
+        variant="error"
+        :level="1"
+        :title="t('lists.loadOneFailed')"
+        @action="load"
+      />
 
       <template v-else-if="list">
         <header class="list-header">
@@ -122,6 +133,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
 import BookDialog from '../components/BookDialog.vue'
 import ListBookRow from '../components/list/ListBookRow.vue'
@@ -143,6 +155,7 @@ const toast = useToast()
 const list = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
+const loadError = ref(false)
 const openedBookId = ref(null)
 const bookDialogOpen = ref(false)
 
@@ -157,6 +170,7 @@ function formatDate(value) {
 async function load() {
   loading.value = true
   notFound.value = false
+  loadError.value = false
   try {
     list.value = (await api.getPublicList(username.value, listId.value)).list
     // Corrige o nome no fim da URL (link antigo, lista renomeada)
@@ -167,7 +181,7 @@ async function load() {
   } catch (error) {
     list.value = null
     if (error.status === 404 || error.status === 400) notFound.value = true
-    else toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    else loadError.value = true
   } finally {
     loading.value = false
   }
@@ -315,45 +329,6 @@ onBeforeUnmount(() => setOverlayTitle(''))
 
 .cta a {
   color: var(--main-color);
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 3rem auto;
-  max-width: 26rem;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.empty h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-xl);
-  color: var(--text-primary);
-}
-
-.empty p {
-  margin: 0;
-  line-height: 1.5;
-}
-
-.empty a {
-  color: var(--main-color);
-}
-
-.empty-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  background: rgba(var(--main-color-rgb), 0.1);
-  color: var(--main-color);
-  font-size: 1.25rem;
 }
 
 @media (max-width: 640px) {

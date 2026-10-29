@@ -50,25 +50,12 @@
         </div>
       </div>
 
-      <div
+      <EmptyState
         v-else-if="error && books.length === 0"
-        class="empty-state"
-        role="alert"
-      >
-        <div class="empty-icon-circle">
-          <i
-            class="pi pi-exclamation-triangle"
-            aria-hidden="true"
-          ></i>
-        </div>
-        <h3>{{ t('library.load_error') }}</h3>
-        <AppButton
-          :label="t('common.retry')"
-          icon="pi pi-refresh"
-          class="btn-outlined btn-secondary mt-3"
-          @click="refreshData"
-        />
-      </div>
+        variant="error"
+        :title="t('library.load_error')"
+        @action="refreshData"
+      />
 
       <div
         v-else-if="books.length > 0"
@@ -137,46 +124,26 @@
       </div>
 
       <!-- Estante vazia de verdade (sem filtro): o próximo passo é cadastrar -->
-      <div
+      <EmptyState
         v-else-if="!isFiltered(filters)"
-        class="empty-state"
-      >
-        <div class="empty-icon-circle">
-          <i
-            class="pi pi-book"
-            aria-hidden="true"
-          ></i>
-        </div>
-        <h3>{{ t('home.emptyTitle') }}</h3>
-        <p>{{ t('home.emptyText') }}</p>
-        <AppButton
-          :label="t('home.addFirst')"
-          icon="pi pi-plus"
-          class="btn-primary mt-3"
-          @click="header?.openAddBook()"
-        />
-      </div>
+        icon="pi pi-book"
+        :title="t('home.emptyTitle')"
+        :text="t('home.emptyText')"
+        :action-label="t('home.addFirst')"
+        action-icon="pi pi-plus"
+        @action="header?.openAddBook()"
+      />
 
-      <div
+      <EmptyState
         v-else
-        class="empty-state"
-      >
-        <div class="empty-icon-circle">
-          <i
-            class="pi pi-search"
-            aria-hidden="true"
-          ></i>
-        </div>
-        <h3>{{ t('library.empty_title') }}</h3>
-        <p>{{ t('library.empty_msg') }}</p>
-
-        <AppButton
-          :label="t('library.clear_all')"
-          icon="pi pi-filter-slash"
-          class="btn-outlined btn-secondary mt-3"
-          @click="clearFilters"
-        />
-      </div>
+        icon="pi pi-search"
+        :title="t('library.empty_title')"
+        :text="t('library.empty_msg')"
+        :action-label="t('library.clear_all')"
+        action-icon="pi pi-filter-slash"
+        action-class="btn-outlined btn-secondary"
+        @action="clearFilters"
+      />
 
     </div>
 
@@ -208,7 +175,7 @@ import { holdScroll, isHistoryReturn, rememberPages, recallPages, routeKey } fro
 import BatchBar from '../components/BatchBar.vue'
 import { queryToFilters, queryToView, filtersToQuery, sameQuery, VIEW_MODES } from '../utils/libraryQuery.js'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
-import AppButton from '../components/ui/AppButton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import { useLibrary, isFiltered } from '../composables/useLibrary.js'
 
 const { t } = useI18n()
@@ -489,40 +456,6 @@ onUnmounted(() => {
 .loading-more-icon {
   font-size: var(--fs-xl);
   color: var(--main-color);
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-  text-align: center;
-  color: var(--text-secondary);
-  animation: fadeIn 0.5s ease;
-}
-
-.empty-icon-circle {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-
-.empty-icon-circle i {
-  font-size: var(--fs-3xl);
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  font-size: var(--fs-xl);
-  color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
 }
 
 .book-list-enter-active,

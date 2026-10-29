@@ -4,10 +4,14 @@
       v-if="loading"
       height="420px"
     />
-    <p
+    <EmptyState
       v-else-if="failed"
-      class="empty"
-    >{{ t('common.loadError') }}</p>
+      variant="error"
+      compact
+      :level="3"
+      :title="t('common.loadErrorTitle')"
+      @action="load"
+    />
 
     <template v-else-if="data">
       <section
@@ -92,6 +96,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppSkeleton from '../ui/AppSkeleton.vue'
+import EmptyState from '../ui/EmptyState.vue'
 import api from '../../services/api.js'
 import { LockedError, useAdminCall, formatNumber } from './adminCall.js'
 
@@ -118,7 +123,9 @@ const scanShare = computed(() => {
   return total ? Math.round((events['isbn.scan'] / total) * 100) : null
 })
 
-onMounted(async () => {
+async function load() {
+  loading.value = true
+  failed.value = false
   try {
     data.value = await call(() => api.adminUsage())
   } catch (error) {
@@ -126,7 +133,9 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(load)
 </script>
 
 <style scoped>

@@ -111,8 +111,36 @@
       </div>
     </header>
 
+    <!-- Perfil ainda carregando: esqueleto no lugar dele, e a grade só entra
+         depois (antes a grade aparecia primeiro e era empurrada para baixo) -->
+    <div
+      v-if="!profileSettled && !notFound"
+      class="profile-section profile-skeleton"
+      aria-busy="true"
+      :aria-label="t('common.loading')"
+    >
+      <div class="stat-row">
+        <AppSkeleton
+          v-for="n in 3"
+          :key="n"
+          class="stat-skeleton"
+          width="140px"
+          height="78px"
+          border-radius="12px"
+        />
+      </div>
+      <div class="profile-grid">
+        <AppSkeleton
+          v-for="n in 2"
+          :key="n"
+          height="220px"
+          border-radius="12px"
+        />
+      </div>
+    </div>
+
     <section
-      v-if="profile && !notFound"
+      v-else-if="profile && !notFound"
       class="profile-section"
       :aria-label="t('profile.title')"
     >
@@ -318,53 +346,59 @@
       </div>
     </section>
 
-    <div
-      v-if="loading && books.length === 0"
-      class="loading-state"
-      aria-busy="true"
-    >
-      <i
-        class="pi pi-spin pi-spinner"
-        aria-hidden="true"
-      ></i> {{ t('common.loading') }}
-    </div>
-
-    <div
-      v-else-if="notFound"
-      class="empty-state"
+    <EmptyState
+      v-if="notFound"
+      icon="pi pi-lock"
+      :title="t('publicLibrary.notFound')"
       role="status"
     >
-      <i
-        class="pi pi-lock state-icon"
-        aria-hidden="true"
-      ></i>
-      <p>{{ t('publicLibrary.notFound') }}</p>
-      <router-link
-        to="/"
-        class="state-link"
-      >{{ t('notFound.goHome') }}</router-link>
-    </div>
+      <template #action>
+        <router-link
+          to="/"
+          class="btn btn-outlined btn-secondary"
+        >{{ t('notFound.goHome') }}</router-link>
+      </template>
+    </EmptyState>
 
     <div
+      v-else-if="(loading && books.length === 0) || !profileSettled"
+      class="books-grid"
+      aria-busy="true"
+      :aria-label="t('common.loading')"
+    >
+      <div
+        v-for="n in 10"
+        :key="n"
+        class="book-skeleton"
+      >
+        <AppSkeleton
+          class="cover-skeleton"
+          height="auto"
+          border-radius="12px"
+        />
+        <AppSkeleton
+          width="85%"
+          height="1rem"
+        />
+        <AppSkeleton
+          width="60%"
+          height="0.8rem"
+        />
+      </div>
+    </div>
+
+    <EmptyState
       v-else-if="error && books.length === 0"
-      class="empty-state"
-      role="alert"
-    >
-      <p>{{ t('publicLibrary.error') }}</p>
-      <AppButton
-        :label="t('common.retry')"
-        icon="pi pi-refresh"
-        class="btn-outlined btn-secondary"
-        @click="loadLibrary()"
-      />
-    </div>
+      variant="error"
+      :title="t('publicLibrary.error')"
+      @action="loadLibrary()"
+    />
 
-    <div
+    <EmptyState
       v-else-if="books.length === 0"
-      class="empty-state"
-    >
-      <p>{{ t('publicLibrary.empty') }}</p>
-    </div>
+      icon="pi pi-book"
+      :title="t('publicLibrary.empty')"
+    />
 
     <template v-else>
       <div class="books-grid">
@@ -400,7 +434,10 @@
       :owner-username="username"
     />
 
-    <footer class="public-footer">
+    <footer
+      v-if="profileSettled"
+      class="public-footer"
+    >
       <router-link to="/privacy">{{ t('login.privacy') }}</router-link>
       <span aria-hidden="true">·</span>
       <span>{{ t('publicLibrary.poweredBy') }}</span>
@@ -416,6 +453,8 @@ import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
+import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import { useToast } from '../services/toast.js'
 import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
@@ -477,6 +516,9 @@ watch(bookDialogVisible, (open) => {
   }
 })
 
+// Perfil respondeu (com dados ou não): a grade de livros pode aparecer
+const profileSettled = ref(false)
+
 async function loadProfile() {
   const requestedFor = username.value
   try {
@@ -491,6 +533,8 @@ async function loadProfile() {
       profile.value = null
       setRobots(true)
     }
+  } finally {
+    if (requestedFor === username.value) profileSettled.value = true
   }
 }
 
@@ -641,6 +685,7 @@ watch(username, () => {
   total.value = 0
   page.value = 0
   profile.value = null
+  profileSettled.value = false
   bookDialogVisible.value = false
   openedBookId.value = null
   loadLibrary()
@@ -1001,25 +1046,24 @@ watch(username, () => {
   color: var(--main-color);
 }
 
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: 4rem;
-  color: var(--text-muted);
-  font-size: var(--fs-lg);
+.book-skeleton {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
-.state-icon {
-  font-size: var(--fs-2xl);
+.cover-skeleton {
+  aspect-ratio: 2 / 3;
+  height: auto !important;
+  margin-bottom: 0.4rem;
 }
 
-.state-link {
-  color: var(--main-color);
+.stat-skeleton {
+  flex: 0 0 auto;
 }
+
+
 
 .public-footer {
   margin-top: auto;

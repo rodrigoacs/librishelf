@@ -29,11 +29,22 @@
       </div>
     </div>
 
+    <!-- Enquanto carrega, a linha já ocupa o lugar (contagem em esqueleto,
+         botões desabilitados): a lista não desce quando os dados chegam -->
     <div
-      v-if="!loading && !loadError && items.length"
+      v-if="loading || (!loadError && items.length)"
       class="toolbar"
     >
-      <span class="total">{{ t(`${i18nKey}.total`, { n: items.length }, items.length) }}</span>
+      <AppSkeleton
+        v-if="loading"
+        class="total"
+        width="6rem"
+        height="1.2rem"
+      />
+      <span
+        v-else
+        class="total"
+      >{{ t(`${i18nKey}.total`, { n: items.length }, items.length) }}</span>
 
       <div
         class="sort-group"
@@ -47,6 +58,7 @@
           class="pill"
           :class="{ active: sortBy === option.value }"
           :aria-pressed="sortBy === option.value"
+          :disabled="loading"
           @click="sortBy = option.value"
         >{{ option.label }}</button>
       </div>
@@ -56,6 +68,7 @@
         class="pill merge-toggle"
         :class="{ active: merging }"
         :aria-pressed="merging"
+        :disabled="loading"
         @click="toggleMerging"
       >
         <i
@@ -84,76 +97,50 @@
         ></div>
       </div>
 
-      <div
+      <EmptyState
         v-else-if="loadError"
-        class="empty-state"
-        role="alert"
-      >
-        <i
-          class="pi pi-exclamation-triangle"
-          aria-hidden="true"
-        ></i>
-        <p>{{ t(errorKey) }}</p>
-        <AppButton
-          :label="t('common.retry')"
-          icon="pi pi-refresh"
-          class="btn-outlined btn-secondary"
-          @click="load"
-        />
-      </div>
+        variant="error"
+        :title="t(errorKey)"
+        @action="load"
+      />
 
       <!-- Nenhum item ainda: explica de onde eles vêm e oferece o próximo passo -->
-      <div
+      <EmptyState
         v-else-if="items.length === 0"
-        class="empty-state"
+        :icon="`pi ${icon}`"
+        :title="t(`entities.empty.${i18nKey}.title`)"
+        :text="t(`entities.empty.${i18nKey}.text`)"
+        :action-label="i18nKey === 'tags' ? '' : t('home.addBook')"
+        action-icon="pi pi-plus"
+        @action="addBookVisible = true"
       >
-        <span class="empty-icon-circle">
-          <i
-            :class="['pi', icon]"
-            aria-hidden="true"
-          ></i>
-        </span>
-        <h2>{{ t(`entities.empty.${i18nKey}.title`) }}</h2>
-        <p>{{ t(`entities.empty.${i18nKey}.text`) }}</p>
-        <router-link
+        <template
           v-if="i18nKey === 'tags'"
-          :to="{ name: 'library' }"
-          class="btn btn-primary"
+          #action
         >
-          <i
-            class="pi pi-book"
-            aria-hidden="true"
-          ></i>
-          <span>{{ t('entities.empty.openLibrary') }}</span>
-        </router-link>
-        <AppButton
-          v-else
-          :label="t('home.addBook')"
-          icon="pi pi-plus"
-          class="btn-primary"
-          @click="addBookVisible = true"
-        />
-      </div>
+          <router-link
+            :to="{ name: 'library' }"
+            class="btn btn-primary"
+          >
+            <i
+              class="pi pi-book"
+              aria-hidden="true"
+            ></i>
+            <span>{{ t('entities.empty.openLibrary') }}</span>
+          </router-link>
+        </template>
+      </EmptyState>
 
       <!-- A busca não achou nada -->
-      <div
+      <EmptyState
         v-else-if="filteredItems.length === 0"
-        class="empty-state"
-      >
-        <span class="empty-icon-circle">
-          <i
-            class="pi pi-search"
-            aria-hidden="true"
-          ></i>
-        </span>
-        <p>{{ t(emptyKey) }}</p>
-        <AppButton
-          :label="t('entities.empty.clearSearch')"
-          icon="pi pi-times"
-          class="btn-outlined btn-secondary"
-          @click="search = ''"
-        />
-      </div>
+        icon="pi pi-search"
+        :title="t(emptyKey)"
+        :action-label="t('entities.empty.clearSearch')"
+        action-icon="pi pi-times"
+        action-class="btn-outlined btn-secondary"
+        @action="search = ''"
+      />
 
       <ul
         v-else
@@ -331,6 +318,8 @@ import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
 import AppButton from './ui/AppButton.vue'
 import AppDialog from './ui/AppDialog.vue'
+import AppSkeleton from './ui/AppSkeleton.vue'
+import EmptyState from './ui/EmptyState.vue'
 import AddBookDialog from './AddBookDialog.vue'
 import api from '../services/api.js'
 
@@ -863,44 +852,6 @@ button.entity-card {
   background-color: var(--bg-hover);
   border-radius: 12px;
   animation: pulse 1.5s infinite;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 4rem 1rem;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.empty-state h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-xl);
-  color: var(--text-primary);
-}
-
-.empty-state p {
-  margin: 0;
-  max-width: 28rem;
-  color: var(--text-secondary);
-}
-
-.empty-icon-circle {
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(var(--main-color-rgb), 0.12);
-  color: var(--main-color);
-}
-
-.empty-icon-circle .pi {
-  font-size: var(--fs-2xl);
 }
 
 @keyframes pulse {

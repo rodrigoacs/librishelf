@@ -30,36 +30,23 @@
         />
       </div>
 
-      <div
+      <EmptyState
         v-else-if="loadError"
-        class="empty"
-      >
-        <p>{{ t('lists.loadFailed') }}</p>
-        <AppButton
-          :label="t('common.retry')"
-          class="btn-outlined btn-secondary"
-          @click="load"
-        />
-      </div>
+        variant="error"
+        :title="t('lists.loadFailed')"
+        @action="load"
+      />
 
-      <div
+      <EmptyState
         v-else-if="!lists.length"
-        class="empty"
-      >
-        <span
-          class="empty-icon"
-          aria-hidden="true"
-        ><i class="pi pi-list"></i></span>
-        <h2>{{ t('lists.emptyTitle') }}</h2>
-        <p>{{ t('lists.emptyText') }}</p>
-        <AppButton
-          :label="t('lists.createFirst')"
-          icon="pi pi-plus"
-          class="btn-primary"
-          :disabled="isOffline"
-          @click="formOpen = true"
-        />
-      </div>
+        icon="pi pi-list"
+        :title="t('lists.emptyTitle')"
+        :text="t('lists.emptyText')"
+        :action-label="t('lists.createFirst')"
+        action-icon="pi pi-plus"
+        :action-disabled="isOffline"
+        @action="formOpen = true"
+      />
 
       <ul
         v-else
@@ -91,6 +78,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import ListCard from '../components/list/ListCard.vue'
 import ListFormDialog from '../components/list/ListFormDialog.vue'
 import api from '../services/api.js'
@@ -176,41 +164,6 @@ onMounted(load)
 
 .grid > li > * {
   flex: 1;
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  max-width: 28rem;
-  margin: 3rem auto;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.empty h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-xl);
-  color: var(--text-primary);
-}
-
-.empty p {
-  margin: 0 0 0.5rem;
-  line-height: 1.5;
-}
-
-.empty-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 4rem;
-  height: 4rem;
-  border-radius: 50%;
-  background: rgba(var(--main-color-rgb), 0.1);
-  color: var(--main-color);
-  font-size: 1.5rem;
 }
 
 @media (max-width: 640px) {

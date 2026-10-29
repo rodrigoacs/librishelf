@@ -51,7 +51,9 @@
     "discardTitle": "Discard changes?",
     "discardMessage": "What you changed hasn't been saved and will be lost.",
     "discard": "Discard",
-    "keepEditing": "Keep editing"
+    "keepEditing": "Keep editing",
+    "loadErrorTitle": "Couldn't load this",
+    "loadErrorHint": "Check your connection and try again."
   },
   "home": {
     "morning": "Good morning, {name}",
@@ -90,7 +92,8 @@
     "inviteText": "Mark a book as Reading and it shows up here, with the date you started.",
     "inviteWant": "Pick from my Want to read list",
     "yearInBooks": "Your {year} in books: see your recap | Your {year} in books: 1 book so far — see your recap | Your {year} in books: {n} books so far — see your recap",
-    "loadError": "Could not load your shelf. Your books are still saved."
+    "loadError": "Your books are still saved. Check your connection and try again.",
+    "loadErrorTitle": "Couldn't load your shelf"
   },
   "book": {
     "new_title": "New Book",
@@ -812,7 +815,7 @@
     "tab_following": "Following",
     "tab_followers": "Followers",
     "load_error": "Couldn't load.",
-    "feed_empty": "Nothing here yet. Find readers in a book's Community section and ask to follow them from their public page.",
+    "feed_empty": "Find readers in a book's Community section and ask to follow them from their public page.",
     "event_read": "finished",
     "event_reread": "reread",
     "event_added": "added",
@@ -832,7 +835,8 @@
     "yesterday": "Yesterday",
     "event_added_many": "added {n} books",
     "event_read_many": "finished {n} books",
-    "and_more": "and {n} more"
+    "and_more": "and {n} more",
+    "feed_empty_title": "Nothing here yet"
   },
   "forgot": {
     "title": "Forgot your password",
@@ -1169,7 +1173,8 @@
     "blocked": "{name} was blocked.",
     "unblocked": "{name} was unblocked.",
     "listTitle": "Blocked readers",
-    "listEmpty": "Nobody blocked. To block someone, open their public library and use the ⋯ menu."
+    "listEmpty": "Nobody blocked. To block someone, open their public library and use the ⋯ menu.",
+    "listFailed": "Couldn't load the blocked list."
   },
   "review": {
     "title": "Review",
@@ -1323,7 +1328,8 @@
     "noListsYet": "You don't have any lists yet. Create one with this book.",
     "addedTo": "Added to “{title}”",
     "removedFrom": "Removed from “{title}”",
-    "profileTitle": "Lists | 1 list | {n} lists"
+    "profileTitle": "Lists | 1 list | {n} lists",
+    "loadOneFailed": "Couldn't load this list."
   },
   "year": {
     "kicker": "Recap",
