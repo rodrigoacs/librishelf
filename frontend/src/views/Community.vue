@@ -297,7 +297,7 @@
               />
               <AppButton
                 :label="t('communityView.reject')"
-                class="btn-sm btn-text btn-secondary"
+                class="btn-sm btn-outlined btn-secondary"
                 :disabled="busy === person.username"
                 @click="act(person.username, () => api.rejectRequest(person.username), 'communityView.rejected')"
               />
@@ -306,6 +306,9 @@
         </ul>
       </section>
 
+      <!-- Ações das linhas (D9): botão pequeno contornado para agir (seguir,
+           recusar, deixar de seguir, remover); link só para navegar
+           ("Ver estante") -->
       <!-- Encontrar leitores -->
       <section
         v-show="activeTab === 'discover'"
@@ -498,7 +501,7 @@
               >{{ t('communityView.pending') }}</span>
               <AppButton
                 :label="person.status === 'pending' ? t('profile.cancel_request') : t('communityView.unfollow')"
-                class="btn-sm btn-text btn-secondary"
+                class="btn-sm btn-outlined btn-secondary"
                 :loading="busy === person.username"
                 @click="act(person.username, () => api.unfollow(person.username))"
               />
@@ -572,7 +575,7 @@
             <div class="actions">
               <AppButton
                 :label="t('communityView.remove')"
-                class="btn-sm btn-text btn-danger"
+                class="btn-sm btn-outlined btn-danger"
                 :loading="busy === person.username"
                 @click="confirmRemove(person.username)"
               />
