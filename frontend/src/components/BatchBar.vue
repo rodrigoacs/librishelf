@@ -176,10 +176,10 @@ async function run(body, successKey) {
   busy.value = true
   try {
     const { updated } = await api.batchBooks({ ids: props.ids, ...body })
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t(successKey, { n: updated }, updated), life: 3000 })
+    toast.add({ severity: 'success', detail: t(successKey, { n: updated }, updated), life: 3000 })
     emit('done')
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.value = false
   }

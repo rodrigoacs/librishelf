@@ -591,9 +591,9 @@ async function saveFollowEmails(value) {
   try {
     const result = await api.setNotifications({ followEmails: value, locale: locale.value === 'en' ? 'en' : 'pt' })
     updateUser({ followEmails: result.followEmails })
-    toast.add({ severity: 'success', summary: t('common.success'), detail: result.followEmails ? t('settings.notifications.on') : t('settings.notifications.off'), life: 3000 })
+    toast.add({ severity: 'success', detail: result.followEmails ? t('settings.notifications.on') : t('settings.notifications.off'), life: 3000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     savingNotifications.value = false
   }
@@ -621,9 +621,9 @@ async function savePrivacy(field, value) {
       allowIndexing: result.allowIndexing
     })
     const [onKey, offKey] = PRIVACY_MESSAGES[field]
-    toast.add({ severity: 'success', summary: t('common.success'), detail: result[field] ? t(onKey) : t(offKey), life: 3000 })
+    toast.add({ severity: 'success', detail: result[field] ? t(onKey) : t(offKey), life: 3000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message || t('settings.public.error'), life: 4000 })
+    toast.add({ severity: 'error', detail: error.message || t('settings.public.error'), life: 4000 })
   } finally {
     savingVisibility.value = false
   }
@@ -666,9 +666,9 @@ async function unblockUser(username) {
   try {
     await api.unblock(username)
     blockedUsers.value = blockedUsers.value.filter(person => person.username !== username)
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.unblocked', { name: username }), life: 3000 })
+    toast.add({ severity: 'success', detail: t('block.unblocked', { name: username }), life: 3000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     unblocking.value = ''
   }
@@ -717,12 +717,12 @@ async function changePassword() {
     const result = await api.changePassword(passwordForm.current, passwordForm.next)
     setUser(result.user)
     Object.assign(passwordForm, { current: '', next: '', confirm: '' })
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('settings.password.success'), life: 3000 })
+    toast.add({ severity: 'success', detail: t('settings.password.success'), life: 3000 })
     // Os watchers limpam os erros no próximo tick; o formulário volta vazio e sem erro
   } catch (error) {
     if (error.status === 401) passwordErrors.current = error.message
     else if (error.status === 400) passwordErrors.next = error.message
-    else toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    else toast.add({ severity: 'error', detail: error.message, life: 4000 })
     focusFirstError(passwordErrors, fields)
   } finally {
     savingPassword.value = false
@@ -775,7 +775,6 @@ async function saveAccount() {
     accountDialog.visible = false
     toast.add({
       severity: 'success',
-      summary: t('common.success'),
       detail: accountDialog.field === 'email' ? t('settings.account.emailChanged') : t('settings.account.usernameChanged', { name: result.user.name }),
       life: 5000
     })
@@ -783,7 +782,7 @@ async function saveAccount() {
     // 401: senha errada; 400/409: valor inválido ou já em uso
     if (error.status === 401) accountDialog.errors.password = error.message
     else if (error.status === 400 || error.status === 409) accountDialog.errors.value = error.message
-    else toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    else toast.add({ severity: 'error', detail: error.message, life: 4000 })
     focusFirstError(accountDialog.errors, { value: accountValueField, password: accountPasswordField })
   } finally {
     accountDialog.saving = false
@@ -809,7 +808,7 @@ async function downloadExport(format) {
     link.remove()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     exporting.value = null
   }
@@ -823,7 +822,7 @@ async function importFile(event) {
   try {
     importResult.value = await api.importBooks(file)
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 5000 })
+    toast.add({ severity: 'error', detail: error.message, life: 5000 })
   } finally {
     importing.value = false
     if (importInput.value) importInput.value.value = ''
@@ -857,14 +856,14 @@ async function deleteAccount() {
     await api.deleteAccount(deletePassword.value)
     deleteDialogVisible.value = false
     clearSession()
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('settings.delete.success'), life: 5000 })
+    toast.add({ severity: 'success', detail: t('settings.delete.success'), life: 5000 })
     router.replace({ name: 'login' })
   } catch (error) {
     if (error.status === 401) {
       deleteError.value = error.message
       deletePasswordField.value?.focus()
     } else {
-      toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+      toast.add({ severity: 'error', detail: error.message, life: 4000 })
     }
   } finally {
     deleting.value = false

@@ -256,7 +256,7 @@ async function lock() {
   try {
     await api.adminLock()
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message })
+    toast.add({ severity: 'error', detail: error.message })
   } finally {
     locking.value = false
     showLocked()
@@ -274,7 +274,7 @@ onMounted(async () => {
       showLocked()
     }
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message })
+    toast.add({ severity: 'error', detail: error.message })
     showLocked()
   }
 })

@@ -57,7 +57,7 @@ async function resend() {
       sent.value = true
     }
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 5000 })
+    toast.add({ severity: 'error', detail: error.message, life: 5000 })
   } finally {
     sending.value = false
   }

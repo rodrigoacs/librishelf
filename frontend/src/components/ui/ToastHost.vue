@@ -24,12 +24,11 @@
           aria-hidden="true"
         ></i>
         <div class="toast-text">
+          <!-- Só a frase: sem título genérico ("Sucesso"/"Erro"); o título
+               aparece quando diz algo além da frase (ex.: "Link copiado" + link) -->
+          <p class="toast-summary">{{ item.summary || item.detail }}</p>
           <p
-            v-if="item.summary"
-            class="toast-summary"
-          >{{ item.summary }}</p>
-          <p
-            v-if="item.detail"
+            v-if="item.summary && item.detail"
             class="toast-detail"
           >{{ item.detail }}</p>
         </div>

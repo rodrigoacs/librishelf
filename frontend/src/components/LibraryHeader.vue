@@ -117,7 +117,8 @@
         />
 
         <AppButton
-          :label="t('common.new')"
+          :label="t('home.addBook')"
+          :aria-label="t('home.addBook')"
           icon="pi pi-plus"
           class="btn-rounded btn-primary add-btn"
           @click="addBookDialogVisible = true"
@@ -1059,6 +1060,20 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     position: absolute;
     inset: -5px;
     border-radius: 50%;
+  }
+}
+
+/* "Adicionar livro" é mais longo que o antigo "Novo": abaixo de 420 px fica
+   só o ícone (o nome continua no aria-label), para o título caber */
+@media (max-width: 420px) {
+  .add-btn .btn-label {
+    display: none;
+  }
+
+  .add-btn.btn {
+    width: 2.75rem;
+    padding: 0;
+    justify-content: center;
   }
 }
 </style>

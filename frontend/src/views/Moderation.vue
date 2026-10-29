@@ -130,7 +130,7 @@ async function act(hide) {
     data.value = await api.moderateReview(token, hide)
     toast.add({ severity: 'success', summary: hide ? t('moderation.hiddenDone') : t('moderation.keptDone'), life: 3000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.value = ''
   }

@@ -267,7 +267,7 @@ async function resend() {
     await load()
     emit('changed')
   } catch (error) {
-    if (!(error instanceof LockedError)) toast.add({ severity: 'error', summary: t('common.error'), detail: error.message })
+    if (!(error instanceof LockedError)) toast.add({ severity: 'error', detail: error.message })
   } finally {
     resending.value = false
   }
@@ -310,7 +310,7 @@ async function confirmDialog() {
       dialog.password = ''
       passwordField.value?.focus()
     } else {
-      toast.add({ severity: 'error', summary: t('common.error'), detail: error.message })
+      toast.add({ severity: 'error', detail: error.message })
     }
   } finally {
     dialog.busy = false

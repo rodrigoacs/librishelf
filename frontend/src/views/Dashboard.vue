@@ -502,7 +502,7 @@ async function saveGoal() {
     stats.value.goal = saved.target
     editingGoal.value = false
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     goalSaving.value = false
   }
@@ -515,7 +515,7 @@ async function removeGoal() {
     stats.value.goal = null
     editingGoal.value = false
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     goalSaving.value = false
   }

@@ -110,10 +110,10 @@ async function finish() {
   saving.value = true
   try {
     await api.setReadingStatus(props.book.book_id, 'read', toApiDate(new Date()))
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('home.finishedToast', { title: props.book.title }), life: 3000 })
+    toast.add({ severity: 'success', detail: t('home.finishedToast', { title: props.book.title }), life: 3000 })
     emit('updated')
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
+    toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
     saving.value = false
   }

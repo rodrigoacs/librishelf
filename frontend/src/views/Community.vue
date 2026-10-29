@@ -737,10 +737,10 @@ async function followReader(reader) {
   try {
     const result = await api.follow(reader.username)
     reader.followStatus = result?.status ?? 'pending'
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('discover.requested', { name: reader.username }), life: 3000 })
+    toast.add({ severity: 'success', detail: t('discover.requested', { name: reader.username }), life: 3000 })
     loadConnections()
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.value = ''
   }
@@ -759,7 +759,7 @@ async function loadConnections() {
   } catch {
     // Sem nada carregado: erro na própria aba (antes, só um toast e a aba
     // dizia "ninguém"); com dados na tela, mantém e avisa
-    if (connectionsLoaded.value) toast.add({ severity: 'error', summary: t('common.error'), detail: t('communityView.load_error'), life: 4000 })
+    if (connectionsLoaded.value) toast.add({ severity: 'error', detail: t('communityView.load_error'), life: 4000 })
     else connectionsError.value = true
   } finally {
     connectionsLoading.value = false
@@ -770,12 +770,12 @@ async function act(username, request, successKey) {
   busy.value = username
   try {
     await request()
-    if (successKey) toast.add({ severity: 'success', summary: t('common.success'), detail: t(successKey, { name: username }), life: 3000 })
+    if (successKey) toast.add({ severity: 'success', detail: t(successKey, { name: username }), life: 3000 })
     await loadConnections()
     refreshPendingRequests({ force: true })
     loadFeed()
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.value = ''
   }

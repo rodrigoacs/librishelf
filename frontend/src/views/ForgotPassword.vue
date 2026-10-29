@@ -80,7 +80,7 @@ const loading = ref(false)
 async function submit() {
   const value = email.value.trim()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-    toast.add({ severity: 'warn', summary: t('login.attention'), detail: t('forgot.invalidEmail'), life: 3000 })
+    toast.add({ severity: 'warn', detail: t('forgot.invalidEmail'), life: 3000 })
     return
   }
 
@@ -91,7 +91,7 @@ async function submit() {
     sentTo.value = value
     sent.value = true
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     loading.value = false
   }

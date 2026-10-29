@@ -444,10 +444,10 @@ async function addRecommendation(rec) {
   try {
     await api.wantFromCommunity(rec.bookId)
     rec.added = true
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('home.recAddedToast', { title: rec.title }), life: 3000 })
+    toast.add({ severity: 'success', detail: t('home.recAddedToast', { title: rec.title }), life: 3000 })
     reload()
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     rec.adding = false
   }

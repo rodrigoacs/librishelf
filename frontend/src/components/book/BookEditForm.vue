@@ -674,7 +674,7 @@ async function submit() {
       errors[fieldError.field] = fieldError.message
       focusFirstError()
     } else {
-      toast.add({ severity: 'error', summary: t('common.error'), detail: error.message || t('book.toast_error'), life: 5000 })
+      toast.add({ severity: 'error', detail: error.message || t('book.toast_error'), life: 5000 })
     }
   } finally {
     saving.value = false
@@ -753,11 +753,11 @@ async function create() {
 
   const expectedCover = selectedFile.value || data.has('olCoverId')
   if (!statusSaved) {
-    toast.add({ severity: 'warn', summary: t('common.success'), detail: t('bookForm.statusNotSaved'), life: 6000 })
+    toast.add({ severity: 'warn', detail: t('bookForm.statusNotSaved'), life: 6000 })
   } else if (expectedCover && result?.coverSaved === false) {
-    toast.add({ severity: 'warn', summary: t('common.success'), detail: t('book.cover_not_saved'), life: 6000 })
+    toast.add({ severity: 'warn', detail: t('book.cover_not_saved'), life: 6000 })
   } else {
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('book.toast_added'), life: 3000 })
+    toast.add({ severity: 'success', detail: t('book.toast_added'), life: 3000 })
   }
   emit('saved', result)
 }
@@ -796,7 +796,7 @@ async function update() {
     coverChanged = true
   }
 
-  toast.add({ severity: 'success', summary: t('bookDialog.success'), detail: t('bookDialog.changesSaved'), life: 3000 })
+  toast.add({ severity: 'success', detail: t('bookDialog.changesSaved'), life: 3000 })
   emit('saved', { book, coverChanged })
 }
 

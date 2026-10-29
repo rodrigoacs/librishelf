@@ -179,7 +179,7 @@ async function toggle(book) {
     }
     emit('changed')
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.delete(id)
   }

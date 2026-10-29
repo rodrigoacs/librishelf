@@ -543,9 +543,9 @@ async function follow() {
   try {
     const result = await api.follow(username.value)
     profile.value.viewer.followStatus = result.status
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('profile.request_sent'), life: 3000 })
+    toast.add({ severity: 'success', detail: t('profile.request_sent'), life: 3000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     followBusy.value = false
   }
@@ -583,9 +583,9 @@ async function block() {
     profile.value.viewer.commonBooks = []
     // Bloqueado não aparece mais aqui (e a resenha deixa de ser visível)
     profile.value.reviews = { total: 0, items: [] }
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.blocked', { name: username.value }), life: 4000 })
+    toast.add({ severity: 'success', detail: t('block.blocked', { name: username.value }), life: 4000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     blockBusy.value = false
   }
@@ -596,9 +596,9 @@ async function unblock() {
   try {
     await api.unblock(username.value)
     await loadProfile()
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('block.unblocked', { name: username.value }), life: 3000 })
+    toast.add({ severity: 'success', detail: t('block.unblocked', { name: username.value }), life: 3000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     blockBusy.value = false
   }
@@ -610,7 +610,7 @@ async function unfollow() {
     await api.unfollow(username.value)
     profile.value.viewer.followStatus = null
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     followBusy.value = false
   }

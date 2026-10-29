@@ -83,7 +83,7 @@ const confirm = ref('')
 const loading = ref(false)
 
 function warn(detail) {
-  toast.add({ severity: 'warn', summary: t('login.attention'), detail, life: 4000 })
+  toast.add({ severity: 'warn', detail, life: 4000 })
 }
 
 async function submit() {
@@ -94,11 +94,11 @@ async function submit() {
   try {
     await api.resetPassword(token.value, password.value)
     clearSession()
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('reset.done'), life: 5000 })
+    toast.add({ severity: 'success', detail: t('reset.done'), life: 5000 })
     // Tira o token da barra de endereço/histórico antes de sair.
     router.replace({ name: 'login' })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 6000 })
+    toast.add({ severity: 'error', detail: error.message, life: 6000 })
   } finally {
     loading.value = false
   }

@@ -296,7 +296,7 @@ async function load() {
   } catch (error) {
     if (error.status === 404 || error.status === 400) notFound.value = true
     // Com a lista na tela (recarga depois de mudar), mantém e avisa
-    else if (list.value) toast.add({ severity: 'error', summary: t('common.error'), detail: t('lists.loadOneFailed'), life: 4000 })
+    else if (list.value) toast.add({ severity: 'error', detail: t('lists.loadOneFailed'), life: 4000 })
     else loadError.value = true
   } finally {
     loading.value = false
@@ -406,7 +406,7 @@ async function removeItem(item) {
     await api.removeFromList(before.id, item.bookId)
   } catch (error) {
     list.value = before
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
     return
   }
   // Foco no próximo livro (ou no anterior, se era o último)
@@ -435,7 +435,7 @@ function askDelete() {
         toast.add({ severity: 'success', summary: t('lists.deleted'), life: 2500 })
         router.replace({ name: 'lists' })
       } catch (error) {
-        toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+        toast.add({ severity: 'error', detail: error.message, life: 4000 })
       }
     }
   })

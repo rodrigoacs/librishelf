@@ -283,7 +283,7 @@ function isOld(report) {
 
 function notify(error) {
   if (error instanceof LockedError) return
-  toast.add({ severity: 'error', summary: t('common.error'), detail: error.message })
+  toast.add({ severity: 'error', detail: error.message })
 }
 
 async function loadQueue() {

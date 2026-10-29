@@ -77,7 +77,7 @@ const loading = ref(false)
 
 async function handleLogin() {
   if (!username.value.trim() || !password.value) {
-    toast.add({ severity: 'warn', summary: t('login.attention'), detail: t('login.fillFields'), life: 3000 })
+    toast.add({ severity: 'warn', detail: t('login.fillFields'), life: 3000 })
     return
   }
 
@@ -92,7 +92,7 @@ async function handleLogin() {
     // 401 = credenciais; qualquer outro (429 do rate limit, 5xx) mostra a
     // mensagem do servidor em vez de "credenciais inválidas".
     const detail = error.status === 401 ? t('login.invalidCreds') : (error.message || t('login.invalidCreds'))
-    toast.add({ severity: 'error', summary: t('login.error'), detail, life: 4000 })
+    toast.add({ severity: 'error', detail, life: 4000 })
   } finally {
     loading.value = false
   }

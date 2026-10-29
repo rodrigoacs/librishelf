@@ -497,7 +497,7 @@ async function makeList() {
     toast.add({ severity: 'success', summary: t('year.listCreated'), life: 3000 })
     router.push({ name: 'list', params: { id: list.id } })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     makingList.value = false
   }

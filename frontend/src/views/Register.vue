@@ -170,7 +170,7 @@ async function handleRegister() {
       locale: locale.value
     })
 
-    toast.add({ severity: 'success', summary: t('register.success'), detail: t('register.accountCreatedVerify'), life: 7000 })
+    toast.add({ severity: 'success', detail: t('register.accountCreatedVerify'), life: 7000 })
     router.push({ name: 'login', query: route.query })
   } catch (error) {
     const field = CODE_FIELDS[error.code]
@@ -178,7 +178,7 @@ async function handleRegister() {
       errors[field] = error.message
       focusFirstError()
     } else {
-      toast.add({ severity: 'error', summary: t('register.error'), detail: error.message || t('register.errorCreating'), life: 4000 })
+      toast.add({ severity: 'error', detail: error.message || t('register.errorCreating'), life: 4000 })
     }
   } finally {
     loading.value = false

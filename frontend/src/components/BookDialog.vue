@@ -276,7 +276,7 @@ async function changeStatus(option) {
     })
     refreshReadingFields()
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
+    toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
     readSaving.value = false
   }
@@ -336,7 +336,7 @@ async function quickRate(value) {
     emit('updated', { book: { book_id: props.bookId, rating: book.value.rating }, coverChanged: false })
   } catch (error) {
     book.value.rating = previous
-    toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
+    toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
     ratingSaving.value = false
   }
@@ -356,9 +356,9 @@ function deleteBook() {
         await api.deleteBook(props.bookId)
         visible.value = false
         emit('deleted', props.bookId)
-        toast.add({ severity: 'success', summary: t('bookDialog.deleted'), detail: t('bookDialog.bookDeleted'), life: 3000 })
+        toast.add({ severity: 'success', detail: t('bookDialog.bookDeleted'), life: 3000 })
       } catch (error) {
-        toast.add({ severity: 'error', summary: t('bookDialog.errorDeleted'), detail: error.message || t('bookDialog.deleteFailed'), life: 4000 })
+        toast.add({ severity: 'error', detail: error.message || t('bookDialog.deleteFailed'), life: 4000 })
       }
     }
   })
@@ -460,7 +460,7 @@ async function loadBookData() {
     // "Erro ao carregar" por cima do título verdadeiro.
     loadFailed.value = true
     book.value = emptyBook()
-    toast.add({ severity: 'warn', summary: t('bookDialog.attention'), detail: t('bookDialog.couldNotLoad'), life: 3000 })
+    toast.add({ severity: 'warn', detail: t('bookDialog.couldNotLoad'), life: 3000 })
   } finally {
     loading.value = false
   }

@@ -76,9 +76,9 @@ async function resend() {
   resending.value = true
   try {
     const result = await api.resendVerification(locale.value)
-    toast.add({ severity: 'success', summary: t('common.success'), detail: result.alreadyVerified ? t('verify.already') : t('verify.sent'), life: 5000 })
+    toast.add({ severity: 'success', detail: result.alreadyVerified ? t('verify.already') : t('verify.sent'), life: 5000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 5000 })
+    toast.add({ severity: 'error', detail: error.message, life: 5000 })
   } finally {
     resending.value = false
   }

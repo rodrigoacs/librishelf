@@ -36,7 +36,7 @@ export function useReadToggle(getBook, onUpdated) {
         onUpdated({ book: { book_id: bookId, read_date: today, reading_status: null }, coverChanged: false })
       }
     } catch (error) {
-      toast.add({ severity: 'error', summary: t('bookDialog.error'), detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
+      toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
     } finally {
       saving.value = false
     }

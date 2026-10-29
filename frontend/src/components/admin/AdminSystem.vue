@@ -452,7 +452,7 @@ async function load() {
   } catch (error) {
     if (!(error instanceof LockedError)) {
       failed.value = true
-      if (data.value) toast.add({ severity: 'error', summary: t('common.error'), detail: error.message })
+      if (data.value) toast.add({ severity: 'error', detail: error.message })
     }
   } finally {
     loading.value = false
@@ -468,7 +468,7 @@ async function testEmail() {
       : { severity: 'warn', summary: t('admin.system.email.testLogged'), life: 6000 })
     load()
   } catch (error) {
-    if (!(error instanceof LockedError)) toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 8000 })
+    if (!(error instanceof LockedError)) toast.add({ severity: 'error', detail: error.message, life: 8000 })
   } finally {
     testing.value = false
   }

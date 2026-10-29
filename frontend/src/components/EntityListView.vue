@@ -422,7 +422,6 @@ async function submitName() {
     await api.mergeNames(props.queryParam, nameDialog.from, to)
     toast.add({
       severity: 'success',
-      summary: t('common.success'),
       detail: nameDialog.mode === 'merge' || mergeTarget.value ? t('entities.mergedToast', { name: to }) : t('entities.renamedToast', { name: to }),
       life: 3000
     })
@@ -431,7 +430,7 @@ async function submitName() {
     selected.value = new Set()
     await load()
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     saving.value = false
   }

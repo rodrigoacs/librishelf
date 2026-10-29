@@ -116,7 +116,7 @@ async function toggle(list) {
     list.itemCount += adding ? 1 : -1
     toast.add({ severity: 'success', summary: adding ? t('lists.addedTo', { title: list.title }) : t('lists.removedFrom', { title: list.title }), life: 2500 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.value = null
   }

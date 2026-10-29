@@ -277,9 +277,9 @@ async function readAgain() {
       current_page: null,
       progress_percent: null
     })
-    toast.add({ severity: 'success', summary: t('common.success'), detail: t('history.readAgainToast'), life: 3000 })
+    toast.add({ severity: 'success', detail: t('history.readAgainToast'), life: 3000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.value = null
   }
@@ -311,7 +311,7 @@ async function saveRating(item, value) {
     await api.updateReading(props.bookId, item.id, { rating: value })
   } catch (error) {
     item.rating = previous
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.value = null
   }
@@ -371,7 +371,7 @@ async function remove(item) {
     applyBookState(result.book)
     if (!item.finishedOn) emit('changed', { current_page: null, progress_percent: null })
   } catch (error) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: error.message, life: 4000 })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
     busy.value = null
   }
