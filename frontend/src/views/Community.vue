@@ -423,6 +423,11 @@
                 :loading="busy === reader.username"
                 @click="followReader(reader)"
               />
+              <!-- Antes não aparecia nada: parecia que o botão Seguir tinha sumido -->
+              <span
+                v-else
+                class="status-pill"
+              >{{ t('discover.notAccepting') }}</span>
               <router-link
                 :to="{ name: 'public-library', params: { username: reader.username } }"
                 class="see-shelf"
@@ -588,6 +593,7 @@
 </template>
 
 <script setup>
+import { scrollBehavior } from '../utils/motion.js'
 import PageHeader from '../components/ui/PageHeader.vue'
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
@@ -651,8 +657,7 @@ function centerActiveTab(smooth = true) {
   const tab = el?.querySelector('[aria-selected="true"]')
   if (!el || !tab) return
   const left = tab.offsetLeft - (el.clientWidth - tab.offsetWidth) / 2
-  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-  el.scrollTo({ left: Math.max(0, left), behavior: smooth && !reduce ? 'smooth' : 'auto' })
+  el.scrollTo({ left: Math.max(0, left), behavior: scrollBehavior(smooth) })
 }
 
 watch(activeTab, () => nextTick(() => centerActiveTab()))
@@ -995,6 +1000,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
+  max-width: 100%;
 }
 
 .feed-body {
@@ -1059,6 +1065,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .status-pill.ok {

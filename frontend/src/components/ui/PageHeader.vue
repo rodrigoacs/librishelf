@@ -1,7 +1,8 @@
 <template>
   <!-- Cabeçalho de página único (D2): h1 --fs-3xl (--fs-2xl abaixo de 640 px),
        subtítulo, ações à direita e 2rem até o conteúdo. A variante compacta
-       (Biblioteca) é só o título numa linha, com o mesmo h1. -->
+       (Biblioteca) é só o título numa linha, com um token só (--fs-xl) em
+       todas as larguras. -->
   <header
     class="page-header"
     :class="{ compact, divider }"
@@ -129,7 +130,7 @@ defineProps({
 }
 
 .page-header.compact .page-header-title {
-  font-size: var(--fs-2xl);
+  font-size: var(--fs-xl);
   white-space: nowrap;
 }
 
@@ -140,10 +141,6 @@ defineProps({
 
   .page-header-title {
     font-size: var(--fs-2xl);
-  }
-
-  .page-header.compact .page-header-title {
-    font-size: var(--fs-xl);
   }
 }
 </style>

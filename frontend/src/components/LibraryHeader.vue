@@ -29,9 +29,10 @@
           >{{ t('library.search_label') }}</label>
           <input
             id="library-search"
+            ref="searchInput"
             v-model="searchText"
             type="search"
-            :placeholder="compact ? t('library.search_ph_short') : t('library.search_ph')"
+            :placeholder="longPlaceholderFits ? t('library.search_ph') : t('library.search_ph_short')"
             class="custom-search-input"
             autocomplete="off"
             @input="emitFilter('search', searchText)"
@@ -191,7 +192,7 @@
       </div>
       <AppButton
         :label="t('library.clear_all')"
-        class="btn-text btn-sm btn-danger clear-all-btn"
+        class="btn-text btn-sm btn-secondary clear-all-btn"
         @click="emit('reset')"
       />
     </div>
@@ -368,7 +369,7 @@
 <script setup>
 import PageHeader from './ui/PageHeader.vue'
 import { tagColor } from '../utils/tagColors.js'
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import AppButton from './ui/AppButton.vue'
 import AppDialog from './ui/AppDialog.vue'
 import IconButton from './form/IconButton.vue'
@@ -403,14 +404,33 @@ const viewModes = computed(() => [
 const visibleFilters = ref(false)
 const addBookDialogVisible = ref(false)
 
-// Celular (mesmo corte do CSS abaixo): placeholder curto, porque o longo
-// ("Pesquisar por título, autor ou ISBN...") era cortado no meio da palavra.
-const COMPACT_QUERY = '(max-width: 639.98px)'
-const compactMedia = typeof window !== 'undefined' ? window.matchMedia?.(COMPACT_QUERY) : null
-const compact = ref(Boolean(compactMedia?.matches))
-const onCompactChange = event => { compact.value = event.matches }
-compactMedia?.addEventListener?.('change', onCompactChange)
-onBeforeUnmount(() => compactMedia?.removeEventListener?.('change', onCompactChange))
+// Placeholder curto ("Buscar livros") sempre que o longo ("Pesquisar por
+// título, autor ou ISBN") não cabe no campo: antes era cortado no meio da
+// palavra no celular e também a 1440 px, ao lado do ordenar.
+const searchInput = ref(null)
+const longPlaceholderFits = ref(true)
+let measureCtx = null
+function measurePlaceholder() {
+  const el = searchInput.value
+  if (!el || !el.clientWidth) return
+  const style = getComputedStyle(el)
+  const available = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+  measureCtx ||= document.createElement('canvas').getContext('2d')
+  if (!measureCtx) return
+  measureCtx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+  longPlaceholderFits.value = measureCtx.measureText(t('library.search_ph')).width <= available
+}
+let placeholderObserver = null
+onMounted(() => {
+  measurePlaceholder()
+  if (typeof ResizeObserver !== 'undefined' && searchInput.value) {
+    placeholderObserver = new ResizeObserver(() => measurePlaceholder())
+    placeholderObserver.observe(searchInput.value)
+  }
+  document.fonts?.ready?.then(measurePlaceholder)
+})
+onBeforeUnmount(() => placeholderObserver?.disconnect())
+watch(locale, () => nextTick(measurePlaceholder))
 
 const searchText = ref(props.filters.search || '')
 watch(() => props.filters.search, (value) => {
@@ -544,6 +564,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
 <style scoped>
 .library-header-wrapper {
+  container: libheader / inline-size;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -884,6 +905,57 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   font: inherit;
   font-size: var(--fs-md);
   font-weight: 600;
+}
+
+/* Com o cabeçalho abaixo de 1000 px (janela até ~1300) numa linha só não
+   cabem título, busca, ordenar e ações (a 1024 a busca ficava com 0 px): duas
+   linhas — título e ações em cima, busca e ordenar embaixo. Container query
+   (largura do próprio cabeçalho), porque depende do menu lateral. */
+@container libheader (max-width: 999.98px) {
+  .top-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title actions"
+      "search search";
+    gap: 0.6rem 0.75rem;
+  }
+
+  .header-title {
+    grid-area: title;
+    min-width: 0;
+  }
+
+  .actions {
+    grid-area: actions;
+  }
+
+  .search-area {
+    grid-area: search;
+    min-width: 0;
+    max-width: none;
+  }
+
+  /* Na linha da busca sobra espaço: o valor do ordenar aparece inteiro */
+  .sort-quick-value {
+    max-width: none;
+  }
+}
+
+/* Uma linha: o ordenar mostra o ícone e o valor inteiro (sem o "Ordenar:",
+   que segue no nome acessível) e a busca fica com o resto */
+@container libheader (min-width: 1000px) {
+  .sort-quick-prefix {
+    display: none;
+  }
+
+  .sort-quick-icon {
+    display: inline;
+  }
+
+  .sort-quick-value {
+    max-width: none;
+  }
 }
 
 @media (max-width: 1023.98px) {

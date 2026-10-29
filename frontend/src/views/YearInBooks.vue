@@ -257,10 +257,12 @@
                     class="record-book"
                     @click="openBook(record.book.bookId)"
                   >{{ record.book.title }}</button>
+                  <!-- Páginas numa linha própria, embaixo do título (antes o
+                       "· 790 págs." caía sozinho na linha de baixo) -->
                   <span
                     v-if="record.detail"
-                    class="muted"
-                  >{{ record.book ? ` · ${record.detail}` : record.detail }}</span>
+                    class="muted record-detail"
+                  >{{ record.detail }}</span>
                 </dd>
               </template>
             </dl>
@@ -925,9 +927,17 @@ onBeforeUnmount(() => {
 }
 
 .records dd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.record-detail {
+  font-size: var(--fs-sm);
 }
 
 .record-book {

@@ -394,7 +394,7 @@
 
 <script setup>
 import PageHeader from '../components/ui/PageHeader.vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
@@ -549,9 +549,18 @@ function pointerOnHover(event, elements) {
   if (canvas) canvas.style.cursor = elements.length ? 'pointer' : 'default'
 }
 
+// Celular (abaixo de 640 px): iniciais dos meses, retas (antes o Chart.js
+// girava "jan.", "fev."… em 45°)
+const NARROW_QUERY = '(max-width: 639.98px)'
+const narrowMedia = typeof window !== 'undefined' ? window.matchMedia?.(NARROW_QUERY) : null
+const narrow = ref(Boolean(narrowMedia?.matches))
+const onNarrowChange = event => { narrow.value = event.matches }
+narrowMedia?.addEventListener?.('change', onNarrowChange)
+onBeforeUnmount(() => narrowMedia?.removeEventListener?.('change', onNarrowChange))
+
 const monthLabels = computed(() =>
   Array.from({ length: 12 }, (_, i) =>
-    new Date(2000, i, 1).toLocaleDateString(dateLocale.value, { month: 'short' }).replace('.', ''))
+    new Date(2000, i, 1).toLocaleDateString(dateLocale.value, { month: narrow.value ? 'narrow' : 'short' }).replace('.', ''))
 )
 
 // Texto alternativo dos gráficos (o canvas não tem conteúdo para leitor de tela)
@@ -580,14 +589,15 @@ const monthChartData = computed(() => ({
     // Conta leituras (releitura conta de novo), não livros
     label: t('dashboard.readings'),
     data: stats.value.readingByMonth.map(item => item.count),
-    backgroundColor: cssVar(`--${tagColorName(String(year.value))}`) || palette.value.main,
+    // Cor de destaque, como na Retrospectiva (antes a cor vinha do nome do ano)
+    backgroundColor: palette.value.main,
     borderRadius: 6
   }]
 }))
 
 const barScales = computed(() => ({
   y: { grid: { color: palette.value.grid }, ticks: { color: palette.value.text, precision: 0 } },
-  x: { grid: { display: false }, ticks: { color: palette.value.text } }
+  x: { grid: { display: false }, ticks: { color: palette.value.text, maxRotation: 0, autoSkip: false } }
 }))
 
 const monthChartOptions = computed(() => ({
@@ -613,8 +623,8 @@ const yearChartData = computed(() => ({
   datasets: [{
     label: t('dashboard.readings'),
     data: sortedYears.value.map(item => item.count),
-    // Cada ano com a sua cor — a mesma das barras do perfil público.
-    backgroundColor: sortedYears.value.map(item => cssVar(`--${tagColorName(String(item.year))}`) || palette.value.main),
+    // Cor de destaque em todos os anos (antes cada ano tinha a cor do nome)
+    backgroundColor: palette.value.main,
     borderRadius: 6
   }]
 }))
@@ -1248,6 +1258,12 @@ a.author-row:hover {
   .header-side {
     width: 100%;
     justify-content: space-between;
+  }
+
+  /* A 320 o link da retrospectiva e o ano não cabem lado a lado */
+  .header-side {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
   }
 
   .goal-card {

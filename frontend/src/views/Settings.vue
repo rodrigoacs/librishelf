@@ -535,6 +535,7 @@
 </template>
 
 <script setup>
+import { scrollBehavior } from '../utils/motion.js'
 import PageHeader from '../components/ui/PageHeader.vue'
 import PasswordField from '../components/form/PasswordField.vue'
 import TextField from '../components/form/TextField.vue'
@@ -570,8 +571,7 @@ const indexItems = computed(() => [
 function jumpTo(id) {
   const el = document.getElementById(id)
   if (!el) return
-  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+  el.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
   el.focus({ preventScroll: true })
 }
 

@@ -74,7 +74,9 @@ onMounted(async () => {
   display: flex;
   min-height: 100vh;
   min-height: 100dvh;
-  width: 100vw;
+  /* 100%, não 100vw: com barra de rolagem o 100vw passava da tela (era o
+     motivo do overflow-x: hidden no body). O mosaico fica cortado aqui. */
+  width: 100%;
   background-color: var(--bg-app);
   overflow: hidden;
 }

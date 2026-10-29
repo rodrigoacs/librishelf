@@ -98,7 +98,9 @@
     "quick_read": "Marcar \"{title}\" como lido hoje",
     "quick_unread": "Desmarcar \"{title}\" como lido",
     "quick_read_short": "Marcar como lido",
-    "quick_unread_short": "Desmarcar como lido"
+    "quick_unread_short": "Desmarcar como lido",
+    "markedRead": "“{title}” marcado como lido hoje",
+    "markedUnread": "“{title}” desmarcado como lido"
   },
   "bookForm": {
     "newTitle": "Novo livro",
@@ -487,7 +489,8 @@
     "follow": "Seguir",
     "following": "Seguindo",
     "requested": "Pedido enviado para {'@'}{name}.",
-    "see_shelf": "Ver estante"
+    "see_shelf": "Ver estante",
+    "notAccepting": "Não aceita seguidores"
   },
   "privacy": {
     "title": "Política de privacidade",
@@ -1468,7 +1471,8 @@
       "suspendedDone": "Conta de {'@'}{name} suspensa.",
       "reactivatedDone": "Conta de {'@'}{name} reativada.",
       "open": "Abrir",
-      "openWho": "Abrir a conta de {name}"
+      "openWho": "Abrir a conta de {name}",
+      "scrollHint": "Role para o lado para ver todas as colunas"
     },
     "log": {
       "intro": "Tudo o que foi feito nesta área, do mais recente para o mais antigo.",

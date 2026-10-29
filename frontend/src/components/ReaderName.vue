@@ -3,15 +3,17 @@
     v-if="isPublic"
     :to="{ name: 'public-library', params: { username }, query }"
     class="reader-name link"
+    :title="`@${username}`"
   >@{{ username }}</router-link>
 
   <span
     v-else
     class="reader-name private"
     tabindex="0"
+    :title="`@${username}`"
     v-tooltip.top="t('communityView.private_library')"
   >
-    @{{ username }}
+    <span class="name-text">@{{ username }}</span>
     <i
       class="pi pi-lock"
       aria-hidden="true"
@@ -39,9 +41,22 @@ const { t } = useI18n()
 <style scoped>
 .reader-name {
   font-weight: 600;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Nome longo (até 50 caracteres) termina em reticências; o nome inteiro fica
+   no title, e o cadeado da biblioteca privada continua visível */
+.link,
+.name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .link {
+  display: inline-block;
+  vertical-align: bottom;
   color: var(--main-color);
   text-decoration: none;
 }
@@ -60,6 +75,7 @@ const { t } = useI18n()
 }
 
 .private .pi {
+  flex-shrink: 0;
   font-size: 0.75em;
   color: var(--text-muted);
 }

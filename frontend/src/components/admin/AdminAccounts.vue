@@ -44,7 +44,23 @@
       >{{ t('admin.accounts.total', { n: total }, total) }}</span>
     </div>
 
-    <div class="table-wrap">
+    <!-- Tabela mais larga que a tela: aviso e degradê na borda (antes nada
+         indicava que havia mais colunas à direita) -->
+    <p
+      v-if="tableEdges.scrollable.value"
+      class="scroll-hint"
+    >
+      <i
+        class="pi pi-arrows-h"
+        aria-hidden="true"
+      ></i>
+      {{ t('admin.accounts.scrollHint') }}
+    </p>
+    <div
+      ref="tableWrap"
+      class="table-wrap"
+      :class="{ 'more-end': tableEdges.moreEnd.value }"
+    >
       <table :aria-busy="loading ? 'true' : 'false'">
         <thead>
           <tr>
@@ -164,6 +180,7 @@
 </template>
 
 <script setup>
+import { useScrollEdges } from '../../composables/useScrollEdges.js'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -179,6 +196,9 @@ const props = defineProps({
 const emit = defineEmits(['open-user'])
 
 const { t, locale } = useI18n()
+
+const tableWrap = ref(null)
+const tableEdges = useScrollEdges(tableWrap)
 const call = useAdminCall()
 const LIMIT = 25
 
@@ -329,6 +349,19 @@ onMounted(load)
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   overflow-x: auto;
+}
+
+.table-wrap.more-end {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), rgba(0, 0, 0, 0.25));
+}
+
+.scroll-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
 }
 
 table {

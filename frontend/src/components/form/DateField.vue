@@ -1,7 +1,7 @@
 <template>
   <div
     class="date-field"
-    :class="{ invalid: Boolean(error), floated: focused || Boolean(modelValue) }"
+    :class="{ invalid: Boolean(error), floated: focused || Boolean(modelValue), 'show-display': Boolean(displayText) && !focused }"
   >
     <div class="field-box">
       <input
@@ -17,6 +17,13 @@
         @focus="focused = true"
         @blur="focused = false"
       />
+      <!-- Fora do foco, a data aparece no idioma do app (o campo nativo usa o
+           do navegador: "10/04/2026" num app em inglês); editando, vale o nativo -->
+      <span
+        v-if="displayText && !focused"
+        class="field-display"
+        aria-hidden="true"
+      >{{ displayText }}</span>
       <label
         :for="id"
         class="field-label"
@@ -42,6 +49,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { toApiDate } from '../../utils/dates.js'
 
 /**
@@ -60,6 +68,14 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 const focused = ref(false)
+const { locale } = useI18n()
+
+const DATE_LOCALES = { pt: 'pt-BR', en: 'en-US' }
+const displayText = computed(() => {
+  const date = props.modelValue
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString(DATE_LOCALES[locale.value] || locale.value, { day: '2-digit', month: '2-digit', year: 'numeric' })
+})
 
 
 const describedBy = computed(() => (props.error ? `${props.id}-error` : undefined))
@@ -116,6 +132,25 @@ function onNativeInput(event) {
 /* Vazio e sem foco, o texto do seletor nativo (dd/mm/aaaa) fica escondido atrás do rótulo */
 .date-field:not(.floated) .native {
   color: transparent;
+}
+
+/* Com valor e sem foco: o texto nativo some e fica a data no idioma do app */
+.date-field.show-display .native {
+  color: transparent;
+}
+
+.field-display {
+  position: absolute;
+  left: 0.9rem;
+  right: 2.5rem;
+  bottom: 0.5rem;
+  color: var(--text-primary);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 .native::-webkit-calendar-picker-indicator {

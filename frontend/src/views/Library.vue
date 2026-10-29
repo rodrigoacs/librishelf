@@ -1,7 +1,11 @@
 <template>
   <div class="library-container">
 
-    <div class="header-section">
+    <div
+      class="header-section"
+      :class="{ collapsed: headerCollapsed }"
+      @focusin="headerCollapsed = false"
+    >
       <LibraryHeader
         ref="header"
         :books-quantity="totalRecords"
@@ -170,6 +174,7 @@
 </template>
 
 <script setup>
+import { scrollBehavior } from '../utils/motion.js'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -215,10 +220,31 @@ function refreshData() {
   fetchBooks()
 }
 
+// R6: no celular/tablet, barra do app + cabeçalho preso somavam 26% da tela a
+// 390 × 700. Rolando para baixo o cabeçalho recolhe (passa por baixo da barra
+// do app); qualquer rolagem para cima, foco nele ou modo seleção traz de volta.
+const headerCollapsed = ref(false)
+const COLLAPSE_QUERY = '(max-width: 1023.98px)'
+let lastScrollY = 0
+let scrollFrame = 0
+function onWindowScroll() {
+  if (scrollFrame) return
+  scrollFrame = requestAnimationFrame(() => {
+    scrollFrame = 0
+    const y = window.scrollY
+    const canCollapse = window.matchMedia?.(COLLAPSE_QUERY).matches && !selecting.value &&
+      !document.querySelector('.header-section')?.contains(document.activeElement)
+    if (!canCollapse || y < 160) headerCollapsed.value = false
+    else if (y > lastScrollY + 6) headerCollapsed.value = true
+    else if (y < lastScrollY - 6) headerCollapsed.value = false
+    lastScrollY = y
+  })
+}
+
 // A Biblioteca rola na janela (antes num contêiner próprio): o voltar do
 // navegador devolve a posição e o cabeçalho fica preso no topo (sticky).
 function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  window.scrollTo({ top: 0, behavior: scrollBehavior() })
 }
 
 function handleFilterChange({ key, value, silent = false }) {
@@ -275,6 +301,7 @@ watchEffect(() => {
 // Seleção para ações em lote
 // ---------------------------------------------------------------------------
 const selecting = ref(false)
+watch(selecting, value => { if (value) headerCollapsed.value = false })
 const selectedIds = ref(new Set())
 
 function toggleSelecting() {
@@ -375,6 +402,7 @@ onBeforeRouteLeave(() => {
 
 onMounted(async () => {
   window.addEventListener('keydown', onKeydown)
+  window.addEventListener('scroll', onWindowScroll, { passive: true })
   // Filtros da URL (inclusive os que vêm de Autores/Editoras/Categorias) entram
   // no estado compartilhado: aparecem como chips e podem ser removidos.
   const pages = isHistoryReturn() ? recallPages(routeKey(route)) : 1
@@ -395,6 +423,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('scroll', onWindowScroll)
+  if (scrollFrame) cancelAnimationFrame(scrollFrame)
   if (observer) observer.disconnect()
 })
 </script>
@@ -414,6 +444,18 @@ onUnmounted(() => {
   position: sticky;
   top: var(--app-bar-height, 0px);
   z-index: 100;
+  transition: transform 0.2s ease;
+}
+
+/* Recolhido: sobe para trás da barra do app (z-index 200) */
+.header-section.collapsed {
+  transform: translateY(calc(-100% - var(--app-bar-height, 0px)));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-section {
+    transition: none;
+  }
 }
 
 .content-section {

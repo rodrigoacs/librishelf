@@ -56,7 +56,6 @@ body {
   padding: 0;
   font-family: var(--font-family);
   background-color: var(--bg-app);
-  overflow-x: hidden;
 }
 
 .app-layout {

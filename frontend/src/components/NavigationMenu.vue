@@ -2,7 +2,10 @@
   <div class="navigation-container">
 
     <!-- Barra do topo no celular: landmark próprio para o logo não ficar solto -->
-    <header class="mobile-header">
+    <header
+      ref="mobileHeader"
+      class="mobile-header"
+    >
       <AppButton
         ref="menuButton"
         icon="pi pi-bars"
@@ -42,7 +45,6 @@
       id="app-sidebar"
       class="sidebar"
       :class="{ 'sidebar-mobile-open': mobileMenuOpen }"
-      @keydown.esc="mobileMenuOpen = false"
     >
 
       <div class="sidebar-header">
@@ -195,15 +197,44 @@ const menuButton = ref(null)
 const closeButton = ref(null)
 
 // Menu do celular: trava a rolagem da página, leva o foco para dentro ao abrir
-// e devolve ao botão do menu ao fechar (teclado e leitor de tela).
+// e devolve ao botão do menu ao fechar (teclado e leitor de tela). Aberto, o
+// resto da tela fica inert (o Tab não sai do menu) e o Esc fecha de qualquer
+// lugar, não só com o foco dentro dele.
+const mobileHeader = ref(null)
+
+function outsideMenu() {
+  return [document.getElementById('main-content'), mobileHeader.value, document.querySelector('.skip-link')].filter(Boolean)
+}
+
+function setInert(on) {
+  for (const el of outsideMenu()) {
+    if (on) el.setAttribute('inert', '')
+    else el.removeAttribute('inert')
+  }
+}
+
+function onDocumentKeydown(event) {
+  if (event.key !== 'Escape' || event.defaultPrevented) return
+  // Uma janela aberta por cima do menu (confirmação) tem a vez
+  if (document.querySelector('dialog[open]')) return
+  mobileMenuOpen.value = false
+}
+
 watch(mobileMenuOpen, async (open) => {
   document.body.style.overflow = open ? 'hidden' : ''
+  setInert(open)
+  if (open) document.addEventListener('keydown', onDocumentKeydown)
+  else document.removeEventListener('keydown', onDocumentKeydown)
   await nextTick()
   if (open) closeButton.value?.focus()
-  else if (document.activeElement?.closest?.('#app-sidebar')) menuButton.value?.$el?.focus()
+  else if (!document.activeElement || document.activeElement === document.body || document.activeElement.closest?.('#app-sidebar')) menuButton.value?.$el?.focus()
 })
 
-onBeforeUnmount(() => { document.body.style.overflow = '' })
+onBeforeUnmount(() => {
+  document.body.style.overflow = ''
+  setInert(false)
+  document.removeEventListener('keydown', onDocumentKeydown)
+})
 const showSettings = ref(false)
 
 const displayName = computed(() => currentUser.value?.name || t('menu.guest'))

@@ -262,6 +262,7 @@
 </template>
 
 <script setup>
+import { scrollBehavior } from '../../utils/motion.js'
 import { computed, nextTick, reactive, ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -637,7 +638,7 @@ async function focusFirstError() {
   if (!first) return
   const el = document.getElementById(`${props.idPrefix}-${FIELD_IDS[first]}`)
   el?.focus({ preventScroll: true })
-  el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  el?.scrollIntoView({ block: 'center', behavior: scrollBehavior() })
 }
 
 // ---------------------------------------------------------------- salvar

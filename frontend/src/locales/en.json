@@ -98,7 +98,9 @@
     "quick_read": "Mark \"{title}\" as read today",
     "quick_unread": "Mark \"{title}\" as unread",
     "quick_read_short": "Mark as read",
-    "quick_unread_short": "Mark as unread"
+    "quick_unread_short": "Mark as unread",
+    "markedRead": "“{title}” marked as read today",
+    "markedUnread": "“{title}” unmarked as read"
   },
   "bookForm": {
     "newTitle": "New book",
@@ -487,7 +489,8 @@
     "follow": "Follow",
     "following": "Following",
     "requested": "Request sent to {'@'}{name}.",
-    "see_shelf": "See shelf"
+    "see_shelf": "See shelf",
+    "notAccepting": "Not accepting followers"
   },
   "privacy": {
     "title": "Privacy policy",
@@ -1468,7 +1471,8 @@
       "suspendedDone": "{'@'}{name}’s account was suspended.",
       "reactivatedDone": "{'@'}{name}’s account was reactivated.",
       "open": "Open",
-      "openWho": "Open {name}'s account"
+      "openWho": "Open {name}'s account",
+      "scrollHint": "Scroll sideways to see every column"
     },
     "log": {
       "intro": "Everything done in this area, newest first.",

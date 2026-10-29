@@ -66,7 +66,9 @@
 
     <template v-else>
       <div
+        ref="tabsEl"
         class="tabs"
+        :class="{ 'more-start': tabsEdges.moreStart.value, 'more-end': tabsEdges.moreEnd.value }"
         role="tablist"
         :aria-label="t('admin.title')"
       >
@@ -134,6 +136,7 @@
 </template>
 
 <script setup>
+import { useScrollEdges } from '../composables/useScrollEdges.js'
 import PageHeader from '../components/ui/PageHeader.vue'
 import { computed, nextTick, onMounted, provide, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -157,6 +160,10 @@ import { ADMIN_CALL, LockedError } from '../components/admin/adminCall.js'
  * volte ADMIN_LOCKED traz de volta a tela da senha. Pensada para o computador.
  */
 const { t } = useI18n()
+
+// Abas que não cabem (celular): degradê na borda indica que dá para rolar
+const tabsEl = ref(null)
+const tabsEdges = useScrollEdges(tabsEl)
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -356,6 +363,19 @@ onMounted(async () => {
   margin-bottom: 1.5rem;
   overflow-x: auto;
   scrollbar-width: none;
+}
+
+/* Há abas escondidas: a borda some num degradê (antes cortava em "Modera") */
+.tabs.more-end {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+.tabs.more-start {
+  mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
+}
+
+.tabs.more-start.more-end {
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
 }
 
 .tab {
