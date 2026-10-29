@@ -3,7 +3,10 @@
     <div class="top-bar">
 
       <div class="header-title">
-        <h1>{{ t('menu.library') }}</h1>
+        <PageHeader
+          compact
+          :title="t('menu.library')"
+        />
         <span
           class="count-badge"
           v-if="booksQuantity !== undefined"
@@ -363,6 +366,7 @@
 </template>
 
 <script setup>
+import PageHeader from './ui/PageHeader.vue'
 import { tagColor } from '../utils/tagColors.js'
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import AppButton from './ui/AppButton.vue'
@@ -560,15 +564,6 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   align-items: center;
   gap: 0.8rem;
   white-space: nowrap;
-}
-
-.header-title h1 {
-  font-size: var(--fs-xl);
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
 }
 
 .count-badge {
@@ -916,11 +911,6 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     align-items: flex-start;
     gap: 0.15rem;
     min-width: 0;
-  }
-
-  .header-title h1 {
-    font-size: var(--fs-lg);
-    line-height: 1.1;
   }
 
   .count-badge {

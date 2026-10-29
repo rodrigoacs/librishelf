@@ -1,10 +1,11 @@
 <template>
   <div class="community-container">
     <div class="community-content">
-      <div class="view-header">
-        <h1>{{ t('communityView.title') }}</h1>
-        <p>{{ t('communityView.subtitle') }}</p>
-      </div>
+      <PageHeader
+        :title="t('communityView.title')"
+        :subtitle="t('communityView.subtitle')"
+        divider
+      />
 
       <div
         v-if="!user?.showActivity"
@@ -584,6 +585,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -815,24 +817,6 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
-.view-header {
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1.5rem;
-}
-
-.view-header h1 {
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.view-header p {
-  color: var(--text-secondary);
-  margin: 0.5rem 0 0 0;
-}
-
 .notice {
   display: flex;
   gap: 0.6rem;
@@ -1059,7 +1043,6 @@ onMounted(async () => {
   color: var(--text-secondary);
 }
 
-
 .people-list li {
   display: flex;
   justify-content: space-between;
@@ -1174,10 +1157,6 @@ onMounted(async () => {
 
   .community-container {
     padding: 1.25rem;
-  }
-
-  .view-header h1 {
-    font-size: var(--fs-2xl);
   }
 
   .people-list li {

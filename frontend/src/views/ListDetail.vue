@@ -55,13 +55,16 @@
       />
 
       <template v-else-if="list">
-        <header class="list-header">
-          <div class="heading">
-            <h1>{{ list.title }}</h1>
+        <PageHeader
+          :title="list.title"
+          divider
+        >
+          <template #subtitle>
             <p
               v-if="list.description"
               class="description"
             >{{ list.description }}</p>
+          </template>
             <p class="meta">
               <span>{{ t('lists.count', { n: list.items.length }, list.items.length) }}</span>
               <span
@@ -76,8 +79,7 @@
               </span>
               <span v-if="list.ranked">{{ t('lists.rankedShort') }}</span>
             </p>
-          </div>
-          <div class="actions">
+          <template #actions>
             <AppButton
               :label="t('lists.addBooks')"
               icon="pi pi-plus"
@@ -104,8 +106,8 @@
               ref="moreMenu"
               :items="moreItems"
             />
-          </div>
-        </header>
+          </template>
+        </PageHeader>
 
         <p
           v-if="list.isPublic && !currentUser?.isPublic"
@@ -239,6 +241,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -561,32 +564,8 @@ onBeforeUnmount(() => {
   gap: 0.75rem;
 }
 
-.list-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.heading {
-  flex: 1 1 18rem;
-  min-width: 0;
-}
-
-.heading h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  line-height: 1.15;
-  overflow-wrap: anywhere;
-}
-
 .description {
-  margin: 0.6rem 0 0;
+  margin: 0;
   color: var(--text-secondary);
   white-space: pre-line;
   line-height: 1.5;
@@ -598,7 +577,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem 1rem;
-  margin: 0.75rem 0 0;
+  margin: 0.25rem 0 0;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
 }
@@ -615,13 +594,6 @@ onBeforeUnmount(() => {
 
 .visibility .pi {
   font-size: var(--fs-xs);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
 .notice {
@@ -762,12 +734,12 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
 
-  .actions {
+  .list-content > .page-header :deep(.page-header-actions) {
     flex-wrap: nowrap;
     width: 100%;
   }
 
-  .actions > :first-child {
+  .list-content > .page-header :deep(.page-header-actions > :first-child) {
     flex: 1;
   }
 }
@@ -775,10 +747,6 @@ onBeforeUnmount(() => {
 @media (max-width: 639.98px) {
   .list-page {
     padding: 1.25rem;
-  }
-
-  .heading h1 {
-    font-size: var(--fs-2xl);
   }
 
   .item {

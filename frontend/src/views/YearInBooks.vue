@@ -1,8 +1,12 @@
 <template>
   <div class="year-page">
     <div class="year-content">
-      <header class="view-header">
-        <div>
+      <PageHeader
+        :title="t('year.title', { year })"
+        :subtitle="data?.isCurrentYear ? t('year.soFar', { date: todayLabel }) : ''"
+        divider
+      >
+        <template #kicker>
           <p class="kicker">
             <i
               class="pi pi-sparkles"
@@ -10,14 +14,12 @@
             ></i>
             {{ t('year.kicker') }}
           </p>
-          <h1>{{ t('year.title', { year }) }}</h1>
-          <p
-            v-if="data?.isCurrentYear"
-            class="subtitle"
-          >{{ t('year.soFar', { date: todayLabel }) }}</p>
-        </div>
-        <nav
+        </template>
+        <template
           v-if="years.length > 1"
+          #actions
+        >
+        <nav
           class="years"
           :aria-label="t('year.chooseYear')"
         >
@@ -30,7 +32,8 @@
             :aria-current="option === year ? 'page' : undefined"
           >{{ option }}</router-link>
         </nav>
-      </header>
+        </template>
+      </PageHeader>
 
       <div
         v-if="loading"
@@ -317,6 +320,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -531,21 +535,11 @@ onBeforeUnmount(() => {
   gap: 1.25rem;
 }
 
-.view-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
 .kicker {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin: 0 0 0.35rem;
+  margin: 0;
   color: var(--main-color);
   font-size: var(--fs-sm);
   font-weight: 700;
@@ -553,16 +547,14 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
 }
 
-.view-header h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  line-height: 1.1;
+/* 2rem até o conteúdo, contando o gap de 1.25rem do .year-content */
+.year-content > .page-header {
+  margin-bottom: 0.75rem;
 }
 
-.subtitle {
-  margin: 0.4rem 0 0;
-  color: var(--text-secondary);
+.year-content > .page-header :deep(.page-header-actions) {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .years {
@@ -1049,10 +1041,6 @@ onBeforeUnmount(() => {
 @media (max-width: 639.98px) {
   .year-page {
     padding: 1.25rem;
-  }
-
-  .view-header h1 {
-    font-size: var(--fs-2xl);
   }
 
   .hero-value {

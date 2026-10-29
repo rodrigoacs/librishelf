@@ -1,19 +1,22 @@
 <template>
   <div class="admin-container">
-    <div class="header-section">
-      <div class="welcome-text">
-        <h1>{{ t('admin.title') }}</h1>
-        <p>{{ t('admin.subtitle') }}</p>
-      </div>
-      <AppButton
+    <PageHeader
+      :title="t('admin.title')"
+      :subtitle="t('admin.subtitle')"
+    >
+      <template
         v-if="state === 'unlocked'"
-        :label="t('admin.lock')"
-        icon="pi pi-lock"
-        class="btn-outlined btn-secondary btn-sm"
-        :loading="locking"
-        @click="lock"
-      />
-    </div>
+        #actions
+      >
+        <AppButton
+          :label="t('admin.lock')"
+          icon="pi pi-lock"
+          class="btn-outlined btn-secondary btn-sm"
+          :loading="locking"
+          @click="lock"
+        />
+      </template>
+    </PageHeader>
 
     <div
       v-if="state === 'loading'"
@@ -131,6 +134,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { computed, nextTick, onMounted, provide, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -291,26 +295,6 @@ onMounted(async () => {
   max-width: 1280px;
   margin: 0 auto;
   box-sizing: border-box;
-}
-
-.header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.welcome-text h1 {
-  margin: 0;
-  font-size: var(--fs-2xl);
-  color: var(--text-primary);
-  font-family: var(--font-display);
-}
-
-.welcome-text p {
-  margin: 0.35rem 0 0;
-  color: var(--text-secondary);
 }
 
 .loading {

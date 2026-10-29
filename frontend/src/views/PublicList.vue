@@ -59,7 +59,11 @@
       />
 
       <template v-else-if="list">
-        <header class="list-header">
+        <PageHeader
+          :title="list.title"
+          divider
+        >
+          <template #kicker>
           <router-link
             :to="{ name: 'public-library', params: { username } }"
             class="owner"
@@ -70,11 +74,13 @@
             />
             <span>{{ t('lists.byOwner', { name: list.owner.username }) }}</span>
           </router-link>
-          <h1>{{ list.title }}</h1>
-          <p
-            v-if="list.description"
-            class="description"
-          >{{ list.description }}</p>
+          </template>
+          <template #subtitle>
+            <p
+              v-if="list.description"
+              class="description"
+            >{{ list.description }}</p>
+          </template>
           <div class="meta-row">
             <span class="meta">
               {{ t('lists.count', { n: list.items.length }, list.items.length) }}
@@ -87,7 +93,7 @@
               @click="share"
             />
           </div>
-        </header>
+        </PageHeader>
 
         <ol class="items">
           <li
@@ -128,6 +134,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -252,15 +259,6 @@ onBeforeUnmount(() => setOverlayTitle(''))
   gap: 0.75rem;
 }
 
-.list-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
 .owner {
   display: inline-flex;
   align-items: center;
@@ -273,14 +271,6 @@ onBeforeUnmount(() => setOverlayTitle(''))
 
 .owner:hover {
   color: var(--main-color);
-}
-
-.list-header h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  line-height: 1.15;
-  overflow-wrap: anywhere;
 }
 
 .description {
@@ -336,8 +326,5 @@ onBeforeUnmount(() => setOverlayTitle(''))
     padding: 1.25rem;
   }
 
-  .list-header h1 {
-    font-size: var(--fs-2xl);
-  }
 }
 </style>

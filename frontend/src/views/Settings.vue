@@ -1,10 +1,11 @@
 <template>
   <div class="settings-container">
     <div class="settings-content">
-      <div class="view-header">
-        <h1>{{ t('settings.title') }}</h1>
-        <p>{{ t('settings.subtitle') }}</p>
-      </div>
+      <PageHeader
+        :title="t('settings.title')"
+        :subtitle="t('settings.subtitle')"
+        divider
+      />
 
       <!-- Índice: no celular são 7 cartões em coluna -->
       <nav
@@ -534,6 +535,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import PasswordField from '../components/form/PasswordField.vue'
 import TextField from '../components/form/TextField.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
@@ -884,24 +886,6 @@ async function deleteAccount() {
   margin: 0 auto;
 }
 
-.view-header {
-  margin-bottom: 2.5rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1.5rem;
-}
-
-.view-header h1 {
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.view-header p {
-  color: var(--text-secondary);
-  margin: 0.5rem 0 0 0;
-}
-
 .settings-index {
   display: flex;
   flex-wrap: wrap;
@@ -1244,10 +1228,6 @@ async function deleteAccount() {
 
   .settings-container {
     padding: 1.25rem;
-  }
-
-  .view-header h1 {
-    font-size: var(--fs-2xl);
   }
 
   .link-row {

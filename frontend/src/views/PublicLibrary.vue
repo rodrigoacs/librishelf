@@ -14,28 +14,27 @@
         <span>LIBRISHELF</span>
       </router-link>
 
-      <div
+      <PageHeader
         v-if="!notFound"
-        class="header-row"
+        :title="t('publicLibrary.title', { ownerName: ownerName || username })"
       >
-        <div class="header-content">
+        <template #lead>
           <ReaderAvatar
             :username="ownerName || username"
             size="lg"
           />
-          <div class="header-text">
-            <h1>{{ t('publicLibrary.title', { ownerName: ownerName || username }) }}</h1>
-            <p>
-              <span class="handle">@{{ username }}</span>
-              <span v-if="total > 0"> · {{ t('publicLibrary.count', { count: total }, total) }}</span>
-            </p>
-          </div>
-        </div>
-
-        <div
+        </template>
+        <template #subtitle>
+          <p class="owner-meta">
+            <span class="handle">@{{ username }}</span>
+            <span v-if="total > 0"> · {{ t('publicLibrary.count', { count: total }, total) }}</span>
+          </p>
+        </template>
+        <template
           v-if="profile"
-          class="follow-area"
+          #actions
         >
+        <div class="follow-area">
           <template v-if="viewer?.isOwner">
             <span class="owner-note">{{ t('profile.own_page') }}</span>
             <router-link
@@ -108,7 +107,8 @@
             <span>{{ t('profile.follow') }}</span>
           </router-link>
         </div>
-      </div>
+        </template>
+      </PageHeader>
     </header>
 
     <!-- Perfil ainda carregando: esqueleto no lugar dele, e a grade só entra
@@ -446,6 +446,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import ReviewCard from '../components/review/ReviewCard.vue'
 import ListCard from '../components/list/ListCard.vue'
 import { slugify } from '../utils/slug.js'
@@ -731,14 +732,6 @@ watch(username, () => {
   color: var(--text-primary);
 }
 
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
 .follow-area {
   display: flex;
   align-items: center;
@@ -999,31 +992,18 @@ watch(username, () => {
   margin: 0.5rem 0 0;
 }
 
-.header-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  min-width: 0;
-}
-
-.header-text {
-  min-width: 0;
-}
-
 .handle {
   font-weight: 600;
 }
 
-.header-content h1 {
-  font-family: var(--font-display);
-  font-size: var(--fs-2xl);
-  color: var(--text-primary);
+.owner-meta {
   margin: 0;
+  color: var(--text-secondary);
 }
 
-.header-content p {
-  color: var(--text-secondary);
-  margin: 0.25rem 0 0;
+/* O .view-header já dá 2rem até o conteúdo */
+.view-header > .page-header {
+  margin-bottom: 0;
 }
 
 .books-grid {
@@ -1063,8 +1043,6 @@ watch(username, () => {
   flex: 0 0 auto;
 }
 
-
-
 .public-footer {
   margin-top: auto;
   padding-top: 3rem;
@@ -1090,6 +1068,7 @@ watch(username, () => {
   }
 
   /* Botão Seguir na largura toda, embaixo do nome (o ⋯ fica ao lado) */
+  .view-header > .page-header :deep(.page-header-actions),
   .follow-area {
     width: 100%;
     flex-wrap: nowrap;

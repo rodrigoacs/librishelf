@@ -1,11 +1,11 @@
 <template>
   <div class="entity-container">
-    <div class="view-header">
-      <div class="header-content">
-        <h1>{{ t(`${i18nKey}.title`) }}</h1>
-        <p>{{ t(`${i18nKey}.subtitle`) }}</p>
-      </div>
-
+    <PageHeader
+      :title="t(`${i18nKey}.title`)"
+      :subtitle="t(`${i18nKey}.subtitle`)"
+      divider
+    >
+      <template #actions>
       <div
         class="search-wrapper"
         role="search"
@@ -27,7 +27,8 @@
           autocomplete="off"
         />
       </div>
-    </div>
+      </template>
+    </PageHeader>
 
     <!-- Enquanto carrega, a linha já ocupa o lugar (contagem em esqueleto,
          botões desabilitados): a lista não desce quando os dados chegam -->
@@ -312,6 +313,7 @@
 </template>
 
 <script setup>
+import PageHeader from './ui/PageHeader.vue'
 import { tagColor } from '../utils/tagColors.js'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -474,27 +476,9 @@ onMounted(load)
   background-color: var(--bg-app);
 }
 
-.view-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 3rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-}
-
-.header-content h1 {
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.header-content p {
-  color: var(--text-secondary);
-  margin: 0.5rem 0 0 0;
+/* A busca ocupa a coluna de ações do cabeçalho (até 300 px; inteira no celular) */
+.entity-container > .page-header :deep(.page-header-actions) {
+  flex: 0 1 300px;
 }
 
 .search-wrapper {
@@ -872,8 +856,8 @@ button.entity-card {
     padding: 1.25rem;
   }
 
-  .header-content h1 {
-    font-size: var(--fs-2xl);
+  .entity-container > .page-header :deep(.page-header-actions) {
+    flex-basis: 100%;
   }
 
   .search-wrapper {

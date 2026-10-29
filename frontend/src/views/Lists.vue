@@ -1,20 +1,24 @@
 <template>
   <div class="lists-page">
     <div class="lists-content">
-      <div class="view-header">
-        <div class="header-text">
-          <h1>{{ t('lists.title') }}</h1>
-          <p>{{ t('lists.subtitle') }}</p>
-        </div>
-        <AppButton
+      <PageHeader
+        :title="t('lists.title')"
+        :subtitle="t('lists.subtitle')"
+        divider
+      >
+        <template
           v-if="lists.length"
-          :label="t('lists.new')"
-          icon="pi pi-plus"
-          class="btn-primary"
-          :disabled="isOffline"
-          @click="formOpen = true"
-        />
-      </div>
+          #actions
+        >
+          <AppButton
+            :label="t('lists.new')"
+            icon="pi pi-plus"
+            class="btn-primary"
+            :disabled="isOffline"
+            @click="formOpen = true"
+          />
+        </template>
+      </PageHeader>
 
       <div
         v-if="loading"
@@ -73,6 +77,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -125,29 +130,6 @@ onMounted(load)
   margin: 0 auto;
 }
 
-.view-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1.5rem;
-}
-
-.view-header h1 {
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.view-header p {
-  color: var(--text-secondary);
-  margin: 0.5rem 0 0 0;
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
@@ -171,8 +153,5 @@ onMounted(load)
     padding: 1.25rem;
   }
 
-  .view-header h1 {
-    font-size: var(--fs-2xl);
-  }
 }
 </style>

@@ -1,8 +1,7 @@
 <template>
   <div class="home-container">
-    <header class="home-header">
-      <div class="greeting">
-        <h1>{{ greeting }}</h1>
+    <PageHeader :title="greeting">
+      <template #subtitle>
         <p
           v-if="summary"
           class="summary"
@@ -14,15 +13,19 @@
           width="16rem"
           height="1.1rem"
         />
-      </div>
-      <AppButton
+      </template>
+      <template
         v-if="!isEmpty && !loadError"
-        :label="t('home.addBook')"
-        icon="pi pi-plus"
-        class="btn-primary add-btn-home"
-        @click="addDialogVisible = true"
-      />
-    </header>
+        #actions
+      >
+        <AppButton
+          :label="t('home.addBook')"
+          icon="pi pi-plus"
+          class="btn-primary add-btn-home"
+          @click="addDialogVisible = true"
+        />
+      </template>
+    </PageHeader>
 
     <!-- Avisos entram junto com o conteúdo, não por cima do esqueleto -->
     <router-link
@@ -334,6 +337,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
@@ -491,24 +495,14 @@ onMounted(async () => {
   gap: 2.25rem;
 }
 
-.home-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.greeting h1 {
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  margin: 0;
-  line-height: 1.15;
-}
-
 .summary {
-  margin: 0.5rem 0 0;
+  margin: 0;
   color: var(--text-secondary);
+}
+
+/* O espaço até o conteúdo já vem do gap do .home-container */
+.home-container > .page-header {
+  margin-bottom: 0;
 }
 
 .notice {
@@ -798,10 +792,7 @@ onMounted(async () => {
     gap: 1.75rem;
   }
 
-  .greeting h1 {
-    font-size: var(--fs-2xl);
-  }
-
+  .home-container > .page-header :deep(.page-header-actions),
   .add-btn-home {
     width: 100%;
   }

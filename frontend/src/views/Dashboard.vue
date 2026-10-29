@@ -1,10 +1,10 @@
 <template>
   <div class="dashboard-container">
-    <div class="header-section">
-      <div class="welcome-text">
-        <h1>{{ $t('dashboard.title') }}</h1>
-        <p>{{ $t('dashboard.subtitle') }}</p>
-      </div>
+    <PageHeader
+      :title="t('dashboard.title')"
+      :subtitle="t('dashboard.subtitle')"
+    >
+      <template #actions>
       <div class="header-side">
         <router-link
           :to="{ name: 'year', params: { year } }"
@@ -28,7 +28,8 @@
           @update:modelValue="changeYear"
         />
       </div>
-    </div>
+      </template>
+    </PageHeader>
 
     <div
       v-if="loading"
@@ -392,6 +393,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -725,25 +727,6 @@ onMounted(loadStats)
   box-sizing: border-box;
 }
 
-.header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-}
-
-.welcome-text h1 {
-  margin: 0;
-  font-size: var(--fs-2xl);
-  color: var(--text-primary);
-  font-family: var(--font-display);
-}
-
-.welcome-text p {
-  margin: 0.5rem 0 0;
-  color: var(--text-secondary);
-}
-
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -894,12 +877,6 @@ a.author-row:focus-visible {
   background: color-mix(in srgb, var(--kpi-color) 14%, transparent);
   color: var(--kpi-color);
 }
-
-
-
-
-
-
 
 .kpi-info {
   display: flex;
@@ -1267,12 +1244,7 @@ a.author-row:hover {
     padding: 1.1rem;
   }
 
-  .header-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
+  .dashboard-container > .page-header :deep(.page-header-actions),
   .header-side {
     width: 100%;
     justify-content: space-between;

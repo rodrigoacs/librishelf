@@ -12,8 +12,11 @@
         {{ t('common.back') }}
       </router-link>
 
-      <h1>{{ t('privacy.title') }}</h1>
-      <p class="updated">{{ t('privacy.updated', { date: updatedAt }) }}</p>
+      <PageHeader :title="t('privacy.title')">
+        <template #subtitle>
+          <p class="updated">{{ t('privacy.updated', { date: updatedAt }) }}</p>
+        </template>
+      </PageHeader>
       <p class="intro">{{ t('privacy.intro') }}</p>
 
       <section
@@ -36,6 +39,7 @@
 </template>
 
 <script setup>
+import PageHeader from '../components/ui/PageHeader.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CONTACT_EMAIL, PRIVACY_UPDATED_AT } from '../config/site.js'
@@ -94,12 +98,6 @@ const updatedAt = computed(() => {
   color: var(--main-color);
 }
 
-h1 {
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  margin: 0;
-}
-
 h2 {
   font-size: var(--fs-lg);
   margin: 2rem 0 0.5rem 0;
@@ -111,6 +109,7 @@ p {
 }
 
 .updated {
+  margin: 0;
   color: var(--text-muted);
   font-size: var(--fs-sm);
 }
@@ -118,7 +117,7 @@ p {
 .intro {
   font-size: var(--fs-md);
   color: var(--text-primary);
-  margin-top: 1.5rem;
+  margin-top: 0;
 }
 
 a {
@@ -130,8 +129,5 @@ a {
     padding: 1.25rem;
   }
 
-  h1 {
-    font-size: var(--fs-2xl);
-  }
 }
 </style>
