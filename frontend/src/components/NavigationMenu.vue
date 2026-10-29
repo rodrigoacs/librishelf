@@ -23,7 +23,11 @@
           <span class="text-main">LIBRI</span>SHELF
         </div>
       </div>
-      <div style="width: 40px"></div>
+      <!-- Contrapeso do botão do menu, para o logo ficar no centro -->
+      <div
+        class="header-spacer"
+        aria-hidden="true"
+      ></div>
     </header>
 
     <Transition name="fade">
@@ -239,6 +243,11 @@ const items = computed(() => [
 </script>
 
 <style scoped>
+.header-spacer {
+  width: 40px;
+  flex-shrink: 0;
+}
+
 .nav-badge {
   margin-left: auto;
   min-width: 1.25rem;

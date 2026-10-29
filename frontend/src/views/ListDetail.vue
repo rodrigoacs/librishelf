@@ -614,7 +614,7 @@ onBeforeUnmount(() => {
 }
 
 .visibility .pi {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .actions {
@@ -701,7 +701,7 @@ onBeforeUnmount(() => {
 }
 
 .drag-handle:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
   outline-offset: 1px;
   color: var(--main-color);
 }

@@ -84,8 +84,8 @@ const { t } = useI18n()
 }
 
 .list-card:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -122,7 +122,7 @@ const { t } = useI18n()
   justify-content: center;
   height: 100%;
   color: var(--text-muted);
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
 }
 
 .info {
@@ -156,7 +156,7 @@ const { t } = useI18n()
 }
 
 .visibility .pi {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .visibility.public {

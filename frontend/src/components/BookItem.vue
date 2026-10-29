@@ -372,8 +372,8 @@ button.book-card {
 }
 
 .book-card.is-selected {
-  outline: 3px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .status-badge {

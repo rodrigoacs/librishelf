@@ -62,8 +62,8 @@ const { t } = useI18n()
 }
 
 .chart-data summary:focus-visible {
-  outline: 2px solid var(--main-solid);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .chart-data table {

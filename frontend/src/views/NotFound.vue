@@ -132,7 +132,7 @@ h1 {
 
 .search-form:focus-within {
   border-color: var(--main-color);
-  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.2);
+  box-shadow: var(--focus-glow);
 }
 
 .search-icon {

@@ -814,8 +814,8 @@ onMounted(loadStats)
 }
 
 .tag-bar-row:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .tag-bar-name {
@@ -886,8 +886,8 @@ a.kpi-card {
 
 a.kpi-card:focus-visible,
 a.author-row:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .kpi-icon {
@@ -950,8 +950,8 @@ a.author-row:focus-visible {
 }
 
 .year-link:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .year-dropdown {

@@ -576,8 +576,8 @@ onMounted(load)
 
 .pill:focus-visible,
 .rename-btn:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .merge-help {

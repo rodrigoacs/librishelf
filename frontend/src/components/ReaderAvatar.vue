@@ -77,6 +77,6 @@ const initial = computed(() => props.username.replace(/^[^\p{L}\p{N}]+/u, '').ch
 }
 
 .badge .pi {
-  font-size: 0.5rem;
+  font-size: var(--fs-2xs);
 }
 </style>

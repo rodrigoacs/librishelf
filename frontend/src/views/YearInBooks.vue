@@ -598,8 +598,8 @@ onBeforeUnmount(() => {
 }
 
 .year-pill:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .skeletons {
@@ -637,14 +637,14 @@ onBeforeUnmount(() => {
   align-items: baseline;
   gap: 0.25rem;
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: var(--fs-3xl);
   font-weight: 700;
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
 }
 
 .hero-value .star {
-  font-size: 1.4rem;
+  font-size: var(--fs-xl);
   color: var(--rating);
 }
 
@@ -823,7 +823,7 @@ onBeforeUnmount(() => {
 }
 
 .top-book:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
   outline-offset: 4px;
   border-radius: 6px;
 }
@@ -956,8 +956,8 @@ onBeforeUnmount(() => {
 }
 
 .record-book:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: 4px;
 }
 
@@ -1056,7 +1056,7 @@ onBeforeUnmount(() => {
   }
 
   .hero-value {
-    font-size: 2rem;
+    font-size: var(--fs-2xl);
   }
 
   .hero-card {

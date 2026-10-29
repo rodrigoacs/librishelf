@@ -405,8 +405,8 @@ function remove() {
 
 .text-btn:focus-visible,
 .write-btn:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: 6px;
 }
 
@@ -508,7 +508,7 @@ function remove() {
 .body-input:focus {
   outline: none;
   border-color: var(--main-color);
-  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.18);
+  box-shadow: var(--focus-glow);
 }
 
 .counter {

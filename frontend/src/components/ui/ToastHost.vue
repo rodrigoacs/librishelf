@@ -210,7 +210,7 @@ onMounted(bringToFront)
 }
 
 .toast-action:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
 }
 
 @media (pointer: coarse) {
@@ -236,7 +236,7 @@ onMounted(bringToFront)
 }
 
 .toast-close:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
 }
 
 .toast-enter-from,

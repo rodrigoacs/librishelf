@@ -290,7 +290,7 @@ function onPanelKeydown(event) {
 }
 
 .ms-check .pi {
-  font-size: 0.65rem;
+  font-size: var(--fs-2xs);
 }
 
 .ms-check.on {

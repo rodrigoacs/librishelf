@@ -152,7 +152,7 @@ function onUpdate(values) {
 
 .field-box:focus-within {
   border-color: var(--main-color);
-  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.18);
+  box-shadow: var(--focus-glow);
 }
 
 .invalid .field-box {
@@ -196,7 +196,7 @@ function onUpdate(values) {
 }
 
 .author-chip-remove .pi {
-  font-size: 0.65rem;
+  font-size: var(--fs-2xs);
 }
 
 .author-chip-remove:hover,

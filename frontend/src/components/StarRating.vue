@@ -115,7 +115,7 @@ function select(value) {
 
 .star-btn:focus-visible,
 .clear-btn:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
   outline-offset: 1px;
 }
 

@@ -232,8 +232,8 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 }
 
 .more-reviews:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: 4px;
 }
 
@@ -283,8 +283,8 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 }
 
 .community-toggle:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: 6px;
 }
 

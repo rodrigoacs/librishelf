@@ -613,8 +613,8 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 }
 
 .view-btn:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .search-area {

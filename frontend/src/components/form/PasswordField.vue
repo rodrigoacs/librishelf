@@ -112,7 +112,7 @@ defineExpose({ focus: () => field.value?.focus() })
 }
 
 .reveal-btn:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
 }
 
 .strength {

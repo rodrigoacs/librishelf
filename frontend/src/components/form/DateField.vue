@@ -90,7 +90,7 @@ function onNativeInput(event) {
 
 .field-box:focus-within {
   border-color: var(--main-color);
-  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.18);
+  box-shadow: var(--focus-glow);
 }
 
 .invalid .field-box {

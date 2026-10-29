@@ -229,7 +229,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
 }
 
 .row-main:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
   outline-offset: -2px;
 }
 
@@ -369,8 +369,8 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
 }
 
 .row-read:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 @media (max-width: 1100px) {

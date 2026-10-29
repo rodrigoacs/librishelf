@@ -356,8 +356,8 @@ async function save() {
 .update-btn:focus-visible,
 .mode-btn:focus-visible,
 .total-btn:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: 4px;
 }
 
@@ -403,7 +403,7 @@ async function save() {
 .num:focus {
   outline: none;
   border-color: var(--main-color);
-  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.18);
+  box-shadow: var(--focus-glow);
 }
 
 .total-btn {

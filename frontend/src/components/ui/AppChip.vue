@@ -65,7 +65,7 @@ const { t } = useI18n()
 }
 
 .app-chip-remove .pi {
-  font-size: 0.7rem;
+  font-size: var(--fs-2xs);
 }
 
 .app-chip-remove:hover {
@@ -74,6 +74,6 @@ const { t } = useI18n()
 }
 
 .app-chip-remove:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
 }
 </style>

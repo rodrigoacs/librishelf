@@ -173,8 +173,8 @@ async function submit() {
 }
 
 .reason:has(input:focus-visible) {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .note-field {
@@ -203,7 +203,7 @@ async function submit() {
 .note:focus {
   outline: none;
   border-color: var(--main-color);
-  box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.18);
+  box-shadow: var(--focus-glow);
 }
 
 .counter {

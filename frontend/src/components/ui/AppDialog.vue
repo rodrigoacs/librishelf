@@ -246,7 +246,7 @@ html.dialog-open {
 }
 
 .app-dialog-close:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
 }
 
 .app-dialog-content {

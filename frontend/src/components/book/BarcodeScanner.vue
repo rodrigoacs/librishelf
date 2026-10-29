@@ -344,7 +344,7 @@ onBeforeUnmount(() => {
 }
 
 .overlay-msg .pi {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
 }
 
 .overlay-msg.error .pi {

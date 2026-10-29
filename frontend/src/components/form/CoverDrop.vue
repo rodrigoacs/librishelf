@@ -156,7 +156,7 @@ function onPick(event) {
 }
 
 .drop-zone:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 

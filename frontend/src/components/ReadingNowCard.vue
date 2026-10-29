@@ -144,8 +144,8 @@ async function finish() {
 
 .cover-btn:focus-visible,
 .title-btn:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .reading-info {

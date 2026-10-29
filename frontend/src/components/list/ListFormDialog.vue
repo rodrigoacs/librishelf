@@ -237,8 +237,8 @@ async function submit() {
 }
 
 .suggestion:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .toggle-block {

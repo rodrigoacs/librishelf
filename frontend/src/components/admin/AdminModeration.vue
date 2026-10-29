@@ -381,7 +381,7 @@ onMounted(() => {
 }
 
 .filter:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
   outline-offset: 1px;
 }
 
@@ -435,8 +435,8 @@ onMounted(() => {
 }
 
 .queue-item:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .queue-head {
@@ -650,8 +650,8 @@ onMounted(() => {
 }
 
 .insights summary:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: 6px;
 }
 
@@ -715,8 +715,8 @@ onMounted(() => {
 }
 
 .person:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 @media (max-width: 900px) {

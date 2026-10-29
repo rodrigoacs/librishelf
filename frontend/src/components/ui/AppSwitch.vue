@@ -72,8 +72,8 @@ const emit = defineEmits(['update:modelValue'])
 }
 
 .app-switch:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 @media (prefers-reduced-motion: reduce) {

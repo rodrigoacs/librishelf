@@ -312,8 +312,8 @@ async function toggleLike() {
 }
 
 .book-link:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: 4px;
 }
 
@@ -342,7 +342,7 @@ async function toggleLike() {
 }
 
 .badge .pi {
-  font-size: 0.7rem;
+  font-size: var(--fs-2xs);
 }
 
 .date {
@@ -481,8 +481,8 @@ async function toggleLike() {
 .icon-btn:focus-visible,
 .text-btn:focus-visible,
 .spoiler-btn:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 @media (pointer: coarse) {

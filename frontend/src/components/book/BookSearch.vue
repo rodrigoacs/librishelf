@@ -295,7 +295,7 @@ button.result:hover {
 }
 
 button.result:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
   outline-offset: -2px;
   border-radius: 10px;
 }

@@ -1,9 +1,29 @@
+/* =====================================================================
+ * Tokens de design do Librishelf — use estes em vez de valores soltos.
+ *
+ * Fonte      --fs-2xs 10 · xs 12 · sm 13,6 · md 15,2 · lg 18,4 · xl 24 · 2xl 32 · 3xl 40 px
+ * Espaço     --space-1 4 · 2 8 · 3 12 · 4 16 · 5 20 · 6 24 · 7 32 · 8 48 px
+ *            (2rem = --space-7 entre seções; 1rem = --space-4 entre cards)
+ * Raio       --radius-sm 6 (chip, capa pequena) · md 10 (botão, campo, card)
+ *            · lg 16 (painel, diálogo) · pill 999 (selo, pílula); círculo = 50%
+ * Sombra     --shadow-1 (capa, card parado) · 2 (card em destaque, arrastando)
+ *            · 3 (menu, aviso, diálogo, popover)
+ * Foco       botões, links e controles: anel --focus-ring com --focus-offset
+ *            (:focus-visible global abaixo); campos de texto: borda na cor de
+ *            destaque + --focus-glow
+ * Breakpoints (media query não lê variável: use os números)
+ *            celular   (max-width: 639.98px)
+ *            tablet    (max-width: 1023.98px) — abaixo disso, menu em gaveta
+ *            largo     (max-width: 1279.98px)
+ *            Toque: (pointer: coarse) para alvos de 44 px.
+ * ===================================================================== */
 :root {
   --font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   /* Títulos, logo e capas desenhadas: serifa empacotada, igual em todo sistema */
   --font-display: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
 
   /* Escala de fonte (use estes tokens em vez de tamanhos soltos) */
+  --fs-2xs: 0.625rem;
   --fs-xs: 0.75rem;
   --fs-sm: 0.85rem;
   --fs-md: 0.95rem;
@@ -11,6 +31,32 @@
   --fs-xl: 1.5rem;
   --fs-2xl: 2rem;
   --fs-3xl: 2.5rem;
+
+  /* Espaço */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 2rem;
+  --space-8: 3rem;
+
+  /* Raio */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Sombra (iguais nos dois temas) */
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-3: 0 12px 30px rgba(0, 0, 0, 0.3);
+
+  /* Foco */
+  --focus-ring: 2px solid var(--main-color);
+  --focus-offset: 2px;
+  --focus-glow: 0 0 0 3px rgba(var(--main-color-rgb), 0.18);
 
   /* Cor de destaque. --main-color: texto, borda, ícone e detalhes;
      --main-solid: fundo de botão e selo, sempre com --on-main (branco) por cima.
@@ -149,7 +195,7 @@ h1[tabindex="-1"]:focus {
 }
 
 h1[tabindex="-1"]:focus-visible {
-  outline: 2px solid var(--main-color);
+  outline: var(--focus-ring);
   outline-offset: 4px;
   border-radius: 4px;
 }
@@ -224,8 +270,8 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 /* ------------------------------------------------------------------ botões
@@ -261,8 +307,8 @@ body {
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .btn:disabled {
