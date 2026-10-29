@@ -229,9 +229,11 @@ function onCoverError(event) {
     opacity: 1;
   }
 
-  /* Acompanha o card, que sobe ao passar o mouse */
+  /* Acompanha o card, que sobe 5 px ao passar o mouse, e cresce para
+     baixo: a ponta desce 6 px na tela (com 48 px a ponta ficava no lugar e
+     a fita parecia crescer para cima) */
   .book-card-wrapper:hover .quick-read {
-    height: 48px;
+    height: 53px;
     transform: translateY(-5px);
   }
 
@@ -333,8 +335,9 @@ button.book-card {
   transition: height 0.2s ease;
 }
 
+/* O card sobe 5 px: com 53 px a ponta da fita desce 6 px na tela */
 .book-card:hover .bookmark-ribbon {
-  height: 48px;
+  height: 53px;
 }
 
 .bookmark-ribbon i {
