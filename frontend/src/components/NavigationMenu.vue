@@ -355,8 +355,8 @@ button.nav-item {
 }
 
 .nav-item.action-item:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background-color: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
 }
 
 .separator {

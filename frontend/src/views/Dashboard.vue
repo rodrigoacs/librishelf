@@ -702,15 +702,15 @@ onMounted(loadStats)
   padding: 0.85rem 1.1rem;
   margin-bottom: 1.5rem;
   border-radius: 10px;
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
   color: var(--text-primary);
   text-decoration: none;
   font-size: var(--fs-md);
 }
 
 .isbn-notice .pi-exclamation-triangle {
-  color: #f59e0b;
+  color: var(--warning);
 }
 
 .isbn-notice .pi-angle-right {
@@ -719,7 +719,7 @@ onMounted(loadStats)
 }
 
 .isbn-notice:hover {
-  background: rgba(245, 158, 11, 0.14);
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
 }
 
 .dashboard-container {
@@ -1185,7 +1185,7 @@ a.author-row:hover {
   left: 30px;
   top: 10%;
   height: 80%;
-  background-color: rgba(76, 175, 80, 0.15);
+  background-color: color-mix(in srgb, var(--success) 15%, transparent);
   border-radius: 4px;
   z-index: 1;
 }

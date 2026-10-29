@@ -651,7 +651,7 @@ onBeforeUnmount(() => {
 
 .hero-value .star {
   font-size: 1.4rem;
-  color: #f5b301;
+  color: var(--rating);
 }
 
 .hero-label {

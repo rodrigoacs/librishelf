@@ -430,7 +430,7 @@ a.series-line:hover {
   align-items: center;
   gap: 0.4rem;
   margin: -0.4rem 0 0;
-  color: #f59e0b;
+  color: var(--warning);
   font-size: var(--fs-sm);
 }
 

@@ -747,7 +747,7 @@ watch(username, () => {
 }
 
 .star {
-  color: #f5b301;
+  color: var(--rating);
   font-size: var(--fs-lg);
 }
 

@@ -295,7 +295,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 }
 
 .avg-rating .pi {
-  color: #f5b301;
+  color: var(--rating);
   font-size: var(--fs-sm);
 }
 

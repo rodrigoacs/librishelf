@@ -92,6 +92,12 @@ async function resend() {
   flex-shrink: 0;
 }
 
+/* Texto sobre o tingido do banner: a mistura dos selos (--tint-text) dá
+   ≥ 4,5:1 nas 6 cores; a cor de destaque pura ficava em 4,0:1 no claro */
+.resend-btn.btn.btn-text {
+  --btn-fg: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
+}
+
 @media (max-width: 640px) {
   .email-banner {
     padding: 0.6rem 1rem;

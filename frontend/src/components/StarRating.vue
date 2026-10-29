@@ -94,7 +94,7 @@ function select(value) {
 
 .star.on,
 .star-btn.on {
-  color: #f5b301;
+  color: var(--rating);
 }
 
 .star-btn,

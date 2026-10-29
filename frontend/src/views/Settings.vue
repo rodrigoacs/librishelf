@@ -1113,8 +1113,8 @@ async function deleteAccount() {
   border-radius: 999px;
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: #b45309;
-  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
 }
 
 .button-row {
