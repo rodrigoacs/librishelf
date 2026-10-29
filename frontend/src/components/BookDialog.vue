@@ -82,6 +82,35 @@
             @rate="quickRate"
             @navigate="visible = false"
           >
+            <template
+              v-if="!isReadOnly && !loading && !loadFailed"
+              #actions
+            >
+              <div class="book-actions">
+                <AppButton
+                  v-tooltip.top="t('bookDialog.editShortcut')"
+                  :label="t('bookDialog.editShort')"
+                  icon="pi pi-pencil"
+                  class="btn-outlined btn-secondary btn-sm action-edit"
+                  aria-keyshortcuts="E"
+                  @click="editMode"
+                />
+                <IconButton
+                  icon="pi pi-ellipsis-h"
+                  :label="t('bookDialog.moreActions')"
+                  class="action-more"
+                  aria-haspopup="true"
+                  aria-controls="book-more-menu"
+                  aria-expanded="false"
+                  @click="event => moreMenu.toggle(event)"
+                />
+                <PopupMenu
+                  id="book-more-menu"
+                  ref="moreMenu"
+                  :items="moreItems"
+                />
+              </div>
+            </template>
             <template #cover>
               <span
                 class="mini-cover"
@@ -141,34 +170,6 @@
             v-if="!isReadOnly && !loading && !loadFailed"
             :book-id="bookId"
           />
-
-          <!-- Ações do dono, longe do X de fechar e com nome escrito -->
-          <div
-            v-if="!isReadOnly && !loading && !loadFailed"
-            class="dialog-footer"
-          >
-            <AppButton
-              :label="t('bookDialog.deleteShort')"
-              icon="pi pi-trash"
-              class="btn-text btn-danger btn-sm"
-              @click="deleteBook"
-            />
-            <AppButton
-              :label="t('lists.addToShort')"
-              icon="pi pi-list"
-              class="btn-outlined btn-secondary btn-sm footer-lists"
-              aria-haspopup="dialog"
-              @click="addToListOpen = true"
-            />
-            <AppButton
-              v-tooltip.top="t('bookDialog.editShortcut')"
-              :label="t('bookDialog.editShort')"
-              icon="pi pi-pencil"
-              class="btn-outlined btn-secondary btn-sm footer-edit"
-              aria-keyshortcuts="E"
-              @click="editMode"
-            />
-          </div>
         </div>
       </div>
     </div>
@@ -201,6 +202,7 @@ import BookCommunity from './book/BookCommunity.vue'
 import ReviewEditor from './review/ReviewEditor.vue'
 import ReviewCard from './review/ReviewCard.vue'
 import AddToListDialog from './list/AddToListDialog.vue'
+import PopupMenu from './ui/PopupMenu.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { statusOf } from '../utils/readingStatus.js'
 import { setOverlayTitle } from '../services/pageTitle.js'
@@ -231,6 +233,14 @@ const isEditing = ref(false)
 const ratingSaving = ref(false)
 const readSaving = ref(false)
 const addToListOpen = ref(false)
+
+// Menu "⋯" ao lado de Editar: Listas e Excluir
+const moreMenu = ref(null)
+const moreItems = computed(() => [
+  { label: t('lists.addToShort'), icon: 'pi pi-list', command: () => { addToListOpen.value = true } },
+  { separator: true },
+  { label: t('bookDialog.deleteShort'), icon: 'pi pi-trash', danger: true, command: deleteBook }
+])
 
 function emptyBook() {
   // authors: texto para exibir; authorNames: a lista que é editada e salva.
@@ -632,24 +642,22 @@ onBeforeUnmount(() => {
   max-height: inherit;
 }
 
-.dialog-footer {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+/* Editar e o menu "⋯" (Listas, Excluir) no topo, numa linha só deles ao
+   lado do X: o título fica logo abaixo e com a largura toda */
+.book-actions {
+  order: -1;
+  width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.35rem;
+  /* Na altura do X (top 1rem) e sem encostar nele (44 px + folga) */
+  margin-top: -1.5rem;
+  padding-right: 1.75rem;
 }
 
-.footer-edit.btn,
-.footer-lists.btn {
+.action-edit.btn {
   border-radius: 8px;
-}
-
-/* Apagar à esquerda; Listas e Editar juntos à direita */
-.footer-lists.btn {
-  margin-left: auto;
 }
 
 .mini-cover {
@@ -694,6 +702,12 @@ onBeforeUnmount(() => {
     gap: 1.25rem;
   }
 
+  /* O X está sobre a faixa da capa: a linha das ações não precisa desviar */
+  .book-actions {
+    margin-top: 0;
+    padding-right: 0;
+  }
+
   /* Capa inteira e pequena, em vez de um recorte gigante. */
   .image-container {
     padding: 1rem;
@@ -718,6 +732,12 @@ onBeforeUnmount(() => {
   .viewing .close-btn {
     background: transparent;
     color: inherit;
+  }
+
+  /* O X fica ao lado do título de novo: mesma linha dele */
+  .book-actions {
+    margin-top: -0.5rem;
+    padding-right: 2.75rem;
   }
 
   .mini-cover {

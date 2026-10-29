@@ -83,7 +83,8 @@
     "discard": "Descartar",
     "keepEditing": "Continuar editando",
     "loadErrorTitle": "Não foi possível carregar",
-    "loadErrorHint": "Verifique sua conexão e tente de novo."
+    "loadErrorHint": "Verifique sua conexão e tente de novo.",
+    "undo": "Desfazer"
   },
   "book": {
     "toast_added": "Livro adicionado com sucesso!",
@@ -189,7 +190,16 @@
     "row_rating": "Nota {n} de 5",
     "read_month_chip": "Lidos em {period}",
     "sort_short": "Ordenar:",
-    "count_of": "{shown} de {total}"
+    "count_of": "{shown} de {total}",
+    "col": {
+      "title": "Título",
+      "publisher": "Editora",
+      "year": "Ano",
+      "rating": "Nota",
+      "readOn": "Lido em",
+      "asc": "ordem crescente",
+      "desc": "ordem decrescente"
+    }
   },
   "bookDialog": {
     "bookCover": "Capa do livro",
@@ -214,7 +224,10 @@
     "publishedOn": "Publicado em {date}",
     "editShort": "Editar",
     "deleteShort": "Excluir",
-    "editShortcut": "Editar (atalho: E)"
+    "editShortcut": "Editar (atalho: E)",
+    "moreActions": "Mais ações do livro",
+    "titleFull": "Ver título completo",
+    "titleLess": "Mostrar menos"
   },
   "authors": {
     "title": "Autores",
@@ -1260,7 +1273,10 @@
     "addedTo": "Adicionado a “{title}”",
     "removedFrom": "Tirado de “{title}”",
     "profileTitle": "Listas | 1 lista | {n} listas",
-    "loadOneFailed": "Não foi possível carregar esta lista."
+    "loadOneFailed": "Não foi possível carregar esta lista.",
+    "rowActions": "Ações para {title}",
+    "removeShort": "Tirar da lista",
+    "restored": "{title} voltou para a lista"
   },
   "year": {
     "kicker": "Retrospectiva",

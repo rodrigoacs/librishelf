@@ -32,7 +32,15 @@
       </span>
 
       <span class="main-text">
-        <span class="title">{{ book.title }}</span>
+        <span class="title-line">
+          <span class="title">{{ book.title }}</span>
+          <!-- Status num selo, separado da data de leitura (coluna "Lido em") -->
+          <span
+            v-if="statusBadge"
+            class="status-badge"
+            :class="`status-${status}`"
+          >{{ statusBadge }}</span>
+        </span>
         <span class="authors">
           {{ book.authors }}<template v-if="book.series"><span class="series"> · {{ seriesText(book, t, locale) }}</span></template>
         </span>
@@ -59,8 +67,8 @@
 
       <span
         class="col read"
-        :class="[`status-${status}`]"
-      >{{ statusLabel }}</span>
+        :class="{ muted: !readDateText }"
+      >{{ readDateText || '—' }}</span>
     </button>
 
     <button
@@ -147,11 +155,11 @@ const readDateLabel = computed(() => {
   return date.toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 })
 
-const statusLabel = computed(() => {
-  if (status.value === 'read') return readDateLabel.value
-  if (status.value === 'none') return t('library.unread')
-  return t(`status.${status.value}`)
-})
+// Coluna "Lido em": só a data (lido sem data diz "Lido")
+const readDateText = computed(() => (status.value === 'read' ? readDateLabel.value : ''))
+
+// Selo ao lado do título: Lendo / Quero ler (lido já aparece pela data)
+const statusBadge = computed(() => (status.value === 'reading' || status.value === 'want' ? t(`status.${status.value}`) : ''))
 
 </script>
 
@@ -255,12 +263,37 @@ const statusLabel = computed(() => {
   min-width: 0;
 }
 
+.title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 .title {
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* Texto na mistura de contraste (--tint-text) sobre o fundo tingido */
+.status-badge.status-reading {
+  color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
+  background: rgba(var(--main-color-rgb), 0.12);
 }
 
 .authors,
@@ -292,17 +325,13 @@ const statusLabel = computed(() => {
   font-size: var(--fs-sm);
 }
 
-.read.status-read {
+.read {
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
-.read.status-reading {
-  color: var(--main-color);
-  font-weight: 600;
-}
-
-.read.status-want {
-  color: var(--text-primary);
+.read.muted {
+  color: var(--text-secondary);
 }
 
 .row-read {

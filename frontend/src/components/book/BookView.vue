@@ -4,8 +4,21 @@
       <!-- Capa pequena ao lado do título (o diálogo só mostra no celular) -->
       <slot name="cover"></slot>
       <div class="title-area">
-        <h1 class="book-title">{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}
-        </h1>
+        <h1
+          :id="titleId"
+          ref="titleEl"
+          class="book-title"
+          :class="{ expanded: titleExpanded }"
+        >{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}</h1>
+        <!-- Título muito longo no celular: 4 linhas e o resto sob demanda -->
+        <button
+          v-if="titleClamped || titleExpanded"
+          type="button"
+          class="link-btn title-toggle"
+          :aria-expanded="titleExpanded ? 'true' : 'false'"
+          :aria-controls="titleId"
+          @click="titleExpanded = !titleExpanded"
+        >{{ titleExpanded ? t('bookDialog.titleLess') : t('bookDialog.titleFull') }}</button>
         <h2 class="book-author">{{ book.authors || (loading ? '' : t('bookDialog.unknownAuthor')) }}</h2>
         <template v-if="book.series && !loading">
           <router-link
@@ -51,6 +64,8 @@
           />
         </template>
       </div>
+      <!-- Ações do dono (Editar, ⋯) ao lado do título -->
+      <slot name="actions"></slot>
     </div>
 
     <div
@@ -156,8 +171,13 @@
   </div>
 </template>
 
+<script>
+// Contador entre instâncias, para o id do título (aria-controls do "ver título completo")
+const titleSeq = { n: 0 }
+</script>
+
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import StarRating from '../StarRating.vue'
 import PillButton from '../form/PillButton.vue'
@@ -209,6 +229,33 @@ const metaItems = computed(() => {
 })
 
 const currentStatus = computed(() => statusOf(props.book))
+
+// Título cortado em 4 linhas abaixo de 640 px: o botão só aparece quando há corte
+const titleId = `book-title-${++titleSeq.n}`
+const titleEl = ref(null)
+const titleExpanded = ref(false)
+const titleClamped = ref(false)
+
+function measureTitle() {
+  const el = titleEl.value
+  // Só onde o CSS corta (line-clamp abaixo de 640 px)
+  titleClamped.value = Boolean(el) && !titleExpanded.value &&
+    getComputedStyle(el).webkitLineClamp !== 'none' && el.scrollHeight > el.clientHeight + 1
+}
+
+let titleObserver = null
+onMounted(() => {
+  measureTitle()
+  if (typeof ResizeObserver !== 'undefined' && titleEl.value) {
+    titleObserver = new ResizeObserver(() => measureTitle())
+    titleObserver.observe(titleEl.value)
+  }
+})
+onBeforeUnmount(() => titleObserver?.disconnect())
+watch(() => [props.book.title, props.loading], () => {
+  titleExpanded.value = false
+  nextTick(measureTitle)
+})
 
 const seriesLabel = computed(() => seriesText(props.book, t, locale.value))
 
@@ -479,6 +526,23 @@ a.series-line:hover {
   font-weight: 400;
 }
 
+.book-title {
+  overflow-wrap: break-word;
+  /* Palavra maior que a linha quebra com hífen (lang da página), não no meio */
+  hyphens: auto;
+}
+
+/* Com as ações do dono numa linha própria no topo, o título usa a largura toda */
+.details-header:has(.book-actions) {
+  flex-wrap: wrap;
+  padding-right: 0;
+}
+
+.title-toggle {
+  align-self: flex-start;
+  margin-top: -0.25rem;
+}
+
 @media (max-width: 768px) {
   .book-title {
     font-size: var(--fs-xl);
@@ -489,7 +553,18 @@ a.series-line:hover {
   }
 }
 
-/* Celular: sem a faixa da capa em cima, o X fica ao lado do título */
+@media (max-width: 640px) {
+  .book-title:not(.expanded) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    overflow: hidden;
+  }
+}
+
+/* Celular: sem a faixa da capa em cima. As ações (Editar, ⋯) ganham uma
+   linha no topo, na altura do X; o título fica logo abaixo, com a largura toda */
 @media (max-width: 600px) {
   .details-header {
     padding-right: 2.25rem;

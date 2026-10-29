@@ -17,6 +17,8 @@
         :role="item.severity === 'error' ? 'alert' : 'status'"
         @mouseenter="pause(item.id)"
         @mouseleave="resume(item)"
+        @focusin="pause(item.id)"
+        @focusout="resume(item)"
       >
         <i
           class="pi toast-icon"
@@ -32,6 +34,12 @@
             class="toast-detail"
           >{{ item.detail }}</p>
         </div>
+        <button
+          v-if="item.action"
+          type="button"
+          class="toast-action"
+          @click="runAction(item)"
+        >{{ item.action.label }}</button>
         <button
           type="button"
           class="toast-close"
@@ -78,6 +86,12 @@ function pause(id) {
 
 function resume(item) {
   schedule(item)
+}
+
+function runAction(item) {
+  pause(item.id)
+  removeToast(item.id)
+  item.action?.onClick?.()
 }
 
 // Reabre o popover a cada aviso novo: assim ele fica acima de um diálogo
@@ -174,6 +188,35 @@ onMounted(bringToFront)
   font-size: var(--fs-sm);
   color: var(--text-secondary);
   overflow-wrap: anywhere;
+}
+
+.toast-action {
+  flex-shrink: 0;
+  align-self: center;
+  min-height: 2rem;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--main-color);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toast-action:hover {
+  background: var(--bg-hover);
+}
+
+.toast-action:focus-visible {
+  outline: 2px solid var(--main-color);
+}
+
+@media (pointer: coarse) {
+  .toast-action {
+    min-height: 44px;
+  }
 }
 
 .toast-close {

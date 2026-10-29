@@ -1,6 +1,7 @@
 <template>
   <div class="list-book-row">
-    <slot name="handle" />
+    <!-- display: contents; abaixo de 400 px as duas pontas viram uma coluna à esquerda -->
+    <span class="tools tools-start"><slot name="handle" /></span>
     <span
       v-if="rank"
       class="rank"
@@ -40,7 +41,7 @@
         </span>
       </span>
     </button>
-    <slot name="actions" />
+    <span class="tools tools-end"><slot name="actions" /></span>
   </div>
 </template>
 
@@ -134,7 +135,8 @@ const readLabel = computed(() => {
   font-weight: 600;
   font-size: var(--fs-md);
   line-height: 1.3;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .authors {
@@ -156,5 +158,72 @@ const readLabel = computed(() => {
 .read {
   font-size: var(--fs-xs);
   color: var(--text-muted);
+}
+
+.tools {
+  display: contents;
+}
+
+/* 320–399 px: alça e menu numa coluna à esquerda, número como selo sobre a
+   capa; sobra o dobro de largura para o título */
+@media (max-width: 399.98px) {
+  .list-book-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 0.4rem;
+  }
+
+  .tools {
+    display: flex;
+    justify-content: center;
+    grid-column: 1;
+  }
+
+  .tools-start {
+    grid-row: 1;
+    align-self: end;
+  }
+
+  .tools-end {
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .tools:empty {
+    display: none;
+  }
+
+  .open {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    gap: 0.7rem;
+  }
+
+  .rank {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    justify-self: start;
+    z-index: 1;
+    width: auto;
+    min-width: 1.5rem;
+    margin: 0;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    font-family: inherit;
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+    color: var(--text-secondary);
+  }
+
+  .rank.top {
+    background: var(--main-solid);
+    border-color: transparent;
+    color: var(--on-main);
+  }
 }
 </style>

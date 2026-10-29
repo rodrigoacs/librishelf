@@ -45,7 +45,8 @@
     "discard": "Discard",
     "keepEditing": "Keep editing",
     "loadErrorTitle": "Couldn't load this",
-    "loadErrorHint": "Check your connection and try again."
+    "loadErrorHint": "Check your connection and try again.",
+    "undo": "Undo"
   },
   "home": {
     "morning": "Good morning, {name}",
@@ -189,7 +190,16 @@
     "row_rating": "Rated {n} out of 5",
     "read_month_chip": "Read in {period}",
     "sort_short": "Sort:",
-    "count_of": "{shown} of {total}"
+    "count_of": "{shown} of {total}",
+    "col": {
+      "title": "Title",
+      "publisher": "Publisher",
+      "year": "Year",
+      "rating": "Rating",
+      "readOn": "Read on",
+      "asc": "ascending",
+      "desc": "descending"
+    }
   },
   "bookDialog": {
     "bookCover": "Book cover",
@@ -214,7 +224,10 @@
     "publishedOn": "Published on {date}",
     "editShort": "Edit",
     "deleteShort": "Delete",
-    "editShortcut": "Edit (shortcut: E)"
+    "editShortcut": "Edit (shortcut: E)",
+    "moreActions": "More book actions",
+    "titleFull": "Show full title",
+    "titleLess": "Show less"
   },
   "authors": {
     "title": "Authors",
@@ -1260,7 +1273,10 @@
     "addedTo": "Added to “{title}”",
     "removedFrom": "Removed from “{title}”",
     "profileTitle": "Lists | 1 list | {n} lists",
-    "loadOneFailed": "Couldn't load this list."
+    "loadOneFailed": "Couldn't load this list.",
+    "rowActions": "Actions for {title}",
+    "removeShort": "Remove from list",
+    "restored": "{title} is back on the list"
   },
   "year": {
     "kicker": "Recap",

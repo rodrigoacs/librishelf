@@ -82,8 +82,15 @@
           />
         </TransitionGroup>
 
+        <BookRowHeader
+          v-if="viewMode !== 'grid'"
+          :sort-field="filters.sortField"
+          :sort-order="filters.sortOrder"
+          :selecting="selecting"
+          @sort="sortByColumn"
+        />
         <ul
-          v-else
+          v-if="viewMode !== 'grid'"
           class="books-list"
           :aria-label="t('library.results')"
         >
@@ -167,6 +174,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect } f
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LibraryHeader from '../components/LibraryHeader.vue'
+import BookRowHeader from '../components/BookRowHeader.vue'
 import BookItem from '../components/BookItem.vue'
 import BookRow from '../components/BookRow.vue'
 import BookDialog from '../components/BookDialog.vue'
@@ -217,6 +225,12 @@ function handleFilterChange({ key, value, silent = false }) {
   // silent: muda o filtro sem buscar (vem junto com outra mudança que busca).
   setFilter(key, value, { fetch: !silent })
   if (!silent) scrollToTop()
+}
+
+// Cabeçalho das colunas (modo lista): campo e ordem numa busca só
+function sortByColumn({ field, order }) {
+  setFilters({ sortField: field, sortOrder: order, page: 1 })
+  scrollToTop()
 }
 
 function clearFilters() {

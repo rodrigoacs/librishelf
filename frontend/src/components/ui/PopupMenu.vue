@@ -22,6 +22,7 @@
         type="button"
         role="menuitem"
         class="popup-item"
+        :class="{ danger: item.danger }"
         tabindex="-1"
         :disabled="item.disabled"
         @click="choose(item)"
@@ -45,7 +46,7 @@ import { ref } from 'vue'
  * fica por cima de tudo, fecha clicando fora ou com Esc. Setas do teclado
  * andam entre os itens.
  *
- *   <PopupMenu ref="menu" id="x" :items="[{ label, icon, command }, { separator: true }]" />
+ *   <PopupMenu ref="menu" id="x" :items="[{ label, icon, command, danger? }, { separator: true }]" />
  *   menu.value.toggle(event)
  */
 defineProps({
@@ -153,6 +154,12 @@ defineExpose({ toggle })
 .popup-item:focus-visible {
   background: var(--bg-hover);
   outline: none;
+}
+
+/* Ação destrutiva (Excluir) */
+.popup-item.danger,
+.popup-item.danger .pi {
+  color: var(--danger);
 }
 
 .popup-item:disabled {

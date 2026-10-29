@@ -187,10 +187,25 @@
                     class="remove-btn"
                     @click="removeItem(item)"
                   />
+                  <!-- Abaixo de 400 px o X vira um menu da linha, embaixo da alça -->
+                  <IconButton
+                    v-if="!isOffline"
+                    icon="pi pi-ellipsis-v"
+                    :label="t('lists.rowActions', { title: item.title })"
+                    class="row-more"
+                    aria-haspopup="true"
+                    aria-controls="list-row-menu"
+                    @click="event => openRowMenu(event, item)"
+                  />
                 </template>
               </ListBookRow>
             </li>
           </ol>
+          <PopupMenu
+            id="list-row-menu"
+            ref="rowMenu"
+            :items="rowMenuItems"
+          />
         </template>
 
         <p
@@ -390,6 +405,18 @@ watch(listEl, element => {
 
 // ------------------------------------------------------------ ações
 
+// Menu da linha (celular estreito): uma instância só, com o livro da vez
+const rowMenu = ref(null)
+const rowMenuItem = ref(null)
+const rowMenuItems = computed(() => rowMenuItem.value
+  ? [{ label: t('lists.removeShort'), icon: 'pi pi-times', danger: true, command: () => removeItem(rowMenuItem.value) }]
+  : [])
+
+function openRowMenu(event, item) {
+  rowMenuItem.value = item
+  rowMenu.value?.toggle(event)
+}
+
 async function removeItem(item) {
   const index = list.value.items.findIndex(entry => entry.bookId === item.bookId)
   const before = list.value
@@ -409,10 +436,39 @@ async function removeItem(item) {
     toast.add({ severity: 'error', detail: error.message, life: 4000 })
     return
   }
+  // Saiu sem perguntar: o aviso traz "Desfazer", que devolve na mesma posição
+  toast.add({
+    severity: 'success',
+    detail: t('lists.removed', { title: item.title }),
+    life: 7000,
+    action: { label: t('common.undo'), onClick: () => undoRemove(item, index) }
+  })
   // Foco no próximo livro (ou no anterior, se era o último)
   await nextTick()
   const handles = listEl.value?.querySelectorAll('.open')
   handles?.[Math.min(index, handles.length - 1)]?.focus()
+}
+
+async function undoRemove(item, index) {
+  if (!list.value || list.value.items.some(entry => entry.bookId === item.bookId)) return
+  const items = [...list.value.items]
+  items.splice(Math.min(index, items.length), 0, item)
+  list.value = { ...list.value, items }
+  lastMoved.value = item.bookId
+  announcement.value = t('lists.restored', { title: item.title })
+  try {
+    if (saveTimer) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
+    await saving
+    // Volta para o fim da lista no servidor e a ordem de antes é regravada
+    await api.addToList(list.value.id, item.bookId)
+    await api.reorderList(list.value.id, list.value.items.map(entry => entry.bookId))
+  } catch (error) {
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
+    await load()
+  }
 }
 
 function onSaved(saved) {
@@ -660,9 +716,26 @@ onBeforeUnmount(() => {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
 }
 
-.remove-btn {
+.remove-btn,
+.row-more {
   flex-shrink: 0;
   color: var(--text-muted);
+}
+
+.row-more {
+  display: none;
+}
+
+/* Abaixo de 400 px: o X vai para um menu da linha, embaixo da alça
+   (o ListBookRow põe a alça e o menu numa coluna só) */
+@media (max-width: 399.98px) {
+  .remove-btn {
+    display: none;
+  }
+
+  .row-more {
+    display: inline-flex;
+  }
 }
 
 @media (pointer: coarse) {
