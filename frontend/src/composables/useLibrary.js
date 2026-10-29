@@ -2,6 +2,8 @@ import { ref } from 'vue'
 import api from '../services/api.js'
 
 const SEARCH_DEBOUNCE_MS = 500
+// Limite por requisição do servidor (backend/src/utils/pagination.js)
+const MAX_LIMIT = 100
 
 function defaultFilters() {
   return {
@@ -105,7 +107,11 @@ export function useLibrary() {
   let requestId = 0
   let searchTimeout = null
 
-  async function fetchBooks(isLoadMore = false) {
+  /**
+   * pagesWanted > 1 (voltar para a Biblioteca): carrega de uma vez as páginas
+   * que já estavam na tela, até MAX_LIMIT livros por requisição.
+   */
+  async function fetchBooks(isLoadMore = false, pagesWanted = 1) {
     if (isLoadMore) {
       if (loading.value || loadingMore.value) return
       if (books.value.length >= totalRecords.value) return
@@ -116,6 +122,8 @@ export function useLibrary() {
     const currentRequest = ++requestId
 
     const nextPage = isLoadMore ? filters.value.page + 1 : 1
+    const pageSize = filters.value.limit
+    const chunk = isLoadMore ? 1 : Math.max(1, Math.min(pagesWanted, Math.floor(MAX_LIMIT / pageSize)))
 
     if (isLoadMore) {
       loadingMore.value = true
@@ -127,12 +135,13 @@ export function useLibrary() {
     error.value = null
 
     try {
-      const params = buildParams({ ...filters.value, page: nextPage })
+      const params = buildParams({ ...filters.value, page: nextPage, limit: pageSize * chunk })
       const response = await api.getBooks(params, { signal: controller.signal })
 
       if (currentRequest !== requestId) return
 
-      filters.value.page = nextPage
+      // Várias páginas numa requisição só contam como as páginas 1…chunk
+      filters.value.page = nextPage + chunk - 1
       totalRecords.value = response.total || 0
 
       if (!isFiltered(filters.value)) libraryTotal.value = totalRecords.value
@@ -161,6 +170,17 @@ export function useLibrary() {
 
   function loadMore() {
     fetchBooks(true)
+  }
+
+  /** Recarrega a lista com as mesmas páginas que estavam carregadas (voltar). */
+  async function restorePages(count) {
+    libraryTotal.value = null
+    await fetchBooks(false, count)
+    while (filters.value.page < count && books.value.length < totalRecords.value && !error.value) {
+      const before = books.value.length
+      await fetchBooks(true)
+      if (books.value.length === before) break
+    }
   }
 
   function cancelPendingSearch() {
@@ -243,6 +263,7 @@ export function useLibrary() {
       fetchBooks(false)
     },
     loadMore,
+    restorePages,
     setFilter,
     setFilters,
     resetFilters,

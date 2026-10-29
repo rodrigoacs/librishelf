@@ -47,7 +47,11 @@
     "increase": "Increase",
     "noResults": "Nothing found.",
     "typeToSeeMore": "{n} more — type to filter.",
-    "clearSelection": "Clear selection"
+    "clearSelection": "Clear selection",
+    "discardTitle": "Discard changes?",
+    "discardMessage": "What you changed hasn't been saved and will be lost.",
+    "discard": "Discard",
+    "keepEditing": "Keep editing"
   },
   "home": {
     "morning": "Good morning, {name}",

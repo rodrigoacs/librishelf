@@ -107,13 +107,16 @@ import { seriesText } from '../utils/series.js'
 const props = defineProps({
   book: { type: Object, required: true },
   selectable: { type: Boolean, default: false },
-  selected: { type: Boolean, default: false }
+  selected: { type: Boolean, default: false },
+  /** Quem usa abre o livro pela URL (?book=<id>, evento "open") em vez do diálogo daqui. */
+  openInUrl: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['updated', 'deleted', 'toggle-select'])
+const emit = defineEmits(['updated', 'deleted', 'toggle-select', 'open'])
 
 function onRowClick() {
   if (props.selectable) emit('toggle-select', bookId.value)
+  else if (props.openInUrl) emit('open', bookId.value)
   else displayDialog.value = true
 }
 const { t, locale } = useI18n()

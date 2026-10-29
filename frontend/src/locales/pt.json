@@ -86,7 +86,11 @@
     "increase": "Aumentar",
     "noResults": "Nada encontrado.",
     "typeToSeeMore": "Mais {n} — digite para filtrar.",
-    "clearSelection": "Limpar seleção"
+    "clearSelection": "Limpar seleção",
+    "discardTitle": "Descartar alterações?",
+    "discardMessage": "O que você mudou ainda não foi salvo e vai se perder.",
+    "discard": "Descartar",
+    "keepEditing": "Continuar editando"
   },
   "book": {
     "new_title": "Novo Livro",

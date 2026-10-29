@@ -26,7 +26,7 @@
           type="button"
           class="app-dialog-close"
           :aria-label="t('common.close')"
-          @click="emit('update:visible', false)"
+          @click="requestClose"
         >
           <i
             class="pi pi-times"
@@ -71,7 +71,10 @@ const props = defineProps({
   // Com título: cabeçalho com o título e o X; sem: o conteúdo desenha tudo
   header: { type: String, default: '' },
   closable: { type: Boolean, default: true },
-  panelStyle: { type: [String, Object], default: undefined }
+  panelStyle: { type: [String, Object], default: undefined },
+  // Chamada antes de fechar por Esc, clique fora ou X; se devolver false (ou
+  // uma Promise de false), o diálogo continua aberto. Ex.: "Descartar alterações?"
+  beforeClose: { type: Function, default: null }
 })
 
 const emit = defineEmits(['update:visible', 'hide', 'show'])
@@ -112,13 +115,27 @@ function onNativeClose() {
   returnFocus = null
 }
 
+let closing = false
+async function requestClose() {
+  if (closing) return
+  if (props.beforeClose) {
+    closing = true
+    try {
+      if ((await props.beforeClose()) === false) return
+    } finally {
+      closing = false
+    }
+  }
+  emit('update:visible', false)
+}
+
 function onCancel() {
-  if (props.closeOnEscape && props.closable) emit('update:visible', false)
+  if (props.closeOnEscape && props.closable) requestClose()
 }
 
 function onBackdropClick() {
   // Só fecha se o clique começou e terminou fora (arrastar seleção de texto não fecha)
-  if (props.dismissable && props.closable && pressedBackdrop.value) emit('update:visible', false)
+  if (props.dismissable && props.closable && pressedBackdrop.value) requestClose()
   pressedBackdrop.value = false
 }
 
@@ -132,7 +149,7 @@ onBeforeUnmount(() => {
   returnFocus = null
 })
 
-defineExpose({ close: () => emit('update:visible', false) })
+defineExpose({ close: () => emit('update:visible', false), requestClose })
 </script>
 
 <style>

@@ -314,6 +314,7 @@ import { currentUser } from '../services/session.js'
 import { pendingRequests } from '../services/social.js'
 import { useToast } from '../services/toast.js'
 import { useRouter } from 'vue-router'
+import { holdScroll } from '../services/scrollRestore.js'
 
 const SHELF_SIZE = 6
 // "Lendo agora" em destaque: até 3 cards grandes
@@ -426,10 +427,15 @@ async function loadActivity() {
   }
 }
 
-onMounted(() => {
-  reload()
-  loadActivity()
-  loadRecommendations()
+onMounted(async () => {
+  // Voltar para o Início devolve a rolagem só depois de tudo carregar
+  // (services/scrollRestore.js); antes parava perto do topo.
+  const release = holdScroll()
+  try {
+    await Promise.all([reload(), loadActivity(), loadRecommendations()])
+  } finally {
+    release()
+  }
 })
 </script>
 

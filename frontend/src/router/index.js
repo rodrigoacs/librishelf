@@ -3,6 +3,7 @@ import { loadSession, isAuthenticated, clearSession } from '../services/session.
 import { setSessionExpiredHandler } from '../services/fetchClient.js'
 import { setRouteTitle } from '../services/pageTitle.js'
 import { installRouteFocus } from '../services/routeFocus.js'
+import { waitForContent } from '../services/scrollRestore.js'
 
 /**
  * meta:
@@ -50,7 +51,12 @@ const router = createRouter({
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFound.vue'), meta: { public: true, title: 'notFound' } }
   ],
   scrollBehavior(to, from, savedPosition) {
-    return savedPosition || { top: 0 }
+    // Voltar/avançar: espera a tela carregar o conteúdo (services/scrollRestore.js)
+    // antes de devolver a posição; senão a página ainda está curta e para no topo.
+    if (savedPosition) return waitForContent().then(() => savedPosition)
+    // Mesma tela, só a query mudou (livro aberto em ?book=, filtros): não rola
+    if (to.path === from.path) return false
+    return { top: 0 }
   }
 })
 

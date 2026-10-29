@@ -30,3 +30,27 @@ export function settleConfirm(accepted) {
 export function useConfirm() {
   return { require: requireConfirm, close: () => settleConfirm(false) }
 }
+
+/**
+ * "Descartar alterações?" antes de fechar um formulário que mudou. Resolve
+ * true para descartar (fechar) e false para continuar editando. Mesmo
+ * diálogo das outras confirmações; o foco começa em "Continuar editando".
+ *
+ *   if (dirty && !(await confirmDiscard(t))) return
+ */
+export function confirmDiscard(t) {
+  return new Promise(resolve => {
+    requireConfirm({
+      header: t('common.discardTitle'),
+      message: t('common.discardMessage'),
+      icon: 'pi pi-exclamation-triangle',
+      acceptClass: 'btn-danger',
+      rejectClass: 'btn-text btn-secondary',
+      acceptLabel: t('common.discard'),
+      rejectLabel: t('common.keepEditing'),
+      accept: () => resolve(true),
+      reject: () => resolve(false),
+      onHide: () => resolve(false)
+    })
+  })
+}

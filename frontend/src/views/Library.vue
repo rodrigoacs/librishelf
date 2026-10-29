@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="library-container"
-    ref="scrollContainer"
-  >
+  <div class="library-container">
 
     <div class="header-section">
       <LibraryHeader
@@ -88,9 +85,11 @@
             :key="item.book_id || item.id"
             :book="item"
             quick-actions
+            open-in-url
             :selectable="selecting"
             :selected="selectedIds.has(item.book_id || item.id)"
             @toggle-select="toggleSelected"
+            @open="openBook"
             @updated="onBookUpdated"
             @deleted="onBookDeleted"
           />
@@ -105,9 +104,11 @@
             v-for="item in books"
             :key="item.book_id || item.id"
             :book="item"
+            open-in-url
             :selectable="selecting"
             :selected="selectedIds.has(item.book_id || item.id)"
             @toggle-select="toggleSelected"
+            @open="openBook"
             @updated="onBookUpdated"
             @deleted="onBookDeleted"
           />
@@ -178,16 +179,32 @@
       </div>
 
     </div>
+
+    <!-- Livro aberto: vem da URL (?book=<id>), então o voltar do navegador
+         fecha o livro e recarregar a página o abre de novo -->
+    <BookDialog
+      v-if="openBookId"
+      :key="openBookId"
+      :book-id="openBookId"
+      :cover-version="openBookCoverVersion"
+      :model-value="true"
+      @update:model-value="open => !open && closeBook()"
+      @updated="onBookUpdated"
+      @deleted="onBookDeleted"
+    />
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LibraryHeader from '../components/LibraryHeader.vue'
 import BookItem from '../components/BookItem.vue'
 import BookRow from '../components/BookRow.vue'
+import BookDialog from '../components/BookDialog.vue'
+import { bookIdFromQuery, withBook, withoutBook, closeWithBack } from '../utils/bookQuery.js'
+import { holdScroll, isHistoryReturn, rememberPages, recallPages, routeKey } from '../services/scrollRestore.js'
 import BatchBar from '../components/BatchBar.vue'
 import { queryToFilters, queryToView, filtersToQuery, sameQuery, VIEW_MODES } from '../utils/libraryQuery.js'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
@@ -207,6 +224,7 @@ const {
   filters,
   fetchBooks,
   loadMore,
+  restorePages,
   setFilter,
   setFilters,
   resetFilters,
@@ -214,7 +232,6 @@ const {
   removeBookFromList
 } = useLibrary()
 
-const scrollContainer = ref(null)
 const sentinel = ref(null)
 const header = ref(null)
 let observer = null
@@ -223,8 +240,10 @@ function refreshData() {
   fetchBooks()
 }
 
+// A Biblioteca rola na janela (antes num contêiner próprio): o voltar do
+// navegador devolve a posição e o cabeçalho fica preso no topo (sticky).
 function scrollToTop() {
-  scrollContainer.value?.scrollTo({ top: 0, behavior: 'smooth' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function handleFilterChange({ key, value, silent = false }) {
@@ -256,7 +275,6 @@ function setupIntersectionObserver() {
       loadMore()
     }
   }, {
-    root: scrollContainer.value,
     rootMargin: '400px',
     threshold: 0.1
   })
@@ -330,24 +348,68 @@ function setViewMode(mode) {
 // Filtros ⇄ URL. A URL é atualizada com replace (não enche o histórico a cada
 // tecla) e, se ela mudar por fora (link de Autores, voltar do navegador),
 // os filtros acompanham.
+// O ?book= do livro aberto fica de fora da comparação e é mantido.
 watch([filters, viewMode], () => {
   const next = filtersToQuery(filters.value, viewMode.value)
-  if (!sameQuery(route.query, next)) router.replace({ query: next })
+  if (!sameQuery(withoutBook(route.query), next)) {
+    const book = bookIdFromQuery(route.query)
+    router.replace({ query: book ? withBook(next, book) : next })
+  }
 }, { deep: true })
 
 watch(() => route.query, (query) => {
   if (route.name !== 'library') return
-  if (sameQuery(query, filtersToQuery(filters.value, viewMode.value))) return
+  if (sameQuery(withoutBook(query), filtersToQuery(filters.value, viewMode.value))) return
   const view = queryToView(query)
   if (view) viewMode.value = view
   setFilters(queryToFilters(query))
 })
 
-onMounted(() => {
+// ---------------------------------------------------------------------------
+// Livro aberto na URL
+// ---------------------------------------------------------------------------
+const openBookId = computed(() => (route.name === 'library' ? bookIdFromQuery(route.query) : null))
+const openBookCoverVersion = computed(() => {
+  const item = books.value.find(book => (book.book_id ?? book.id) === openBookId.value)
+  return item ? item.cover_version : undefined
+})
+
+function openBook(id) {
+  router.push({ query: withBook(route.query, id) })
+}
+
+function closeBook() {
+  if (!bookIdFromQuery(route.query)) return
+  const without = router.resolve({ query: withoutBook(route.query) }).fullPath
+  if (closeWithBack(window.history.state, route.fullPath, without)) router.back()
+  else router.replace({ query: withoutBook(route.query) })
+}
+
+// ---------------------------------------------------------------------------
+// Voltar para a Biblioteca: mesmas páginas carregadas e mesma rolagem
+// ---------------------------------------------------------------------------
+onBeforeRouteLeave(() => {
+  rememberPages(routeKey(route), filters.value.page)
+})
+
+onMounted(async () => {
   window.addEventListener('keydown', onKeydown)
   // Filtros da URL (inclusive os que vêm de Autores/Editoras/Categorias) entram
   // no estado compartilhado: aparecem como chips e podem ser removidos.
-  setFilters(queryToFilters(route.query))
+  const pages = isHistoryReturn() ? recallPages(routeKey(route)) : 1
+  if (pages <= 1) {
+    setFilters(queryToFilters(route.query))
+    return
+  }
+  // O router espera (scrollBehavior) até as páginas voltarem e renderizarem
+  const release = holdScroll()
+  setFilters(queryToFilters(route.query), { fetch: false })
+  try {
+    await restorePages(pages)
+    await nextTick()
+  } finally {
+    release()
+  }
 })
 
 onUnmounted(() => {
@@ -358,20 +420,18 @@ onUnmounted(() => {
 
 <style scoped>
 .library-container {
-  /* 100dvh desconta a barra de endereço do celular; 100vh fica de reserva */
-  height: 100vh;
-  height: 100dvh;
   width: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-app);
-  overflow-y: auto;
   position: relative;
 }
 
+/* Preso abaixo da barra do app no celular (--app-bar-height, main.css) */
 .header-section {
   position: sticky;
-  top: 0;
+  top: var(--app-bar-height, 0px);
   z-index: 100;
 }
 

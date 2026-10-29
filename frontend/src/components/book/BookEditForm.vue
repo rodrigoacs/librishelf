@@ -248,7 +248,7 @@
         :label="t('common.cancel')"
         class="btn-text btn-secondary"
         :disabled="saving"
-        @click="emit('cancel')"
+        @click="requestCancel"
       />
       <AppButton
         type="submit"
@@ -266,7 +266,8 @@ import { computed, nextTick, reactive, ref, watch, onBeforeUnmount, onMounted } 
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
 import { useToast } from '../../services/toast.js'
-import { useConfirm } from '../../services/confirm.js'
+import { useConfirm, confirmDiscard } from '../../services/confirm.js'
+import { formSnapshot, hasChanges } from '../../utils/formState.js'
 import api from '../../services/api.js'
 import AuthorsInput from '../AuthorsInput.vue'
 import StarRating from '../StarRating.vue'
@@ -348,6 +349,34 @@ function load() {
   clearErrors()
   clearCover()
   resetLookup()
+  initialSnapshot = currentSnapshot()
+}
+
+// ---------------------------------------------------------------- alterações não salvas
+
+// O que a pessoa pode mudar; comparado com o valor ao abrir (utils/formState.js)
+let initialSnapshot = null
+function currentState() {
+  return { ...form, status: status.value, statusDate: statusDate.value, cover: selectedFile.value }
+}
+function currentSnapshot() {
+  return formSnapshot(currentState())
+}
+function isDirty() {
+  return hasChanges(initialSnapshot, currentState())
+}
+
+/**
+ * Sair sem salvar (Cancelar, Esc, X, voltar do navegador): se algo mudou,
+ * pergunta "Descartar alterações?". Resolve true quando pode sair.
+ */
+async function confirmLeave() {
+  if (saving.value || !isDirty()) return true
+  return confirmDiscard(t)
+}
+
+async function requestCancel() {
+  if (await confirmLeave()) emit('cancel')
 }
 
 function clearErrors() {
@@ -774,7 +803,7 @@ async function update() {
 // Carrega o livro depois de tudo declarado (load usa capa e busca por ISBN)
 watch(() => props.initial, load, { immediate: true })
 
-defineExpose({ focusIsbn: () => isbnField.value?.focus() })
+defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave })
 </script>
 
 <style scoped>

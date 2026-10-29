@@ -61,6 +61,16 @@
   --orange-solid-rgb: 194, 65, 12;
 
   color-scheme: dark;
+
+  /* Altura da barra do app no celular (NavigationMenu, presa no topo): os
+     cabeçalhos sticky das telas começam logo abaixo dela */
+  --app-bar-height: 0px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --app-bar-height: 61px;
+  }
 }
 
 [data-theme="light"] {

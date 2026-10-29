@@ -4,6 +4,7 @@
       :visible="visible"
       size="sm"
       :header="list ? t('lists.editTitle') : t('lists.newTitle')"
+      :before-close="confirmLeave"
       @update:visible="value => emit('update:visible', value)"
     >
       <form
@@ -97,7 +98,7 @@
             type="button"
             :label="t('common.cancel')"
             class="btn-text btn-secondary"
-            @click="emit('update:visible', false)"
+            @click="cancel"
           />
           <AppButton
             type="submit"
@@ -120,6 +121,8 @@ import AppSwitch from '../ui/AppSwitch.vue'
 import TextField from '../form/TextField.vue'
 import api from '../../services/api.js'
 import { currentUser } from '../../services/session.js'
+import { confirmDiscard } from '../../services/confirm.js'
+import { formSnapshot, hasChanges } from '../../utils/formState.js'
 
 /**
  * Criar ou editar uma lista (nome, descrição, numerada, pública). Com
@@ -158,7 +161,21 @@ watch(() => props.visible, open => {
   isPublic.value = props.list?.isPublic ?? false
   titleError.value = ''
   error.value = ''
+  openedSnapshot = formSnapshot(fields())
 })
+
+// Alterações não salvas: Cancelar, Esc, X e clique fora perguntam antes
+let openedSnapshot = null
+function fields() {
+  return { title: title.value, description: description.value, ranked: ranked.value, isPublic: isPublic.value }
+}
+async function confirmLeave() {
+  if (saving.value || !hasChanges(openedSnapshot, fields())) return true
+  return confirmDiscard(t)
+}
+async function cancel() {
+  if (await confirmLeave()) emit('update:visible', false)
+}
 
 async function submit() {
   titleError.value = ''

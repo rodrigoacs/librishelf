@@ -216,7 +216,8 @@ import ReviewCard from './ReviewCard.vue'
 import api from '../../services/api.js'
 import { currentUser } from '../../services/session.js'
 import { useToast } from '../../services/toast.js'
-import { useConfirm } from '../../services/confirm.js'
+import { useConfirm, confirmDiscard } from '../../services/confirm.js'
+import { formSnapshot, hasChanges } from '../../utils/formState.js'
 
 /**
  * Resenha do dono, no livro aberto: escrever, editar, apagar. Diferente das
@@ -279,15 +280,33 @@ async function startEditing() {
   draft.hasSpoiler = review.value?.hasSpoiler ?? false
   draft.visibility = review.value?.visibility ?? 'public'
   error.value = ''
+  draftSnapshot = formSnapshot(draft)
   editing.value = true
   await nextTick()
   textareaEl.value?.focus()
 }
 
-function cancel() {
+// Texto, spoiler e visibilidade ao começar a editar (utils/formState.js)
+let draftSnapshot = null
+function isDirty() {
+  return editing.value && !saving.value && hasChanges(draftSnapshot, draft)
+}
+
+function discard() {
   editing.value = false
   error.value = ''
 }
+
+// Cancelar ou Esc com o texto mudado: pergunta antes de jogar fora
+async function cancel() {
+  if (isDirty() && !(await confirmDiscard(t))) {
+    textareaEl.value?.focus()
+    return
+  }
+  discard()
+}
+
+defineExpose({ isDirty, discard })
 
 async function save() {
   error.value = ''

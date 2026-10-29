@@ -4,6 +4,7 @@
     :size="isEditing ? 'xl' : 'lg'"
     :dismissable="!isEditing"
     :close-on-escape="!isEditing"
+    :before-close="confirmLeave"
     dialog-class="book-form-dialog"
     :aria-label="book.title || t('bookDialog.dialog_label')"
     @hide="closeDialog"
@@ -17,11 +18,12 @@
         class="close-btn"
         icon="pi pi-times"
         :label="t('common.close')"
-        @click="visible = false"
+        @click="requestClose"
       />
 
       <BookEditForm
         v-if="isEditing"
+        ref="editForm"
         mode="edit"
         :book-id="bookId"
         :initial="book"
@@ -109,6 +111,7 @@
 
           <ReviewEditor
             v-if="!isReadOnly && !loading && !loadFailed"
+            ref="reviewEditor"
             :book-id="bookId"
           />
 
@@ -184,7 +187,8 @@ import { useI18n } from 'vue-i18n'
 import AppDialog from './ui/AppDialog.vue'
 import AppButton from './ui/AppButton.vue'
 import { useToast } from '../services/toast.js'
-import { useConfirm } from '../services/confirm.js'
+import { useConfirm, confirmDiscard } from '../services/confirm.js'
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import api from '../services/api.js'
 import { colorFor } from '../utils/tagColors.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
@@ -370,6 +374,40 @@ function closeDialog() {
   visible.value = false
 }
 
+/**
+ * Alterações não salvas (edição do livro ou resenha sendo escrita): Esc,
+ * Cancelar, X, clique fora e o voltar do navegador perguntam antes de
+ * descartar. Resolve true quando pode fechar.
+ */
+const editForm = ref(null)
+const reviewEditor = ref(null)
+
+async function confirmLeave() {
+  if (isEditing.value) {
+    if (editForm.value && !(await editForm.value.confirmLeave())) return false
+  } else if (reviewEditor.value?.isDirty()) {
+    if (!(await confirmDiscard(t))) return false
+  }
+  // Já confirmado: não pergunta de novo quando a URL mudar ao fechar
+  isEditing.value = false
+  reviewEditor.value?.discard()
+  return true
+}
+
+async function requestClose() {
+  if (await confirmLeave()) visible.value = false
+}
+
+async function leaveEditing() {
+  if (editForm.value && !(await editForm.value.confirmLeave())) return
+  isEditing.value = false
+}
+
+// Voltar do navegador (fecha o livro ou sai da tela) com algo mudado
+const routeGuard = () => (visible.value ? confirmLeave() : true)
+onBeforeRouteLeave(routeGuard)
+onBeforeRouteUpdate(routeGuard)
+
 function onSaved({ book: saved, coverChanged }) {
   applyResponse(saved)
   isEditing.value = false
@@ -460,7 +498,7 @@ function onKeydown(event) {
   // Esc com uma lista aberta (seletor, menu) fecha só a lista
   if (event.key === 'Escape' && isEditing.value && !document.querySelector('[popover="auto"]:popover-open')) {
     event.preventDefault()
-    isEditing.value = false
+    leaveEditing()
     return
   }
 
