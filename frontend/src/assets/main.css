@@ -204,6 +204,8 @@
   --danger: #b91c1c;
   --warning: #8f5a00;
   --success: #1f7a3a;
+  /* Verde sobre os campos (#e4e4e7), como o "✓ Encontrado" do ISBN: 6,4:1 */
+  --success-strong: #166534;
   --rating: #a86b00;
 
   color-scheme: light;

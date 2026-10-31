@@ -12,7 +12,7 @@
       <div class="scanner">
         <div
           class="viewport"
-          :class="{ ready: state === 'scanning' }"
+          :class="{ ready: state === 'scanning', found: state === 'found' }"
         >
           <video
             ref="videoEl"
@@ -25,7 +25,7 @@
 
           <!-- Moldura onde o código de barras deve ficar -->
           <div
-            v-if="state === 'scanning'"
+            v-if="state === 'scanning' || state === 'found'"
             class="guide"
             aria-hidden="true"
           >
@@ -33,8 +33,24 @@
             <span class="corner tr"></span>
             <span class="corner bl"></span>
             <span class="corner br"></span>
-            <span class="laser"></span>
+            <span
+              v-if="state === 'scanning'"
+              class="laser"
+            ></span>
           </div>
+
+          <!-- Lido: a moldura fica verde e o ISBN aparece antes de fechar -->
+          <p
+            v-if="state === 'found'"
+            class="found-pill"
+            role="status"
+          >
+            <i
+              class="pi pi-check"
+              aria-hidden="true"
+            ></i>
+            {{ t('scanner.detected', { isbn: foundIsbn }) }}
+          </p>
 
           <div
             v-if="state === 'starting'"
@@ -90,6 +106,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppDialog from '../ui/AppDialog.vue'
 import AppButton from '../ui/AppButton.vue'
+import { canAnimate } from '../../utils/motion.js'
 import {
   getBarcodeDetector,
   openCamera,
@@ -115,7 +132,12 @@ const SCAN_INTERVAL_MS = 120
 const NOTICE_MS = 2500
 
 const videoEl = ref(null)
-const state = ref('idle') // idle | starting | scanning | error
+const state = ref('idle') // idle | starting | scanning | found | error
+const foundIsbn = ref('')
+// Tempo para ver a confirmação verde antes de a folha fechar (o formulário
+// já recebe o ISBN na hora; desktop ou sem movimento: fecha direto)
+const FOUND_HOLD_MS = 650
+let closeTimer = null
 const errorKey = ref('')
 const notice = ref('')
 
@@ -217,14 +239,21 @@ function handle(codes) {
   }
 }
 
+// Sem vibração (decisão do projeto): a confirmação é visual e pelo role="status"
 function found(isbn) {
-  navigator.vibrate?.(40)
-  stop()
+  session++
+  clearTimeout(timer)
+  timer = null
+  videoEl.value?.pause?.()
+  foundIsbn.value = isbn
+  state.value = 'found'
   emit('detected', isbn)
-  emit('update:visible', false)
+  clearTimeout(closeTimer)
+  closeTimer = setTimeout(() => emit('update:visible', false), canAnimate() ? FOUND_HOLD_MS : 0)
 }
 
 function stop() {
+  clearTimeout(closeTimer)
   session++
   clearTimeout(timer)
   timer = null
@@ -315,6 +344,61 @@ onBeforeUnmount(() => {
   background: rgb(var(--main-color-rgb));
   box-shadow: 0 0 8px rgb(var(--main-color-rgb));
   animation: laser 1.6s ease-in-out infinite alternate;
+}
+
+/* Lido: cantos verdes e o ISBN numa pílula verde */
+.viewport.found .corner {
+  border-color: var(--success);
+  transition: border-color var(--dur-short) linear;
+}
+
+.found-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-pill);
+  background: #15803d;
+  color: #ffffff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: found-pill-in var(--dur-spring) var(--ease-spring);
+}
+
+@keyframes found-pill-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.6);
+  }
+}
+
+/* Celular (folha): vídeo em pé, mais alto, como a câmera do trailer */
+@media (max-width: 639.98px) {
+  .viewport {
+    aspect-ratio: 3 / 4;
+    max-height: 62dvh;
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .guide {
+    left: 12%;
+    right: 12%;
+    top: 38%;
+    bottom: 38%;
+  }
+
+  .laser {
+    left: 4%;
+    right: 4%;
+    animation-duration: 1.2s;
+  }
 }
 
 @keyframes laser {

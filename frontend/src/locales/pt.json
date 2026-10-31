@@ -628,7 +628,8 @@
     "found": "Dados encontrados no Open Library. Confira antes de salvar — só os campos vazios foram preenchidos.",
     "not_found": "Não encontramos este ISBN. Preencha os dados à mão.",
     "error": "A busca está indisponível agora. Preencha os dados à mão ou tente mais tarde.",
-    "invalid": "Este ISBN não é válido. Confira os dígitos."
+    "invalid": "Este ISBN não é válido. Confira os dígitos.",
+    "foundShort": "Encontrado"
   },
   "scanner": {
     "open": "Ler o código de barras com a câmera",
@@ -644,7 +645,8 @@
       "busy": "A câmera está sendo usada por outro app. Feche-o e tente de novo.",
       "reader": "Não foi possível carregar o leitor de código de barras. Confira sua conexão e tente de novo.",
       "generic": "Não foi possível abrir a câmera."
-    }
+    },
+    "detected": "ISBN {isbn}"
   },
   "bookSearch": {
     "modeLabel": "Como encontrar o livro",

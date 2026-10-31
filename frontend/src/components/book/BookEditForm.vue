@@ -6,7 +6,7 @@
     @submit.prevent="submit"
   >
     <header class="form-header">
-      <h2 :id="`${idPrefix}-heading`">{{ isCreate ? t('bookForm.newTitle') : t('bookForm.editTitle') }}</h2>
+      <h2 :id="`${idPrefix}-heading`">{{ isCreate ? (phone ? t('home.addBook') : t('bookForm.newTitle')) : t('bookForm.editTitle') }}</h2>
       <p v-if="isCreate">{{ t('bookForm.newSubtitle') }}</p>
     </header>
 
@@ -54,7 +54,7 @@
         <div
           v-else
           class="isbn-row"
-          :class="{ single: !isCreate }"
+          :class="{ single: !isCreate || isbnFoundHere }"
         >
           <TextField
             :id="`${idPrefix}-isbn`"
@@ -69,10 +69,24 @@
             :input-attrs="isCreate ? { onKeydown: onIsbnKeydown, enterkeyhint: 'search' } : {}"
           >
             <template
-              v-if="isCreate && canScan"
+              v-if="isCreate && (canScan || isbnFoundHere)"
               #suffix
             >
-              <span class="scan-btn">
+              <!-- Celular: "✓ Encontrado" dentro do campo, como no trailer -->
+              <span
+                v-if="isbnFoundHere"
+                class="isbn-found"
+              >
+                <i
+                  class="pi pi-check"
+                  aria-hidden="true"
+                ></i>
+                {{ t('isbn.foundShort') }}
+              </span>
+              <span
+                v-if="canScan"
+                class="scan-btn"
+              >
                 <IconButton
                   icon="pi pi-camera"
                   :label="t('scanner.open')"
@@ -83,7 +97,7 @@
             </template>
           </TextField>
           <AppButton
-            v-if="isCreate"
+            v-if="isCreate && !isbnFoundHere"
             type="button"
             :label="t('isbn.search')"
             icon="pi pi-search"
@@ -103,6 +117,7 @@
         <TextField
           :id="`${idPrefix}-title`"
           v-model="form.title"
+          class="f-title"
           :label="t('bookForm.title')"
           :error="errors.title"
           maxlength="500"
@@ -112,6 +127,7 @@
 
         <AuthorsInput
           v-model="form.authorNames"
+          class="f-authors"
           :input-id="`${idPrefix}-authors`"
           :label="t('bookForm.authors')"
           :error="errors.authors"
@@ -266,6 +282,7 @@ import { scrollBehavior } from '../../utils/motion.js'
 import { computed, nextTick, reactive, ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
+import { useIsPhone } from '../../composables/useIsPhone.js'
 import { useToast } from '../../services/toast.js'
 import { useConfirm, confirmDiscard } from '../../services/confirm.js'
 import { formSnapshot, hasChanges } from '../../utils/formState.js'
@@ -326,6 +343,7 @@ const initialStatusDate = ref(null)
 const errors = reactive({})
 const saving = ref(false)
 const isbnField = ref(null)
+const phone = useIsPhone()
 
 function load() {
   const source = props.initial || {}
@@ -468,6 +486,9 @@ function resetLookup() {
 }
 
 const lookupMatchesForm = () => lookup.active && lookup.isbn === form.isbn.trim()
+// Celular: com o ISBN já encontrado, o campo mostra "✓ Encontrado" e o Buscar
+// sai (volta assim que o ISBN mudar), deixando o número inteiro à vista
+const isbnFoundHere = computed(() => phone.value && lookupState.value === 'found' && lookupMatchesForm())
 
 const lookupMessage = computed(() => {
   if (lookupState.value === 'found') return t('isbn.found')
@@ -997,7 +1018,97 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
   }
 }
 
+/* Celular (folha de baixo): capa pequena ao lado do título e dos autores,
+   como no trailer; o botão de salvar fica preso no rodapé da folha (o X e o
+   puxar para baixo cancelam, então o "Cancelar" sai). */
 @media (max-width: 639.98px) {
+  .form-header {
+    padding: 0 3.25rem var(--space-3) var(--space-4);
+    border-bottom: none;
+  }
+
+  .form-header p {
+    display: none;
+  }
+
+  .form-scroll {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: var(--space-4) var(--space-3);
+    padding: var(--space-1) var(--space-4) var(--space-4);
+    overscroll-behavior: contain;
+  }
+
+  .fields-column {
+    display: contents;
+  }
+
+  .fields-column > * {
+    grid-column: 1 / -1;
+    order: 6;
+  }
+
+  .fields-column > .finder-tabs {
+    order: 1;
+  }
+
+  .fields-column > .isbn-row,
+  .fields-column > :deep(.book-search) {
+    order: 2;
+  }
+
+  .cover-column {
+    grid-column: 1;
+    grid-row: span 2;
+    order: 3;
+  }
+
+  .fields-column > .f-title,
+  .fields-column > .f-authors {
+    grid-column: 2;
+    order: 4;
+    min-width: 0;
+  }
+
+  .fields-column > .f-authors {
+    order: 5;
+  }
+
+  /* Só a miniatura: o texto de ajuda continua para o leitor de tela */
+  .cover-column :deep(.field-hint) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .form-footer {
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-panel);
+  }
+
+  .form-footer :deep(.btn-text.btn-secondary) {
+    display: none;
+  }
+
+  .form-footer :deep(.btn-primary) {
+    flex: 1;
+    min-height: 48px;
+  }
+
+  .isbn-found {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-right: var(--space-1);
+    color: var(--success-strong, var(--success));
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    animation: isbn-found-in var(--dur-spring) var(--ease-spring);
+  }
+
   .grid-2 {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1008,6 +1119,13 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 
   .grid-series > :first-child {
     grid-column: 1 / -1;
+  }
+}
+
+@keyframes isbn-found-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
   }
 }
 </style>

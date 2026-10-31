@@ -628,7 +628,8 @@
     "found": "Found on Open Library. Check before saving — only empty fields were filled.",
     "not_found": "We couldn't find this ISBN. Fill in the details by hand.",
     "error": "Lookup is unavailable right now. Fill in the details by hand or try later.",
-    "invalid": "This ISBN isn't valid. Check the digits."
+    "invalid": "This ISBN isn't valid. Check the digits.",
+    "foundShort": "Found"
   },
   "scanner": {
     "open": "Scan the barcode with the camera",
@@ -644,7 +645,8 @@
       "busy": "The camera is being used by another app. Close it and try again.",
       "reader": "Could not load the barcode reader. Check your connection and try again.",
       "generic": "Could not open the camera."
-    }
+    },
+    "detected": "ISBN {isbn}"
   },
   "bookSearch": {
     "modeLabel": "How to find the book",
