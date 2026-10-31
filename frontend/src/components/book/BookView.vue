@@ -45,7 +45,26 @@
             {{ seriesLabel }}
           </span>
         </template>
-        <template v-if="!loading && !loadFailed">
+        <!-- Celular: editora · páginas e categorias logo abaixo do autor -->
+        <template v-if="phoneLayout && !loading && !loadFailed">
+          <p
+            v-if="phoneMeta"
+            class="phone-meta"
+          >{{ phoneMeta }}</p>
+          <div
+            v-if="tagList.length"
+            class="tags-list phone-tags"
+            :aria-label="t('bookDialog.tags')"
+          >
+            <span
+              v-for="(tag, index) in tagList"
+              :key="`${tag}-${index}`"
+              class="tag-chip"
+              :style="{ '--tag-color': tagColor(tag) }"
+            >{{ tag }}</span>
+          </div>
+        </template>
+        <template v-if="!loading && !loadFailed && !(phoneLayout && !isReadOnly)">
           <StarRating
             v-if="!isReadOnly"
             :model-value="book.rating"
@@ -73,7 +92,7 @@
       class="details-content"
     >
       <div
-        v-if="!isReadOnly"
+        v-if="!isReadOnly && !phoneLayout"
         class="read-state"
       >
         <div
@@ -105,7 +124,7 @@
         </p>
       </div>
       <div
-        v-else-if="currentStatus !== 'none'"
+        v-else-if="isReadOnly && currentStatus !== 'none'"
         class="read-state"
       >
         <span class="read-pill">
@@ -118,11 +137,11 @@
       </div>
 
       <ul
-        v-if="metaItems.length"
+        v-if="bodyMeta.length"
         class="meta-line"
       >
         <li
-          v-for="item in metaItems"
+          v-for="item in bodyMeta"
           :key="item.key"
           :title="item.title"
         >{{ item.text }}</li>
@@ -141,7 +160,7 @@
       </p>
 
       <div
-        v-if="tagList.length"
+        v-if="tagList.length && !phoneLayout"
         class="tags-list"
         :aria-label="t('bookDialog.tags')"
       >
@@ -195,7 +214,10 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
   loadFailed: { type: Boolean, default: false },
   readSaving: { type: Boolean, default: false },
-  ratingSaving: { type: Boolean, default: false }
+  ratingSaving: { type: Boolean, default: false },
+  // Celular (livro em tela cheia): status e nota vão para o cartão da
+  // leitura; editora, páginas e categorias sobem para perto do título
+  phoneLayout: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['change-status', 'rate', 'navigate'])
@@ -212,6 +234,15 @@ function formatDate(value) {
   const date = value instanceof Date ? value : new Date(value)
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(locale.value)
 }
+
+// Celular: "Editora Farol · 340 págs." (o ano e o ISBN ficam na linha de baixo)
+const phoneMeta = computed(() => [
+  props.book.publisher,
+  props.book.page_count ? t('bookDialog.pagesShort', { n: props.book.page_count }, props.book.page_count) : ''
+].filter(Boolean).join(' · '))
+
+// Linha de baixo: no celular sem a editora, que já subiu para o título
+const bodyMeta = computed(() => (props.phoneLayout ? metaItems.value.filter(item => item.key !== 'publisher') : metaItems.value))
 
 // Editora · ano · ISBN numa linha só; a data completa fica no title.
 const metaItems = computed(() => {
@@ -574,6 +605,36 @@ a.series-line:hover {
   .title-area {
     min-width: 0;
     gap: 0.35rem;
+  }
+
+  /* Tela cheia (sem o X ao lado do título) */
+  .details-header {
+    padding-right: 0;
+  }
+
+  .phone-meta {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+  }
+
+  .phone-tags {
+    margin-top: var(--space-1);
+  }
+}
+
+.phone-meta,
+.phone-tags {
+  display: none;
+}
+
+@media (max-width: 639.98px) {
+  .phone-meta {
+    display: block;
+  }
+
+  .phone-tags {
+    display: flex;
   }
 }
 </style>

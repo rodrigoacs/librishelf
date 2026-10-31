@@ -1,7 +1,7 @@
 <template>
   <div
     class="star-rating"
-    :class="[`size-${size}`, { readonly }]"
+    :class="[`size-${size}`, { readonly, animated }]"
     role="group"
     :aria-label="label || t('rating.label')"
   >
@@ -22,7 +22,8 @@
         :key="value"
         type="button"
         class="star-btn"
-        :class="{ on: value <= (hover || modelValue || 0) }"
+        :class="{ on: value <= (hover || modelValue || 0), pop: animated && value <= popped }"
+        :style="animated ? { '--n': value - 1 } : undefined"
         :aria-label="t('rating.set', { n: value })"
         :aria-pressed="modelValue === value"
         :disabled="disabled"
@@ -32,6 +33,7 @@
         @click="select(value)"
       >
         <i
+          :key="animated ? `${value}-${popKey}` : value"
           class="pi"
           :class="value <= (hover || modelValue || 0) ? 'pi-star-fill' : 'pi-star'"
           aria-hidden="true"
@@ -68,15 +70,25 @@ const props = defineProps({
   readonly: Boolean,
   disabled: Boolean,
   size: { type: String, default: 'md' },
-  label: { type: String, default: '' }
+  label: { type: String, default: '' },
+  // As estrelas pulam uma a uma ao dar a nota (livro aberto no celular)
+  animated: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:modelValue'])
 const { t } = useI18n()
 const hover = ref(0)
 
+const popped = ref(0)
+const popKey = ref(0)
+
 function select(value) {
-  emit('update:modelValue', props.modelValue === value ? null : value)
+  const next = props.modelValue === value ? null : value
+  if (props.animated && next) {
+    popped.value = next
+    popKey.value++
+  }
+  emit('update:modelValue', next)
 }
 </script>
 
@@ -139,6 +151,22 @@ function select(value) {
 
 .star-rating.size-lg .pi {
   font-size: var(--fs-xl);
+}
+
+/* Pulo em cascata: só transform; movimento reduzido desliga no main.css */
+.animated .star-btn.pop .pi {
+  animation: star-pop var(--dur-spring) var(--ease-spring) both;
+  animation-delay: calc(var(--n, 0) * 45ms);
+}
+
+@keyframes star-pop {
+  0% {
+    transform: scale(0.4);
+  }
+
+  45% {
+    transform: scale(1.25);
+  }
 }
 
 .sr-only {

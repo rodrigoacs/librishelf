@@ -72,9 +72,10 @@
           class="books-grid"
         >
           <BookItem
-            v-for="item in books"
+            v-for="(item, index) in books"
             :key="item.book_id || item.id"
             :book="item"
+            :style="{ '--i': index % PAGE_STAGGER }"
             quick-actions
             open-in-url
             :selectable="selecting"
@@ -231,6 +232,8 @@ const {
   removeBookFromList
 } = useLibrary()
 
+// Cascata dos cards no celular: recomeça a cada página carregada (20 por página)
+const PAGE_STAGGER = 20
 const sentinel = ref(null)
 const header = ref(null)
 const phone = useIsPhone()
@@ -555,6 +558,27 @@ onUnmounted(() => {
 @media (max-width: 1023.98px) {
   .content-section.is-selecting {
     padding-bottom: calc(var(--batch-bar-height, 0px) + 1rem);
+  }
+}
+
+/* Celular: cards entram em cascata (só os que acabaram de chegar: os que
+   já estavam na tela não animam de novo). Não bloqueia o toque. */
+@media (max-width: 639.98px) {
+  .books-grid > .book-card-wrapper {
+    animation: card-in var(--dur-medium) var(--ease-enter) both;
+    animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));
+  }
+
+  .book-list-enter-active,
+  .book-list-leave-active {
+    transition: none;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.98);
   }
 }
 

@@ -11,7 +11,7 @@
           class="count-badge"
           v-if="booksQuantity !== undefined"
           aria-live="polite"
-        >{{ countLabel }}</span>
+        >{{ phone ? countLabelLong : countLabel }}</span>
       </div>
 
       <div class="search-area">
@@ -130,9 +130,100 @@
       </div>
     </div>
 
+    <!-- Celular: filtros em chips logo abaixo da busca. O chip da dimensão
+         (Autor ▾) abre a folha de escolha; escolhido, vira "Nome ×". -->
+    <div
+      v-if="phone"
+      class="chip-row"
+      role="group"
+      :aria-label="t('library.quickFilters')"
+    >
+      <span
+        v-for="chip in otherChips"
+        :key="chip.key"
+        class="fchip is-active"
+      >
+        <span class="fchip-label">{{ chip.label }}</span>
+        <button
+          type="button"
+          class="fchip-x"
+          :aria-label="t('common.removeItem', { name: chip.label })"
+          @click="chip.remove"
+        >
+          <i
+            class="pi pi-times"
+            aria-hidden="true"
+          ></i>
+        </button>
+      </span>
+      <template
+        v-for="dim in dimensions"
+        :key="dim.key"
+      >
+        <template v-if="filters[dim.key].length">
+          <span
+            v-for="name in filters[dim.key]"
+            :key="`${dim.key}-${name}`"
+            class="fchip is-active"
+            :style="dim.key === 'tags' ? { '--tag-color': tagColor(name) } : undefined"
+          >
+            <button
+              type="button"
+              class="fchip-label fchip-open"
+              aria-haspopup="dialog"
+              :aria-label="t('library.chipChange', { dim: dim.label, name })"
+              data-press
+              @click="openPicker(dim)"
+            >{{ name }}</button>
+            <button
+              type="button"
+              class="fchip-x"
+              :aria-label="t('common.removeItem', { name })"
+              @click="removeFromList(dim.key, name)"
+            >
+              <i
+                class="pi pi-times"
+                aria-hidden="true"
+              ></i>
+            </button>
+          </span>
+        </template>
+        <button
+          v-else
+          type="button"
+          class="fchip"
+          aria-haspopup="dialog"
+          data-press
+          @click="openPicker(dim)"
+        >
+          {{ dim.label }}
+          <i
+            class="pi pi-chevron-down"
+            aria-hidden="true"
+          ></i>
+        </button>
+      </template>
+      <button
+        v-if="hasActiveFilters"
+        type="button"
+        class="fchip fchip-clear"
+        data-press
+        @click="emit('reset')"
+      >{{ t('library.clear_all') }}</button>
+    </div>
+
+    <FilterPickerSheet
+      v-if="phone"
+      v-model:visible="pickerOpen"
+      :title="pickerDim ? pickerDim.title : ''"
+      :options="pickerDim ? pickerDim.options : []"
+      :selected="pickerDim ? filters[pickerDim.key] : []"
+      @update:selected="value => emitFilter(pickerDim.key, value)"
+    />
+
     <div
       class="active-filters-bar"
-      v-if="hasActiveFilters"
+      v-if="hasActiveFilters && !phone"
     >
       <div class="filter-label">{{ t('library.filtering_by') }}</div>
       <div class="chips-container">
@@ -377,6 +468,8 @@ import AppMultiSelect from './ui/AppMultiSelect.vue'
 import AppSelect from './ui/AppSelect.vue'
 import AppChip from './ui/AppChip.vue'
 import AddBookDialog from './AddBookDialog.vue'
+import FilterPickerSheet from './FilterPickerSheet.vue'
+import { useIsPhone } from '../composables/useIsPhone.js'
 import api from '../services/api.js'
 import { librarySearchRequest, takeLibrarySearchRequest } from '../services/librarySearch.js'
 import { useI18n } from 'vue-i18n'
@@ -404,6 +497,35 @@ const viewModes = computed(() => [
 
 const visibleFilters = ref(false)
 const addBookDialogVisible = ref(false)
+const phone = useIsPhone()
+
+// ---------------------------------------------------------------------------
+// Celular: chips de filtro abaixo da busca
+// ---------------------------------------------------------------------------
+const pickerOpen = ref(false)
+const pickerKey = ref('')
+const dimensions = computed(() => [
+  { key: 'author', label: t('library.dim.author'), title: t('library.authors'), options: authorsList.value },
+  { key: 'publisher', label: t('library.dim.publisher'), title: t('library.publishers'), options: publishersList.value },
+  { key: 'tags', label: t('library.dim.tag'), title: t('library.tags'), options: tagsList.value }
+])
+const pickerDim = computed(() => dimensions.value.find(dim => dim.key === pickerKey.value) || null)
+
+function openPicker(dim) {
+  pickerKey.value = dim.key
+  pickerOpen.value = true
+}
+
+// Os outros filtros ativos (status, período, série, ISBN) também viram chip
+const otherChips = computed(() => {
+  const f = props.filters
+  const chips = []
+  if (f.readState !== 'all') chips.push({ key: 'state', label: readStateLabel(f.readState), remove: () => emitFilter('readState', 'all') })
+  if (hasReadYear.value) chips.push({ key: 'year', label: readPeriodLabel.value, remove: clearReadPeriod })
+  if (f.series) chips.push({ key: 'series', label: t('series.chip', { series: f.series }), remove: () => emitFilter('series', '') })
+  if (f.isbnStatus === 'invalid') chips.push({ key: 'isbn', label: t('library.invalid_isbn_chip'), remove: () => emitFilter('isbnStatus', 'all') })
+  return chips
+})
 
 // Placeholder curto ("Buscar livros") sempre que o longo ("Pesquisar por
 // título, autor ou ISBN") não cabe no campo: antes era cortado no meio da
@@ -512,6 +634,12 @@ const hasActiveFilters = computed(() => {
     f.author.length > 0 ||
     f.publisher.length > 0 ||
     f.tags.length > 0
+})
+
+// Celular: selo tingido com a palavra ("152 livros", "12 de 150")
+const countLabelLong = computed(() => {
+  const label = countLabel.value
+  return label === String(props.booksQuantity) ? t('library.countBooks', { n: props.booksQuantity }, props.booksQuantity) : label
 })
 
 // Com filtro ou busca: "12 de 150"; sem filtro, só o total
@@ -1070,10 +1198,139 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   }
 }
 
-/* Celular: "Adicionar livro" vira o botão flutuante (Library.vue) */
+/* Celular: "Adicionar livro" vira o botão flutuante (Library.vue); título
+   e selo tingido na mesma linha; filtros em chips abaixo da busca */
 @media (max-width: 639.98px) {
   .add-btn {
     display: none;
+  }
+
+  .library-header-wrapper {
+    padding-bottom: var(--space-2);
+  }
+
+  .header-title {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .count-badge {
+    flex: none;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-pill);
+    background: rgba(var(--main-color-rgb), 0.15);
+    color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
+    font-weight: 700;
+    font-size: var(--fs-xs);
+  }
+
+  .chip-row {
+    display: flex;
+    gap: var(--space-2);
+    margin: var(--space-3) calc(-1 * var(--space-4)) 0;
+    padding: 0 var(--space-4) var(--space-1);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--space-4);
+  }
+
+  .fchip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex: none;
+    max-width: 70vw;
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .fchip .pi-chevron-down {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+  }
+
+  .fchip.is-active {
+    gap: 0;
+    padding: 0 0 0 var(--space-3);
+    border-color: rgba(var(--main-color-rgb), 0.45);
+    background: rgba(var(--main-color-rgb), 0.15);
+    color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
+    font-weight: 600;
+  }
+
+  .fchip-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fchip-open {
+    align-self: stretch;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .fchip-x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .fchip-x .pi {
+    font-size: 0.7rem;
+  }
+
+  .fchip-clear {
+    border-color: transparent;
+    color: var(--text-secondary);
+  }
+
+  .fchip:focus-visible,
+  .fchip-open:focus-visible,
+  .fchip-x:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 1px;
+  }
+}
+
+/* Toque: os chips ficam com 36 px de desenho e 44 px de área */
+@media (max-width: 639.98px) and (pointer: coarse) {
+  .fchip,
+  .fchip-x {
+    position: relative;
+  }
+
+  .fchip::after,
+  .fchip-x::after {
+    content: '';
+    position: absolute;
+    inset: -4px 0;
+  }
+
+  .fchip.is-active::after {
+    content: none;
   }
 }
 

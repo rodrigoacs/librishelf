@@ -8,8 +8,23 @@
       class="sr-only"
     >{{ t('history.panelTitle') }}</h3>
 
+    <!-- Celular: cartão da leitura (progresso + "Marcar como lido") no lugar
+         da barra e do "Ler de novo"; a nota vem logo depois (slot) -->
+    <template v-if="phoneLayout">
+      <ReadingCard
+        :book-id="bookId"
+        :book="book"
+        :saving="statusSaving"
+        :again-busy="busy === 'again'"
+        @change-status="option => emit('change-status', option)"
+        @progress-saved="onProgressSaved"
+        @read-again="readAgain"
+      />
+      <slot name="after-card"></slot>
+    </template>
+
     <ReadingProgress
-      v-if="status === 'reading'"
+      v-if="status === 'reading' && !phoneLayout"
       :book-id="bookId"
       :title="book.title"
       :page-count="book.page_count ?? null"
@@ -19,7 +34,7 @@
     />
 
     <div
-      v-if="status === 'read'"
+      v-if="status === 'read' && !phoneLayout"
       class="again"
     >
       <AppButton
@@ -159,6 +174,7 @@ import AppButton from '../ui/AppButton.vue'
 import IconButton from '../form/IconButton.vue'
 import StarRating from '../StarRating.vue'
 import ReadingProgress from './ReadingProgress.vue'
+import ReadingCard from './ReadingCard.vue'
 import ReadingEditor from './ReadingEditor.vue'
 import api from '../../services/api.js'
 import { useToast } from '../../services/toast.js'
@@ -174,9 +190,12 @@ import { statusOf } from '../../utils/readingStatus.js'
  */
 const props = defineProps({
   bookId: { type: Number, required: true },
-  book: { type: Object, required: true }
+  book: { type: Object, required: true },
+  // Celular: cartão da leitura (ReadingCard) com "Marcar como lido"
+  phoneLayout: { type: Boolean, default: false },
+  statusSaving: { type: Boolean, default: false }
 })
-const emit = defineEmits(['changed'])
+const emit = defineEmits(['changed', 'change-status'])
 const { t, locale } = useI18n()
 const toast = useToast()
 const confirm = useConfirm()

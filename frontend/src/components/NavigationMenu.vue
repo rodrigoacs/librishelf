@@ -1055,6 +1055,14 @@ button.nav-item {
   }
 }
 
+/* Livro abrindo/fechando em tela cheia: a barra entra na troca junto com a
+   página (senão ficaria por cima do livro até a animação acabar) */
+@media (max-width: 639.98px) {
+  :global(html[data-nav^="book"] .mobile-header) {
+    view-transition-name: none;
+  }
+}
+
 @keyframes nav-item-in {
   from {
     opacity: 0;

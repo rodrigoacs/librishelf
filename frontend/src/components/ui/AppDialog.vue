@@ -102,6 +102,9 @@ const props = defineProps({
   page: { type: Boolean, default: false },
   // Celular: o voltar do aparelho fecha (desligue se a URL já cuida disso)
   backCloses: { type: Boolean, default: true },
+  // Celular: animar o fechamento (desligue quando a troca de tela do router
+  // já anima, como no livro aberto pela URL)
+  animateClose: { type: Boolean, default: true },
   // Chamada antes de fechar por Esc, clique fora ou X; se devolver false (ou
   // uma Promise de false), o diálogo continua aberto. Ex.: "Descartar alterações?"
   beforeClose: { type: Function, default: null }
@@ -199,7 +202,7 @@ const drag = useDrag({
 function animateOut() {
   const panel = panelEl.value
   const dialog = dialogEl.value
-  if (!panel || !dialog || !(asSheet.value || asPage.value) || !canAnimate()) return Promise.resolve()
+  if (!panel || !dialog || !props.animateClose || !(asSheet.value || asPage.value) || !canAnimate()) return Promise.resolve()
   stopPanelAnimation()
   const from = dragOffset
   const fade = dialog.style.getPropertyValue('--sheet-fade') || '1'
@@ -540,6 +543,11 @@ html.dialog-open {
 
 .app-dialog.is-page[open] {
   animation: app-page-in var(--dur-medium) var(--ease-enter);
+}
+
+/* Durante a troca de tela (View Transition) quem anima é ela */
+html[data-nav] .app-dialog.is-page[open] {
+  animation: none;
 }
 
 @keyframes app-sheet-in {

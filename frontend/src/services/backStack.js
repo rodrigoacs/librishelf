@@ -5,8 +5,8 @@ import { isPhone } from '../utils/motion.js'
  * da tela, como num app. Ao abrir, entra uma posição extra no histórico com
  * a mesma URL; o voltar a consome e fecha o de cima.
  *
- * O ouvinte de popstate é de captura e para a propagação quando o voltar é
- * nosso: o vue-router não vê nada e a tela não muda. Fechando por outro
+ * O ouvinte de popstate é registrado antes do do vue-router e para a
+ * propagação quando o voltar é nosso: o vue-router não vê nada e a tela não muda. Fechando por outro
  * caminho (X, Esc, puxar), a posição extra é consumida com history.back()
  * e esse popstate também é engolido aqui.
  *
@@ -40,6 +40,11 @@ function install() {
   window.addEventListener('popstate', onPopState, true)
 }
 
+// Precisa vir antes do ouvinte do vue-router (o main.js importa este módulo
+// antes do router): no alvo (window), o Chromium chama os ouvintes na ordem
+// em que foram registrados, e o stopImmediatePropagation só barra os de depois.
+install()
+
 /**
  * Registra algo aberto por cima. Devolve release(): chame ao fechar por
  * qualquer caminho que não seja o voltar (consome a posição extra). A
@@ -59,9 +64,18 @@ export function pushOverlay(onBack) {
     if (index === -1) return Promise.resolve() // já saiu pelo voltar
     stack.splice(index, 1)
     if (window.history.state?.__overlay !== id) return Promise.resolve()
+    // A URL pode ter mudado com replace enquanto estava aberto (filtro escolhido
+    // na folha): depois de voltar, a posição de baixo recebe a URL nova, senão
+    // o voltar desfaria a escolha
+    const state = { ...window.history.state }
+    delete state.__overlay
+    const url = window.location.href
     swallow++
     return new Promise(resolve => {
-      swallowed.push(resolve)
+      swallowed.push(() => {
+        if (window.location.href !== url) window.history.replaceState(state, '', url)
+        resolve()
+      })
       // Rede de segurança: o popstate não veio (aba em segundo plano)
       setTimeout(resolve, 400)
       window.history.back()

@@ -203,7 +203,17 @@
       "readOn": "Lido em",
       "asc": "ordem crescente",
       "desc": "ordem decrescente"
-    }
+    },
+    "quickFilters": "Filtros rápidos",
+    "dim": {
+      "author": "Autor",
+      "publisher": "Editora",
+      "tag": "Categoria"
+    },
+    "chipChange": "{dim}: {name} (trocar)",
+    "pickerSearch": "Buscar em {name}",
+    "pickerEmpty": "Nada encontrado",
+    "countBooks": "{n} livro | {n} livros"
   },
   "bookDialog": {
     "bookCover": "Capa do livro",
@@ -231,7 +241,8 @@
     "editShortcut": "Editar (atalho: E)",
     "moreActions": "Mais ações do livro",
     "titleFull": "Ver título completo",
-    "titleLess": "Mostrar menos"
+    "titleLess": "Mostrar menos",
+    "pagesShort": "{n} pág. | {n} págs."
   },
   "authors": {
     "title": "Autores",
@@ -608,7 +619,8 @@
     "value": "Nota: {n} de 5",
     "none": "Sem nota",
     "set": "Dar {n} de 5 estrelas",
-    "clear": "Tirar a nota"
+    "clear": "Tirar a nota",
+    "yours": "Sua nota"
   },
   "isbn": {
     "search": "Buscar",
@@ -1685,5 +1697,10 @@
       "resend": "Reenviar confirmação",
       "resent": "Confirmação reenviada para {email}."
     }
+  },
+  "readCard": {
+    "title": "Progresso da leitura",
+    "markRead": "Marcar como lido",
+    "readOn": "Lido em {date}"
   }
 }

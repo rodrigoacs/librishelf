@@ -203,7 +203,17 @@
       "readOn": "Read on",
       "asc": "ascending",
       "desc": "descending"
-    }
+    },
+    "quickFilters": "Quick filters",
+    "dim": {
+      "author": "Author",
+      "publisher": "Publisher",
+      "tag": "Category"
+    },
+    "chipChange": "{dim}: {name} (change)",
+    "pickerSearch": "Search {name}",
+    "pickerEmpty": "Nothing found",
+    "countBooks": "{n} book | {n} books"
   },
   "bookDialog": {
     "bookCover": "Book cover",
@@ -231,7 +241,8 @@
     "editShortcut": "Edit (shortcut: E)",
     "moreActions": "More book actions",
     "titleFull": "Show full title",
-    "titleLess": "Show less"
+    "titleLess": "Show less",
+    "pagesShort": "{n} page | {n} pages"
   },
   "authors": {
     "title": "Authors",
@@ -608,7 +619,8 @@
     "value": "Rating: {n} of 5",
     "none": "No rating",
     "set": "Rate {n} of 5 stars",
-    "clear": "Remove rating"
+    "clear": "Remove rating",
+    "yours": "Your rating"
   },
   "isbn": {
     "search": "Look up",
@@ -1685,5 +1697,10 @@
       "resend": "Resend confirmation",
       "resent": "Confirmation resent to {email}."
     }
+  },
+  "readCard": {
+    "title": "Reading progress",
+    "markRead": "Mark as read",
+    "readOn": "Read on {date}"
   }
 }

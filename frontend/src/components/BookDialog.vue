@@ -6,7 +6,9 @@
     :close-on-escape="!isEditing"
     :before-close="confirmLeave"
     :sheet="false"
+    page
     :back-closes="!inUrl"
+    :animate-close="!inUrl"
     dialog-class="book-form-dialog"
     :aria-label="book.title || t('bookDialog.dialog_label')"
     @hide="closeDialog"
@@ -16,11 +18,54 @@
       class="dialog-shell"
       :class="{ viewing: !isEditing }"
     >
+      <!-- Celular: tela cheia com "‹ Biblioteca" e as ações no topo -->
+      <div
+        v-if="phone"
+        class="page-bar"
+      >
+        <button
+          type="button"
+          class="page-back"
+          data-press
+          @click="requestClose"
+        >
+          <i
+            class="pi pi-chevron-left"
+            aria-hidden="true"
+          ></i>
+          <span>{{ backLabel }}</span>
+        </button>
+        <div
+          v-if="!isReadOnly && !loading && !loadFailed && !isEditing"
+          class="book-actions page-actions"
+        >
+          <AppButton
+            :label="t('bookDialog.editShort')"
+            class="btn-secondary btn-sm action-edit"
+            @click="editMode"
+          />
+          <IconButton
+            icon="pi pi-ellipsis-h"
+            :label="t('bookDialog.moreActions')"
+            class="action-more"
+            aria-haspopup="true"
+            aria-controls="book-more-menu"
+            aria-expanded="false"
+            @click="event => moreMenu.toggle(event)"
+          />
+        </div>
+      </div>
       <IconButton
+        v-else
         class="close-btn"
         icon="pi pi-times"
         :label="t('common.close')"
         @click="requestClose"
+      />
+      <PopupMenu
+        id="book-more-menu"
+        ref="moreMenu"
+        :items="moreItems"
       />
 
       <BookEditForm
@@ -80,12 +125,13 @@
             :load-failed="loadFailed"
             :read-saving="readSaving"
             :rating-saving="ratingSaving"
+            :phone-layout="phone"
             @change-status="changeStatus"
             @rate="quickRate"
             @navigate="visible = false"
           >
             <template
-              v-if="!isReadOnly && !loading && !loadFailed"
+              v-if="!isReadOnly && !loading && !loadFailed && !phone"
               #actions
             >
               <div class="book-actions">
@@ -105,11 +151,6 @@
                   aria-controls="book-more-menu"
                   aria-expanded="false"
                   @click="event => moreMenu.toggle(event)"
-                />
-                <PopupMenu
-                  id="book-more-menu"
-                  ref="moreMenu"
-                  :items="moreItems"
                 />
               </div>
             </template>
@@ -138,8 +179,32 @@
             v-if="!isReadOnly && !loading && !loadFailed"
             :book-id="bookId"
             :book="book"
+            :phone-layout="phone"
+            :status-saving="readSaving"
             @changed="onReadingChanged"
-          />
+            @change-status="changeStatus"
+          >
+            <!-- Celular: a nota vem logo depois do cartão da leitura -->
+            <template #after-card>
+              <section
+                class="rate-block"
+                aria-labelledby="rate-block-title"
+              >
+                <h3
+                  id="rate-block-title"
+                  class="rate-title"
+                >{{ t('rating.yours') }}</h3>
+                <StarRating
+                  :model-value="book.rating"
+                  size="lg"
+                  animated
+                  :disabled="ratingSaving"
+                  :label="t('rating.label')"
+                  @update:model-value="quickRate"
+                />
+              </section>
+            </template>
+          </ReadingPanel>
 
           <ReviewEditor
             v-if="!isReadOnly && !loading && !loadFailed"
@@ -209,6 +274,10 @@ import PopupMenu from './ui/PopupMenu.vue'
 import { fromApiDate, toApiDate } from '../utils/dates.js'
 import { statusOf } from '../utils/readingStatus.js'
 import { setOverlayTitle } from '../services/pageTitle.js'
+import StarRating from './StarRating.vue'
+import { useIsPhone } from '../composables/useIsPhone.js'
+import { useRoute } from 'vue-router'
+import { readUndoSteps } from '../utils/readUndo.js'
 
 /**
  * Livro aberto: visualização (BookView + BookCommunity) ou edição
@@ -230,6 +299,11 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])
 const toast = useToast()
 const confirm = useConfirm()
+const phone = useIsPhone()
+const route = useRoute()
+
+// "‹ Biblioteca": o nome da tela de onde o livro foi aberto
+const backLabel = computed(() => (route.meta.title ? t(`pageTitle.${route.meta.title}`, { name: route.params.username || '' }) : t('common.back')))
 
 const visible = ref(props.modelValue)
 const loading = ref(true)
@@ -271,16 +345,46 @@ function onCoverError(event) {
 /**
  * Quero ler / Lendo / Lido. Clicar no status que já está marcado tira o status
  * (o livro volta a só estar na estante). Datas vão no fuso da pessoa.
+ *
+ * A tela muda na hora (o servidor confirma depois); se der erro, volta como
+ * estava e avisa.
+ *
+ * Celular: tocar de novo em "✓ Lido em …" logo depois de marcar desfaz
+ * exatamente (utils/readUndo.js, o mesmo "Desfazer" do card) em vez de
+ * apagar a leitura. O aviso com "Desfazer" não serve aqui: com o livro aberto
+ * (diálogo modal) o resto da página, avisos inclusive, fica inerte.
  */
+let pendingUndo = null
+
 async function changeStatus(option) {
-  const next = statusOf(book.value) === option ? 'none' : option
+  if (readSaving.value) return
+  const current = statusOf(book.value)
+  if (option === 'read' && current === 'read' && pendingUndo) {
+    const steps = pendingUndo.steps
+    pendingUndo = null
+    return undoStatus(steps)
+  }
+  pendingUndo = null
+  const next = current === option ? 'none' : option
   // "Quero ler"/nenhum apagam o histórico: com mais de uma leitura, pergunta antes
   const total = (book.value.read_count || 0) + (book.value.reading_status === 'reading' ? 1 : 0)
   if ((next === 'none' || next === 'want') && total > 1 && !(await confirmClearHistory(total))) return
 
+  const previous = { read_date: book.value.read_date, started_at: book.value.started_at, reading_status: book.value.reading_status }
+  const now = new Date()
+  const today = toApiDate(now)
+  const predicted = {
+    read: { read_date: now, reading_status: null },
+    reading: { reading_status: 'reading', started_at: now },
+    want: { reading_status: 'want', read_date: null },
+    none: { reading_status: null, read_date: null }
+  }[next]
+  Object.assign(book.value, predicted)
+
   readSaving.value = true
   try {
-    const today = toApiDate(new Date())
+    const touchesRead = phone.value && next === 'read'
+    const before = touchesRead ? await api.getReadings(props.bookId).then(data => data?.readings ?? null).catch(() => null) : null
     const result = await api.setReadingStatus(props.bookId, next, next === 'read' || next === 'reading' ? today : undefined)
     book.value.read_date = fromApiDate(result.readDate)
     book.value.started_at = fromApiDate(result.startedAt)
@@ -290,7 +394,41 @@ async function changeStatus(option) {
       coverChanged: false
     })
     refreshReadingFields()
+    if (next === 'read' && phone.value) {
+      const steps = readUndoSteps(current, before)
+      pendingUndo = steps ? { steps } : null
+    }
   } catch (error) {
+    Object.assign(book.value, previous)
+    toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
+  } finally {
+    readSaving.value = false
+  }
+}
+
+async function undoStatus(steps) {
+  const previous = { read_date: book.value.read_date, started_at: book.value.started_at, reading_status: book.value.reading_status }
+  // Na hora: volta ao status de antes; o servidor confirma em seguida
+  const back = steps.some(step => step.op === 'reopen') ? { read_date: null, reading_status: 'reading' }
+    : steps.some(step => step.op === 'want') ? { read_date: null, reading_status: 'want' }
+      : { read_date: null, reading_status: null }
+  Object.assign(book.value, back)
+  readSaving.value = true
+  try {
+    for (const step of steps) {
+      if (step.op === 'add') await api.addReading(props.bookId, step.reading)
+      else if (step.op === 'reopen') await api.updateReading(props.bookId, step.readingId, { finishedOn: null })
+      else if (step.op === 'unread') await api.markAsUnread(props.bookId)
+      else if (step.op === 'want') await api.setReadingStatus(props.bookId, 'want')
+    }
+    const fresh = await api.getBookById(props.bookId)
+    applyResponse(fresh)
+    emit('updated', {
+      book: { book_id: props.bookId, read_date: fresh.read_date ?? null, reading_status: fresh.reading_status ?? null, started_at: fresh.started_at ?? null },
+      coverChanged: false
+    })
+  } catch (error) {
+    Object.assign(book.value, previous)
     toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
   } finally {
     readSaving.value = false
@@ -727,28 +865,85 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Celular: em vez da faixa de 190px em cima, uma capa pequena ao lado do
-   título; sobra altura para o que importa (status, nota, notas). */
+/* Celular: o livro abre em tela cheia (AppDialog page), com "‹ Biblioteca"
+   e Editar/⋯ numa barra no topo; capa pequena ao lado do título (é ela que
+   viaja do card, data-shared-cover) e o resto rola embaixo. */
 @media (max-width: 639.98px) {
   .cover-section {
     display: none;
   }
 
-  .viewing .close-btn {
-    background: transparent;
-    color: inherit;
+  .dialog-shell {
+    height: 100dvh;
+    max-height: 100dvh;
   }
 
-  /* O X fica ao lado do título de novo: mesma linha dele */
-  .book-actions {
-    margin-top: -0.5rem;
-    padding-right: 2.75rem;
+  .dialog-body {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .details-section {
+    padding: var(--space-2) var(--space-4) calc(var(--space-7) + var(--safe-bottom, 0px));
+    gap: var(--space-5);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .page-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    flex: none;
+    min-height: calc(56px + var(--safe-top, 0px));
+    padding: var(--safe-top, 0px) var(--space-2) 0 var(--space-1);
+    background: var(--bg-panel);
+  }
+
+  .page-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 44px;
+    max-width: 60%;
+    padding: 0 var(--space-3) 0 var(--space-2);
+    border: none;
+    border-radius: var(--radius-pill);
+    background: none;
+    color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
+    font: inherit;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .page-back span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page-back:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: -2px;
+  }
+
+  .page-actions {
+    order: 0;
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+
+  .page-actions .action-edit.btn {
+    border-radius: var(--radius-pill);
   }
 
   .mini-cover {
     display: block;
     flex: none;
-    width: 76px;
+    width: 104px;
     aspect-ratio: 2 / 3;
     border-radius: var(--radius-sm);
     overflow: hidden;
@@ -761,6 +956,26 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  .rate-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .rate-title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* 5 estrelas de 44 px + o X de limpar = 264 px: cabe a partir de 296 px
+     (antes passavam da coluna ao lado da capa e cortavam o X) */
+  .rate-block :deep(.star-rating) {
+    flex-wrap: nowrap;
+    margin-left: calc(-1 * var(--space-2));
   }
 }
 </style>

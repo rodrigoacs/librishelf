@@ -1,3 +1,6 @@
+// Primeiro: o voltar do celular que fecha folhas e o menu precisa ouvir o
+// popstate antes do vue-router (services/backStack.js)
+import './services/backStack.js'
 import { createApp } from 'vue'
 import i18n, { i18nReady } from './i18n'
 import App from './App.vue'
