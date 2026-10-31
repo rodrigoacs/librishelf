@@ -130,14 +130,84 @@
       </div>
     </div>
 
-    <!-- Celular: filtros em chips logo abaixo da busca. O chip da dimensão
-         (Autor ▾) abre a folha de escolha; escolhido, vira "Nome ×". -->
+    <!-- Celular: Autor, Editora e Categoria sempre à esquerda, no mesmo lugar
+         (abrem a folha de escolha; acesos com a contagem quando há escolha).
+         Os escolhidos ficam na linha de baixo, enchendo da esquerda. -->
     <div
       v-if="phone"
       class="chip-row"
       role="group"
       :aria-label="t('library.quickFilters')"
     >
+      <button
+        v-for="dim in dimensions"
+        :key="dim.key"
+        type="button"
+        class="fchip fchip-dim"
+        :class="{ 'has-picks': filters[dim.key].length }"
+        :aria-label="filters[dim.key].length ? t('library.dimCount', { dim: dim.label, n: filters[dim.key].length }, filters[dim.key].length) : undefined"
+        aria-haspopup="dialog"
+        data-press
+        @click="openPicker(dim)"
+      >
+        {{ dim.label }}
+        <span
+          v-if="filters[dim.key].length"
+          class="fchip-count"
+          aria-hidden="true"
+        >{{ filters[dim.key].length }}</span>
+        <i
+          v-else
+          class="pi pi-chevron-down"
+          aria-hidden="true"
+        ></i>
+      </button>
+    </div>
+
+    <div
+      v-if="phone && hasActiveFilters"
+      class="chip-row chip-row-picked"
+      role="group"
+      :aria-label="t('library.filtering_by')"
+    >
+      <!-- Primeiro, para não sumir no fim de uma fila longa -->
+      <button
+        type="button"
+        class="fchip fchip-clear"
+        data-press
+        @click="emit('reset')"
+      >{{ t('library.clear_all') }}</button>
+      <template
+        v-for="dim in dimensions"
+        :key="dim.key"
+      >
+        <span
+          v-for="name in filters[dim.key]"
+          :key="`${dim.key}-${name}`"
+          class="fchip is-active"
+          :style="dim.key === 'tags' ? { '--tag-color': tagColor(name) } : undefined"
+        >
+          <button
+            type="button"
+            class="fchip-label fchip-open"
+            aria-haspopup="dialog"
+            :aria-label="t('library.chipChange', { dim: dim.label, name })"
+            data-press
+            @click="openPicker(dim)"
+          >{{ name }}</button>
+          <button
+            type="button"
+            class="fchip-x"
+            :aria-label="t('common.removeItem', { name })"
+            @click="removeFromList(dim.key, name)"
+          >
+            <i
+              class="pi pi-times"
+              aria-hidden="true"
+            ></i>
+          </button>
+        </span>
+      </template>
       <span
         v-for="chip in otherChips"
         :key="chip.key"
@@ -156,60 +226,6 @@
           ></i>
         </button>
       </span>
-      <template
-        v-for="dim in dimensions"
-        :key="dim.key"
-      >
-        <template v-if="filters[dim.key].length">
-          <span
-            v-for="name in filters[dim.key]"
-            :key="`${dim.key}-${name}`"
-            class="fchip is-active"
-            :style="dim.key === 'tags' ? { '--tag-color': tagColor(name) } : undefined"
-          >
-            <button
-              type="button"
-              class="fchip-label fchip-open"
-              aria-haspopup="dialog"
-              :aria-label="t('library.chipChange', { dim: dim.label, name })"
-              data-press
-              @click="openPicker(dim)"
-            >{{ name }}</button>
-            <button
-              type="button"
-              class="fchip-x"
-              :aria-label="t('common.removeItem', { name })"
-              @click="removeFromList(dim.key, name)"
-            >
-              <i
-                class="pi pi-times"
-                aria-hidden="true"
-              ></i>
-            </button>
-          </span>
-        </template>
-        <button
-          v-else
-          type="button"
-          class="fchip"
-          aria-haspopup="dialog"
-          data-press
-          @click="openPicker(dim)"
-        >
-          {{ dim.label }}
-          <i
-            class="pi pi-chevron-down"
-            aria-hidden="true"
-          ></i>
-        </button>
-      </template>
-      <button
-        v-if="hasActiveFilters"
-        type="button"
-        class="fchip fchip-clear"
-        data-press
-        @click="emit('reset')"
-      >{{ t('library.clear_all') }}</button>
     </div>
 
     <FilterPickerSheet
@@ -1225,14 +1241,57 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     font-size: var(--fs-xs);
   }
 
+  /* Linha dos três filtros: sempre à esquerda, no mesmo lugar */
   .chip-row {
     display: flex;
+    justify-content: flex-start;
     gap: var(--space-2);
-    margin: var(--space-3) calc(-1 * var(--space-4)) 0;
+    margin-top: var(--space-3);
+  }
+
+  /* Escolhidos: lado a lado numa linha só, a partir da esquerda; muitos
+     rolam de lado (a altura não cresce) */
+  .chip-row-picked {
+    flex-wrap: nowrap;
+    margin: var(--space-2) calc(-1 * var(--space-4)) 0;
     padding: 0 var(--space-4) var(--space-1);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-padding-inline: var(--space-4);
+    scrollbar-width: none;
+  }
+
+  .chip-row-picked::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fchip-dim.has-picks {
+    border-color: rgba(var(--main-color-rgb), 0.45);
+    color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
+    font-weight: 600;
+  }
+
+  /* 320 px com os três acesos: um pouco menos de respiro para caber */
+  @media (max-width: 359.98px) {
+    .chip-row {
+      gap: 6px;
+    }
+
+    .chip-row .fchip-dim {
+      padding: 0 var(--space-2) 0 calc(var(--space-2) + 2px);
+    }
+  }
+
+  .fchip-count {
+    min-width: 1.15rem;
+    padding: 0 0.3rem;
+    border-radius: var(--radius-pill);
+    background: var(--main-solid);
+    color: var(--on-main);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    line-height: 1.15rem;
+    text-align: center;
   }
 
   .fchip {

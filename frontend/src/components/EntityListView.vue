@@ -315,7 +315,8 @@
 <script setup>
 import PageHeader from './ui/PageHeader.vue'
 import { tagColor } from '../utils/tagColors.js'
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { bookCreatedTick } from '../services/appNav.js'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
 import AppButton from './ui/AppButton.vue'
@@ -449,6 +450,9 @@ function initials(name) {
   return letters.toUpperCase()
 }
 
+
+// Livro novo pelo "+" da barra de abas (celular)
+watch(bookCreatedTick, () => load())
 
 async function load() {
   loading.value = true

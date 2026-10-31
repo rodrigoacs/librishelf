@@ -6,7 +6,9 @@
       ref="mobileHeader"
       class="mobile-header"
     >
+      <!-- No celular o menu fica na aba "Menu" da barra de baixo -->
       <AppButton
+        v-if="!phone"
         ref="menuButton"
         icon="pi pi-bars"
         class="btn-text menu-btn"
@@ -320,13 +322,15 @@ import { useTheme, ACCENT_COLORS } from '../composables/useTheme.js'
 import { pushOverlay } from '../services/backStack.js'
 import { requestLibrarySearch } from '../services/librarySearch.js'
 import { shouldComplete } from '../utils/motion.js'
+import { drawerOpen } from '../services/appNav.js'
 
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
 const toast = useToast()
 
-const mobileMenuOpen = ref(false)
+// Mesma gaveta que a aba "Menu" da barra de abas (celular) abre
+const mobileMenuOpen = drawerOpen
 const menuButton = ref(null)
 const closeButton = ref(null)
 const phone = useIsPhone()
@@ -339,7 +343,7 @@ const { currentTheme, accentColor, toggleTheme, setAccent } = useTheme()
 const mobileHeader = ref(null)
 
 function outsideMenu() {
-  return [document.getElementById('main-content'), mobileHeader.value, document.querySelector('.skip-link')].filter(Boolean)
+  return [document.getElementById('main-content'), mobileHeader.value, document.querySelector('.skip-link'), document.querySelector('.tab-bar')].filter(Boolean)
 }
 
 function setInert(on) {
@@ -366,7 +370,11 @@ watch(mobileMenuOpen, async (open) => {
   else document.removeEventListener('keydown', onDocumentKeydown)
   await nextTick()
   if (open) closeButton.value?.focus()
-  else if (!document.activeElement || document.activeElement === document.body || document.activeElement.closest?.('#app-sidebar')) menuButton.value?.$el?.focus()
+  else if (!document.activeElement || document.activeElement === document.body || document.activeElement.closest?.('#app-sidebar')) {
+    // Foco volta para quem abriu: ☰ (tablet) ou a aba "Menu" (celular)
+    if (menuButton.value) menuButton.value.$el?.focus()
+    else document.querySelector('.tab-bar .tab-menu')?.focus()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -429,12 +437,13 @@ const overlayEl = ref(null)
 const dragging = ref(false)
 const DRAWER_WIDTH = 280
 
+// Celular: a gaveta vem da direita, do lado da aba "Menu"
 function setProgress(progress) {
   const p = Math.min(1, Math.max(0, progress))
-  if (sidebarEl.value) sidebarEl.value.style.transform = `translate3d(${(p - 1) * DRAWER_WIDTH}px, 0, 0)`
+  if (sidebarEl.value) sidebarEl.value.style.transform = `translate3d(${(1 - p) * DRAWER_WIDTH}px, 0, 0)`
   if (overlayEl.value) overlayEl.value.style.opacity = String(p)
   const main = document.getElementById('main-content')
-  if (main) main.style.transform = p ? `translate3d(${p * 12}px, 0, 0) scale(${1 - p * 0.03})` : ''
+  if (main) main.style.transform = p ? `translate3d(${p * -12}px, 0, 0)` : ''
 }
 
 function clearProgress() {
@@ -453,19 +462,21 @@ function settle(open) {
   mobileMenuOpen.value = open
 }
 
+// Borda direita: arrastar para a esquerda abre (distância negativa)
 const edgeDrag = useDrag({
   axis: 'x',
   onStart: () => { dragging.value = true; nextTick(() => setProgress(0)) },
-  onMove: distance => setProgress(distance / DRAWER_WIDTH),
-  onEnd: ({ distance, velocity }) => settle(shouldComplete({ distance, velocity, size: DRAWER_WIDTH }))
+  onMove: distance => setProgress(-distance / DRAWER_WIDTH),
+  onEnd: ({ distance, velocity }) => settle(shouldComplete({ distance: -distance, velocity: -velocity, size: DRAWER_WIDTH }))
 })
 
 const closeDrag = useDrag({
   axis: 'x',
   canStart: event => !event.target.closest?.('.settings-menu, input, select'),
   onStart: () => { dragging.value = true },
-  onMove: distance => setProgress(1 + Math.min(0, distance) / DRAWER_WIDTH),
-  onEnd: ({ distance, velocity }) => settle(!shouldComplete({ distance: -distance, velocity: -velocity, size: DRAWER_WIDTH }))
+  // Arrastar para a direita fecha
+  onMove: distance => setProgress(1 - Math.max(0, distance) / DRAWER_WIDTH),
+  onEnd: ({ distance, velocity }) => settle(!shouldComplete({ distance, velocity, size: DRAWER_WIDTH }))
 })
 
 // ---------------------------------------------------------------------------
@@ -878,7 +889,7 @@ button.nav-item {
     justify-content: flex-start;
     gap: var(--space-1);
     height: calc(56px + var(--safe-top));
-    padding: var(--safe-top) var(--space-2) 0 var(--space-1);
+    padding: var(--safe-top) var(--space-2) 0 var(--space-4);
     view-transition-name: app-bar;
   }
 
@@ -970,30 +981,35 @@ button.nav-item {
     box-shadow: 0 0 0 1px var(--border-color);
   }
 
-  /* Faixa invisível na borda esquerda: arrastar dali abre o menu. pan-y
+  /* Faixa invisível na borda direita (lado da aba "Menu"): arrastar dali
+     abre o menu. A esquerda fica livre para o voltar do iPhone. pan-y
      deixa a página rolar na vertical; o lado fica com o gesto. */
   .drawer-edge {
     display: block;
     position: fixed;
     top: var(--app-bar-height);
-    bottom: 0;
-    left: 0;
+    bottom: var(--tab-bar-height, 0px);
+    right: 0;
     width: 16px;
     z-index: 150;
     touch-action: pan-y;
   }
 
-  /* Gaveta: 32 px a mais escondidos à esquerda para a sobra da mola não
-     mostrar um vão na borda */
+  /* Gaveta vem da direita, do lado da aba "Menu". 32 px a mais escondidos
+     à direita para a sobra da mola não mostrar um vão na borda */
   .sidebar {
-    left: -32px;
+    left: auto;
+    right: -32px;
     width: calc(280px + 32px);
-    padding: var(--safe-top) 0 var(--safe-bottom) 32px;
+    padding: var(--safe-top) 32px var(--safe-bottom) 0;
+    transform: translateX(100%);
     touch-action: pan-y;
     transition: transform var(--dur-medium) var(--ease-exit), visibility 0s linear var(--dur-medium);
   }
 
   .sidebar.sidebar-mobile-open {
+    transform: translateX(0);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
     transition: transform var(--dur-spring) var(--ease-spring), visibility 0s;
   }
 
@@ -1092,14 +1108,16 @@ button.nav-item {
   }
 }
 
-/* Conteúdo recua um pouco com o menu aberto (o arrasto faz o mesmo à mão) */
+/* Conteúdo é empurrado 12 px para a esquerda com o menu aberto (o arrasto
+   faz o mesmo à mão). Sem encolher: o scale(0.97) antigo tinha o centro no
+   meio da página inteira e o que estava à vista descia até 58 px. */
 @media (max-width: 639.98px) {
   :global(#main-content) {
     transition: transform var(--dur-medium) var(--ease-exit);
   }
 
   :global(html.menu-open #main-content) {
-    transform: translate3d(12px, 0, 0) scale(0.97);
+    transform: translate3d(-12px, 0, 0);
     transition: transform var(--dur-spring) var(--ease-spring);
   }
 }
@@ -1115,7 +1133,8 @@ button.nav-item {
 @keyframes nav-item-in {
   from {
     opacity: 0;
-    transform: translate3d(-16px, 0, 0);
+    /* Entram vindo da direita, como a gaveta (só no celular) */
+    transform: translate3d(16px, 0, 0);
   }
 }
 

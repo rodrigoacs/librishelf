@@ -3,10 +3,13 @@
     <button
       type="button"
       class="cover-btn"
-      :aria-label="t('home.openBook', { title: book.title })"
       @click="dialogOpen = true"
     >
+      <!-- Nome do botão em texto para leitor de tela; a capa (imagem ou gerada,
+           com título e autor escritos) fica fora dele -->
+      <span class="sr-only">{{ t('home.openBook', { title: book.title }) }}</span>
       <BookCover
+        aria-hidden="true"
         :book-id="book.book_id"
         :version="book.cover_version"
         :title="book.title"

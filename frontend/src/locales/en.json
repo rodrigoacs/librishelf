@@ -22,7 +22,9 @@
     "adminRole": "Admin",
     "logoutPending": "You're signed out on this device. Without a connection the session is still open on the server: it will be closed as soon as the app is back online.",
     "search": "Search books",
-    "appearance": "Appearance"
+    "appearance": "Appearance",
+    "menuTab": "Menu",
+    "tabsLabel": "Main navigation"
   },
   "common": {
     "save": "Save",
@@ -211,6 +213,7 @@
       "tag": "Category"
     },
     "chipChange": "{dim}: {name} (change)",
+    "dimCount": "{dim}: {n} selected | {dim}: {n} selected",
     "pickerSearch": "Search {name}",
     "pickerEmpty": "Nothing found",
     "countBooks": "{n} book | {n} books"

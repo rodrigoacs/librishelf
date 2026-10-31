@@ -601,6 +601,8 @@ body {
     --safe-left: env(safe-area-inset-left, 0px);
     --safe-right: env(safe-area-inset-right, 0px);
     --app-bar-height: calc(57px + var(--safe-top));
+    /* Barra de abas (TabBar.vue): 64 px + a barra de gestos */
+    --tab-bar-height: calc(64px + var(--safe-bottom));
   }
 
   /* Afundar ao tocar: services/press.js marca [data-pressed] no pointerdown

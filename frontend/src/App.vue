@@ -24,6 +24,8 @@
       />
       <router-view />
     </main>
+
+    <TabBar v-if="showNavigation && phone" />
   </div>
 </template>
 
@@ -37,9 +39,12 @@ import ConfirmHost from './components/ui/ConfirmHost.vue'
 import { isAuthenticated, currentUser } from './services/session.js'
 import EmailBanner from './components/EmailBanner.vue'
 import OfflineBanner from './components/OfflineBanner.vue'
+import TabBar from './components/TabBar.vue'
+import { useIsPhone } from './composables/useIsPhone.js'
 
 const route = useRoute()
 const { t } = useI18n()
+const phone = useIsPhone()
 
 // Menu só para quem está logado e fora das telas cheias (login, cadastro,
 // biblioteca pública). Privacidade e 404 mostram o menu se houver sessão.
@@ -73,6 +78,15 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Celular: espaço embaixo para a barra de abas (some junto com ela) */
+html.has-tab-bar .main-content {
+  padding-bottom: var(--tab-bar-height);
+}
+
+html.has-tab-bar.tab-bar-hidden .main-content {
+  padding-bottom: 0;
 }
 
 @media (max-width: 1023.98px) {

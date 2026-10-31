@@ -340,7 +340,8 @@
 
 <script setup>
 import PageHeader from '../components/ui/PageHeader.vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { bookCreatedTick } from '../services/appNav.js'
 import { usePullToRefresh } from '../composables/usePullToRefresh.js'
 import PullRefresh from '../components/ui/PullRefresh.vue'
 import { useI18n } from 'vue-i18n'
@@ -399,6 +400,9 @@ const summary = computed(() => {
   else read = t('home.readOfGoal', { n: readThisYear.value, goal: goal.value })
   return `${t('home.totalBooks', { n: total.value }, total.value)} · ${read}`
 })
+
+// Livro novo pelo "+" da barra de abas (celular)
+watch(bookCreatedTick, () => reload())
 
 async function reload() {
   try {
@@ -799,9 +803,9 @@ onMounted(async () => {
     gap: 1.75rem;
   }
 
-  .home-container > .page-header :deep(.page-header-actions),
-  .add-btn-home {
-    width: 100%;
+  /* Adicionar fica no "+" da barra de abas */
+  .home-container > .page-header :deep(.page-header-actions) {
+    display: none;
   }
 
   .reading-grid {

@@ -60,7 +60,9 @@
     "adminRole": "Administração",
     "logoutPending": "Você saiu neste aparelho. Sem conexão, a sessão continua aberta no servidor: ela será encerrada assim que o app voltar a ter internet.",
     "search": "Buscar livros",
-    "appearance": "Aparência"
+    "appearance": "Aparência",
+    "menuTab": "Menu",
+    "tabsLabel": "Navegação principal"
   },
   "common": {
     "save": "Salvar",
@@ -211,6 +213,7 @@
       "tag": "Categoria"
     },
     "chipChange": "{dim}: {name} (trocar)",
+    "dimCount": "{dim}: {n} escolhido | {dim}: {n} escolhidos",
     "pickerSearch": "Buscar em {name}",
     "pickerEmpty": "Nada encontrado",
     "countBooks": "{n} livro | {n} livros"
