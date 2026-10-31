@@ -391,7 +391,8 @@
       "link": "Seu link público",
       "on": "Sua biblioteca agora é pública.",
       "off": "Sua biblioteca agora é privada.",
-      "error": "Não foi possível alterar a visibilidade."
+      "error": "Não foi possível alterar a visibilidade.",
+      "copyFallback": "Não deu para copiar — seu link: {url}"
     },
     "indexing": {
       "toggle": "Aparecer em buscadores (Google, Bing…)",
@@ -401,7 +402,6 @@
     },
     "notifications": {
       "title": "Avisos por e-mail",
-      "desc": "Receba um e-mail quando alguém pedir para seguir você e quando aceitarem o seu pedido.",
       "verifyFirst": "Confirme seu e-mail para receber avisos.",
       "follow": "Pedidos para seguir e pedidos aceitos",
       "followHelp": "Vai para {email}. No máximo um e-mail a cada {hours} horas — o que acontecer nesse meio-tempo vem junto. Todo e-mail tem um link para descadastrar.",
@@ -431,7 +431,6 @@
     "privacyLink": "Ler a política de privacidade",
     "community": {
       "title": "Comunidade",
-      "desc": "Escolha como outros leitores podem interagir com você. Tudo começa desligado.",
       "toggle": "Participar da comunidade",
       "help": "Outros leitores verão que você tem os mesmos livros, sua nota e quantos livros vocês têm em comum.",
       "needs_public": "Disponível só com a biblioteca pública ligada.",
@@ -447,10 +446,8 @@
     "verifyFirst": "Confirme seu e-mail para ligar estas opções. Use o link que enviamos ou o botão \"Reenviar link\" no topo da página.",
     "account": {
       "title": "Usuário e e-mail",
-      "desc": "Seu nome de usuário (também o endereço da biblioteca pública) e o e-mail de contato.",
       "username": "Nome de usuário",
       "email": "E-mail",
-      "change": "Alterar",
       "notVerified": "não confirmado",
       "usernameTitle": "Trocar nome de usuário",
       "emailTitle": "Trocar e-mail",
@@ -463,7 +460,6 @@
     },
     "data": {
       "title": "Seus dados",
-      "exportDesc": "Baixe uma cópia de tudo: livros, notas, anotações, status, metas e dados da conta. O CSV abre em planilhas e pode ser importado de volta.",
       "exportJson": "Baixar tudo (JSON)",
       "exportCsv": "Baixar livros (CSV)",
       "importTitle": "Importar livros",
@@ -477,22 +473,28 @@
       "duplicates": "{n} já estava na estante | {n} já estavam na estante",
       "failed": "{n} com problema | {n} com problema",
       "errorLine": "Linha {line} ({title})",
-      "seeLibrary": "Ver na biblioteca"
-    },
-    "index": {
-      "label": "Nesta página",
-      "privacy": "Privacidade",
-      "account": "Conta",
-      "notifications": "Avisos",
-      "password": "Senha",
-      "data": "Dados",
-      "delete": "Excluir"
+      "seeLibrary": "Ver na biblioteca",
+      "exportJsonHelp": "Livros, notas, anotações, metas e dados da conta",
+      "exportCsvHelp": "Abre em planilhas e pode ser importado de volta",
+      "importShort": "Do Goodreads ou de um CSV do Librishelf"
     },
     "errors": {
       "required": "Preencha este campo.",
       "email": "Digite um e-mail válido, como nome{'@'}exemplo.com."
     },
-    "exportFailed": "Não foi possível exportar."
+    "exportFailed": "Não foi possível exportar.",
+    "profile": {
+      "photoButton": "Foto de perfil: trocar ou mudar quem vê",
+      "verified": "confirmado",
+      "seeLibrary": "Ver minha biblioteca pública"
+    },
+    "groups": {
+      "profile": "Perfil",
+      "privacy": "Privacidade",
+      "security": "Segurança"
+    },
+    "blockedCount": "{n} leitor | {n} leitores",
+    "blockedNone": "Ninguém"
   },
   "discover": {
     "tab": "Encontrar",
@@ -1224,7 +1226,17 @@
     "restore": "Reexibir resenha",
     "keepHint": "Manter ou reexibir zera a contagem para a ocultação automática.",
     "hiddenDone": "Resenha ocultada",
-    "keptDone": "Resenha visível"
+    "keptDone": "Resenha visível",
+    "avatarRemoved": "A foto foi removida; a conta mostra a inicial",
+    "avatarHiddenAuto": "Fora do ar por denúncias até alguém revisar",
+    "avatarVisible": "No ar",
+    "avatarAlt": "Foto de perfil de {name}",
+    "avatarRemove": "Remover a foto",
+    "avatarHint": "Manter zera as denúncias desta foto. Remover exclui a foto; a pessoa pode pôr outra.",
+    "avatarRemovedDone": "Foto removida",
+    "avatarKeep": "Manter a foto",
+    "avatarRestore": "Pôr a foto de volta",
+    "avatarKeptDone": "Foto mantida"
   },
   "lists": {
     "title": "Listas",
@@ -1458,6 +1470,17 @@
         "serialDetail": "{n} denúncias · {upheld} ocultas · {rejected} mantidas · {week} nesta semana",
         "freshDetail": "{n} denúncias em {reviews} resenhas · conta de {date}",
         "mostDetail": "{n} denúncias em {reviews} resenhas · {hidden} ocultas"
+      },
+      "avatars": {
+        "kind": "O que ver",
+        "kindReviews": "Resenhas",
+        "kindAvatars": "Fotos de perfil",
+        "queue": "Fotos de perfil denunciadas",
+        "empty": {
+          "open": "Nenhuma foto esperando revisão.",
+          "hidden": "Nenhuma foto fora do ar.",
+          "all": "Nenhuma foto foi denunciada."
+        }
       }
     },
     "accounts": {
@@ -1517,7 +1540,9 @@
         "user_suspend": "Suspendeu conta",
         "user_reactivate": "Reativou conta",
         "user_resend_verification": "Reenviou confirmação",
-        "email_test": "Enviou e-mail de teste"
+        "email_test": "Enviou e-mail de teste",
+        "avatar_remove": "Removeu foto de perfil",
+        "avatar_keep": "Manteve foto de perfil"
       },
       "review": "resenha #{id}",
       "deleted": "conta excluída",
@@ -1719,5 +1744,47 @@
   "pullRefresh": {
     "refreshing": "Atualizando…",
     "done": "Atualizado"
+  },
+  "avatar": {
+    "title": "Foto de perfil",
+    "none": "Sem foto: aparece a inicial do seu nome",
+    "visibilityShort": {
+      "everyone": "Todos veem",
+      "followers": "Só quem segue você vê",
+      "nobody": "Só você vê"
+    },
+    "choose": "Escolher foto",
+    "change": "Trocar foto",
+    "remove": "Tirar foto",
+    "needsEmail": "Confirme seu e-mail para pôr uma foto de perfil.",
+    "hiddenNotice": "Sua foto saiu do ar por denúncias e está em revisão. Enquanto isso, aparece a inicial do seu nome.",
+    "visibilityLabel": "Quem vê a foto",
+    "visibility": {
+      "everyone": "Todos",
+      "followers": "Só quem me segue",
+      "nobody": "Só eu"
+    },
+    "notImage": "Escolha um arquivo de imagem.",
+    "saved": "Foto de perfil salva",
+    "removeTitle": "Tirar a foto de perfil?",
+    "removeText": "A inicial do seu nome volta a aparecer no lugar.",
+    "removed": "Foto removida",
+    "cropTitle": "Ajustar foto",
+    "stageLabel": "Recorte da foto",
+    "hintTouch": "Arraste para posicionar e use dois dedos para ampliar.",
+    "hintPointer": "Arraste para posicionar; amplie com a roda do mouse, o controle abaixo ou as teclas + e −.",
+    "zoom": "Ampliar",
+    "save": "Salvar foto",
+    "loadError": "Não foi possível abrir esta imagem. Tente outra.",
+    "saveError": "Não foi possível salvar a foto. Tente de novo.",
+    "report": "Denunciar foto",
+    "reportTitle": "Denunciar foto de perfil",
+    "reportIntro": "A foto de {name} vai para a moderação. A pessoa não fica sabendo quem denunciou.",
+    "reasons": {
+      "offensive": "Ofensiva ou imprópria",
+      "impersonation": "Se passando por outra pessoa",
+      "spam": "Spam ou propaganda",
+      "other": "Outro motivo"
+    }
   }
 }

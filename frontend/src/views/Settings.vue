@@ -1,62 +1,153 @@
 <template>
   <div class="settings-container">
     <div class="settings-content">
-      <PageHeader
-        :title="t('settings.title')"
-        :subtitle="t('settings.subtitle')"
-        divider
-      />
+      <PageHeader :title="t('settings.title')" />
 
-      <!-- Índice: no celular são 7 cartões em coluna -->
-      <nav
-        class="settings-index"
-        :aria-label="t('settings.index.label')"
+      <!-- Perfil: foto (tocar troca), nome, e-mail e o atalho da biblioteca pública -->
+      <section
+        class="profile-card"
+        aria-labelledby="settings-profile-name"
       >
-        <a
-          v-for="item in indexItems"
-          :key="item.id"
-          :href="`#${item.id}`"
-          class="index-link"
-          @click.prevent="jumpTo(item.id)"
-        >{{ item.label }}</a>
-      </nav>
-
-      <div class="settings-grid">
-        <!-- Biblioteca pública -->
-        <section
-          class="settings-card"
-          aria-labelledby="settings-public-title"
-          id="settings-privacy"
-          tabindex="-1"
+        <button
+          type="button"
+          class="profile-photo"
+          :aria-label="t('settings.profile.photoButton')"
+          data-press
+          @click="photoSheetOpen = true"
         >
-          <h2 id="settings-public-title">{{ t('settings.public.title') }}</h2>
-          <p class="card-desc">{{ t('settings.public.desc') }}</p>
-          <p
-            v-if="!emailVerified"
-            class="verify-note"
+          <ReaderAvatar
+            :username="user?.name || '?'"
+            :avatar="user?.avatarHidden ? null : (user?.avatarVersion ?? null)"
+            size="xl"
+          />
+          <span
+            class="photo-badge"
+            aria-hidden="true"
+          ><i class="pi pi-camera"></i></span>
+        </button>
+        <div class="profile-text">
+          <h2 id="settings-profile-name">{{ user?.name }}</h2>
+          <p class="profile-email">
+            <span class="email-text">{{ user?.email }}</span>
+            <span
+              class="email-badge"
+              :class="emailVerified ? 'ok' : 'pending'"
+            >
+              <i
+                :class="emailVerified ? 'pi pi-check-circle' : 'pi pi-clock'"
+                aria-hidden="true"
+              ></i>
+              {{ emailVerified ? t('settings.profile.verified') : t('settings.account.notVerified') }}
+            </span>
+          </p>
+          <router-link
+            v-if="isPublic"
+            :to="{ name: 'public-library', params: { username: user?.name } }"
+            class="profile-link"
           >
+            {{ t('settings.profile.seeLibrary') }}
             <i
-              class="pi pi-envelope"
+              class="pi pi-angle-right"
               aria-hidden="true"
             ></i>
-            {{ t('settings.verifyFirst') }}
-          </p>
+          </router-link>
+        </div>
+      </section>
 
-          <div class="toggle-row">
-            <AppSwitch
-              inputId="settings-public-toggle"
-              :modelValue="isPublic"
-              :disabled="savingVisibility || (!emailVerified && !isPublic)"
-              @update:modelValue="value => savePrivacy('isPublic', value)"
-            />
-            <label for="settings-public-toggle">{{ t('settings.public.toggle') }}</label>
-          </div>
+      <p
+        v-if="!emailVerified"
+        class="verify-note"
+      >
+        <i
+          class="pi pi-envelope"
+          aria-hidden="true"
+        ></i>
+        {{ t('settings.verifyFirst') }}
+      </p>
 
-          <div
-            v-if="isPublic"
-            class="toggle-block"
+      <!-- Perfil -->
+      <section
+        class="settings-group"
+        aria-labelledby="settings-group-profile"
+      >
+        <h2
+          id="settings-group-profile"
+          class="group-title"
+        >{{ t('settings.groups.profile') }}</h2>
+        <div class="group-list">
+          <SettingsRow
+            :label="t('avatar.title')"
+            :value="photoStatus"
+            icon="pi pi-image"
+            interactive
+            class="row-photo"
+            @click="photoSheetOpen = true"
+          />
+          <SettingsRow
+            :label="t('settings.account.username')"
+            :value="user?.name || ''"
+            icon="pi pi-at"
+            interactive
+            class="row-username"
+            @click="openAccountDialog('username')"
+          />
+          <SettingsRow
+            :label="t('settings.account.email')"
+            :value="user?.email || ''"
+            icon="pi pi-envelope"
+            interactive
+            class="row-email"
+            @click="openAccountDialog('email')"
+          />
+        </div>
+      </section>
+
+      <!-- Privacidade -->
+      <section
+        id="settings-privacy"
+        class="settings-group"
+        aria-labelledby="settings-group-privacy"
+        tabindex="-1"
+      >
+        <h2
+          id="settings-group-privacy"
+          class="group-title"
+        >{{ t('settings.groups.privacy') }}</h2>
+        <div class="group-list">
+          <SettingsRow
+            :label="t('settings.public.toggle')"
+            :help="t('settings.public.desc')"
+            label-for="settings-public-toggle"
+            help-id="settings-public-help"
           >
-            <div class="toggle-row">
+            <template #trailing>
+              <AppSwitch
+                inputId="settings-public-toggle"
+                :modelValue="isPublic"
+                :disabled="savingVisibility || (!emailVerified && !isPublic)"
+                aria-describedby="settings-public-help"
+                @update:modelValue="value => savePrivacy('isPublic', value)"
+              />
+            </template>
+          </SettingsRow>
+          <SettingsRow
+            v-if="isPublic"
+            :label="t('settings.public.link')"
+            :help="publicUrl"
+            :value="copied ? t('common.copied') : t('common.copy')"
+            :trail-icon="copied ? 'pi pi-check' : 'pi pi-copy'"
+            interactive
+            class="row-copy"
+            @click="copyLink"
+          />
+          <SettingsRow
+            v-if="isPublic"
+            :label="t('settings.indexing.toggle')"
+            :help="t('settings.indexing.help')"
+            label-for="settings-indexing-toggle"
+            help-id="settings-indexing-help"
+          >
+            <template #trailing>
               <AppSwitch
                 inputId="settings-indexing-toggle"
                 :modelValue="allowIndexing"
@@ -64,195 +155,68 @@
                 aria-describedby="settings-indexing-help"
                 @update:modelValue="value => savePrivacy('allowIndexing', value)"
               />
-              <label for="settings-indexing-toggle">{{ t('settings.indexing.toggle') }}</label>
-            </div>
-            <small
-              id="settings-indexing-help"
-              class="toggle-help"
-            >{{ t('settings.indexing.help') }}</small>
-          </div>
-
-          <div
-            v-if="isPublic"
-            class="public-link"
+            </template>
+          </SettingsRow>
+          <SettingsRow
+            :label="t('settings.community.toggle')"
+            :help="isPublic ? t('settings.community.help') : t('settings.community.needs_public')"
+            label-for="settings-community-toggle"
+            help-id="settings-community-help"
           >
-            <label for="settings-public-link">{{ t('settings.public.link') }}</label>
-            <div class="link-row">
-              <input
-                id="settings-public-link"
-                :value="publicUrl"
-                class="modern-input"
-                readonly
-                @focus="event => event.target.select()"
+            <template #trailing>
+              <AppSwitch
+                inputId="settings-community-toggle"
+                :modelValue="showInCommunity"
+                :disabled="savingVisibility || !isPublic || (!emailVerified && !showInCommunity)"
+                aria-describedby="settings-community-help"
+                @update:modelValue="value => savePrivacy('showInCommunity', value)"
               />
-              <AppButton
-                :label="copied ? t('common.copied') : t('common.copy')"
-                :icon="copied ? 'pi pi-check' : 'pi pi-copy'"
-                class="btn-outlined btn-secondary"
-                @click="copyLink"
-              />
-            </div>
-          </div>
-        </section>
-
-        <!-- Comunidade -->
-        <section
-          class="settings-card"
-          aria-labelledby="settings-community-title"
-        >
-          <h2 id="settings-community-title">{{ t('settings.community.title') }}</h2>
-          <p class="card-desc">{{ t('settings.community.desc') }}</p>
-
-          <div class="stack">
-            <div class="toggle-block">
-              <div class="toggle-row">
-                <AppSwitch
-                  inputId="settings-community-toggle"
-                  :modelValue="showInCommunity"
-                  :disabled="savingVisibility || !isPublic || (!emailVerified && !showInCommunity)"
-                  aria-describedby="settings-community-help"
-                  @update:modelValue="value => savePrivacy('showInCommunity', value)"
-                />
-                <label for="settings-community-toggle">{{ t('settings.community.toggle') }}</label>
-              </div>
-              <small
-                id="settings-community-help"
-                class="toggle-help"
-              >{{ isPublic ? t('settings.community.help') : t('settings.community.needs_public') }}</small>
-            </div>
-
-            <div class="toggle-block">
-              <div class="toggle-row">
-                <AppSwitch
-                  inputId="settings-activity-toggle"
-                  :modelValue="showActivity"
-                  :disabled="savingVisibility || (!emailVerified && !showActivity)"
-                  aria-describedby="settings-activity-help"
-                  @update:modelValue="value => savePrivacy('showActivity', value)"
-                />
-                <label for="settings-activity-toggle">{{ t('settings.activity.toggle') }}</label>
-              </div>
-              <small
-                id="settings-activity-help"
-                class="toggle-help"
-              >{{ t('settings.activity.help') }}</small>
-            </div>
-
-            <!-- Leitores bloqueados: não veem você na comunidade nem pedem para seguir -->
-            <div
-              class="blocked-block"
-              id="settings-blocked"
-              tabindex="-1"
-            >
-              <h3 class="sub-title">{{ t('block.listTitle') }}</h3>
-              <AppSkeleton
-                v-if="blockedLoading && !blockedLoaded"
-                width="60%"
-                height="1rem"
-              />
-              <!-- Falha não é "ninguém bloqueado": erro com "Tentar de novo" -->
-              <EmptyState
-                v-else-if="blockedError"
-                variant="error"
-                compact
-                :level="4"
-                :title="t('block.listFailed')"
-                :loading="blockedLoading"
-                @action="loadBlocked"
-              />
-              <p
-                v-else-if="blockedUsers.length === 0"
-                class="toggle-help"
-              >{{ t('block.listEmpty') }}</p>
-              <ul
-                v-else
-                class="blocked-list"
-              >
-                <li
-                  v-for="person in blockedUsers"
-                  :key="person.username"
-                >
-                  <ReaderAvatar
-                    :username="person.username"
-                    size="sm"
-                  />
-                  <span class="blocked-name">{{ person.username }}</span>
-                  <AppButton
-                    :label="t('block.unblock')"
-                    class="btn-sm btn-text btn-secondary"
-                    :loading="unblocking === person.username"
-                    @click="unblockUser(person.username)"
-                  />
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <!-- Conta: nome de usuário e e-mail -->
-        <section
-          class="settings-card"
-          aria-labelledby="settings-account-title"
-          id="settings-account"
-          tabindex="-1"
-        >
-          <h2 id="settings-account-title">{{ t('settings.account.title') }}</h2>
-          <p class="card-desc">{{ t('settings.account.desc') }}</p>
-
-          <dl class="account-rows">
-            <div class="account-row">
-              <dt>{{ t('settings.account.username') }}</dt>
-              <dd>
-                <span class="account-value">{{ user?.name }}</span>
-                <AppButton
-                  :label="t('settings.account.change')"
-                  class="btn-text btn-sm"
-                  @click="openAccountDialog('username')"
-                />
-              </dd>
-            </div>
-            <div class="account-row">
-              <dt>{{ t('settings.account.email') }}</dt>
-              <dd>
-                <span class="account-value">
-                  {{ user?.email }}
-                  <span
-                    v-if="!emailVerified"
-                    class="badge-pending"
-                  >{{ t('settings.account.notVerified') }}</span>
-                </span>
-                <AppButton
-                  :label="t('settings.account.change')"
-                  class="btn-text btn-sm"
-                  @click="openAccountDialog('email')"
-                />
-              </dd>
-            </div>
-          </dl>
-        </section>
-
-        <!-- Avisos por e-mail (opt-in) -->
-        <section
-          class="settings-card"
-          aria-labelledby="settings-notifications-title"
-          id="settings-notifications"
-          tabindex="-1"
-        >
-          <h2 id="settings-notifications-title">{{ t('settings.notifications.title') }}</h2>
-          <p class="card-desc">{{ t('settings.notifications.desc') }}</p>
-          <p
-            v-if="!emailVerified"
-            class="verify-note"
+            </template>
+          </SettingsRow>
+          <SettingsRow
+            :label="t('settings.activity.toggle')"
+            :help="t('settings.activity.help')"
+            label-for="settings-activity-toggle"
+            help-id="settings-activity-help"
           >
-            <i
-              class="pi pi-envelope"
-              aria-hidden="true"
-            ></i>
-            {{ t('settings.notifications.verifyFirst') }}
-          </p>
+            <template #trailing>
+              <AppSwitch
+                inputId="settings-activity-toggle"
+                :modelValue="showActivity"
+                :disabled="savingVisibility || (!emailVerified && !showActivity)"
+                aria-describedby="settings-activity-help"
+                @update:modelValue="value => savePrivacy('showActivity', value)"
+              />
+            </template>
+          </SettingsRow>
+          <SettingsRow
+            :label="t('block.listTitle')"
+            :value="blockedValue"
+            icon="pi pi-ban"
+            interactive
+            class="row-blocked"
+            @click="blockedSheetOpen = true"
+          />
+        </div>
+      </section>
 
-          <div class="toggle-block">
-            <div class="toggle-row">
+      <!-- Avisos por e-mail (opt-in) -->
+      <section
+        class="settings-group"
+        aria-labelledby="settings-group-notifications"
+      >
+        <h2
+          id="settings-group-notifications"
+          class="group-title"
+        >{{ t('settings.notifications.title') }}</h2>
+        <div class="group-list">
+          <SettingsRow
+            :label="t('settings.notifications.follow')"
+            :help="emailVerified ? t('settings.notifications.followHelp', { hours: 6, email: user?.email || '' }) : t('settings.notifications.verifyFirst')"
+            label-for="settings-follow-emails"
+            help-id="settings-follow-emails-help"
+          >
+            <template #trailing>
               <AppSwitch
                 inputId="settings-follow-emails"
                 :modelValue="followEmails"
@@ -260,193 +224,371 @@
                 aria-describedby="settings-follow-emails-help"
                 @update:modelValue="saveFollowEmails"
               />
-              <label for="settings-follow-emails">{{ t('settings.notifications.follow') }}</label>
-            </div>
-            <small
-              id="settings-follow-emails-help"
-              class="toggle-help"
-            >{{ t('settings.notifications.followHelp', { hours: 6, email: user?.email || '' }) }}</small>
-          </div>
-        </section>
+            </template>
+          </SettingsRow>
+        </div>
+      </section>
 
-        <!-- Senha -->
-        <section
-          class="settings-card"
-          aria-labelledby="settings-password-title"
-          id="settings-password"
-          tabindex="-1"
-        >
-          <h2 id="settings-password-title">{{ t('settings.password.title') }}</h2>
-          <p class="card-desc">{{ t('settings.password.desc') }}</p>
+      <!-- Segurança -->
+      <section
+        class="settings-group"
+        aria-labelledby="settings-group-security"
+      >
+        <h2
+          id="settings-group-security"
+          class="group-title"
+        >{{ t('settings.groups.security') }}</h2>
+        <div class="group-list">
+          <SettingsRow
+            :label="t('settings.password.title')"
+            :help="t('settings.password.desc')"
+            icon="pi pi-lock"
+            interactive
+            class="row-password"
+            @click="passwordSheetOpen = true"
+          />
+        </div>
+      </section>
 
-          <form
-            class="stack"
-            novalidate
-            @submit.prevent="changePassword"
-          >
-            <!-- Campo de usuário oculto: gerenciadores de senha associam a nova senha à conta certa. -->
-            <input
-              type="text"
-              :value="user?.name"
-              autocomplete="username"
-              class="sr-only"
-              tabindex="-1"
-              aria-hidden="true"
-              readonly
-            />
+      <!-- Seus dados -->
+      <section
+        class="settings-group"
+        aria-labelledby="settings-group-data"
+      >
+        <h2
+          id="settings-group-data"
+          class="group-title"
+        >{{ t('settings.data.title') }}</h2>
+        <div class="group-list">
+          <SettingsRow
+            :label="t('settings.data.exportJson')"
+            :help="t('settings.data.exportJsonHelp')"
+            icon="pi pi-download"
+            trail-icon=""
+            interactive
+            :loading="exporting === 'json'"
+            :disabled="Boolean(exporting)"
+            class="row-export-json"
+            @click="downloadExport('json')"
+          />
+          <SettingsRow
+            :label="t('settings.data.exportCsv')"
+            :help="t('settings.data.exportCsvHelp')"
+            icon="pi pi-file"
+            trail-icon=""
+            interactive
+            :loading="exporting === 'csv'"
+            :disabled="Boolean(exporting)"
+            class="row-export-csv"
+            @click="downloadExport('csv')"
+          />
+          <SettingsRow
+            :label="t('settings.data.importTitle')"
+            :help="t('settings.data.importShort')"
+            icon="pi pi-upload"
+            interactive
+            class="row-import"
+            @click="importSheetOpen = true"
+          />
+        </div>
+      </section>
 
-            <div class="field">
-              <PasswordField
-                id="settings-current-password"
-                ref="currentPasswordField"
-                v-model="passwordForm.current"
-                :label="t('settings.password.current')"
-                autocomplete="current-password"
-                :error="passwordErrors.current"
-              />
-            </div>
-            <div class="field">
-              <PasswordField
-                id="settings-new-password"
-                ref="newPasswordField"
-                v-model="passwordForm.next"
-                :label="t('settings.password.new')"
-                autocomplete="new-password"
-                strength
-                :error="passwordErrors.next"
-              />
-            </div>
-            <div class="field">
-              <PasswordField
-                id="settings-confirm-password"
-                ref="confirmPasswordField"
-                v-model="passwordForm.confirm"
-                :label="t('settings.password.confirm')"
-                autocomplete="new-password"
-                :error="passwordErrors.confirm"
-              />
-            </div>
-
-            <AppButton
-              type="submit"
-              :label="t('settings.password.submit')"
-              class="btn-primary"
-              :loading="savingPassword"
-            />
-          </form>
-        </section>
-
-        <!-- Seus dados: exportar e importar -->
-        <section
-          class="settings-card"
-          aria-labelledby="settings-data-title"
-          id="settings-data"
-          tabindex="-1"
-        >
-          <h2 id="settings-data-title">{{ t('settings.data.title') }}</h2>
-          <p class="card-desc">{{ t('settings.data.exportDesc') }}</p>
-          <div class="button-row">
-            <AppButton
-              :label="t('settings.data.exportJson')"
-              icon="pi pi-download"
-              class="btn-outlined btn-sm"
-              :loading="exporting === 'json'"
-              :disabled="Boolean(exporting)"
-              @click="downloadExport('json')"
-            />
-            <AppButton
-              :label="t('settings.data.exportCsv')"
-              icon="pi pi-file"
-              class="btn-outlined btn-sm"
-              :loading="exporting === 'csv'"
-              :disabled="Boolean(exporting)"
-              @click="downloadExport('csv')"
-            />
-          </div>
-
-          <h3 class="sub-title">{{ t('settings.data.importTitle') }}</h3>
-          <p class="card-desc">{{ t('settings.data.importDesc') }}</p>
-          <ol class="import-steps">
-            <li>{{ t('settings.data.step1') }}</li>
-            <li>{{ t('settings.data.step2') }}</li>
-            <li>{{ t('settings.data.step3') }}</li>
-          </ol>
-
-          <label
-            class="file-drop"
-            :class="{ busy: importing }"
-          >
-            <input
-              ref="importInput"
-              type="file"
-              accept=".csv,text/csv"
-              class="sr-only"
-              :disabled="importing"
-              @change="importFile"
-            />
-            <i
-              :class="importing ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
-              aria-hidden="true"
-            ></i>
-            <span>{{ importing ? t('settings.data.importing') : t('settings.data.chooseFile') }}</span>
-          </label>
-
-          <div
-            v-if="importResult"
-            class="import-result"
-            role="status"
-          >
-            <p class="import-summary">
-              <strong>{{ t('settings.data.imported', { n: importResult.imported }, importResult.imported) }}</strong>
-              <span v-if="importResult.duplicates"> · {{ t('settings.data.duplicates', { n: importResult.duplicates }, importResult.duplicates) }}</span>
-              <span v-if="importResult.failed"> · {{ t('settings.data.failed', { n: importResult.failed }, importResult.failed) }}</span>
-            </p>
-            <ul
-              v-if="importResult.errors?.length"
-              class="import-errors"
-            >
-              <li
-                v-for="error in importResult.errors.slice(0, 10)"
-                :key="error.line"
-              >{{ t('settings.data.errorLine', { line: error.line, title: error.title || '—' }) }}: {{ error.reason }}</li>
-            </ul>
-            <router-link
-              v-if="importResult.imported"
-              :to="{ name: 'library' }"
-              class="see-library"
-            >{{ t('settings.data.seeLibrary') }}</router-link>
-          </div>
-        </section>
-
-        <!-- Excluir conta -->
-        <section
-          class="settings-card danger"
-          aria-labelledby="settings-delete-title"
-          id="settings-delete"
-          tabindex="-1"
-        >
-          <h2 id="settings-delete-title">{{ t('settings.delete.title') }}</h2>
-          <p class="card-desc">{{ t('settings.delete.desc') }}</p>
-          <AppButton
+      <!-- Excluir conta: separado, no fim -->
+      <section
+        class="settings-group"
+        aria-labelledby="settings-group-danger"
+      >
+        <h2
+          id="settings-group-danger"
+          class="sr-only"
+        >{{ t('settings.delete.title') }}</h2>
+        <div class="group-list">
+          <SettingsRow
             :label="t('settings.delete.button')"
+            :help="t('settings.delete.desc')"
             icon="pi pi-trash"
-            class="btn-danger btn-outlined"
+            interactive
+            danger
+            class="row-delete"
             @click="openDeleteDialog"
           />
-        </section>
+        </div>
+      </section>
 
-        <router-link
-          to="/privacy"
-          class="privacy-link"
+      <router-link
+        to="/privacy"
+        class="privacy-link"
+      >
+        <i
+          class="pi pi-shield"
+          aria-hidden="true"
+        ></i>
+        {{ t('settings.privacyLink') }}
+      </router-link>
+    </div>
+
+    <!-- Foto de perfil -->
+    <input
+      ref="photoInput"
+      type="file"
+      accept="image/*"
+      class="sr-only photo-input"
+      tabindex="-1"
+      aria-hidden="true"
+      @change="onPhotoPicked"
+    />
+    <AppDialog
+      v-model:visible="photoSheetOpen"
+      size="sm"
+      dialog-class="settings-sheet photo-sheet"
+      :header="t('avatar.title')"
+    >
+      <div class="sheet-stack">
+        <div
+          class="photo-block"
+          role="group"
+          :aria-label="t('avatar.title')"
+        >
+          <ReaderAvatar
+            :username="user?.name || '?'"
+            :avatar="user?.avatarHidden ? null : (user?.avatarVersion ?? null)"
+            size="xl"
+          />
+          <div class="photo-side">
+            <span class="photo-status">{{ photoStatus }}</span>
+            <div class="photo-actions">
+              <AppButton
+                :label="user?.avatarVersion ? t('avatar.change') : t('avatar.choose')"
+                icon="pi pi-camera"
+                class="btn-outlined btn-sm"
+                :disabled="!emailVerified"
+                @click="pickPhoto"
+              />
+              <AppButton
+                v-if="user?.avatarVersion"
+                :label="t('avatar.remove')"
+                class="btn-text btn-sm btn-secondary"
+                :loading="removingPhoto"
+                @click="askRemovePhoto"
+              />
+            </div>
+          </div>
+        </div>
+        <p
+          v-if="!emailVerified"
+          class="photo-note"
+        >{{ t('avatar.needsEmail') }}</p>
+        <p
+          v-else-if="user?.avatarHidden"
+          class="photo-note warn"
+          role="status"
         >
           <i
-            class="pi pi-shield"
+            class="pi pi-exclamation-triangle"
             aria-hidden="true"
           ></i>
-          {{ t('settings.privacyLink') }}
-        </router-link>
+          {{ t('avatar.hiddenNotice') }}
+        </p>
+        <fieldset
+          v-if="user?.avatarVersion"
+          class="vis-group"
+        >
+          <legend>{{ t('avatar.visibilityLabel') }}</legend>
+          <label
+            v-for="option in ['everyone', 'followers', 'nobody']"
+            :key="option"
+            class="vis-option"
+            :class="{ selected: (user?.avatarVisibility || 'followers') === option }"
+          >
+            <input
+              type="radio"
+              name="settings-photo-visibility"
+              :value="option"
+              :checked="(user?.avatarVisibility || 'followers') === option"
+              :disabled="savingPhotoVisibility"
+              @change="savePhotoVisibility(option)"
+            />
+            <span>{{ t(`avatar.visibility.${option}`) }}</span>
+          </label>
+        </fieldset>
       </div>
-    </div>
+    </AppDialog>
+    <AvatarCropSheet
+      v-model:visible="cropOpen"
+      :file="pickedPhoto"
+      :initial-visibility="user?.avatarVisibility || 'followers'"
+      @saved="onPhotoSaved"
+    />
+
+    <!-- Leitores bloqueados: não veem você na comunidade nem pedem para seguir -->
+    <AppDialog
+      v-model:visible="blockedSheetOpen"
+      size="sm"
+      dialog-class="settings-sheet blocked-sheet"
+      :header="t('block.listTitle')"
+    >
+      <div class="sheet-stack">
+        <AppSkeleton
+          v-if="blockedLoading && !blockedLoaded"
+          width="60%"
+          height="1rem"
+        />
+        <!-- Falha não é "ninguém bloqueado": erro com "Tentar de novo" -->
+        <EmptyState
+          v-else-if="blockedError"
+          variant="error"
+          compact
+          :level="3"
+          :title="t('block.listFailed')"
+          :loading="blockedLoading"
+          @action="loadBlocked"
+        />
+        <p
+          v-else-if="blockedUsers.length === 0"
+          class="sheet-text"
+        >{{ t('block.listEmpty') }}</p>
+        <ul
+          v-else
+          class="blocked-list"
+        >
+          <li
+            v-for="person in blockedUsers"
+            :key="person.username"
+          >
+            <ReaderAvatar
+              :username="person.username"
+              size="sm"
+            />
+            <span class="blocked-name">{{ person.username }}</span>
+            <AppButton
+              :label="t('block.unblock')"
+              class="btn-sm btn-text btn-secondary"
+              :loading="unblocking === person.username"
+              @click="unblockUser(person.username)"
+            />
+          </li>
+        </ul>
+      </div>
+    </AppDialog>
+
+    <!-- Senha -->
+    <AppDialog
+      v-model:visible="passwordSheetOpen"
+      size="sm"
+      dialog-class="settings-sheet password-sheet"
+      :header="t('settings.password.title')"
+    >
+      <form
+        class="sheet-stack"
+        novalidate
+        @submit.prevent="changePassword"
+      >
+        <p class="sheet-text">{{ t('settings.password.desc') }}</p>
+        <!-- Campo de usuário oculto: gerenciadores de senha associam a nova senha à conta certa. -->
+        <input
+          type="text"
+          :value="user?.name"
+          autocomplete="username"
+          class="sr-only"
+          tabindex="-1"
+          aria-hidden="true"
+          readonly
+        />
+        <PasswordField
+          id="settings-current-password"
+          ref="currentPasswordField"
+          v-model="passwordForm.current"
+          :label="t('settings.password.current')"
+          autocomplete="current-password"
+          :error="passwordErrors.current"
+        />
+        <PasswordField
+          id="settings-new-password"
+          ref="newPasswordField"
+          v-model="passwordForm.next"
+          :label="t('settings.password.new')"
+          autocomplete="new-password"
+          strength
+          :error="passwordErrors.next"
+        />
+        <PasswordField
+          id="settings-confirm-password"
+          ref="confirmPasswordField"
+          v-model="passwordForm.confirm"
+          :label="t('settings.password.confirm')"
+          autocomplete="new-password"
+          :error="passwordErrors.confirm"
+        />
+        <AppButton
+          type="submit"
+          :label="t('settings.password.submit')"
+          class="btn-primary sheet-submit"
+          :loading="savingPassword"
+        />
+      </form>
+    </AppDialog>
+
+    <!-- Importar livros (Goodreads ou CSV do Librishelf) -->
+    <AppDialog
+      v-model:visible="importSheetOpen"
+      size="sm"
+      dialog-class="settings-sheet import-sheet"
+      :header="t('settings.data.importTitle')"
+    >
+      <div class="sheet-stack">
+        <p class="sheet-text">{{ t('settings.data.importDesc') }}</p>
+        <ol class="import-steps">
+          <li>{{ t('settings.data.step1') }}</li>
+          <li>{{ t('settings.data.step2') }}</li>
+          <li>{{ t('settings.data.step3') }}</li>
+        </ol>
+
+        <label
+          class="file-drop"
+          :class="{ busy: importing }"
+        >
+          <input
+            ref="importInput"
+            type="file"
+            accept=".csv,text/csv"
+            class="sr-only"
+            :disabled="importing"
+            @change="importFile"
+          />
+          <i
+            :class="importing ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
+            aria-hidden="true"
+          ></i>
+          <span>{{ importing ? t('settings.data.importing') : t('settings.data.chooseFile') }}</span>
+        </label>
+
+        <div
+          v-if="importResult"
+          class="import-result"
+          role="status"
+        >
+          <p class="import-summary">
+            <strong>{{ t('settings.data.imported', { n: importResult.imported }, importResult.imported) }}</strong>
+            <span v-if="importResult.duplicates"> · {{ t('settings.data.duplicates', { n: importResult.duplicates }, importResult.duplicates) }}</span>
+            <span v-if="importResult.failed"> · {{ t('settings.data.failed', { n: importResult.failed }, importResult.failed) }}</span>
+          </p>
+          <ul
+            v-if="importResult.errors?.length"
+            class="import-errors"
+          >
+            <li
+              v-for="error in importResult.errors.slice(0, 10)"
+              :key="error.line"
+            >{{ t('settings.data.errorLine', { line: error.line, title: error.title || '—' }) }}: {{ error.reason }}</li>
+          </ul>
+          <router-link
+            v-if="importResult.imported"
+            :to="{ name: 'library' }"
+            class="see-library"
+          >{{ t('settings.data.seeLibrary') }}</router-link>
+        </div>
+      </div>
+    </AppDialog>
 
     <AppDialog
       v-model:visible="deleteDialogVisible"
@@ -535,11 +677,13 @@
 </template>
 
 <script setup>
-import { scrollBehavior } from '../utils/motion.js'
 import PageHeader from '../components/ui/PageHeader.vue'
 import PasswordField from '../components/form/PasswordField.vue'
 import TextField from '../components/form/TextField.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
+import AvatarCropSheet from '../components/AvatarCropSheet.vue'
+import SettingsRow from '../components/settings/SettingsRow.vue'
+import { useConfirm } from '../services/confirm.js'
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -559,24 +703,90 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const { t, locale } = useI18n()
 
-const indexItems = computed(() => [
-  { id: 'settings-privacy', label: t('settings.index.privacy') },
-  { id: 'settings-account', label: t('settings.index.account') },
-  { id: 'settings-notifications', label: t('settings.index.notifications') },
-  { id: 'settings-password', label: t('settings.index.password') },
-  { id: 'settings-data', label: t('settings.index.data') },
-  { id: 'settings-delete', label: t('settings.index.delete') }
-])
-
-function jumpTo(id) {
-  const el = document.getElementById(id)
-  if (!el) return
-  el.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
-  el.focus({ preventScroll: true })
-}
+// Folhas da Conta (no celular sobem de baixo; no desktop, janelas)
+const photoSheetOpen = ref(false)
+const blockedSheetOpen = ref(false)
+const passwordSheetOpen = ref(false)
+const importSheetOpen = ref(false)
 
 const toast = useToast()
 const router = useRouter()
+const confirm = useConfirm()
+
+// ---------------------------------------------------------------- foto de perfil
+const photoInput = ref(null)
+const pickedPhoto = ref(null)
+const cropOpen = ref(false)
+const removingPhoto = ref(false)
+const savingPhotoVisibility = ref(false)
+
+const photoStatus = computed(() => {
+  const u = currentUser.value
+  if (!u?.avatarVersion) return t('avatar.none')
+  return t(`avatar.visibilityShort.${u.avatarVisibility || 'followers'}`)
+})
+
+function pickPhoto() {
+  photoInput.value?.click()
+}
+
+function onPhotoPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    toast.add({ severity: 'error', detail: t('avatar.notImage'), life: 4000 })
+    return
+  }
+  pickedPhoto.value = file
+  // Escolheu a foto: a folha da foto dá lugar à de recorte
+  photoSheetOpen.value = false
+  cropOpen.value = true
+}
+
+function onPhotoSaved(result) {
+  updateUser(result)
+  toast.add({ severity: 'success', detail: t('avatar.saved'), life: 3000 })
+}
+
+function askRemovePhoto() {
+  confirm.require({
+    header: t('avatar.removeTitle'),
+    message: t('avatar.removeText'),
+    icon: 'pi pi-trash',
+    acceptLabel: t('avatar.remove'),
+    rejectLabel: t('common.cancel'),
+    acceptClass: 'btn-danger',
+    rejectClass: 'btn-text btn-secondary',
+    accept: removePhoto
+  })
+}
+
+async function removePhoto() {
+  removingPhoto.value = true
+  try {
+    updateUser(await api.removeAvatar())
+    toast.add({ severity: 'success', detail: t('avatar.removed'), life: 3000 })
+  } catch (error) {
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
+  } finally {
+    removingPhoto.value = false
+  }
+}
+
+async function savePhotoVisibility(value) {
+  const before = currentUser.value?.avatarVisibility
+  updateUser({ avatarVisibility: value })
+  savingPhotoVisibility.value = true
+  try {
+    updateUser(await api.setAvatarVisibility(value))
+  } catch (error) {
+    updateUser({ avatarVisibility: before })
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
+  } finally {
+    savingPhotoVisibility.value = false
+  }
+}
 
 const user = currentUser
 const isPublic = computed(() => Boolean(user.value?.isPublic))
@@ -635,8 +845,8 @@ async function copyLink() {
   try {
     await navigator.clipboard.writeText(publicUrl.value)
   } catch {
-    // Sem permissão de clipboard (http, navegador antigo): seleciona o texto.
-    document.getElementById('settings-public-link')?.select()
+    // Sem permissão de clipboard (http, navegador antigo): mostra o link para copiar à mão
+    toast.add({ severity: 'info', detail: t('settings.public.copyFallback', { url: publicUrl.value }), life: 8000 })
     return
   }
   copied.value = true
@@ -677,6 +887,13 @@ async function unblockUser(username) {
 }
 
 onMounted(loadBlocked)
+
+// Valor da linha "Leitores bloqueados": quantos (ou "Ninguém")
+const blockedValue = computed(() => {
+  if (!blockedLoaded.value) return ''
+  const n = blockedUsers.value.length
+  return n ? t('settings.blockedCount', { n }, n) : t('settings.blockedNone')
+})
 
 // --- Senha ---
 // Erros embaixo de cada campo (como no cadastro), em vez de um aviso solto
@@ -719,6 +936,7 @@ async function changePassword() {
     const result = await api.changePassword(passwordForm.current, passwordForm.next)
     setUser(result.user)
     Object.assign(passwordForm, { current: '', next: '', confirm: '' })
+    passwordSheetOpen.value = false
     toast.add({ severity: 'success', detail: t('settings.password.success'), life: 3000 })
     // Os watchers limpam os erros no próximo tick; o formulário volta vazio e sem erro
   } catch (error) {
@@ -882,85 +1100,123 @@ async function deleteAccount() {
 }
 
 .settings-content {
-  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 640px;
   margin: 0 auto;
 }
 
-.settings-index {
+/* Cabeçalho de perfil */
+.profile-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: -1rem 0 1.75rem;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel);
 }
 
-.index-link {
+.profile-photo {
+  position: relative;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.profile-photo:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.photo-badge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--main-solid);
+  color: var(--on-main);
+  box-shadow: 0 0 0 3px var(--bg-panel);
+  font-size: var(--fs-sm);
+}
+
+.profile-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.profile-text h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  overflow-wrap: anywhere;
+}
+
+.profile-email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.email-text {
+  overflow-wrap: anywhere;
+}
+
+.email-badge {
   display: inline-flex;
   align-items: center;
-  min-height: 2.25rem;
-  padding: 0.35rem 0.9rem;
-  border: 1px solid var(--border-color);
+  gap: 0.25rem;
+  padding: 0.05rem 0.5rem;
   border-radius: var(--radius-pill);
-  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.email-badge.ok {
+  background: rgba(var(--green-rgb), 0.12);
+  color: var(--success);
+}
+
+.email-badge.pending {
+  background: rgba(var(--yellow-rgb), 0.16);
+  color: var(--warning);
+}
+
+.profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 32px;
+  width: fit-content;
+  color: var(--main-color);
   font-size: var(--fs-sm);
   font-weight: 600;
   text-decoration: none;
-  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.index-link:hover {
-  border-color: var(--main-color);
-  color: var(--text-primary);
-}
-
-.settings-card {
-  scroll-margin-top: 5rem;
-}
-
-.settings-card:focus {
-  outline: none;
-}
-
-@media (pointer: coarse) {
-  .index-link {
-    min-height: 2.75rem;
-  }
-}
-
-.settings-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.settings-card {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-}
-
-.settings-card.danger {
-  border-color: rgba(var(--red-rgb), 0.4);
-}
-
-.settings-card h2 {
-  margin: 0 0 0.5rem 0;
-  font-size: var(--fs-lg);
-  color: var(--text-primary);
-}
-
-.card-desc {
-  margin: 0 0 1.25rem 0;
-  color: var(--text-secondary);
-  font-size: var(--fs-md);
-  line-height: 1.5;
+.profile-link:hover {
+  text-decoration: underline;
 }
 
 .verify-note {
   display: flex;
   gap: 0.5rem;
   align-items: flex-start;
-  margin: -0.5rem 0 1.25rem;
+  margin: 0;
   padding: 0.7rem 0.9rem;
   border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
@@ -974,96 +1230,38 @@ async function deleteAccount() {
   margin-top: 0.15rem;
 }
 
-.toggle-block {
+/* Grupos de linhas, como os Ajustes de um celular */
+.settings-group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
-.blocked-block .toggle-help {
-  padding-left: 0;
+.settings-group:focus {
+  outline: none;
 }
 
-.toggle-row + .toggle-block {
-  margin-top: 1rem;
-}
-
-.toggle-help {
+.group-title {
+  margin: 0;
+  padding: 0 var(--space-4);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
-  line-height: 1.45;
-  padding-left: 3.75rem;
+  font-weight: 600;
 }
 
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--text-primary);
-}
-
-.public-link {
-  margin-top: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.public-link label,
-.field label {
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-}
-
-.link-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.modern-input {
-  flex: 1;
-  min-width: 0;
-  background-color: var(--bg-input);
+.group-list {
+  overflow: hidden;
   border: 1px solid var(--border-color);
-  padding: 0.7rem 1rem;
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-size: var(--fs-md);
-}
-
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: stretch;
-}
-
-.stack>.btn {
-  align-self: flex-start;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.w-full,
-.w-full :deep(input) {
-  width: 100%;
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel);
 }
 
 .privacy-link {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 var(--space-4);
   color: var(--text-secondary);
   text-decoration: none;
   font-size: var(--fs-md);
@@ -1074,71 +1272,123 @@ async function deleteAccount() {
   color: var(--main-color);
 }
 
-.account-rows {
-  margin: 0;
+/* Folhas */
+.sheet-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-4);
 }
 
-.account-row {
-  display: grid;
-  grid-template-columns: 9rem minmax(0, 1fr);
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.account-row:last-child {
-  border-bottom: none;
-}
-
-.account-row dt {
+.sheet-text {
+  margin: 0;
   color: var(--text-secondary);
   font-size: var(--fs-md);
+  line-height: 1.5;
 }
 
-.account-row dd {
-  margin: 0;
+.sheet-submit {
+  min-height: 48px;
+}
+
+.photo-block {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--space-4);
+}
+
+.photo-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   min-width: 0;
 }
 
-.account-value {
-  color: var(--text-primary);
-  font-weight: 600;
-  overflow-wrap: anywhere;
+.photo-status {
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
 }
 
-.badge-pending {
-  display: inline-block;
-  margin-left: 0.4rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: var(--radius-pill);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--warning);
-  background: color-mix(in srgb, var(--warning) 15%, transparent);
-}
-
-.button-row {
+.photo-actions {
   display: flex;
-  gap: 0.6rem;
   flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-.sub-title {
-  margin: 1.5rem 0 0.25rem;
-  font-size: var(--fs-md);
-  color: var(--text-primary);
+.photo-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.photo-note.warn .pi {
+  color: var(--warning);
+  margin-top: 0.15rem;
+}
+
+.vis-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.vis-group legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-weight: 600;
+}
+
+.vis-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.vis-option.selected {
+  border-color: var(--main-color);
+  background: rgba(var(--main-color-rgb), 0.08);
+}
+
+.vis-option input {
+  accent-color: var(--main-solid);
+}
+
+.blocked-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.blocked-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.blocked-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .import-steps {
-  margin: 0 0 1rem;
+  margin: 0;
   padding-left: 1.2rem;
   color: var(--text-secondary);
   font-size: var(--fs-md);
@@ -1150,6 +1400,7 @@ async function deleteAccount() {
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
+  min-height: 56px;
   padding: 1.1rem;
   border: 2px dashed var(--border-color);
   border-radius: var(--radius-md);
@@ -1170,7 +1421,6 @@ async function deleteAccount() {
 }
 
 .import-result {
-  margin-top: 1rem;
   padding: 0.9rem 1rem;
   border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
@@ -1197,6 +1447,25 @@ async function deleteAccount() {
   font-weight: 600;
 }
 
+/* Janelas de nome de usuário, e-mail e exclusão */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.stack>.btn {
+  align-self: flex-start;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.card-desc,
 .dialog-hint {
   margin: 0;
   color: var(--text-secondary);
@@ -1204,68 +1473,31 @@ async function deleteAccount() {
   line-height: 1.5;
 }
 
-.plain-input {
-  width: 100%;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  padding: 0.7rem 0.9rem;
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font: inherit;
-  box-sizing: border-box;
-}
-
-.plain-input:focus {
-  border-color: var(--main-color);
-  outline: none;
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 @media (max-width: 639.98px) {
-  .account-row {
-    grid-template-columns: 1fr;
-    gap: 0.1rem;
-  }
-
   .settings-container {
-    padding: 1.25rem;
+    padding: 1.25rem 1rem;
   }
 
-  .link-row {
-    flex-direction: column;
+  .settings-content {
+    gap: var(--space-4);
   }
-}
-.blocked-block {
-  border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
-}
 
-.blocked-block .sub-title {
-  margin: 0 0 0.5rem;
-  font-size: var(--fs-md);
-  font-weight: 600;
-  color: var(--text-primary);
-}
+  .profile-card {
+    padding: var(--space-4);
+  }
 
-.blocked-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.blocked-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.blocked-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Celular: o botão de cada folha ocupa a largura toda */
+  .sheet-submit,
+  .stack > .btn {
+    align-self: stretch;
+    width: 100%;
+  }
 }
 </style>

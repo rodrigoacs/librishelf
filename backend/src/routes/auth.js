@@ -10,6 +10,31 @@ import { clearUnlockCookie } from '../middlewares/admin.js'
 import { track } from '../utils/metrics.js'
 import logger from '../utils/logger.js'
 import { errorBody, httpError } from '../utils/httpError.js'
+import multer from 'multer'
+import * as avatarService from '../services/avatarService.js'
+import { uploadLimiter } from '../middlewares/rateLimiter.js'
+
+// Foto de perfil: chega já recortada pelo app (quadrada); até 10 MB
+const MAX_AVATAR_MB = 10
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 1024 * 1024 * MAX_AVATAR_MB, files: 1, fields: 5, fieldSize: 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) return cb(new Error('Apenas arquivos de imagem são permitidos.'))
+    cb(null, true)
+  }
+})
+
+function receiveAvatar(req, res, next) {
+  avatarUpload.single('avatar')(req, res, (err) => {
+    if (!err) return next()
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(STATUS.BAD_REQUEST).json(errorBody(`A imagem pode ter no máximo ${MAX_AVATAR_MB} MB.`, 'IMAGE_TOO_LARGE', { max: MAX_AVATAR_MB }))
+    }
+    if (err instanceof multer.MulterError) return res.status(STATUS.BAD_REQUEST).json(errorBody('Envio inválido.', 'UPLOAD_INVALID'))
+    return res.status(STATUS.BAD_REQUEST).json(errorBody(err.message, 'IMAGE_ONLY'))
+  })
+}
 
 const router = express.Router()
 
@@ -186,6 +211,32 @@ router.patch('/me/notifications', authenticateToken, async (req, res) => {
     res.status(STATUS.OK).json(await authService.setNotifications(req.user.id, req.body ?? {}))
   } catch (error) {
     sendError(res, error, 'Erro ao alterar avisos por e-mail')
+  }
+})
+
+// Foto de perfil: enviar/trocar (multipart "avatar" + "visibility" opcional),
+// tirar e mudar quem vê ({ visibility: everyone | followers | nobody })
+router.put('/me/avatar', authenticateToken, uploadLimiter, receiveAvatar, track('avatar.upload'), async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await avatarService.upload(req.user.id, req.file?.buffer, req.body?.visibility))
+  } catch (error) {
+    sendError(res, error, 'Erro ao salvar foto')
+  }
+})
+
+router.delete('/me/avatar', authenticateToken, async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await avatarService.remove(req.user.id))
+  } catch (error) {
+    sendError(res, error, 'Erro ao tirar foto')
+  }
+})
+
+router.patch('/me/avatar', authenticateToken, async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await avatarService.setVisibility(req.user.id, req.body?.visibility))
+  } catch (error) {
+    sendError(res, error, 'Erro ao mudar quem vê a foto')
   }
 })
 

@@ -391,7 +391,8 @@
       "link": "Your public link",
       "on": "Your library is now public.",
       "off": "Your library is now private.",
-      "error": "Could not change visibility."
+      "error": "Could not change visibility.",
+      "copyFallback": "Could not copy — your link: {url}"
     },
     "indexing": {
       "toggle": "Show in search engines (Google, Bing…)",
@@ -401,7 +402,6 @@
     },
     "notifications": {
       "title": "Email notifications",
-      "desc": "Get an email when someone asks to follow you and when your request is accepted.",
       "verifyFirst": "Confirm your email to receive notifications.",
       "follow": "Follow requests and accepted requests",
       "followHelp": "Sent to {email}. At most one email every {hours} hours — anything in between comes together. Every email has an unsubscribe link.",
@@ -431,7 +431,6 @@
     "privacyLink": "Read the privacy policy",
     "community": {
       "title": "Community",
-      "desc": "Choose how other readers can interact with you. Everything starts off.",
       "toggle": "Join the community",
       "help": "Other readers will see that you have the same books, your rating and how many books you share.",
       "needs_public": "Only available when your library is public.",
@@ -447,10 +446,8 @@
     "verifyFirst": "Confirm your email to turn these on. Use the link we sent or the \"Resend link\" button at the top of the page.",
     "account": {
       "title": "Username and email",
-      "desc": "Your username (also your public library address) and contact email.",
       "username": "Username",
       "email": "Email",
-      "change": "Change",
       "notVerified": "not confirmed",
       "usernameTitle": "Change username",
       "emailTitle": "Change email",
@@ -463,7 +460,6 @@
     },
     "data": {
       "title": "Your data",
-      "exportDesc": "Download a copy of everything: books, ratings, notes, status, goals and account data. The CSV opens in spreadsheets and can be imported back.",
       "exportJson": "Download everything (JSON)",
       "exportCsv": "Download books (CSV)",
       "importTitle": "Import books",
@@ -477,22 +473,28 @@
       "duplicates": "{n} was already on your shelf | {n} were already on your shelf",
       "failed": "{n} with problems | {n} with problems",
       "errorLine": "Line {line} ({title})",
-      "seeLibrary": "See in library"
-    },
-    "index": {
-      "label": "On this page",
-      "privacy": "Privacy",
-      "account": "Account",
-      "notifications": "Notifications",
-      "password": "Password",
-      "data": "Data",
-      "delete": "Delete"
+      "seeLibrary": "See in library",
+      "exportJsonHelp": "Books, ratings, notes, goals and account data",
+      "exportCsvHelp": "Opens in spreadsheets and can be imported back",
+      "importShort": "From Goodreads or a Librishelf CSV"
     },
     "errors": {
       "required": "Fill in this field.",
       "email": "Enter a valid email, like name{'@'}example.com."
     },
-    "exportFailed": "Could not export your data."
+    "exportFailed": "Could not export your data.",
+    "profile": {
+      "photoButton": "Profile photo: change it or who can see it",
+      "verified": "verified",
+      "seeLibrary": "See my public library"
+    },
+    "groups": {
+      "profile": "Profile",
+      "privacy": "Privacy",
+      "security": "Security"
+    },
+    "blockedCount": "{n} reader | {n} readers",
+    "blockedNone": "Nobody"
   },
   "discover": {
     "tab": "Discover",
@@ -1224,7 +1226,17 @@
     "restore": "Show review again",
     "keepHint": "Keeping or showing it again resets the count for automatic hiding.",
     "hiddenDone": "Review hidden",
-    "keptDone": "Review visible"
+    "keptDone": "Review visible",
+    "avatarRemoved": "The photo was removed; the account shows its initial",
+    "avatarHiddenAuto": "Taken down after reports until someone reviews it",
+    "avatarVisible": "Visible",
+    "avatarAlt": "{name}'s profile photo",
+    "avatarRemove": "Remove the photo",
+    "avatarHint": "Keeping clears the reports for this photo. Removing deletes it; the person can add another one.",
+    "avatarRemovedDone": "Photo removed",
+    "avatarKeep": "Keep the photo",
+    "avatarRestore": "Restore the photo",
+    "avatarKeptDone": "Photo kept"
   },
   "lists": {
     "title": "Lists",
@@ -1458,6 +1470,17 @@
         "serialDetail": "{n} reports · {upheld} hidden · {rejected} kept · {week} this week",
         "freshDetail": "{n} reports on {reviews} reviews · account from {date}",
         "mostDetail": "{n} reports on {reviews} reviews · {hidden} hidden"
+      },
+      "avatars": {
+        "kind": "What to see",
+        "kindReviews": "Reviews",
+        "kindAvatars": "Profile photos",
+        "queue": "Reported profile photos",
+        "empty": {
+          "open": "No photos waiting for review.",
+          "hidden": "No photos taken down.",
+          "all": "No photos have been reported."
+        }
       }
     },
     "accounts": {
@@ -1517,7 +1540,9 @@
         "user_suspend": "Suspended account",
         "user_reactivate": "Reactivated account",
         "user_resend_verification": "Resent confirmation",
-        "email_test": "Sent test email"
+        "email_test": "Sent test email",
+        "avatar_remove": "Removed profile photo",
+        "avatar_keep": "Kept profile photo"
       },
       "review": "review #{id}",
       "deleted": "deleted account",
@@ -1719,5 +1744,47 @@
   "pullRefresh": {
     "refreshing": "Refreshing…",
     "done": "Updated"
+  },
+  "avatar": {
+    "title": "Profile photo",
+    "none": "No photo: your initial shows instead",
+    "visibilityShort": {
+      "everyone": "Everyone can see it",
+      "followers": "Only your followers see it",
+      "nobody": "Only you see it"
+    },
+    "choose": "Choose photo",
+    "change": "Change photo",
+    "remove": "Remove photo",
+    "needsEmail": "Confirm your email to add a profile photo.",
+    "hiddenNotice": "Your photo was taken down after reports and is under review. Meanwhile, your initial shows instead.",
+    "visibilityLabel": "Who can see the photo",
+    "visibility": {
+      "everyone": "Everyone",
+      "followers": "Only my followers",
+      "nobody": "Only me"
+    },
+    "notImage": "Choose an image file.",
+    "saved": "Profile photo saved",
+    "removeTitle": "Remove your profile photo?",
+    "removeText": "Your initial will show instead.",
+    "removed": "Photo removed",
+    "cropTitle": "Adjust photo",
+    "stageLabel": "Photo crop",
+    "hintTouch": "Drag to position and pinch with two fingers to zoom.",
+    "hintPointer": "Drag to position; zoom with the mouse wheel, the slider below or the + and − keys.",
+    "zoom": "Zoom",
+    "save": "Save photo",
+    "loadError": "Could not open this image. Try another one.",
+    "saveError": "Could not save the photo. Try again.",
+    "report": "Report photo",
+    "reportTitle": "Report profile photo",
+    "reportIntro": "{name}'s photo goes to moderation. They won't know who reported it.",
+    "reasons": {
+      "offensive": "Offensive or inappropriate",
+      "impersonation": "Impersonating someone",
+      "spam": "Spam or advertising",
+      "other": "Other"
+    }
   }
 }

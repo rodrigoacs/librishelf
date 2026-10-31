@@ -9,6 +9,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Your collection, your way** — add books with authors, publisher, ISBN, tags, publication date, cover art and a 1–5 star rating.
 - **ISBN lookup, barcode and title search** — type or scan an ISBN with the camera, or search by title/author, and the title, authors, publisher, date, pages and cover are filled in from [Open Library](https://openlibrary.org) (queried by the server, never by the browser). Invalid ISBNs are flagged so you can fix them.
 - **Reading log** — want to read, reading and read; every reading is kept, so rereads count again (with their own dates and an optional rating), and books in progress track the current page or percentage.
+- **Profile photo** — pick a photo and crop it in a circle (pinch and drag on the phone; drag, wheel, slider or keyboard on desktop), and choose who sees it: everyone, only your followers or only you. Everyone else sees your initial. Photos can be reported like reviews.
 - **Reviews** — write a review per book (spoiler warning, public or followers only); readers can like and report them, with moderation by email.
 - **Lists** — "Best of 2026", "Vacation reads": pick books from your shelf, drag (or use the keyboard) to order them, optionally numbered. Public lists show on your profile and get their own shareable page (`/u/your-username/lists/<id>`) with a link preview of the list's covers.
 - **Search and filters** — search by title or ISBN; filter by author, publisher, tag, reading status and year; sort by any field.
@@ -16,7 +17,7 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Your year in books** — a yearly recap (available all year; "so far" for the current one): books and pages read, month by month, goal, best rated, most-read authors and records (longest, fastest…), plus a 9:16 story image drawn in the browser to download or share.
 - **Public library (opt-in)** — share a read-only link (`/u/your-username`) to your shelf (with a link preview on WhatsApp and social networks: title, book count and a mosaic of your covers), with a profile: reading by year, top authors and tags, recently read and books you have in common. Libraries are private by default.
 - **Community (opt-in)** — see who else has a book, their average rating and what people who have it also have. Follow other readers (they approve each request) and get a feed of what they add and finish. Everything is off until the user turns it on.
-- **Admin area** (`/admin`, desktop) — for accounts with `role = 'admin'`, after re-entering the password (unlocked for 30 idle minutes): site numbers and weekly sign-ups, the queue of reported reviews (hide / keep), account search with suspend / reactivate (nothing is deleted; a suspended account can't sign in and its public pages disappear) a log of every admin action, usage (sign-up funnel, who uses each feature, daily counters such as camera scans and imports), moderation signals (frequent reporters, new accounts already reported), a per-account drawer (totals, privacy flags, history; resend confirmation) and a **System** tab: backend/frontend versions, database and pending migrations, disk and covers, SMTP status with a test email, Open Library calls and failure rate, rate-limit hits and the latest 500 errors. Optional: set `APP_VERSION` (e.g. the git commit) to show it there.
+- **Admin area** (`/admin`, desktop) — for accounts with `role = 'admin'`, after re-entering the password (unlocked for 30 idle minutes): site numbers and weekly sign-ups, the queue of reported reviews (hide / keep) and of reported profile photos (keep / remove), account search with suspend / reactivate (nothing is deleted; a suspended account can't sign in and its public pages disappear) a log of every admin action, usage (sign-up funnel, who uses each feature, daily counters such as camera scans and imports), moderation signals (frequent reporters, new accounts already reported), a per-account drawer (totals, privacy flags, history; resend confirmation) and a **System** tab: backend/frontend versions, database and pending migrations, disk and covers, SMTP status with a test email, Open Library calls and failure rate, rate-limit hits and the latest 500 errors. Optional: set `APP_VERSION` (e.g. the git commit) to show it there.
 - **Account control** — email confirmation, password recovery by email, change your password (signs out other sessions), sign out that ends the session on the server (the old cookie stops working), download all your data (JSON, including follows, blocks, likes and reports; or books as CSV) and delete your account with all its data. Usernames and emails are unique regardless of case (`Demo` = `demo`).
 - **Portuguese and English**, light and dark themes, six accent colors.
 
@@ -154,7 +155,7 @@ server {
 
 ### Email (password recovery and sign-up confirmation)
 
-The API sends email over SMTP: the password reset link (valid for 1 hour), the sign-up confirmation link (valid for 3 days) and, for users who turn it on in Account, follower notifications (someone asked to follow you / accepted your request) — at most one every `FOLLOW_EMAIL_INTERVAL_HOURS` (default 6), with one-click unsubscribe (`List-Unsubscribe` + `List-Unsubscribe-Post`, RFC 8058). When a reader reports a review, `ADMIN_EMAIL` gets the review text and a signed link to `/moderation` to hide it or keep it visible; after 3 reports from different readers it is hidden automatically until reviewed. Until a user confirms their email, public library, community and following stay locked; accounts that existed before this version count as confirmed.
+The API sends email over SMTP: the password reset link (valid for 1 hour), the sign-up confirmation link (valid for 3 days) and, for users who turn it on in Account, follower notifications (someone asked to follow you / accepted your request) — at most one every `FOLLOW_EMAIL_INTERVAL_HOURS` (default 6), with one-click unsubscribe (`List-Unsubscribe` + `List-Unsubscribe-Post`, RFC 8058). When a reader reports a review, `ADMIN_EMAIL` gets the review text and a signed link to `/moderation` to hide it or keep it visible; after 3 reports from different readers it is hidden automatically until reviewed. Reported profile photos work the same way (signed link to keep or remove the photo; 3 reports take it down until reviewed). Until a user confirms their email, public library, community and following stay locked; accounts that existed before this version count as confirmed.
 
 Set in `backend/src/.env`:
 
@@ -167,7 +168,7 @@ SMTP_USER=...
 SMTP_PASS=...
 MAIL_FROM="Librishelf <noreply@librishelf.com>"
 # FOLLOW_EMAIL_INTERVAL_HOURS=6         # optional
-ADMIN_EMAIL=you@example.com             # receives review reports (link to hide/keep); without it reports only go to the log
+ADMIN_EMAIL=you@example.com             # receives review and profile photo reports (signed moderation link); without it reports only go to the log
 ```
 
 To send as `@librishelf.com` without landing in spam, add the SPF and DKIM records your SMTP provider gives you to the domain's DNS (and ideally a DMARC record). Without `SMTP_HOST` nothing is sent: the email content, links included, goes to the server log — handy for local development.
@@ -184,6 +185,8 @@ docker compose up -d
 Migrations must run as the role that **owns** the tables (the same `DB_USER` the app uses, if it created them). Back up first: `003_per_user_names_and_community` moves authors, publishers and tags from shared tables to per-user ones (each user gets their own copy; case-only duplicates are merged).
 
 `016_cover_version_and_fk_indexes` records which books have a cover by reading the files in `UPLOAD_DIR` (the `./uploads` volume, mounted by `docker compose run` too). If covers were restored later or the volume was missing during the migration, run `docker compose exec backend npm run covers:sync:docker` to check again (it never clears anything when the folder is empty, unless you pass `-- --force`).
+
+`017_user_avatars` adds profile photos. The files live in `UPLOAD_DIR/avatars/` (`{user id}-sm|lg.avif|jpg`), on the same `./uploads` volume as the covers, so the same backup covers both.
 
 Optional, after upgrading: link books that already have an ISBN to Open Library, so they match other readers' copies even across editions. Set `OPENLIBRARY_CONTACT` (an e-mail, sent in the User-Agent as Open Library asks) and run:
 

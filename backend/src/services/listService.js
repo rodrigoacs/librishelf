@@ -1,4 +1,5 @@
 import { db } from '../database/connection.js'
+import { visibleAvatar } from './avatarService.js'
 import { LIST_QUERIES as q } from '../database/queries.js'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
@@ -230,7 +231,7 @@ async function publicList(username, listId) {
 export async function getPublic(username, listId) {
   const found = await publicList(username, listId)
   if (!found) throw notFound()
-  return { ...(await withItems(found.row)), owner: { username: found.user.name } }
+  return { ...(await withItems(found.row)), owner: { username: found.user.name, avatarVersion: await visibleAvatar(found.user.id, null) } }
 }
 
 /** Para a prévia do link (metaService): { user, list } ou null, com a mesma regra. */

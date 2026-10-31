@@ -26,6 +26,7 @@
         >
           <ReaderAvatar
             :username="review.author.username"
+            :avatar="review.author.avatarVersion ?? null"
             size="sm"
           />
           <ReaderName

@@ -314,6 +314,7 @@
           >
             <ReaderAvatar
               :username="event.username"
+              :avatar="event.avatarVersion ?? null"
               size="sm"
               :badge="event.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"
             />

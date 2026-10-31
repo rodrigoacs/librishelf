@@ -21,6 +21,7 @@
         <template #lead>
           <ReaderAvatar
             :username="ownerName || username"
+            :avatar="profile?.avatarVersion ?? null"
             size="lg"
           />
         </template>
@@ -90,6 +91,12 @@
               id="profile-more-menu"
               ref="moreMenu"
               :items="moreItems"
+            />
+            <ReportDialog
+              v-if="profile?.avatarVersion"
+              v-model:visible="reportAvatarOpen"
+              kind="avatar"
+              :username="ownerName || username"
             />
           </template>
 
@@ -462,6 +469,7 @@ import BookItem from '../components/BookItem.vue'
 import BookDialog from '../components/BookDialog.vue'
 import StarRating from '../components/StarRating.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
+import ReportDialog from '../components/review/ReportDialog.vue'
 import IconButton from '../components/form/IconButton.vue'
 import PopupMenu from '../components/ui/PopupMenu.vue'
 import { useConfirm } from '../services/confirm.js'
@@ -557,7 +565,10 @@ const confirm = useConfirm()
 const moreMenu = ref(null)
 const blockBusy = ref(false)
 
+// Denunciar a foto: só quando ela aparece (e não é a minha página)
+const reportAvatarOpen = ref(false)
 const moreItems = computed(() => [
+  ...(profile.value?.avatarVersion ? [{ label: t('avatar.report'), icon: 'pi pi-flag', command: () => { reportAvatarOpen.value = true } }] : []),
   { label: t('block.block', { name: username.value }), icon: 'pi pi-ban', command: askBlock }
 ])
 

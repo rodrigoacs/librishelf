@@ -98,7 +98,7 @@ export async function connections(viewerId) {
   const rows = await socialRepository.connections(viewerId)
   const pick = kind => rows
     .filter(row => row.kind === kind)
-    .map(row => ({ username: row.username, status: row.status, isPublic: row.is_public, since: row.created_at }))
+    .map(row => ({ username: row.username, status: row.status, isPublic: row.is_public, since: row.created_at, avatarVersion: row.avatar_version ?? null }))
 
   return { following: pick('following'), followers: pick('follower'), requests: pick('request') }
 }
@@ -129,6 +129,7 @@ export async function feed(viewerId, page, kinds) {
       ...(row.day ? { date: row.day } : {}),
       username: row.username,
       isPublic: row.is_public,
+      avatarVersion: row.avatar_version ?? null,
       bookId: row.book_id,
       coverVersion: row.cover_version,
       title: row.title,

@@ -1,5 +1,23 @@
 <template>
   <div class="moderation">
+    <!-- Resenhas ou fotos de perfil denunciadas -->
+    <div
+      class="filters kinds"
+      role="radiogroup"
+      :aria-label="t('admin.moderation.avatars.kind')"
+    >
+      <button
+        v-for="option in kinds"
+        :key="option.value"
+        type="button"
+        role="radio"
+        class="filter"
+        :class="{ active: kind === option.value }"
+        :aria-checked="kind === option.value"
+        @click="kind = option.value"
+      >{{ option.label }}</button>
+    </div>
+
     <div
       class="filters"
       role="radiogroup"
@@ -17,8 +35,15 @@
       >{{ option.label }}</button>
     </div>
 
+    <AdminAvatarQueue
+      v-if="kind === 'avatars'"
+      :status="status"
+      @open-user="id => emit('open-user', id)"
+      @changed="emit('changed')"
+    />
+
     <details
-      v-if="insights"
+      v-if="insights && kind === 'reviews'"
       class="insights"
     >
       <summary>
@@ -62,7 +87,10 @@
       </div>
     </details>
 
-    <div class="layout">
+    <div
+      v-if="kind === 'reviews'"
+      class="layout"
+    >
       <section
         class="queue"
         :aria-label="t('admin.moderation.queue')"
@@ -232,6 +260,7 @@ import AppButton from '../ui/AppButton.vue'
 import AppSkeleton from '../ui/AppSkeleton.vue'
 import EmptyState from '../ui/EmptyState.vue'
 import ReviewCard from '../review/ReviewCard.vue'
+import AdminAvatarQueue from './AdminAvatarQueue.vue'
 import api from '../../services/api.js'
 import { useToast } from '../../services/toast.js'
 import { LockedError, useAdminCall, formatDateTime } from './adminCall.js'
@@ -242,6 +271,11 @@ const toast = useToast()
 const call = useAdminCall()
 
 const status = ref('open')
+const kind = ref('reviews') // reviews | avatars
+const kinds = computed(() => [
+  { value: 'reviews', label: t('admin.moderation.avatars.kindReviews') },
+  { value: 'avatars', label: t('admin.moderation.avatars.kindAvatars') }
+])
 const items = ref([])
 const loading = ref(true)
 const failed = ref(false)
@@ -305,7 +339,7 @@ async function loadQueue() {
 function setStatus(value) {
   if (status.value === value) return
   status.value = value
-  loadQueue()
+  if (kind.value === 'reviews') loadQueue()
 }
 
 async function select(id) {

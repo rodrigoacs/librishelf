@@ -1,4 +1,5 @@
 import * as communityRepository from '../repositories/communityRepository.js'
+import { visibleAvatar } from './avatarService.js'
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import * as socialRepository from '../repositories/socialRepository.js'
@@ -68,7 +69,7 @@ export async function bookCommunity(bookId, userId) {
     reviews,
     readerCount: readers.length,
     readers: readers
-      .map(r => ({ username: r.username, hasRead: r.has_read, rating: r.rating }))
+      .map(r => ({ username: r.username, hasRead: r.has_read, rating: r.rating, avatarVersion: r.avatar_version ?? null }))
       .sort((a, b) => a.username.localeCompare(b.username))
       .slice(0, MAX_READERS_LISTED),
     averageRating: ratings.length ? Math.round((ratings.reduce((s, r) => s + r, 0) / ratings.length) * 10) / 10 : null,
@@ -96,6 +97,7 @@ export async function publicProfile(username, viewerId) {
 
   const profile = {
     username: user.name,
+    avatarVersion: await visibleAvatar(user.id, viewerId),
     acceptsFollowers: Boolean(user.show_activity),
     inCommunity: Boolean(user.show_in_community),
     indexable: Boolean(user.allow_indexing),
@@ -160,6 +162,7 @@ export async function findReaders(viewerId, rawText) {
       const person = live.get(row.id)
       return {
         username: person.username,
+        avatarVersion: person.avatar_version ?? null,
         acceptsFollowers: Boolean(person.accepts_followers),
         totalBooks: row.total_books,
         readBooks: row.read_books,

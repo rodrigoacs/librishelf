@@ -89,7 +89,9 @@ export async function exportJson(userId) {
       showInCommunity: user.show_in_community,
       showActivity: user.show_activity,
       allowIndexing: user.allow_indexing,
-      followEmails: user.follow_emails
+      followEmails: user.follow_emails,
+      // A foto em si fica no app (Conta → Foto de perfil); aqui, se há e quem vê
+      avatar: { hasPhoto: Boolean(user.has_avatar), visibility: user.avatar_visibility }
     },
     notifications: {
       followEmails: user.follow_emails,

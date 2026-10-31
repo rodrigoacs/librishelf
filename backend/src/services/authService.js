@@ -1,4 +1,5 @@
 import * as authRepository from '../repositories/authRepository.js'
+import { removeFiles as removeAvatarFiles } from './avatarService.js'
 import STATUS from '../utils/statusCodes.js'
 import { validatePassword } from '../utils/passwordPolicy.js'
 import { deleteBookCover } from '../utils/imageProcessor.js'
@@ -76,7 +77,11 @@ function toProfile(user) {
     allowIndexing: Boolean(user.allow_indexing),
     followEmails: Boolean(user.follow_emails),
     emailVerified: Boolean(user.email_verified_at),
-    isAdmin: user.role === 'admin'
+    isAdmin: user.role === 'admin',
+    // Foto de perfil (a própria pessoa sempre vê, mesmo ocultada por denúncia)
+    avatarVersion: user.avatar_version ?? null,
+    avatarVisibility: user.avatar_visibility || 'followers',
+    avatarHidden: Boolean(user.avatar_hidden_at)
   }
 }
 
@@ -465,6 +470,8 @@ async function deleteAccount(userId, password) {
   if (failed > 0) {
     logger.warn('Algumas capas não foram removidas na exclusão de conta', { userId, failed })
   }
+
+  await removeAvatarFiles(userId).catch(err => logger.warn('Foto de perfil não removida na exclusão de conta', { userId, message: err.message }))
 
   logger.info('Conta excluída', { userId, books: bookIds.length })
 }

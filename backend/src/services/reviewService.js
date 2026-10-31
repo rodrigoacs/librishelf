@@ -49,7 +49,7 @@ export function toApi(row, { own = false } = {}) {
     visibility: row.visibility,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    author: { username: row.username, isPublic: row.is_public },
+    author: { username: row.username, isPublic: row.is_public, avatarVersion: row.avatar_version ?? null },
     book: { title: row.title, authors: row.authors, rating: row.rating },
     likeCount: row.like_count,
     likedByMe: row.liked_by_me

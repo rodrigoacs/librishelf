@@ -258,7 +258,7 @@ describe('Comunidade', () => {
     await privacy('bia', { showInCommunity: true })
     const res = await community()
     expect(res.body.readerCount).toBe(1)
-    expect(res.body.readers).toEqual([{ username: 'bia', hasRead: false, rating: 5 }])
+    expect(res.body.readers).toEqual([{ username: 'bia', hasRead: false, rating: 5, avatarVersion: null }])
   })
 
   it('"aparecer para outros leitores" sem biblioteca pública não expõe ninguém', async () => {

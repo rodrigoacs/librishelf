@@ -219,6 +219,37 @@ export default {
     return client.post(`/reviews/${reviewId}/report`, { reason, note })
   },
 
+  // --- Foto de perfil ---
+  /** blob já recortado (quadrado); visibility: everyone | followers | nobody */
+  uploadAvatar(blob, visibility) {
+    const formData = new FormData()
+    formData.append('avatar', blob, 'avatar.jpg')
+    if (visibility) formData.append('visibility', visibility)
+    return client.put('/auth/me/avatar', formData)
+  },
+
+  removeAvatar() {
+    return client.delete('/auth/me/avatar')
+  },
+
+  setAvatarVisibility(visibility) {
+    return client.patch('/auth/me/avatar', { visibility })
+  },
+
+  /** reason: offensive | impersonation | spam | other */
+  reportAvatar(username, reason, note) {
+    return client.post(`/avatars/${encodeURIComponent(username)}/report`, { reason, note })
+  },
+
+  getAvatarModeration(token) {
+    return client.get(`/moderation/avatar?token=${encodeURIComponent(token)}`)
+  },
+
+  /** action: keep | remove */
+  moderateAvatarByLink(token, action) {
+    return client.post(`/moderation/avatar/${action}?token=${encodeURIComponent(token)}`, {})
+  },
+
   // Moderação pelo link do e-mail de denúncia (sem login)
   getModeration(token) {
     return client.get(`/moderation/review?token=${enc(token)}`)
@@ -425,6 +456,20 @@ export default {
 
   adminModerateReview(id, hide) {
     return client.post(`/admin/reviews/${id}/${hide ? 'hide' : 'show'}`, {})
+  },
+
+  /** Fotos de perfil denunciadas. status: 'open' | 'hidden' | 'all' */
+  adminAvatarReports(status = 'open') {
+    return client.get(`/admin/avatar-reports${toQuery({ status })}`)
+  },
+
+  adminAvatar(userId) {
+    return client.get(`/admin/avatars/${userId}`)
+  },
+
+  /** action: keep | remove */
+  adminModerateAvatar(userId, action) {
+    return client.post(`/admin/avatars/${userId}/${action}`, {})
   },
 
   /** { q?, status?: 'all' | 'suspended', page?, limit? } */

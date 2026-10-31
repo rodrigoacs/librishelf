@@ -6,9 +6,10 @@
     aria-hidden="true"
   >
     <ReaderAvatar
-      v-for="(name, index) in shown"
-      :key="name"
-      :username="name"
+      v-for="(person, index) in shown"
+      :key="person.username"
+      :username="person.username"
+      :avatar="person.avatarVersion ?? null"
       :size="size"
       class="stack-item"
       :style="{ '--i': index }"
@@ -26,7 +27,8 @@ import { computed } from 'vue'
 import ReaderAvatar from '../ReaderAvatar.vue'
 
 const props = defineProps({
-  usernames: { type: Array, default: () => [] },
+  // [{ username, avatarVersion? }] (ou só nomes)
+  people: { type: Array, default: () => [] },
   // Total de leitores (a lista pode vir cortada pelo servidor)
   total: { type: Number, default: 0 },
   max: { type: Number, default: 5 },
@@ -35,8 +37,9 @@ const props = defineProps({
   animate: { type: Boolean, default: false }
 })
 
-const shown = computed(() => props.usernames.slice(0, props.max))
-const extra = computed(() => Math.max(props.total, props.usernames.length) - shown.value.length)
+const list = computed(() => props.people.map(p => (typeof p === 'string' ? { username: p } : p)))
+const shown = computed(() => list.value.slice(0, props.max))
+const extra = computed(() => Math.max(props.total, list.value.length) - shown.value.length)
 </script>
 
 <style scoped>

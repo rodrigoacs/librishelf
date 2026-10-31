@@ -69,7 +69,7 @@ describe('Encontrar leitores', () => {
     const res = await find()
     expect(res.statusCode).toBe(200)
     expect(res.body.map(r => r.username)).toEqual(['ana.leitora', 'bruno', 'anabela'])
-    expect(res.body[0]).toEqual({ username: 'ana.leitora', acceptsFollowers: true, totalBooks: 3, readBooks: 0, commonBooks: 2, followStatus: null })
+    expect(res.body[0]).toEqual({ username: 'ana.leitora', avatarVersion: null, acceptsFollowers: true, totalBooks: 3, readBooks: 0, commonBooks: 2, followStatus: null })
   })
 
   it('busca pelo nome sem diferenciar maiúsculas; nome exato vem primeiro', async () => {

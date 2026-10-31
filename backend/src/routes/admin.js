@@ -1,4 +1,5 @@
 import express from 'express'
+import { sendAvatarFile } from './avatars.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import { requireAdmin, requireUnlocked, isUnlocked, setUnlockCookie, clearUnlockCookie, ADMIN_UNLOCK_MINUTES } from '../middlewares/admin.js'
 import { sensitiveLimiter, mailLimiter } from '../middlewares/rateLimiter.js'
@@ -56,6 +57,22 @@ router.post('/reviews/:id/hide', validateNumericId(), handle('Erro ao ocultar re
   req => adminService.moderateReview(req.user.id, Number(req.params.id), true)))
 router.post('/reviews/:id/show', validateNumericId(), handle('Erro ao reexibir resenha',
   req => adminService.moderateReview(req.user.id, Number(req.params.id), false)))
+router.get('/avatar-reports', handle('Erro ao carregar denúncias de foto', req => adminService.avatarQueue(String(req.query.status ?? 'open'))))
+router.get('/avatars/:id', validateNumericId(), handle('Erro ao abrir foto', req => adminService.avatar(Number(req.params.id))))
+// A foto em si (mesmo ocultada por denúncia), para quem modera
+router.get('/avatars/:id/image', validateNumericId(), async (req, res, next) => {
+  try {
+    const data = await adminService.avatar(Number(req.params.id))
+    if (!data.avatar.version) return res.status(404).type('text/plain').send('Not found')
+    sendAvatarFile(res, next, data.avatar.userId, 'lg', 'jpg', 'private, no-store')
+  } catch (error) {
+    sendError(res, error, 'Erro ao abrir foto')
+  }
+})
+router.post('/avatars/:id/keep', validateNumericId(), handle('Erro ao manter foto',
+  req => adminService.moderateAvatar(req.user.id, Number(req.params.id), 'keep')))
+router.post('/avatars/:id/remove', validateNumericId(), handle('Erro ao remover foto',
+  req => adminService.moderateAvatar(req.user.id, Number(req.params.id), 'remove')))
 router.get('/users', handle('Erro ao listar contas', req => adminService.users({
   q: req.query.q, status: String(req.query.status ?? 'all'), page: req.query.page, limit: req.query.limit
 })))

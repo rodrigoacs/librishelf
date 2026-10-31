@@ -94,6 +94,19 @@ const TEXTS = {
       note: 'No link você vê a resenha inteira e as denúncias, e escolhe ocultar ou manter.',
       ignore: 'Você recebeu este e-mail porque o endereço está em ADMIN_EMAIL no servidor do Librishelf.'
     },
+    avatarReport: {
+      subject: ({ username, hidden }) => `${hidden ? '[Oculta] ' : ''}Foto de perfil denunciada: ${username}`,
+      preheader: ({ username, reasonLabel }) => `${username} · ${reasonLabel}`,
+      title: 'Foto de perfil denunciada',
+      greeting: () => 'Olá!',
+      body: ({ hidden, total }) => (hidden
+        ? `Esta foto recebeu ${total} denúncias e saiu do ar automaticamente até alguém revisar (a conta mostra a inicial).`
+        : 'Um leitor denunciou esta foto de perfil. Ela continua no ar até você decidir.'),
+      line: line => line,
+      button: 'Revisar a foto',
+      note: 'No link você vê a foto e as denúncias, e escolhe manter ou remover. O link para de valer se a pessoa trocar a foto.',
+      ignore: 'Você recebeu este e-mail porque o endereço está em ADMIN_EMAIL no servidor do Librishelf.'
+    },
     fallback: 'Se o botão não funcionar, copie e cole este endereço no navegador:',
     tagline: 'Sua biblioteca pessoal, organizada.',
     footer: 'Você recebeu este e-mail porque ele está cadastrado no Librishelf. Este é um endereço automático: respostas não são lidas.'
@@ -156,6 +169,19 @@ const TEXTS = {
       line: line => line,
       button: 'Review it',
       note: 'The link shows the full review and the reports, and lets you hide or keep it.',
+      ignore: "You're receiving this email because this address is set as ADMIN_EMAIL on the Librishelf server."
+    },
+    avatarReport: {
+      subject: ({ username, hidden }) => `${hidden ? '[Hidden] ' : ''}Profile photo reported: ${username}`,
+      preheader: ({ username, reasonLabel }) => `${username} · ${reasonLabel}`,
+      title: 'Profile photo reported',
+      greeting: () => 'Hi!',
+      body: ({ hidden, total }) => (hidden
+        ? `This photo got ${total} reports and was taken down automatically until someone reviews it (the account shows its initial).`
+        : 'A reader reported this profile photo. It stays up until you decide.'),
+      line: line => line,
+      button: 'Review the photo',
+      note: 'The link shows the photo and the reports, and lets you keep or remove it. It stops working if the person changes the photo.',
       ignore: "You're receiving this email because this address is set as ADMIN_EMAIL on the Librishelf server."
     },
     fallback: "If the button doesn't work, copy and paste this address into your browser:",
@@ -362,4 +388,27 @@ export function reviewReportEmail({ author, title, excerpt, reason, note, total,
     `${L.excerpt}: “${excerpt}”`
   ]
   return build('report', { ...rest, locale: code, items, author, title, reasonLabel, total, hidden })
+}
+const AVATAR_REPORT_REASONS = {
+  pt: { offensive: 'Ofensiva ou imprópria', impersonation: 'Se passando por outra pessoa', spam: 'Spam ou propaganda', other: 'Outro motivo' },
+  en: { offensive: 'Offensive or inappropriate', impersonation: 'Impersonating someone', spam: 'Spam or advertising', other: 'Other' }
+}
+
+/**
+ * Denúncia de foto de perfil para quem modera:
+ * { link, locale, username, reason, note, total, hidden }
+ */
+export function avatarReportEmail({ username, reason, note, total, hidden, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  const reasonLabel = AVATAR_REPORT_REASONS[code][reason] || reason
+  const L = code === 'en'
+    ? { user: 'Account', reason: 'Reason', note: 'Reader note', count: 'Reports' }
+    : { user: 'Conta', reason: 'Motivo', note: 'Observação do leitor', count: 'Denúncias' }
+  const items = [
+    `${L.user}: @${username}`,
+    `${L.reason}: ${reasonLabel}`,
+    ...(note ? [`${L.note}: ${note}`] : []),
+    `${L.count}: ${total}`
+  ]
+  return build('avatarReport', { ...rest, locale: code, items, username, reasonLabel, total, hidden })
 }

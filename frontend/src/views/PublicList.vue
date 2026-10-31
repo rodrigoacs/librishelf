@@ -70,6 +70,7 @@
           >
             <ReaderAvatar
               :username="list.owner.username"
+              :avatar="list.owner.avatarVersion ?? null"
               size="sm"
             />
             <span>{{ t('lists.byOwner', { name: list.owner.username }) }}</span>

@@ -67,9 +67,20 @@
         <router-link
           to="/settings"
           class="bar-avatar"
+          :class="{ 'has-photo': myPhoto }"
           :aria-label="t('menu.settings')"
           data-press
-        >{{ userInitials }}</router-link>
+        >
+          <img
+            v-if="myPhoto"
+            :src="myPhoto"
+            alt=""
+            class="bar-photo"
+            draggable="false"
+            @error="photoFailed = true"
+          />
+          <template v-else>{{ userInitials }}</template>
+        </router-link>
       </div>
     </header>
 
@@ -249,8 +260,18 @@
           <div class="user-info">
             <div
               class="avatar-circle"
+              :class="{ 'has-photo': myPhoto }"
               aria-hidden="true"
-            >{{ userInitial }}</div>
+            >
+              <img
+                v-if="myPhoto"
+                :src="myPhoto"
+                alt=""
+                draggable="false"
+                @error="photoFailed = true"
+              />
+              <template v-else>{{ userInitial }}</template>
+            </div>
             <div class="user-details">
               <span
                 class="username"
@@ -283,6 +304,7 @@
 </template>
 
 <script setup>
+import { avatarUrl } from '../utils/avatars.js'
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -358,6 +380,10 @@ const showSettings = ref(false)
 
 const displayName = computed(() => currentUser.value?.name || t('menu.guest'))
 const userInitial = computed(() => displayName.value.charAt(0).toUpperCase())
+// Foto de perfil (Conta → Foto de perfil); sem foto ou se falhar, as iniciais
+const photoFailed = ref(false)
+watch(() => currentUser.value?.avatarVersion, () => { photoFailed.value = false })
+const myPhoto = computed(() => (photoFailed.value ? null : avatarUrl(currentUser.value?.name, currentUser.value?.avatarVersion ?? null)))
 // Avatar da barra: até duas iniciais ("maria_souza" → MS)
 const userInitials = computed(() => {
   const parts = displayName.value.split(/[\s._-]+/).filter(Boolean)
@@ -650,6 +676,17 @@ button.nav-item {
   flex-shrink: 0;
 }
 
+.avatar-circle.has-photo {
+  background: var(--bg-input);
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .user-details {
   display: flex;
   flex-direction: column;
@@ -919,6 +956,18 @@ button.nav-item {
     letter-spacing: 0.02em;
     /* Círculo de 32 px desenhado dentro do alvo de 44 px */
     background: radial-gradient(circle closest-side, var(--main-solid) 15.5px, transparent 16px);
+  }
+
+  .bar-avatar.has-photo {
+    background: none;
+  }
+
+  .bar-photo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px var(--border-color);
   }
 
   /* Faixa invisível na borda esquerda: arrastar dali abre o menu. pan-y

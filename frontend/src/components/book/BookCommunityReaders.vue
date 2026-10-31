@@ -10,6 +10,7 @@
       <ReaderAvatar
         v-if="rows"
         :username="reader.username"
+        :avatar="reader.avatarVersion ?? null"
         size="sm"
       />
       <router-link

@@ -42,7 +42,7 @@ export function groupFeed(events = []) {
     const actorKey = `${event.username}|${event.type}${own}`
     let item = day.byActor.get(actorKey)
     if (!item) {
-      item = { key: `${key}|${actorKey}`, type: event.type, username: event.username, isPublic: event.isPublic, at: event.at, books: [] }
+      item = { key: `${key}|${actorKey}`, type: event.type, username: event.username, isPublic: event.isPublic, avatarVersion: event.avatarVersion ?? null, at: event.at, books: [] }
       day.byActor.set(actorKey, item)
       day.items.push(item)
     }

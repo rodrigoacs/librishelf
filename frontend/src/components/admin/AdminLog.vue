@@ -98,6 +98,8 @@ const ICONS = {
   'admin.unlock': 'pi pi-unlock',
   'review.hide': 'pi pi-eye-slash',
   'review.show': 'pi pi-eye',
+  'avatar.remove': 'pi pi-trash',
+  'avatar.keep': 'pi pi-image',
   'user.suspend': 'pi pi-ban',
   'user.reactivate': 'pi pi-replay',
   'user.resend_verification': 'pi pi-envelope',

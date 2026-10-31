@@ -185,7 +185,8 @@ export const AUTH_QUERIES = {
     WHERE lower(name) = lower($1) AND is_active IS NOT FALSE
   `,
   FIND_USER_BY_ID: `
-    SELECT id, name, email, role, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at
+    SELECT id, name, email, role, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at,
+           avatar_version, avatar_visibility, avatar_hidden_at
     FROM librishelf.users
     WHERE id = $1
   `,
@@ -445,6 +446,24 @@ const AUTHORS_OF = (bookExpr) => `(
   WHERE bal.book_id = ${bookExpr}
 )`
 
+/**
+ * Versão da foto de perfil de u que quem vê (viewer) pode ver, ou null (a
+ * inicial no lugar): sem foto, foto ocultada por denúncia ou conta suspensa
+ * → null; a própria pessoa sempre vê; 'everyone' → todos; 'followers' → só
+ * quem segue com pedido aceito; 'nobody' → só a própria pessoa.
+ * viewer pode ser 'NULL' (sem login, e-mail de moderação): só 'everyone'.
+ */
+const AVATAR_FOR = (u, viewer) => `(CASE
+    WHEN ${u}.avatar_version IS NULL OR ${u}.avatar_hidden_at IS NOT NULL OR ${u}.is_active IS FALSE THEN NULL
+    WHEN ${u}.id = ${viewer}::int THEN ${u}.avatar_version
+    WHEN ${u}.avatar_visibility = 'everyone' THEN ${u}.avatar_version
+    WHEN ${u}.avatar_visibility = 'followers' AND EXISTS (
+      SELECT 1 FROM librishelf.follows af
+      WHERE af.follower_id = ${viewer}::int AND af.followee_id = ${u}.id AND af.status = 'accepted'
+    ) THEN ${u}.avatar_version
+    ELSE NULL
+  END)`
+
 export const COMMUNITY_QUERIES = {
   // Outros leitores do livro $1 (que pertence a $2).
   READERS_OF_BOOK: `
@@ -454,7 +473,8 @@ export const COMMUNITY_QUERIES = {
     SELECT DISTINCT ON (u.id)
       u.name AS username,
       b.rating,
-      (b.read_date IS NOT NULL) AS has_read
+      (b.read_date IS NOT NULL) AS has_read,
+      ${AVATAR_FOR('u', '$2')} AS avatar_version
     FROM me
     JOIN librishelf.books b ON ${SAME_BOOK('me', 'b')}
     JOIN librishelf.users u ON u.id = b.user_id
@@ -541,7 +561,8 @@ export const COMMUNITY_QUERIES = {
   // ainda pode aparecer para $1 agora (privacidade, bloqueio, conta ativa),
   // com o nome atual e a situação de "seguir".
   READERS_LIVE: `
-    SELECT u.id, u.name AS username, u.show_activity AS accepts_followers, f.status AS follow_status
+    SELECT u.id, u.name AS username, u.show_activity AS accepts_followers, f.status AS follow_status,
+           ${AVATAR_FOR('u', '$1')} AS avatar_version
     FROM librishelf.users u
     LEFT JOIN librishelf.follows f ON f.follower_id = $1 AND f.followee_id = u.id
     WHERE u.id = ANY($2::int[]) AND ${IN_COMMUNITY('u', '$1')}
@@ -628,7 +649,8 @@ export const DATA_QUERIES = {
            is_public, show_in_community, show_activity, allow_indexing, follow_emails,
            email_locale,
            email_verified_at IS NOT NULL AS email_verified,
-           last_login_at, last_seen_at
+           last_login_at, last_seen_at,
+           avatar_version IS NOT NULL AS has_avatar, avatar_visibility
     FROM librishelf.users WHERE id = $1
   `,
   // Exportação (LGPD, art. 18, II e V): vínculos e ações da pessoa. Os outros
@@ -818,11 +840,11 @@ export const SOCIAL_QUERIES = {
     WHERE f.followee_id = $1 AND f.status = 'pending' AND u.is_active IS NOT FALSE
   `,
   CONNECTIONS: `
-    SELECT 'following' AS kind, u.name AS username, f.status, f.created_at, u.is_public
+    SELECT 'following' AS kind, u.name AS username, f.status, f.created_at, u.is_public, ${AVATAR_FOR('u', '$1')} AS avatar_version
     FROM librishelf.follows f JOIN librishelf.users u ON u.id = f.followee_id
     WHERE f.follower_id = $1 AND u.is_active IS NOT FALSE
     UNION ALL
-    SELECT CASE WHEN f.status = 'pending' THEN 'request' ELSE 'follower' END, u.name, f.status, f.created_at, u.is_public
+    SELECT CASE WHEN f.status = 'pending' THEN 'request' ELSE 'follower' END, u.name, f.status, f.created_at, u.is_public, ${AVATAR_FOR('u', '$1')}
     FROM librishelf.follows f JOIN librishelf.users u ON u.id = f.follower_id
     WHERE f.followee_id = $1 AND u.is_active IS NOT FALSE
     ORDER BY created_at DESC
@@ -865,6 +887,7 @@ export const SOCIAL_QUERIES = {
         AND EXISTS (SELECT 1 FROM librishelf.list_items li WHERE li.list_id = l.id)
     )
     SELECT e.type, e.at, e.day, e.book_id, e.title, e.rating, e.cover_version, e.reread, u.name AS username, u.is_public,
+           ${AVATAR_FOR('u', '$1')} AS avatar_version,
            CASE WHEN e.book_id IS NOT NULL THEN ${AUTHORS_OF('e.book_id')} END AS authors,
            CASE WHEN e.type = 'review' THEN rv.id END AS review_id,
            CASE WHEN e.type = 'review' THEN left(rv.body, 280) END AS review_body,
@@ -1018,7 +1041,7 @@ const REVIEW_COLUMNS = viewer => `
   r.id, r.book_id, r.user_id, r.body, r.has_spoiler, r.visibility,
   (r.hidden_at IS NOT NULL) AS hidden,
   r.created_at, r.updated_at,
-  u.name AS username, u.is_public,
+  u.name AS username, u.is_public, ${AVATAR_FOR('u', viewer)} AS avatar_version,
   b.title, b.rating, ${AUTHORS_OF('b.id')} AS authors,
   (SELECT count(*)::int FROM librishelf.review_likes l WHERE l.review_id = r.id) AS like_count,
   (${viewer}::int IS NOT NULL AND EXISTS (
@@ -1515,5 +1538,108 @@ export const ADMIN_QUERIES = {
     LEFT JOIN librishelf.books bk ON bk.id = rv.book_id
     ORDER BY a.created_at DESC, a.id DESC
     LIMIT $1 OFFSET $2
+  `
+}
+
+// Foto de perfil (migration 017; services/avatarService.js)
+export const AVATAR_QUERIES = {
+  VISIBLE: `SELECT ${AVATAR_FOR('u', '$2')} AS avatar_version FROM librishelf.users u WHERE u.id = $1`,
+  // Quem pede o arquivo: a foto de $1 (nome) que $2 (ou NULL) pode ver
+  ACCESS_BY_NAME: `
+    SELECT u.id, u.avatar_visibility, ${AVATAR_FOR('u', '$2')} AS avatar_version
+    FROM librishelf.users u
+    WHERE lower(u.name) = lower($1) AND u.is_active IS NOT FALSE
+  `,
+  SET: `
+    UPDATE librishelf.users
+    SET avatar_version = nextval('librishelf.avatar_version_seq'),
+        avatar_visibility = COALESCE($2, avatar_visibility),
+        avatar_hidden_at = NULL, avatar_hidden_reason = NULL, avatar_reviewed_at = NULL,
+        updated_at = now()
+    WHERE id = $1
+    RETURNING avatar_version, avatar_visibility, avatar_hidden_at
+  `,
+  CLEAR: `
+    UPDATE librishelf.users
+    SET avatar_version = NULL, avatar_hidden_at = NULL, avatar_hidden_reason = NULL, avatar_reviewed_at = NULL,
+        updated_at = now()
+    WHERE id = $1
+    RETURNING id
+  `,
+  SET_VISIBILITY: `
+    UPDATE librishelf.users SET avatar_visibility = $2, updated_at = now()
+    WHERE id = $1
+    RETURNING avatar_version, avatar_visibility, avatar_hidden_at
+  `,
+  REPORT: `
+    INSERT INTO librishelf.avatar_reports (user_id, avatar_version, reporter_id, reason, note)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (user_id, avatar_version, reporter_id) DO NOTHING
+    RETURNING id
+  `,
+  // Mesma regra das resenhas: só contas confirmadas, ativas e com mais de $3
+  // dias contam para ocultar sozinho; a revisão "zera a conta"
+  OPEN_REPORTS: `
+    SELECT count(DISTINCT ar.reporter_id)::int AS total,
+           count(DISTINCT ar.reporter_id) FILTER (
+             WHERE r.email_verified_at IS NOT NULL
+               AND r.is_active IS NOT FALSE
+               AND r.created_at < now() - make_interval(days => $3)
+           )::int AS trusted
+    FROM librishelf.avatar_reports ar
+    JOIN librishelf.users o ON o.id = ar.user_id
+    JOIN librishelf.users r ON r.id = ar.reporter_id
+    WHERE ar.user_id = $1 AND ar.avatar_version = $2
+      AND (o.avatar_reviewed_at IS NULL OR ar.created_at > o.avatar_reviewed_at)
+  `,
+  AUTO_HIDE: `
+    UPDATE librishelf.users SET avatar_hidden_at = now(), avatar_hidden_reason = 'reports'
+    WHERE id = $1 AND avatar_version = $2 AND avatar_hidden_at IS NULL
+    RETURNING id
+  `,
+  BY_VERSION: `
+    SELECT id, name, avatar_version, avatar_visibility, avatar_hidden_at, avatar_hidden_reason, avatar_reviewed_at,
+           (is_active IS NOT FALSE) AS active
+    FROM librishelf.users WHERE avatar_version = $1
+  `,
+  BY_USER: `
+    SELECT id, name, avatar_version, avatar_visibility, avatar_hidden_at, avatar_hidden_reason, avatar_reviewed_at,
+           (is_active IS NOT FALSE) AS active
+    FROM librishelf.users WHERE id = $1
+  `,
+  REPORTS_OF: `
+    SELECT ar.reason, ar.note, ar.created_at, u.name AS reporter
+    FROM librishelf.avatar_reports ar
+    JOIN librishelf.users u ON u.id = ar.reporter_id
+    WHERE ar.user_id = $1 AND ar.avatar_version = $2
+    ORDER BY ar.created_at DESC
+  `,
+  KEEP: `
+    UPDATE librishelf.users SET avatar_hidden_at = NULL, avatar_hidden_reason = NULL, avatar_reviewed_at = now()
+    WHERE id = $1 AND avatar_version IS NOT NULL
+    RETURNING id
+  `,
+  // Fila da área administrativa: fotos atuais com denúncias (abertas, ocultas ou todas)
+  QUEUE: `
+    SELECT u.id, u.name AS username, u.avatar_version, u.avatar_hidden_at, u.avatar_hidden_reason, u.avatar_reviewed_at,
+           (u.is_active IS NOT FALSE) AS active,
+           rep.open_count, rep.total_count, rep.last_report_at, rep.reasons
+    FROM librishelf.users u
+    CROSS JOIN LATERAL (
+      SELECT count(*) FILTER (WHERE u.avatar_reviewed_at IS NULL OR ar.created_at > u.avatar_reviewed_at)::int AS open_count,
+             count(*)::int AS total_count,
+             max(ar.created_at) AS last_report_at,
+             COALESCE(array_agg(DISTINCT ar.reason) FILTER (WHERE ar.reason IS NOT NULL), '{}') AS reasons
+      FROM librishelf.avatar_reports ar
+      WHERE ar.user_id = u.id AND ar.avatar_version = u.avatar_version
+    ) rep
+    WHERE u.avatar_version IS NOT NULL AND (rep.total_count > 0 OR u.avatar_hidden_at IS NOT NULL)
+      AND CASE $1
+            WHEN 'open' THEN rep.open_count > 0
+            WHEN 'hidden' THEN u.avatar_hidden_at IS NOT NULL
+            ELSE true
+          END
+    ORDER BY rep.open_count > 0 DESC, rep.last_report_at DESC NULLS LAST, u.id DESC
+    LIMIT 100
   `
 }

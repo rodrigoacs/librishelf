@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import * as avatarService from './avatarService.js'
 import os from 'node:os'
 import path from 'node:path'
 import { db } from '../database/connection.js'
@@ -300,6 +301,27 @@ export async function moderateReview(adminId, id, hide) {
     reviewId: id
   })
   return review(id)
+}
+
+// ------------------------------------------------------------------ fotos de perfil
+
+export function avatarQueue(status = 'open') {
+  return avatarService.queue(status)
+}
+
+export function avatar(userId) {
+  return avatarService.forModerationById(userId)
+}
+
+/** action: 'keep' (manter e zerar as denúncias) | 'remove' (apagar a foto) */
+export async function moderateAvatar(adminId, userId, action) {
+  const before = await avatarService.forModerationById(userId)
+  const result = await avatarService.moderateById(userId, action)
+  await log(adminId, action === 'remove' ? 'avatar.remove' : 'avatar.keep', {
+    userId,
+    details: { version: before.avatar.version, reports: before.reports.length }
+  })
+  return result
 }
 
 // ------------------------------------------------------------------ contas

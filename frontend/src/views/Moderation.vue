@@ -14,7 +14,79 @@
       >{{ message }}</p>
     </div>
 
-    <template v-if="data">
+    <!-- Foto de perfil denunciada (?avatar=<token>) -->
+    <template v-if="data && kind === 'avatar'">
+      <p
+        class="state"
+        :class="data.avatar.hidden ? 'hidden' : 'visible'"
+      >
+        <i
+          :class="data.avatar.hidden ? 'pi pi-eye-slash' : 'pi pi-eye'"
+          aria-hidden="true"
+        ></i>
+        {{ data.avatar.version === null
+          ? t('moderation.avatarRemoved')
+          : data.avatar.hidden ? t('moderation.avatarHiddenAuto') : t('moderation.avatarVisible') }}
+      </p>
+
+      <figure
+        v-if="data.avatar.version !== null"
+        class="avatar-box"
+      >
+        <img
+          :src="avatarImage"
+          :alt="t('moderation.avatarAlt', { name: data.avatar.username })"
+          width="192"
+          height="192"
+        />
+        <figcaption>@{{ data.avatar.username }} · {{ t(`avatar.visibility.${data.avatar.visibility}`) }}</figcaption>
+      </figure>
+
+      <section
+        class="reports"
+        :aria-label="t('moderation.reports')"
+      >
+        <h2>{{ t('moderation.reportsCount', { n: data.reports.length }, data.reports.length) }}</h2>
+        <ul>
+          <li
+            v-for="(report, index) in data.reports"
+            :key="index"
+          >
+            <span class="reason">{{ t(`avatar.reasons.${report.reason}`) }}</span>
+            <span class="by">{{ report.reporter ? `@${report.reporter} · ` : '' }}{{ formatDate(report.createdAt) }}</span>
+            <p
+              v-if="report.note"
+              class="note"
+            >{{ report.note }}</p>
+          </li>
+        </ul>
+      </section>
+
+      <div
+        v-if="data.avatar.version !== null"
+        class="auth-form"
+      >
+        <AppButton
+          :label="t('moderation.avatarRemove')"
+          icon="pi pi-trash"
+          class="btn-danger w-full"
+          :loading="busy === 'remove'"
+          :disabled="Boolean(busy)"
+          @click="actAvatar('remove')"
+        />
+        <AppButton
+          :label="data.avatar.hidden ? t('moderation.avatarRestore') : t('moderation.avatarKeep')"
+          icon="pi pi-check"
+          :class="data.avatar.hidden ? 'btn-primary w-full' : 'btn-outlined btn-secondary w-full'"
+          :loading="busy === 'keep'"
+          :disabled="Boolean(busy)"
+          @click="actAvatar('keep')"
+        />
+        <p class="hint">{{ t('moderation.avatarHint') }}</p>
+      </div>
+    </template>
+
+    <template v-else-if="data">
       <p
         class="state"
         :class="data.review.hidden ? 'hidden' : 'visible'"
@@ -94,6 +166,7 @@ import AuthLayout from '../components/AuthLayout.vue'
 import ReviewCard from '../components/review/ReviewCard.vue'
 import api from '../services/api.js'
 import { useToast } from '../services/toast.js'
+import { moderationAvatarUrl } from '../utils/avatars.js'
 
 /**
  * Link do e-mail de denúncia (vai para ADMIN_EMAIL): mostra a resenha e as
@@ -110,6 +183,21 @@ const errorMessage = ref('')
 const data = ref(null)
 const busy = ref('')
 let token = ''
+// Resenha (?token=) ou foto de perfil (?avatar=)
+const kind = ref('review')
+const avatarImage = ref('')
+
+async function actAvatar(action) {
+  busy.value = action
+  try {
+    data.value = await api.moderateAvatarByLink(token, action)
+    toast.add({ severity: 'success', summary: action === 'remove' ? t('moderation.avatarRemovedDone') : t('moderation.avatarKeptDone'), life: 3000 })
+  } catch (error) {
+    toast.add({ severity: 'error', detail: error.message, life: 4000 })
+  } finally {
+    busy.value = ''
+  }
+}
 
 const heading = computed(() => ({
   loading: t('moderation.loading'),
@@ -137,11 +225,17 @@ async function act(hide) {
 }
 
 onMounted(async () => {
-  token = String(route.query.token || '')
+  kind.value = route.query.avatar ? 'avatar' : 'review'
+  token = String(route.query.avatar || route.query.token || '')
   // Tira o token da barra de endereço/histórico (o link do e-mail continua valendo)
   router.replace({ query: {} })
   try {
-    data.value = await api.getModeration(token)
+    if (kind.value === 'avatar') {
+      avatarImage.value = moderationAvatarUrl(token)
+      data.value = await api.getAvatarModeration(token)
+    } else {
+      data.value = await api.getModeration(token)
+    }
     state.value = 'ready'
   } catch (error) {
     errorMessage.value = error.message
@@ -183,6 +277,27 @@ onMounted(async () => {
   margin: 0;
   font-size: var(--fs-xs);
   color: var(--text-secondary);
+}
+
+.avatar-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.avatar-box img {
+  width: 192px;
+  height: 192px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.avatar-box figcaption {
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
 }
 
 .reports {

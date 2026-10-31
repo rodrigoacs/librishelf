@@ -145,7 +145,10 @@
                 <!-- Resenha (só no celular, que pede kinds=all): texto borrado
                      se tiver spoiler, até tocar em "Contém spoiler — mostrar" -->
                 <template v-if="item.type === 'review'">
-                  <ReaderAvatar :username="item.username" />
+                  <ReaderAvatar
+                    :username="item.username"
+                    :avatar="item.avatarVersion"
+                  />
                   <div class="feed-body">
                     <p class="feed-text">
                       <ReaderName
@@ -224,6 +227,7 @@
                   </div>
                   <ReaderAvatar
                     :username="item.username"
+                    :avatar="item.avatarVersion"
                     class="list-avatar"
                   />
                 </template>
@@ -231,6 +235,7 @@
                 <template v-else>
                 <ReaderAvatar
                   :username="item.username"
+                  :avatar="item.avatarVersion"
                   :badge="item.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"
                 />
                 <div class="feed-body">
@@ -372,7 +377,10 @@
             :key="person.username"
           >
             <span class="person">
-              <ReaderAvatar :username="person.username" />
+              <ReaderAvatar
+                :username="person.username"
+                :avatar="person.avatarVersion ?? null"
+              />
               <ReaderName
                 :username="person.username"
                 :is-public="person.isPublic"
@@ -485,7 +493,10 @@
             :key="reader.username"
           >
             <span class="person">
-              <ReaderAvatar :username="reader.username" />
+              <ReaderAvatar
+                :username="reader.username"
+                :avatar="reader.avatarVersion ?? null"
+              />
               <span class="reader-info">
                 <ReaderName
                   :username="reader.username"
@@ -584,7 +595,10 @@
             :key="person.username"
           >
             <span class="person">
-              <ReaderAvatar :username="person.username" />
+              <ReaderAvatar
+                :username="person.username"
+                :avatar="person.avatarVersion ?? null"
+              />
               <ReaderName
                 :username="person.username"
                 :is-public="person.isPublic"
@@ -662,7 +676,10 @@
             :key="person.username"
           >
             <span class="person">
-              <ReaderAvatar :username="person.username" />
+              <ReaderAvatar
+                :username="person.username"
+                :avatar="person.avatarVersion ?? null"
+              />
               <ReaderName
                 :username="person.username"
                 :is-public="person.isPublic"

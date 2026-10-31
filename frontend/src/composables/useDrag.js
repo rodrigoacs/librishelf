@@ -35,7 +35,7 @@ export function useDrag({ axis = 'y', canStart = () => true, onStart, onMove, on
   function onPointerDown(event) {
     if (event.pointerType === 'mouse' && event.button !== 0) return
     if (state || !canStart(event)) return
-    state = { id: event.pointerId, start: point(event), startCross: cross(event), active: false, samples: [], target: event.currentTarget }
+    state = { id: event.pointerId, start: point(event), startCross: cross(event), downAt: event.timeStamp, active: false, samples: [], target: event.currentTarget }
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
     window.addEventListener('pointercancel', onPointerCancel)
@@ -49,7 +49,12 @@ export function useDrag({ axis = 'y', canStart = () => true, onStart, onMove, on
       if (off > GESTURE.slop && off > Math.abs(delta)) return cleanup()
       if (Math.abs(delta) < GESTURE.slop) return
       state.active = true
-      state.start = point(event)
+      // A distância conta a partir da folga, não do primeiro movimento: um
+      // puxão rápido pode chegar inteiro num quadro só (o navegador junta os
+      // movimentos) e, recomeçando do zero aqui, viraria "não andou nada".
+      // A amostra do toque inicial dá a velocidade desde o começo do gesto.
+      state.start += Math.sign(delta) * GESTURE.slop
+      state.samples.push({ t: state.downAt, v: -Math.sign(delta) * GESTURE.slop })
       try { state.target?.setPointerCapture?.(event.pointerId) } catch { /* já solto */ }
       onStart?.(event)
     }

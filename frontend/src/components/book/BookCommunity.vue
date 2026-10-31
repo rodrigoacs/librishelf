@@ -35,7 +35,7 @@
             <span class="summary-count">{{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}</span>
             <span class="summary-row">
               <AvatarStack
-                :usernames="community.readers.map(r => r.username)"
+                :people="community.readers"
                 :total="community.readerCount"
                 :max="4"
               />
@@ -77,7 +77,7 @@
             </p>
             <h2 class="sheet-title">{{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}</h2>
             <AvatarStack
-              :usernames="community.readers.map(r => r.username)"
+              :people="community.readers"
               :total="community.readerCount"
               size="md"
               animate
