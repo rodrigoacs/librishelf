@@ -158,6 +158,23 @@
 
     </div>
 
+    <!-- Celular: adicionar livro no botão flutuante, acima da barra de gestos -->
+    <Transition name="fab">
+      <button
+        v-if="phone && !selecting"
+        type="button"
+        class="fab-add"
+        data-press
+        :aria-label="t('home.addBook')"
+        @click="header?.openAddBook()"
+      >
+        <i
+          class="pi pi-plus"
+          aria-hidden="true"
+        ></i>
+      </button>
+    </Transition>
+
     <!-- Livro aberto: vem da URL (?book=<id>), então o voltar do navegador
          fecha o livro e recarregar a página o abre de novo -->
     <BookDialog
@@ -191,6 +208,7 @@ import { queryToFilters, queryToView, filtersToQuery, sameQuery, VIEW_MODES } fr
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import { useLibrary, isFiltered } from '../composables/useLibrary.js'
+import { useIsPhone } from '../composables/useIsPhone.js'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -215,6 +233,7 @@ const {
 
 const sentinel = ref(null)
 const header = ref(null)
+const phone = useIsPhone()
 let observer = null
 
 function refreshData() {
@@ -539,9 +558,51 @@ onUnmounted(() => {
   }
 }
 
+/* Botão flutuante (só existe no celular) */
+.fab-add {
+  position: fixed;
+  right: calc(var(--space-4) + var(--safe-right, 0px));
+  bottom: calc(var(--space-4) + var(--safe-bottom, 0px));
+  z-index: 120;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--main-solid);
+  color: var(--on-main);
+  box-shadow: var(--shadow-3);
+  cursor: pointer;
+}
+
+.fab-add .pi {
+  font-size: 1.35rem;
+}
+
+.fab-add:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.fab-enter-active {
+  transition: transform var(--dur-spring) var(--ease-spring), opacity var(--dur-short) linear;
+}
+
+.fab-leave-active {
+  transition: transform var(--dur-short) var(--ease-exit), opacity var(--dur-short) linear;
+}
+
+.fab-enter-from,
+.fab-leave-to {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
 @media (max-width: 639.98px) {
   .content-section {
-    padding: 1rem;
+    padding: 1rem 1rem calc(88px + var(--safe-bottom, 0px));
   }
 
   .books-grid {

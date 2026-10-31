@@ -378,6 +378,7 @@ import AppSelect from './ui/AppSelect.vue'
 import AppChip from './ui/AppChip.vue'
 import AddBookDialog from './AddBookDialog.vue'
 import api from '../services/api.js'
+import { librarySearchRequest, takeLibrarySearchRequest } from '../services/librarySearch.js'
 import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
@@ -556,6 +557,13 @@ function onBookCreated() {
 }
 
 onMounted(loadOptions)
+
+// Lupa da barra do topo (celular): foco na busca, com o teclado aberto
+function focusSearchIfRequested() {
+  if (takeLibrarySearchRequest()) nextTick(() => searchInput.value?.focus())
+}
+onMounted(focusSearchIfRequested)
+watch(librarySearchRequest, focusSearchIfRequested)
 
 // A Library chama isto depois de editar/excluir um livro: autores, editoras e
 // tags novos aparecem nos filtros sem recarregar a página.
@@ -1059,6 +1067,13 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   .clear-all-btn.btn {
     flex-shrink: 0;
     padding: 0.35rem 0.5rem;
+  }
+}
+
+/* Celular: "Adicionar livro" vira o botão flutuante (Library.vue) */
+@media (max-width: 639.98px) {
+  .add-btn {
+    display: none;
   }
 }
 

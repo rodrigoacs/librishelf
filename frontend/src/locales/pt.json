@@ -58,7 +58,9 @@
     "lists": "Listas",
     "admin": "Administração",
     "adminRole": "Administração",
-    "logoutPending": "Você saiu neste aparelho. Sem conexão, a sessão continua aberta no servidor: ela será encerrada assim que o app voltar a ter internet."
+    "logoutPending": "Você saiu neste aparelho. Sem conexão, a sessão continua aberta no servidor: ela será encerrada assim que o app voltar a ter internet.",
+    "search": "Buscar livros",
+    "appearance": "Aparência"
   },
   "common": {
     "save": "Salvar",
