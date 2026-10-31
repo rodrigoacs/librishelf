@@ -32,8 +32,8 @@ export async function connections(userId) {
   return rows
 }
 
-export async function feed(userId, limit, offset) {
-  const { rows } = await db.query(q.FEED, [userId, limit, offset])
+export async function feed(userId, limit, offset, withPosts = false) {
+  const { rows } = await db.query(q.FEED, [userId, limit, offset, withPosts])
   return rows
 }
 

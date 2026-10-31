@@ -7,6 +7,7 @@
       <template #actions>
       <div class="header-side">
         <router-link
+          v-if="!phone"
           :to="{ name: 'year', params: { year } }"
           class="year-link"
         >
@@ -85,6 +86,26 @@
           aria-hidden="true"
         ></i>
       </router-link>
+
+      <PhoneOverview
+        v-if="phone"
+        :year="year"
+        :months="stats.readingByMonth.map(item => item.count)"
+        :read-in-year="readInYear"
+        :top-tags="stats.topTags"
+        :totals="yearTotals"
+        @open-month="month => openLibrary({ status: 'read', year: String(year), month: String(month) })"
+        @open-tag="name => openLibrary({ tags: name })"
+      >
+        <template #month-table>
+          <ChartDataTable
+            :caption="t('dashboard.readingByMonth', { year })"
+            :label-header="t('dashboard.month')"
+            :value-header="t('dashboard.readings')"
+            :rows="monthRows"
+          />
+        </template>
+      </PhoneOverview>
 
       <!-- Meta do ano -->
       <section
@@ -251,7 +272,10 @@
       </div>
 
       <div class="charts-grid">
-        <div class="chart-card main-chart">
+        <div
+          v-if="!phone"
+          class="chart-card main-chart"
+        >
           <h3>{{ t('dashboard.readingByMonth', { year }) }}</h3>
           <p class="chart-hint">{{ t('dashboard.clickHint') }}</p>
           <div class="chart-wrapper flex-center">
@@ -305,7 +329,10 @@
       </div>
 
       <div class="charts-grid lower">
-        <div class="chart-card">
+        <div
+          v-if="!phone"
+          class="chart-card"
+        >
           <h3>{{ $t('dashboard.favoriteGenres') }}</h3>
           <div class="chart-wrapper flex-center">
             <div
@@ -394,7 +421,7 @@
 
 <script setup>
 import PageHeader from '../components/ui/PageHeader.vue'
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
@@ -408,6 +435,8 @@ import NumberField from '../components/ui/NumberField.vue'
 import api from '../services/api.js'
 import { useTheme, cssVar } from '../composables/useTheme.js'
 import { colorFor, tagColorName } from '../utils/tagColors.js'
+import PhoneOverview from '../components/dashboard/PhoneOverview.vue'
+import { useIsPhone } from '../composables/useIsPhone.js'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -673,11 +702,30 @@ const doughnutOptions = computed(() => ({
   }
 }))
 
+// Celular: livros, páginas e nota média do ano (os mesmos da Retrospectiva)
+const phone = useIsPhone()
+const yearTotals = ref(null)
+
+async function loadYearTotals() {
+  if (!phone.value) return
+  const asked = year.value
+  try {
+    const story = await api.getYearInBooks(asked)
+    if (asked === year.value) yearTotals.value = story.totals || null
+  } catch {
+    if (asked === year.value) yearTotals.value = null
+  }
+}
+
+watch(phone, on => { if (on && !yearTotals.value) loadYearTotals() })
+
 async function loadStats() {
   loading.value = true
   loadError.value = false
+  yearTotals.value = null
   try {
-    stats.value = await api.getDashboardStats(year.value)
+    const [result] = await Promise.all([api.getDashboardStats(year.value), loadYearTotals()])
+    stats.value = result
   } catch (error) {
     loadError.value = true
   } finally {

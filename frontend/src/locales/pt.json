@@ -303,7 +303,13 @@
     "year": "Ano",
     "monthSummary": "Nenhuma leitura em {year} | {n} leitura em {year}; mais em {month}: {top} | {n} leituras em {year}; mais em {month}: {top}",
     "yearSummary": "Leituras por ano: {list}",
-    "tagsSummary": "Categorias com mais livros: {list}"
+    "tagsSummary": "Categorias com mais livros: {list}",
+    "overviewLabel": "Resumo de {year}",
+    "tileRead": "Livros lidos",
+    "tilePages": "Páginas",
+    "tileRating": "Nota média",
+    "myYear": "Meu ano em livros",
+    "otherTags": "Outras"
   },
   "login": {
     "header": "Sua biblioteca pessoal, em todo lugar.",
@@ -749,7 +755,10 @@
     "also_have": "Quem tem este livro também tem",
     "readers_short": "{n} leitor | {n} leitores",
     "join_hint": "Você não aparece para outros leitores. Para participar, ative a comunidade em {settings}.",
-    "settings_link": "Conta"
+    "settings_link": "Conta",
+    "average": "Média da comunidade: {n}",
+    "sheetLabel": "Outros leitores deste livro",
+    "sheetEyebrow": "Comunidade"
   },
   "profile": {
     "title": "Perfil",
@@ -801,7 +810,9 @@
     "event_added_many": "adicionou {n} livros",
     "event_read_many": "terminou de ler {n} livros",
     "and_more": "e mais {n}",
-    "feed_empty_title": "Nada por aqui ainda"
+    "feed_empty_title": "Nada por aqui ainda",
+    "event_review": "resenhou",
+    "list_by": "Lista de {name} · {n} livro | Lista de {name} · {n} livros"
   },
   "forgot": {
     "title": "Esqueci minha senha",
@@ -1704,5 +1715,9 @@
     "title": "Progresso da leitura",
     "markRead": "Marcar como lido",
     "readOn": "Lido em {date}"
+  },
+  "pullRefresh": {
+    "refreshing": "Atualizando…",
+    "done": "Atualizado"
   }
 }

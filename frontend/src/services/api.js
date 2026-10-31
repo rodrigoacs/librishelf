@@ -308,8 +308,9 @@ export default {
   },
 
   // --- Seguir / feed ---
-  getFeed(page = 1) {
-    return client.get(`/social/feed${toQuery({ page })}`)
+  /** kinds = 'all': inclui resenhas e listas públicas (feed do celular). */
+  getFeed(page = 1, kinds) {
+    return client.get(`/social/feed${toQuery({ page, kinds })}`)
   },
 
   getConnections() {

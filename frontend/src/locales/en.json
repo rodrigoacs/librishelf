@@ -303,7 +303,13 @@
     "year": "Year",
     "monthSummary": "No readings in {year} | {n} reading in {year}; most in {month}: {top} | {n} readings in {year}; most in {month}: {top}",
     "yearSummary": "Readings per year: {list}",
-    "tagsSummary": "Categories with the most books: {list}"
+    "tagsSummary": "Categories with the most books: {list}",
+    "overviewLabel": "{year} at a glance",
+    "tileRead": "Books read",
+    "tilePages": "Pages",
+    "tileRating": "Average rating",
+    "myYear": "My year in books",
+    "otherTags": "Others"
   },
   "login": {
     "header": "Your personal library, everywhere.",
@@ -749,7 +755,10 @@
     "also_have": "People who have this book also have",
     "readers_short": "{n} reader | {n} readers",
     "join_hint": "Other readers can't see you. To join, turn on the community in {settings}.",
-    "settings_link": "Account"
+    "settings_link": "Account",
+    "average": "Community average: {n}",
+    "sheetLabel": "Other readers of this book",
+    "sheetEyebrow": "Community"
   },
   "profile": {
     "title": "Profile",
@@ -801,7 +810,9 @@
     "event_added_many": "added {n} books",
     "event_read_many": "finished {n} books",
     "and_more": "and {n} more",
-    "feed_empty_title": "Nothing here yet"
+    "feed_empty_title": "Nothing here yet",
+    "event_review": "reviewed",
+    "list_by": "List by {name} · {n} book | List by {name} · {n} books"
   },
   "forgot": {
     "title": "Forgot your password",
@@ -1704,5 +1715,9 @@
     "title": "Reading progress",
     "markRead": "Mark as read",
     "readOn": "Read on {date}"
+  },
+  "pullRefresh": {
+    "refreshing": "Refreshing…",
+    "done": "Updated"
   }
 }

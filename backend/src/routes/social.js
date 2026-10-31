@@ -11,7 +11,7 @@ router.use(authenticateToken)
 
 router.get('/feed', async (req, res) => {
   try {
-    res.status(STATUS.OK).json(await socialService.feed(req.user.id, req.query.page))
+    res.status(STATUS.OK).json(await socialService.feed(req.user.id, req.query.page, req.query.kinds))
   } catch (error) {
     sendError(res, error, 'Erro ao carregar o feed')
   }

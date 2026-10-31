@@ -2,7 +2,7 @@
  * Feed da comunidade agrupado por dia, juntando eventos repetidos:
  * "@lalmeida adicionou 4 livros" em vez de quatro linhas iguais.
  *
- * events: [{ type, at, date?, username, isPublic, bookId, title, authors, rating }]
+ * events: [{ type, at, date?, username, isPublic, bookId, title, authors, rating, review?, list? }]
  * (do mais novo para o mais antigo, como vem de GET /social/feed). Leituras
  * trazem `date` ('YYYY-MM-DD', o dia escolhido): agrupam por ele, não por
  * `at` (meia-noite UTC, que no Brasil cai na véspera).
@@ -36,8 +36,10 @@ export function groupFeed(events = []) {
       days.push(day)
     }
 
-    // Mesma pessoa + mesma ação no mesmo dia viram um item só
-    const actorKey = `${event.username}|${event.type}`
+    // Mesma pessoa + mesma ação no mesmo dia viram um item só; resenhas e
+    // listas (feed do celular) são sempre um cartão cada
+    const own = event.type === 'review' ? `|${event.review?.id}` : event.type === 'list' ? `|${event.list?.id}` : ''
+    const actorKey = `${event.username}|${event.type}${own}`
     let item = day.byActor.get(actorKey)
     if (!item) {
       item = { key: `${key}|${actorKey}`, type: event.type, username: event.username, isPublic: event.isPublic, at: event.at, books: [] }

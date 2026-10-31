@@ -1,5 +1,6 @@
 <template>
   <div class="home-container">
+    <PullRefresh :state="pull" />
     <PageHeader :title="greeting">
       <template #subtitle>
         <p
@@ -339,6 +340,8 @@
 <script setup>
 import PageHeader from '../components/ui/PageHeader.vue'
 import { ref, computed, onMounted } from 'vue'
+import { usePullToRefresh } from '../composables/usePullToRefresh.js'
+import PullRefresh from '../components/ui/PullRefresh.vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
@@ -465,6 +468,9 @@ async function loadActivity() {
     events.value = []
   }
 }
+
+// Puxar para atualizar (celular)
+const pull = usePullToRefresh(() => Promise.all([reload(), loadActivity(), loadRecommendations()]))
 
 onMounted(async () => {
   // Voltar para o Início devolve a rolagem só depois de tudo carregar

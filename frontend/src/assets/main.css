@@ -586,6 +586,13 @@ body {
     scrollbar-width: none;
   }
 
+  /* Telas com puxar para atualizar próprio (usePullToRefresh): sem o
+     "puxar e recarregar" do navegador e sem o brilho de fim de rolagem */
+  html.has-pull-refresh,
+  html.has-pull-refresh body {
+    overscroll-behavior-y: none;
+  }
+
   /* Bordas do aparelho (viewport-fit=cover no index.html): notch e barra de
      gestos. --safe-* valem 0 fora do celular com recorte. */
   :root {

@@ -9,7 +9,7 @@
           ref="titleEl"
           class="book-title"
           :class="{ expanded: titleExpanded }"
-        >{{ loading ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}</h1>
+        >{{ loading && !book.title ? t('bookDialog.loading') : (book.title || t('bookDialog.noTitle')) }}</h1>
         <!-- Título muito longo no celular: 4 linhas e o resto sob demanda -->
         <button
           v-if="titleClamped || titleExpanded"

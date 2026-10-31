@@ -107,9 +107,15 @@ export async function pendingCount(viewerId) {
   return { count: await socialRepository.pendingCount(viewerId) }
 }
 
-export async function feed(viewerId, page) {
+/**
+ * kinds = 'all': inclui resenhas ("review") e listas públicas ("list"), que o
+ * feed do celular mostra em cartões. Sem isso, só "added" e "read" (o feed de
+ * sempre, para o desktop e para versões antigas do app em cache).
+ */
+export async function feed(viewerId, page, kinds) {
   const pageNumber = Math.max(1, Number.parseInt(page, 10) || 1)
-  const rows = await socialRepository.feed(viewerId, FEED_PAGE_SIZE + 1, (pageNumber - 1) * FEED_PAGE_SIZE)
+  const withPosts = kinds === 'all'
+  const rows = await socialRepository.feed(viewerId, FEED_PAGE_SIZE + 1, (pageNumber - 1) * FEED_PAGE_SIZE, withPosts)
 
   return {
     page: pageNumber,
@@ -127,7 +133,13 @@ export async function feed(viewerId, page) {
       coverVersion: row.cover_version,
       title: row.title,
       authors: row.authors,
-      rating: row.rating
+      rating: row.rating,
+      ...(row.type === 'review'
+        ? { review: { id: row.review_id, body: row.review_body, truncated: Boolean(row.review_cut), hasSpoiler: Boolean(row.review_spoiler) } }
+        : {}),
+      ...(row.type === 'list'
+        ? { list: { id: row.list_id, ranked: Boolean(row.list_ranked), count: row.list_count, books: row.list_books || [] } }
+        : {})
     }))
   }
 }

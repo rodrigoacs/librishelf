@@ -23,7 +23,84 @@
       </p>
 
       <template v-else>
+        <!-- Celular: cartão com a pilha de avatares que abre uma folha -->
         <button
+          v-if="phone"
+          type="button"
+          class="community-summary"
+          aria-haspopup="dialog"
+          @click="sheetOpen = true"
+        >
+          <span class="summary-text">
+            <span class="summary-count">{{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}</span>
+            <span class="summary-row">
+              <AvatarStack
+                :usernames="community.readers.map(r => r.username)"
+                :total="community.readerCount"
+                :max="4"
+              />
+              <span
+                v-if="community.averageRating"
+                class="summary-avg"
+              >
+                {{ t('community.average', { n: formatAverage(community.averageRating) }) }}
+                <i
+                  class="pi pi-star-fill"
+                  aria-hidden="true"
+                ></i>
+              </span>
+            </span>
+          </span>
+          <i
+            class="pi pi-chevron-right summary-chevron"
+            aria-hidden="true"
+          ></i>
+        </button>
+        <AppDialog
+          v-if="phone"
+          v-model:visible="sheetOpen"
+          :aria-label="t('community.sheetLabel')"
+          dialog-class="community-sheet"
+        >
+          <div class="sheet-body">
+            <IconButton
+              class="sheet-close"
+              icon="pi pi-times"
+              :label="t('common.close')"
+              @click="sheetOpen = false"
+            />
+            <p
+              v-if="bookTitle"
+              class="sheet-eyebrow"
+            >
+              {{ t('community.sheetEyebrow') }} · <strong>{{ bookTitle }}</strong>
+            </p>
+            <h2 class="sheet-title">{{ t('community.readers_count', { n: community.readerCount }, community.readerCount) }}</h2>
+            <AvatarStack
+              :usernames="community.readers.map(r => r.username)"
+              :total="community.readerCount"
+              size="md"
+              animate
+            />
+            <p
+              v-if="community.averageRating"
+              class="sheet-avg"
+            >
+              {{ t('community.average', { n: formatAverage(community.averageRating) }) }}
+              <i
+                class="pi pi-star-fill"
+                aria-hidden="true"
+              ></i>
+            </p>
+            <BookCommunityReaders
+              :community="community"
+              rows
+            />
+          </div>
+        </AppDialog>
+
+        <button
+          v-if="!phone"
           type="button"
           class="community-toggle"
           :aria-expanded="communityOpen"
@@ -55,59 +132,12 @@
         </button>
 
         <div
+          v-if="!phone"
           v-show="communityOpen"
           id="book-community-panel"
           class="community-panel"
         >
-          <ul class="reader-list">
-            <li
-              v-for="reader in community.readers"
-              :key="reader.username"
-            >
-              <router-link
-                :to="{ name: 'public-library', params: { username: reader.username } }"
-                class="reader-link"
-              >@{{ reader.username }}</router-link>
-              <i
-                v-if="reader.hasRead"
-                class="pi pi-check-circle text-theme"
-                v-tooltip.top="t('community.has_read')"
-                :aria-label="t('community.has_read')"
-              ></i>
-              <StarRating
-                v-if="reader.rating"
-                :model-value="reader.rating"
-                size="sm"
-                readonly
-              />
-            </li>
-          </ul>
-
-          <div
-            v-if="community.alsoHave.length"
-            class="also-have"
-          >
-            <h3>{{ t('community.also_have') }}</h3>
-            <ul>
-              <li
-                v-for="item in community.alsoHave.slice(0, ALSO_HAVE_SHOWN)"
-                :key="`${item.owner}-${item.bookId}`"
-              >
-                <router-link
-                  :to="{ name: 'public-library', params: { username: item.owner }, query: { book: item.bookId } }"
-                  class="also-link"
-                >
-                  <span class="also-title">{{ item.title }}</span>
-                  <span
-                    v-if="item.authors"
-                    class="also-authors"
-                  >{{ item.authors }}</span>
-                </router-link>
-                <span class="also-count">{{ t('community.readers_short', { n: item.readers }, item.readers)
-                  }}</span>
-              </li>
-            </ul>
-          </div>
+          <BookCommunityReaders :community="community" />
         </div>
       </template>
 
@@ -152,18 +182,26 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../../services/api.js'
-import StarRating from '../StarRating.vue'
 import ReviewCard from '../review/ReviewCard.vue'
+import AppDialog from '../ui/AppDialog.vue'
+import IconButton from '../form/IconButton.vue'
+import AvatarStack from '../ui/AvatarStack.vue'
+import BookCommunityReaders from './BookCommunityReaders.vue'
 import { currentUser } from '../../services/session.js'
+import { useIsPhone } from '../../composables/useIsPhone.js'
 
 /** Comunidade do livro: quem mais tem, média das notas e "quem tem também tem". */
 const props = defineProps({
-  bookId: { type: Number, required: true }
+  bookId: { type: Number, required: true },
+  // Celular: título do livro no topo da folha "outros leitores têm este livro"
+  bookTitle: { type: String, default: '' }
 })
+
+const phone = useIsPhone()
+const sheetOpen = ref(false)
 
 const { t } = useI18n()
 
-const ALSO_HAVE_SHOWN = 3
 const REVIEWS_SHOWN = 3
 
 const allReviews = ref(false)
@@ -185,6 +223,7 @@ async function loadCommunity() {
   if (!props.bookId) return
   communityLoading.value = true
   communityError.value = false
+  sheetOpen.value = false
   allReviews.value = false
   try {
     community.value = await api.getBookCommunity(props.bookId)
@@ -321,83 +360,13 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
   gap: 1rem;
 }
 
-.reader-list,
-.also-have ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.reader-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.reader-list li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: var(--bg-input);
-  border-radius: var(--radius-pill);
-  padding: 0.25rem 0.7rem;
-  font-size: var(--fs-sm);
-}
-
-.reader-link,
-.also-link,
 .community-hint a {
   color: var(--main-color);
   text-decoration: none;
 }
 
-.reader-link:hover,
-.also-link:hover .also-title,
 .community-hint a:hover {
   text-decoration: underline;
-}
-
-.also-have h3 {
-  margin: 0 0 0.35rem;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.also-have li {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
-  padding: 0.45rem 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.also-have li:last-child {
-  border-bottom: none;
-}
-
-.also-link {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.also-title {
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.also-authors,
-.also-count {
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-}
-
-.also-count {
-  flex-shrink: 0;
 }
 
 .community-hint {
@@ -407,8 +376,103 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
   line-height: 1.45;
 }
 
-.text-theme {
-  color: var(--main-color);
-  font-weight: bold;
+
+/* Celular: cartão que abre a folha */
+.community-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.community-summary:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.summary-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.summary-count {
+  font-weight: 600;
+}
+
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  margin-top: var(--space-1);
+}
+
+.summary-avg,
+.sheet-avg {
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.summary-avg .pi,
+.sheet-avg .pi {
+  color: var(--rating);
+  font-size: var(--fs-xs);
+}
+
+.summary-chevron {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.sheet-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) calc(var(--space-5) + var(--safe-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sheet-close {
+  position: absolute;
+  top: calc(-1 * var(--space-2));
+  right: var(--space-2);
+}
+
+.sheet-eyebrow {
+  margin: 0;
+  padding-right: 3rem;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.sheet-eyebrow strong {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+
+.sheet-title {
+  margin: 0;
+  padding-right: 3rem;
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+}
+
+.sheet-avg {
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-md);
 }
 </style>

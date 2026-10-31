@@ -829,6 +829,10 @@ export const SOCIAL_QUERIES = {
   `,
   // Feed: leituras concluídas e livros adicionados por quem $1 segue (pedido
   // aceito) e que mantém "mostrar minha atividade" ligado.
+  // $4 = incluir resenhas e listas (o app no celular pede; o resto recebe só
+  // "adicionou" e "leu", como antes). Resenha: a que não foi ocultada pela
+  // moderação, de quem a pessoa segue (público e "só seguidores" valem aqui,
+  // porque o seguir foi aceito). Lista: só as públicas e com algum livro.
   FEED: `
     WITH followed AS (
       SELECT f.followee_id
@@ -840,20 +844,48 @@ export const SOCIAL_QUERIES = {
       -- day: a data da leitura como foi escolhida (sem fuso); at só ordena
       SELECT 'read' AS type, (r.finished_on::timestamp AT TIME ZONE 'UTC') AS at, to_char(r.finished_on, 'YYYY-MM-DD') AS day,
              b.id AS book_id, b.user_id, b.title, b.rating, b.cover_version,
-             (row_number() OVER (PARTITION BY r.book_id ORDER BY r.finished_on, r.id) > 1) AS reread
+             (row_number() OVER (PARTITION BY r.book_id ORDER BY r.finished_on, r.id) > 1) AS reread,
+             NULL::integer AS item_id
       FROM librishelf.readings r
       JOIN librishelf.books b ON b.id = r.book_id
       WHERE b.user_id IN (SELECT followee_id FROM followed) AND r.finished_on IS NOT NULL
       UNION ALL
-      SELECT 'added', b.created_at, NULL, b.id, b.user_id, b.title, b.rating, b.cover_version, false
+      SELECT 'added', b.created_at, NULL, b.id, b.user_id, b.title, b.rating, b.cover_version, false, NULL
       FROM librishelf.books b
       WHERE b.user_id IN (SELECT followee_id FROM followed)
+      UNION ALL
+      SELECT 'review', rv.created_at, NULL, b.id, b.user_id, b.title, b.rating, b.cover_version, false, rv.id
+      FROM librishelf.reviews rv
+      JOIN librishelf.books b ON b.id = rv.book_id
+      WHERE $4 AND rv.user_id IN (SELECT followee_id FROM followed) AND rv.hidden_at IS NULL
+      UNION ALL
+      SELECT 'list', l.created_at, NULL, NULL, l.user_id, l.title, NULL, NULL, false, l.id
+      FROM librishelf.lists l
+      WHERE $4 AND l.is_public AND l.user_id IN (SELECT followee_id FROM followed)
+        AND EXISTS (SELECT 1 FROM librishelf.list_items li WHERE li.list_id = l.id)
     )
     SELECT e.type, e.at, e.day, e.book_id, e.title, e.rating, e.cover_version, e.reread, u.name AS username, u.is_public,
-           ${AUTHORS_OF('e.book_id')} AS authors
+           CASE WHEN e.book_id IS NOT NULL THEN ${AUTHORS_OF('e.book_id')} END AS authors,
+           CASE WHEN e.type = 'review' THEN rv.id END AS review_id,
+           CASE WHEN e.type = 'review' THEN left(rv.body, 280) END AS review_body,
+           CASE WHEN e.type = 'review' THEN char_length(rv.body) > 280 END AS review_cut,
+           CASE WHEN e.type = 'review' THEN rv.has_spoiler END AS review_spoiler,
+           CASE WHEN e.type = 'list' THEN e.item_id END AS list_id,
+           CASE WHEN e.type = 'list' THEN l.ranked END AS list_ranked,
+           CASE WHEN e.type = 'list' THEN (SELECT count(*)::int FROM librishelf.list_items li WHERE li.list_id = e.item_id) END AS list_count,
+           CASE WHEN e.type = 'list' THEN (
+             SELECT json_agg(json_build_object('bookId', x.id, 'title', x.title, 'coverVersion', x.cover_version, 'position', x.position) ORDER BY x.position)
+             FROM (
+               SELECT b.id, b.title, b.cover_version, li.position
+               FROM librishelf.list_items li JOIN librishelf.books b ON b.id = li.book_id
+               WHERE li.list_id = e.item_id ORDER BY li.position LIMIT 5
+             ) x
+           ) END AS list_books
     FROM events e
     JOIN librishelf.users u ON u.id = e.user_id
-    ORDER BY e.at DESC, e.book_id DESC, e.type
+    LEFT JOIN librishelf.reviews rv ON e.type = 'review' AND rv.id = e.item_id
+    LEFT JOIN librishelf.lists l ON e.type = 'list' AND l.id = e.item_id
+    ORDER BY e.at DESC, e.book_id DESC NULLS LAST, e.type, e.item_id
     LIMIT $2 OFFSET $3
   `
 }

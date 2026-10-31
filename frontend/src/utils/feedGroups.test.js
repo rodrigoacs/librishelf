@@ -27,6 +27,16 @@ describe('groupFeed', () => {
     expect(days[1].items[0].books.map(b => b.bookId)).toEqual([5])
   })
 
+  it('resenhas e listas da mesma pessoa no dia ficam em cartões separados', () => {
+    const [day] = groupFeed([
+      { type: 'review', at: '2026-10-20T15:00:00Z', username: 'ana', bookId: 1, review: { id: 10 } },
+      { type: 'review', at: '2026-10-20T14:00:00Z', username: 'ana', bookId: 2, review: { id: 11 } },
+      { type: 'list', at: '2026-10-20T13:00:00Z', username: 'ana', bookId: null, list: { id: 7 } },
+      { type: 'list', at: '2026-10-20T12:00:00Z', username: 'ana', bookId: null, list: { id: 8 } }
+    ])
+    expect(day.items.map(i => [i.type, i.books.length])).toEqual([['review', 1], ['review', 1], ['list', 1], ['list', 1]])
+  })
+
   it('ignora evento sem data válida e lista vazia', () => {
     expect(groupFeed([{ type: 'added', at: 'x', username: 'ana' }])).toEqual([])
     expect(groupFeed()).toEqual([])

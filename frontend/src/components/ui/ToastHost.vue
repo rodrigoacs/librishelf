@@ -250,10 +250,103 @@ onMounted(bringToFront)
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+/* Celular: pílula no centro de baixo, como o "✓ Imagem salva" do trailer.
+   Fica acima do botão flutuante e do rodapé das folhas (72 px) e entra com
+   mola. Cores cheias por tipo, com texto branco (≥ 4,5:1). */
 @media (max-width: 639.98px) {
   .toast-host {
-    inset: auto 1rem calc(1rem + env(safe-area-inset-bottom)) 1rem;
+    inset: auto 1rem calc(var(--space-4) + 72px + env(safe-area-inset-bottom)) 1rem;
     width: auto;
+  }
+
+  .toast-stack {
+    align-items: center;
+  }
+
+  .toast {
+    --toast-bg: var(--bg-panel);
+    --toast-fg: var(--text-primary);
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 100%;
+    padding: 0.4rem 0.4rem 0.4rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    background: var(--toast-bg);
+    color: var(--toast-fg);
+    box-shadow: var(--shadow-3);
+  }
+
+  .toast-success {
+    --toast-bg: #15803d;
+    --toast-fg: #ffffff;
+  }
+
+  .toast-error {
+    --toast-bg: #b91c1c;
+    --toast-fg: #ffffff;
+  }
+
+  .toast-warn {
+    --toast-bg: #8f5a00;
+    --toast-fg: #ffffff;
+  }
+
+  .toast-success,
+  .toast-error,
+  .toast-warn {
+    border-color: transparent;
+  }
+
+  .toast-icon {
+    color: inherit;
+    font-size: var(--fs-md);
+    margin-top: 0;
+  }
+
+  .toast-detail {
+    color: inherit;
+    opacity: 0.9;
+  }
+
+  .toast-success .toast-action,
+  .toast-error .toast-action,
+  .toast-warn .toast-action {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .toast-close {
+    width: 36px;
+    height: 36px;
+    color: inherit;
+    opacity: 0.85;
+  }
+
+  .toast-enter-from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.9);
+  }
+
+  .toast-leave-to {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.96);
+  }
+
+  .toast-enter-active {
+    transition: opacity var(--dur-medium) var(--ease-enter), transform var(--dur-spring) var(--ease-spring);
+  }
+
+  .toast-leave-active {
+    transition: opacity var(--dur-short) var(--ease-exit), transform var(--dur-short) var(--ease-exit);
+  }
+}
+
+@media (max-width: 639.98px) and (prefers-reduced-motion: reduce) {
+  .toast-enter-active,
+  .toast-leave-active {
+    transition: none;
   }
 }
 </style>

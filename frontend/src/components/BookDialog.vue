@@ -237,6 +237,7 @@
           <BookCommunity
             v-if="!isReadOnly && !loading && !loadFailed"
             :book-id="bookId"
+            :book-title="book.title"
           />
         </div>
       </div>
@@ -293,7 +294,10 @@ const props = defineProps({
   // cover_version de quem abriu (card da lista), usado até o livro carregar
   coverVersion: { type: [Number, null], default: undefined },
   // Aberto pela URL (?book=): o voltar do navegador já fecha pelo router
-  inUrl: { type: Boolean, default: false }
+  inUrl: { type: Boolean, default: false },
+  // Celular: título e autores do card que abriu, mostrados enquanto o livro
+  // carrega (a capa que viaja chega na capa certa, não numa genérica)
+  preview: { type: Object, default: null }
 })
 
 const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])
@@ -327,6 +331,12 @@ function emptyBook() {
 }
 
 const book = ref(emptyBook())
+
+function previewBook() {
+  const base = emptyBook()
+  if (!phone.value || !props.preview) return base
+  return { ...base, title: props.preview.title || '', authors: props.preview.authors || '' }
+}
 
 // Versão da capa: a do livro carregado; antes disso, a do card que abriu
 const currentCoverVersion = computed(() =>
@@ -601,6 +611,7 @@ async function loadBookData() {
 
   loading.value = true
   loadFailed.value = false
+  if (!book.value.title) book.value = previewBook()
 
   try {
     const response = props.isReadOnly

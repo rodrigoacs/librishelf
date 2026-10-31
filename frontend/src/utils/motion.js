@@ -88,7 +88,9 @@ export const GESTURE = {
   slop: 8,
   // Puxar para atualizar: distância (já com resistência) que dispara
   refreshTrigger: 72,
-  refreshMax: 120
+  refreshMax: 120,
+  // Quanto de dedo "pesa" o puxar para atualizar (maior = mais leve)
+  refreshFeel: 150
 }
 
 /**
@@ -106,6 +108,21 @@ export function shouldComplete({ distance, velocity, size }) {
 export function rubberBand(offset, limit = GESTURE.refreshMax) {
   if (offset <= 0) return 0
   return limit * (1 - 1 / ((offset * 0.55) / limit + 1))
+}
+
+/**
+ * Puxar para atualizar: do quanto o dedo andou (px, para baixo) para onde o
+ * indicador fica e se, soltando agora, atualiza. A borracha deixa o indicador
+ * cada vez mais pesado e nunca passa de refreshMax.
+ */
+export function refreshPull(pulled) {
+  // 1 - e^(-x/k): quase 1:1 no começo; arma com ~140 px de dedo
+  const offset = GESTURE.refreshMax * (1 - Math.exp(-Math.max(0, pulled) / GESTURE.refreshFeel))
+  return {
+    offset,
+    progress: Math.min(1, offset / GESTURE.refreshTrigger),
+    armed: offset >= GESTURE.refreshTrigger
+  }
 }
 
 /**

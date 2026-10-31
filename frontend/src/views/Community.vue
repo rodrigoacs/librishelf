@@ -1,5 +1,6 @@
 <template>
   <div class="community-container">
+    <PullRefresh :state="pull" />
     <div class="community-content">
       <PageHeader
         :title="t('communityView.title')"
@@ -138,7 +139,96 @@
                 v-for="item in day.items"
                 :key="item.key"
                 class="feed-item"
+                :class="`kind-${item.type}`"
+                :style="{ '--i': staggerIndex(item) }"
               >
+                <!-- Resenha (só no celular, que pede kinds=all): texto borrado
+                     se tiver spoiler, até tocar em "Contém spoiler — mostrar" -->
+                <template v-if="item.type === 'review'">
+                  <ReaderAvatar :username="item.username" />
+                  <div class="feed-body">
+                    <p class="feed-text">
+                      <ReaderName
+                        :username="item.username"
+                        :is-public="item.isPublic"
+                      />
+                      {{ ' ' + t('communityView.event_review') + ' ' }}
+                      <router-link
+                        v-if="item.isPublic"
+                        :to="bookLink(item, item.books[0])"
+                        class="book-link"
+                      >{{ item.books[0].title }}</router-link>
+                      <strong v-else>{{ item.books[0].title }}</strong>
+                    </p>
+                    <div
+                      class="feed-review"
+                      :class="{ concealed: spoilerHidden(item.books[0]) }"
+                    >
+                      <p
+                        class="feed-review-text"
+                        :aria-hidden="spoilerHidden(item.books[0]) ? 'true' : undefined"
+                        :inert="spoilerHidden(item.books[0]) || undefined"
+                      >{{ item.books[0].review.body }}{{ item.books[0].review.truncated ? '…' : '' }}</p>
+                      <button
+                        v-if="spoilerHidden(item.books[0])"
+                        type="button"
+                        class="spoiler-btn"
+                        @click="revealSpoiler(item.books[0])"
+                      >
+                        <i
+                          class="pi pi-exclamation-triangle"
+                          aria-hidden="true"
+                        ></i>
+                        {{ t('review.showSpoiler') }}
+                      </button>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Lista pública: capas em fila, numeradas se for ranking -->
+                <template v-else-if="item.type === 'list'">
+                  <div class="feed-body">
+                    <p class="list-title">
+                      <router-link
+                        v-if="item.isPublic"
+                        :to="{ name: 'public-list', params: { username: item.username, id: item.books[0].list.id } }"
+                        class="book-link"
+                      >{{ item.books[0].title }}</router-link>
+                      <strong v-else>{{ item.books[0].title }}</strong>
+                    </p>
+                    <p class="feed-meta">
+                      {{ t('communityView.list_by', { name: `@${item.username}`, n: item.books[0].list.count }, item.books[0].list.count) }}
+                    </p>
+                    <ol
+                      class="list-covers"
+                      :class="{ ranked: item.books[0].list.ranked }"
+                    >
+                      <li
+                        v-for="book in item.books[0].list.books"
+                        :key="book.bookId"
+                      >
+                        <BookCover
+                          :book-id="book.bookId"
+                          :version="book.coverVersion"
+                          :title="book.title"
+                          class="feed-cover"
+                        />
+                        <span
+                          v-if="item.books[0].list.ranked"
+                          class="rank"
+                          aria-hidden="true"
+                        >{{ book.position }}</span>
+                        <span class="sr-only">{{ book.title }}</span>
+                      </li>
+                    </ol>
+                  </div>
+                  <ReaderAvatar
+                    :username="item.username"
+                    class="list-avatar"
+                  />
+                </template>
+
+                <template v-else>
                 <ReaderAvatar
                   :username="item.username"
                   :badge="item.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"
@@ -206,6 +296,7 @@
                     class="feed-cover"
                   />
                 </div>
+                </template>
               </li>
             </ul>
           </section>
@@ -611,6 +702,9 @@ import BookCover from '../components/BookCover.vue'
 import { groupFeed, dayLabel } from '../utils/feedGroups.js'
 import { currentUser } from '../services/session.js'
 import { refreshPendingRequests } from '../services/social.js'
+import { useIsPhone } from '../composables/useIsPhone.js'
+import { usePullToRefresh } from '../composables/usePullToRefresh.js'
+import PullRefresh from '../components/ui/PullRefresh.vue'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -689,6 +783,24 @@ const MANY_SHOWN = 3
 const COVERS_SHOWN = 3
 const feedDays = computed(() => groupFeed(events.value))
 
+// Celular: o feed traz também resenhas e listas (kinds=all), em cartões
+const phone = useIsPhone()
+const feedKinds = () => (phone.value ? 'all' : undefined)
+
+// Cascata só para o que acabou de chegar (a página seguinte não refaz a primeira)
+let staggerBase = 0
+const staggerOrder = new Map()
+function staggerIndex(item) {
+  if (!staggerOrder.has(item.key)) staggerOrder.set(item.key, staggerOrder.size)
+  return Math.max(0, staggerOrder.get(item.key) - staggerBase)
+}
+
+const shownSpoilers = ref(new Set())
+const spoilerHidden = event => Boolean(event.review?.hasSpoiler) && !shownSpoilers.value.has(event.review.id)
+function revealSpoiler(event) {
+  shownSpoilers.value = new Set(shownSpoilers.value).add(event.review.id)
+}
+
 function bookLink(item, book) {
   return { name: 'public-library', params: { username: item.username }, query: { book: book.bookId } }
 }
@@ -698,7 +810,13 @@ async function loadFeed({ append = false } = {}) {
   feedError.value = false
   try {
     const page = append ? feedPage.value + 1 : 1
-    const result = await api.getFeed(page)
+    const result = await api.getFeed(page, feedKinds())
+    if (!append) {
+      staggerOrder.clear()
+      staggerBase = 0
+    } else {
+      staggerBase = staggerOrder.size
+    }
     events.value = append ? [...events.value, ...result.events] : result.events
     feedPage.value = page
     hasMore.value = result.hasMore
@@ -803,6 +921,15 @@ function confirmRemove(username) {
     accept: () => act(username, () => api.removeFollower(username))
   })
 }
+
+// Girou/redimensionou passando dos 640 px: o feed muda de formato
+watch(phone, () => loadFeed())
+
+// Puxar para atualizar (celular): feed, pedidos e quem segue
+const pull = usePullToRefresh(async () => {
+  await Promise.all([loadFeed(), loadConnections()])
+  refreshPendingRequests({ force: true })
+})
 
 onMounted(async () => {
   await Promise.all([loadFeed(), loadConnections()])
@@ -1173,6 +1300,162 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+
+  /* Feed em cartões, como no trailer: capa à direita, resenha e lista com
+     cara própria; entram em cascata (só os que acabaram de chegar) */
+  .feed-days {
+    gap: var(--space-5);
+  }
+
+  .feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .feed-item,
+  .feed-item:last-child {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--bg-panel);
+    animation: feed-in var(--dur-medium) var(--ease-enter) both;
+    animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));
+  }
+
+  .skeleton-list .feed-item {
+    animation: none;
+  }
+
+  .feed-cover {
+    width: 48px;
+  }
+
+  .book-link {
+    font-family: var(--font-display);
+  }
+
+  .feed-review {
+    position: relative;
+    margin-top: var(--space-2);
+  }
+
+  .feed-review-text {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    user-select: text;
+  }
+
+  .feed-review.concealed .feed-review-text {
+    filter: blur(6px);
+    opacity: 0.55;
+    user-select: none;
+  }
+
+  .spoiler-btn {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: fit-content;
+    height: fit-content;
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .spoiler-btn .pi {
+    color: var(--warning);
+  }
+
+  .kind-list {
+    align-items: flex-start;
+  }
+
+  .list-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .list-title .book-link {
+    font-weight: inherit;
+  }
+
+  .list-covers {
+    display: flex;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+    padding: 8px 8px 0 0;
+    list-style: none;
+    overflow: hidden;
+  }
+
+  .list-covers li {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .list-covers .feed-cover {
+    width: 44px;
+  }
+
+  .rank {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    border-radius: var(--radius-pill);
+    background: var(--main-solid);
+    color: var(--on-main);
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    box-shadow: 0 0 0 2px var(--bg-panel);
+  }
+
+  .list-covers li:first-child .rank {
+    right: -4px;
+  }
+
+  .list-avatar {
+    flex-shrink: 0;
+  }
+}
+
+@keyframes feed-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-item,
+  .feed-item:last-child {
+    animation: none !important;
   }
 }
 </style>

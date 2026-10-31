@@ -27,7 +27,7 @@ describe('scrollBehavior', () => {
 })
 
 import { readFileSync } from 'node:fs'
-import { MOTION, SPRING, GESTURE, shouldComplete, rubberBand, velocityFrom, navDirection, pickTransition, staggerDelay } from './motion.js'
+import { MOTION, SPRING, GESTURE, shouldComplete, rubberBand, velocityFrom, navDirection, pickTransition, staggerDelay, refreshPull } from './motion.js'
 
 describe('tokens de movimento', () => {
   const css = readFileSync(new URL('../assets/main.css', import.meta.url), 'utf8')
@@ -133,5 +133,23 @@ describe('transição pelo sentido da navegação', () => {
   it('telas do mesmo nível (menu) esmaecem', () => {
     expect(pickTransition({ fromPath: '/books', toPath: '/community', direction: 'forward' })).toBe('fade')
     expect(pickTransition({ fromPath: '/community', toPath: '/books', direction: 'back' })).toBe('fade')
+  })
+})
+
+describe('puxar para atualizar', () => {
+  it('não arma com um puxão curto e arma por volta de 140 px de dedo', () => {
+    expect(refreshPull(0)).toEqual({ offset: 0, progress: 0, armed: false })
+    expect(refreshPull(-30).offset).toBe(0)
+    expect(refreshPull(80).armed).toBe(false)
+    expect(refreshPull(130).armed).toBe(false)
+    expect(refreshPull(145).armed).toBe(true)
+  })
+
+  it('o indicador fica mais pesado e nunca passa do máximo', () => {
+    const a = refreshPull(50).offset
+    const b = refreshPull(100).offset - a
+    expect(a).toBeGreaterThan(b)
+    expect(refreshPull(5000).offset).toBeLessThanOrEqual(GESTURE.refreshMax)
+    expect(refreshPull(300).progress).toBe(1)
   })
 })

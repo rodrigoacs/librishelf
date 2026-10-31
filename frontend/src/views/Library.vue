@@ -183,6 +183,7 @@
       :key="openBookId"
       :book-id="openBookId"
       :cover-version="openBookCoverVersion"
+      :preview="openBookPreview"
       in-url
       :model-value="true"
       @update:model-value="open => !open && closeBook()"
@@ -403,6 +404,11 @@ const openBookId = computed(() => (route.name === 'library' ? bookIdFromQuery(ro
 const openBookCoverVersion = computed(() => {
   const item = books.value.find(book => (book.book_id ?? book.id) === openBookId.value)
   return item ? item.cover_version : undefined
+})
+
+const openBookPreview = computed(() => {
+  const item = books.value.find(book => (book.book_id ?? book.id) === openBookId.value)
+  return item ? { title: item.title, authors: item.authors } : null
 })
 
 function openBook(id) {

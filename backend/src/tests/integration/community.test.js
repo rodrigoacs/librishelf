@@ -368,6 +368,40 @@ describe('Seguir com aprovação e feed', () => {
     expect(profile.body.viewer.followStatus).toBe('accepted')
   })
 
+  it('kinds=all: resenhas (sem as ocultadas) e listas públicas com livros; sem kinds, o feed de sempre', async () => {
+    const biaId = (await db.query("SELECT id FROM librishelf.users WHERE name = 'bia'")).rows[0].id
+    const books = (await db.query('SELECT id FROM librishelf.books WHERE user_id = $1 ORDER BY id LIMIT 2', [biaId])).rows.map(r => r.id)
+    const longBody = 'Final surpreendente. '.repeat(20)
+    const { rows: [review] } = await db.query(
+      'INSERT INTO librishelf.reviews (book_id, user_id, body, has_spoiler) VALUES ($1, $2, $3, true) RETURNING id', [books[0], biaId, longBody])
+    const { rows: [hidden] } = await db.query(
+      "INSERT INTO librishelf.reviews (book_id, user_id, body, hidden_at) VALUES ($1, $2, 'oculta', now()) RETURNING id", [books[1], biaId])
+    const { rows: [list] } = await db.query("INSERT INTO librishelf.lists (user_id, title, is_public) VALUES ($1, 'Melhores do ano', true) RETURNING id", [biaId])
+    await db.query('INSERT INTO librishelf.list_items (list_id, book_id, position) VALUES ($1, $2, 1), ($1, $3, 2)', [list.id, books[0], books[1]])
+    await db.query("INSERT INTO librishelf.lists (user_id, title, is_public) VALUES ($1, 'Vazia', true), ($1, 'Privada', false)", [biaId])
+
+    try {
+      const plain = await request(app).get('/social/feed').set(auth('ana'))
+      expect(plain.body.events.every(e => ['added', 'read'].includes(e.type))).toBe(true)
+
+      const all = await request(app).get('/social/feed').query({ kinds: 'all' }).set(auth('ana'))
+      const reviews = all.body.events.filter(e => e.type === 'review')
+      expect(reviews.map(e => e.review.id)).toEqual([review.id])
+      expect(reviews.some(e => e.review.id === hidden.id)).toBe(false)
+      expect(reviews[0]).toMatchObject({ bookId: books[0], username: 'bia', review: { hasSpoiler: true, truncated: true } })
+      expect(reviews[0].review.body).toHaveLength(280)
+
+      const lists = all.body.events.filter(e => e.type === 'list')
+      expect(lists.map(e => e.title)).toEqual(['Melhores do ano'])
+      expect(lists[0].list).toMatchObject({ id: list.id, ranked: true, count: 2 })
+      expect(lists[0].list.books.map(b => b.bookId)).toEqual(books)
+      expect(lists[0].bookId).toBeNull()
+    } finally {
+      await db.query('DELETE FROM librishelf.reviews WHERE id = ANY($1)', [[review.id, hidden.id]])
+      await db.query('DELETE FROM librishelf.lists WHERE user_id = $1', [biaId])
+    }
+  })
+
   it('desligar "mostrar atividade" esconde o feed sem desfazer o vínculo', async () => {
     await privacy('bia', { showActivity: false })
     expect((await request(app).get('/social/feed').set(auth('ana'))).body.events).toEqual([])
