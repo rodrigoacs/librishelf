@@ -16,6 +16,23 @@
  *            tablet    (max-width: 1023.98px) — abaixo disso, menu em gaveta
  *            largo     (max-width: 1279.98px)
  *            Toque: (pointer: coarse) para alvos de 44 px.
+ *
+ * Movimento  (os mesmos números em utils/motion.js → MOTION; o teste
+ *            motion.test.js confere que não se separam)
+ *            --dur-short 120 ms  toque (afundar), troca de cor, chips
+ *            --dur-medium 240 ms telas (push/pop), folha fechando, aviso
+ *            --dur-long 380 ms   capa que viaja, barras e rosca crescendo
+ *            --dur-spring 560 ms folha e gaveta assentando
+ *            --stagger 28 ms     cascata (cards, feed, menu; teto no 10º item)
+ *            --ease-standard     muda de lugar na mesma tela (barra enchendo)
+ *            --ease-enter        entra na tela (desacelera no fim)
+ *            --ease-exit         sai da tela (acelera no fim)
+ *            --ease-spring       mola com leve sobra (linear(); sem suporte,
+ *                                cai numa cubic-bezier com sobra parecida)
+ *            Regras: só transform e opacity; tudo interrompível; movimento
+ *            reduzido no sistema = sem animação (bloco no fim deste arquivo
+ *            e utils/motion.js → prefersReducedMotion/canAnimate).
+ *            Gestos, transições de tela e "afundar ao tocar" só no celular.
  * ===================================================================== */
 :root {
   --font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -117,6 +134,18 @@
 
   color-scheme: dark;
 
+  /* Movimento (ver o topo do arquivo) */
+  --dur-short: 120ms;
+  --dur-medium: 240ms;
+  --dur-long: 380ms;
+  --dur-spring: 560ms;
+  --stagger: 28ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-spring: linear(0, 0.057, 0.189, 0.351, 0.514, 0.661, 0.782, 0.877, 0.945, 0.991, 1.019, 1.033, 1.038, 1.037, 1.033, 1.027, 1.02, 1.014, 1.01, 1.006, 1.003, 1.001, 1, 0.999, 0.999, 0.999, 1);
+  --press-scale: 0.97;
+
   /* Altura da barra do app no celular (NavigationMenu, presa no topo): os
      cabeçalhos sticky das telas começam logo abaixo dela */
   --app-bar-height: 0px;
@@ -125,6 +154,13 @@
 @media (max-width: 1023.98px) {
   :root {
     --app-bar-height: 61px;
+  }
+}
+
+/* Navegador sem linear(): mola aproximada (mesma sobra, sem o assentar) */
+@supports not (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
   }
 }
 
@@ -232,7 +268,8 @@ h1[tabindex="-1"]:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
-  *::after {
+  *::after,
+  *::backdrop {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
@@ -498,4 +535,185 @@ body {
   line-height: 1.35;
   pointer-events: none;
   overflow: visible;
+}
+
+/* =====================================================================
+ * Celular: comportamento de app (Pacote 16). Nada daqui vale a partir de
+ * 640 px — o desktop e o tablet ficam como estavam.
+ * ===================================================================== */
+@media (max-width: 639.98px) {
+  html {
+    /* Toque sem o brilho azul de link e sem o menu de "segurar" em imagens */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Segurar o dedo não seleciona a tela inteira: só o que é conteúdo
+     (títulos, textos, ISBN, campos) continua selecionável */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input,
+  textarea,
+  [contenteditable=""],
+  [contenteditable="true"],
+  p,
+  h1,
+  h2,
+  h3,
+  blockquote,
+  .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  img {
+    -webkit-touch-callout: none;
+  }
+
+  /* Sem barra de rolagem de desktop: o celular mostra a dele, por cima */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  * {
+    scrollbar-width: none;
+  }
+
+  /* Bordas do aparelho (viewport-fit=cover no index.html): notch e barra de
+     gestos. --safe-* valem 0 fora do celular com recorte. */
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --app-bar-height: calc(61px + var(--safe-top));
+  }
+
+  /* Afundar ao tocar: services/press.js marca [data-pressed] no pointerdown
+     (sem esperar o :active, que no iOS só vem depois) e tira ao soltar,
+     cancelar ou começar a rolar. */
+  .btn,
+  .book-card,
+  .app-chip,
+  .nav-item,
+  .pill,
+  .icon-button,
+  [data-press] {
+    transition-property: transform, background-color, border-color, color, opacity, filter;
+    transition-duration: var(--dur-short);
+    transition-timing-function: var(--ease-standard);
+  }
+
+  [data-pressed]:not(:disabled) {
+    transform: scale(var(--press-scale));
+  }
+}
+
+/* Transições de tela (services/viewTransitions.js, só no celular). A barra do
+   app fica parada; o resto desliza no sentido da navegação. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(root) {
+  animation-duration: var(--dur-medium);
+}
+
+html[data-nav="push"]::view-transition-old(root) {
+  animation: var(--dur-medium) var(--ease-exit) both vt-slide-out-left;
+}
+
+html[data-nav="push"]::view-transition-new(root) {
+  animation: var(--dur-medium) var(--ease-enter) both vt-slide-in-right;
+}
+
+html[data-nav="pop"]::view-transition-old(root) {
+  animation: var(--dur-medium) var(--ease-exit) both vt-slide-out-right;
+}
+
+html[data-nav="pop"]::view-transition-new(root) {
+  animation: var(--dur-medium) var(--ease-enter) both vt-slide-in-left;
+}
+
+html[data-nav="fade"]::view-transition-old(root),
+html[data-nav="book-open"]::view-transition-old(root),
+html[data-nav="book-close"]::view-transition-old(root) {
+  animation: var(--dur-short) var(--ease-exit) both vt-fade-out;
+}
+
+html[data-nav="fade"]::view-transition-new(root),
+html[data-nav="book-open"]::view-transition-new(root),
+html[data-nav="book-close"]::view-transition-new(root) {
+  animation: var(--dur-medium) var(--ease-enter) both vt-fade-in;
+}
+
+/* Capa que viaja: o tamanho e o lugar são animados pelo JS só com transform
+   (viewTransitions.js); a troca entre as duas imagens é um cruzamento */
+::view-transition-group(book-cover) {
+  animation: none;
+  transform-origin: 0 0;
+}
+
+::view-transition-old(book-cover),
+::view-transition-new(book-cover) {
+  animation-duration: var(--dur-long);
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes vt-slide-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-24%);
+  }
+}
+
+@keyframes vt-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(32%);
+  }
+}
+
+@keyframes vt-slide-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(32%);
+  }
+}
+
+@keyframes vt-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24%);
+  }
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  [data-pressed] {
+    transform: none !important;
+  }
 }

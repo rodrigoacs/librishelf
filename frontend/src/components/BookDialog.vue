@@ -5,6 +5,8 @@
     :dismissable="!isEditing"
     :close-on-escape="!isEditing"
     :before-close="confirmLeave"
+    :sheet="false"
+    :back-closes="!inUrl"
     dialog-class="book-form-dialog"
     :aria-label="book.title || t('bookDialog.dialog_label')"
     @hide="closeDialog"
@@ -115,6 +117,7 @@
               <span
                 class="mini-cover"
                 aria-hidden="true"
+                data-shared-cover
               >
                 <img
                   v-if="!coverMissing"
@@ -219,7 +222,9 @@ const props = defineProps({
   // Dono da biblioteca pública; obrigatório quando isReadOnly for true.
   ownerUsername: { type: String, default: '' },
   // cover_version de quem abriu (card da lista), usado até o livro carregar
-  coverVersion: { type: [Number, null], default: undefined }
+  coverVersion: { type: [Number, null], default: undefined },
+  // Aberto pela URL (?book=): o voltar do navegador já fecha pelo router
+  inUrl: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])

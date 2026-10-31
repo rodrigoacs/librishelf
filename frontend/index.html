@@ -2,7 +2,9 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: no celular o app vai até as bordas e o CSS respeita
+         o notch e a barra de gestos com env(safe-area-inset-*) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Librishelf</title>
     <meta name="description" content="Librishelf — organize sua biblioteca pessoal: cadastre livros, acompanhe o que já leu e encontre qualquer obra da sua coleção." />
     <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
@@ -13,6 +15,10 @@
     <link rel="apple-touch-icon" href="/bookshelf.png" />
     <!-- Instalar como app no celular (ícone na tela inicial, abre sem a barra do navegador) -->
     <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Librishelf" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
     <!--
       Prévia (WhatsApp, redes) e robots. Em /u/<usuário> e /u/<usuário>/lists/<id>

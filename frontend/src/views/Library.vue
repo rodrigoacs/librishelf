@@ -165,6 +165,7 @@
       :key="openBookId"
       :book-id="openBookId"
       :cover-version="openBookCoverVersion"
+      in-url
       :model-value="true"
       @update:model-value="open => !open && closeBook()"
       @updated="onBookUpdated"

@@ -14,8 +14,10 @@ import './services/session.js'
 import { initTheme } from './composables/useTheme.js'
 import { registerServiceWorker, reloadOnStaleChunks } from './services/pwa.js'
 import { addToast } from './services/toast.js'
+import { installPress } from './services/press.js'
 
 initTheme()
+installPress()
 reloadOnStaleChunks()
 // Versão nova do app instalada com esta aba aberta: a próxima tela já vem dela
 registerServiceWorker({

@@ -1,5 +1,8 @@
 <template>
-  <div class="book-card-wrapper">
+  <div
+    class="book-card-wrapper"
+    :data-book-id="bookId"
+  >
     <button
       type="button"
       class="book-card"
@@ -7,7 +10,11 @@
       :aria-pressed="selectable ? selected : undefined"
       @click="onCardClick"
     >
-      <span class="cover-wrapper">
+      <span
+        ref="coverEl"
+        class="cover-wrapper"
+        data-cover
+      >
         <img
           v-if="!coverMissing"
           :key="bookCoverUrl"
@@ -110,6 +117,7 @@ import { statusOf } from '../utils/readingStatus.js'
 import { seriesText } from '../utils/series.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import GeneratedCover from './GeneratedCover.vue'
+import { shareCoverFrom } from '../services/viewTransitions.js'
 
 const { t, locale } = useI18n()
 
@@ -128,10 +136,15 @@ const props = defineProps({
 
 const emit = defineEmits(['updated', 'deleted', 'toggle-select', 'open'])
 
+// Capa do card: no celular ela "viaja" e vira a capa do livro aberto
+const coverEl = ref(null)
+
 function onCardClick() {
   if (props.selectable) emit('toggle-select', bookId.value)
-  else if (props.openInUrl) emit('open', bookId.value)
-  else displayDialog.value = true
+  else if (props.openInUrl) {
+    shareCoverFrom(coverEl.value)
+    emit('open', bookId.value)
+  } else displayDialog.value = true
 }
 const displayDialog = ref(false)
 

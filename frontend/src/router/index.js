@@ -4,6 +4,7 @@ import { setSessionExpiredHandler } from '../services/fetchClient.js'
 import { setRouteTitle } from '../services/pageTitle.js'
 import { installRouteFocus } from '../services/routeFocus.js'
 import { waitForContent } from '../services/scrollRestore.js'
+import { installViewTransitions } from '../services/viewTransitions.js'
 
 /**
  * meta:
@@ -15,6 +16,8 @@ import { waitForContent } from '../services/scrollRestore.js'
  *                  mostra o menu, a não ser que seja standalone)
  *   title        — chave de pageTitle.* para o título da aba (services/pageTitle.js)
  *   noindex      — fora de buscadores; 'server' = o nginx decide (ver pageTitle.js)
+ *   depth        — profundidade para a transição no celular: 1 (padrão) = tela
+ *                  do menu, 2 = detalhe (desliza de lado; entre telas 1, esmaece)
  *
  * Views carregadas sob demanda: o chart.js do Dashboard e as telas internas
  * não entram no bundle do login.
@@ -28,8 +31,8 @@ const router = createRouter({
     { path: '/publishers', name: 'publishers', component: () => import('../views/Publisher.vue'), meta: { requiresAuth: true, title: 'publishers' } },
     { path: '/tags', name: 'tags', component: () => import('../views/Tags.vue'), meta: { requiresAuth: true, title: 'tags' } },
     { path: '/lists', name: 'lists', component: () => import('../views/Lists.vue'), meta: { requiresAuth: true, title: 'lists' } },
-    { path: '/lists/:id(\\d+)', name: 'list', component: () => import('../views/ListDetail.vue'), meta: { requiresAuth: true, title: 'list' } },
-    { path: '/year/:year(\\d{4})?', name: 'year', component: () => import('../views/YearInBooks.vue'), meta: { requiresAuth: true, title: 'year' } },
+    { path: '/lists/:id(\\d+)', name: 'list', component: () => import('../views/ListDetail.vue'), meta: { requiresAuth: true, title: 'list', depth: 2 } },
+    { path: '/year/:year(\\d{4})?', name: 'year', component: () => import('../views/YearInBooks.vue'), meta: { requiresAuth: true, title: 'year', depth: 2 } },
     { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { requiresAuth: true, title: 'dashboard' } },
     { path: '/community', name: 'community', component: () => import('../views/Community.vue'), meta: { requiresAuth: true, title: 'community' } },
     { path: '/settings', name: 'settings', component: () => import('../views/Settings.vue'), meta: { requiresAuth: true, title: 'settings' } },
@@ -108,6 +111,7 @@ setSessionExpiredHandler(({ silent }) => {
   }
 })
 installRouteFocus(router)
+installViewTransitions(router)
 
 export { safeRedirect }
 export default router

@@ -3,7 +3,7 @@
     v-if="rendered"
     ref="dialogEl"
     class="app-dialog"
-    :class="[dialogClass, `size-${size}`, { 'is-drawer': drawer }]"
+    :class="[dialogClass, `size-${size}`, { 'is-drawer': drawer, 'is-sheet': asSheet, 'is-page': asPage }]"
     :aria-label="ariaLabel || undefined"
     :aria-labelledby="ariaLabelledby || (header ? headerId : undefined)"
     @cancel.prevent="onCancel"
@@ -12,13 +12,24 @@
     @close="onNativeClose"
   >
     <div
+      ref="panelEl"
       class="app-dialog-panel"
       :style="panelStyle"
       @mousedown="pressedBackdrop = false"
     >
+      <!-- Folha do celular: alça para arrastar (o gesto vale também no cabeçalho) -->
+      <div
+        v-if="asSheet"
+        class="sheet-grabber"
+        aria-hidden="true"
+        @pointerdown="drag.onPointerDown"
+      >
+        <span class="sheet-handle"></span>
+      </div>
       <header
         v-if="header"
         class="app-dialog-header"
+        @pointerdown="asSheet && drag.onPointerDown($event)"
       >
         <h2 :id="headerId">{{ header }}</h2>
         <button
@@ -46,8 +57,12 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useIsPhone } from '../../composables/useIsPhone.js'
+import { useDrag } from '../../composables/useDrag.js'
+import { pushOverlay } from '../../services/backStack.js'
+import { MOTION, SPRING, canAnimate, rubberBand, shouldComplete } from '../../utils/motion.js'
 
 /**
  * Janela modal com o <dialog> nativo, no lugar do Dialog do PrimeVue.
@@ -56,6 +71,15 @@ import { useI18n } from 'vue-i18n'
  * de tela. Aqui só entram rolagem travada, clique fora e devolver o foco.
  *
  *   <AppDialog v-model:visible="open" aria-label="…" dismissable>…</AppDialog>
+ *
+ * Celular (abaixo de 640 px):
+ *   - por padrão vira folha de baixo (sheet): sobe com mola, segue o dedo
+ *     pela alça/cabeçalho e fecha puxando para baixo (distância ou puxão
+ *     rápido, utils/motion.js → shouldComplete); o fundo escurece junto;
+ *   - page: tela cheia (livro aberto);
+ *   - o voltar do celular fecha (services/backStack.js), salvo backCloses=false
+ *     (quem já vive na URL, como o ?book=).
+ * A partir de 640 px nada disso vale: diálogo centrado, como sempre.
  */
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -72,6 +96,12 @@ const props = defineProps({
   header: { type: String, default: '' },
   closable: { type: Boolean, default: true },
   panelStyle: { type: [String, Object], default: undefined },
+  // Celular: folha de baixo (padrão) ou tela cheia (page). Gaveta (drawer)
+  // continua gaveta.
+  sheet: { type: Boolean, default: true },
+  page: { type: Boolean, default: false },
+  // Celular: o voltar do aparelho fecha (desligue se a URL já cuida disso)
+  backCloses: { type: Boolean, default: true },
   // Chamada antes de fechar por Esc, clique fora ou X; se devolver false (ou
   // uma Promise de false), o diálogo continua aberto. Ex.: "Descartar alterações?"
   beforeClose: { type: Function, default: null }
@@ -82,9 +112,105 @@ const { t } = useI18n()
 const headerId = `app-dialog-title-${Math.random().toString(36).slice(2, 9)}`
 
 const dialogEl = ref(null)
+const panelEl = ref(null)
 const rendered = ref(props.visible)
 const pressedBackdrop = ref(false)
 let returnFocus = null
+
+const phone = useIsPhone()
+const asPage = computed(() => phone.value && props.page && !props.drawer)
+const asSheet = computed(() => phone.value && props.sheet && !props.page && !props.drawer)
+
+// ---------------------------------------------------------------------------
+// Voltar do celular
+// ---------------------------------------------------------------------------
+let releaseBack = null
+
+function watchBack() {
+  if (!props.backCloses || !phone.value || releaseBack) return
+  releaseBack = pushOverlay(async () => {
+    releaseBack = null
+    const closed = await requestClose()
+    // "Descartar alterações?" → não: continua aberto e o voltar volta a valer
+    if (!closed && dialogEl.value?.open) watchBack()
+  })
+}
+
+function forgetBack() {
+  const release = releaseBack
+  releaseBack = null
+  return release ? release() : Promise.resolve()
+}
+
+// ---------------------------------------------------------------------------
+// Folha: arrastar para fechar
+// ---------------------------------------------------------------------------
+let panelAnimation = null
+let dragOffset = 0
+
+function panelHeight() {
+  return panelEl.value?.getBoundingClientRect().height || window.innerHeight
+}
+
+function setDrag(offset) {
+  dragOffset = offset
+  const panel = panelEl.value
+  const dialog = dialogEl.value
+  if (!panel || !dialog) return
+  panel.style.transform = offset ? `translate3d(0, ${offset}px, 0)` : ''
+  // O fundo clareia na mesma proporção em que a folha desce
+  dialog.style.setProperty('--sheet-fade', String(Math.max(0, 1 - Math.max(offset, 0) / panelHeight())))
+}
+
+function stopPanelAnimation() {
+  panelAnimation?.cancel()
+  panelAnimation = null
+}
+
+function springBack() {
+  const panel = panelEl.value
+  const from = dragOffset
+  setDrag(0)
+  dialogEl.value?.style.removeProperty('--sheet-fade')
+  if (!panel || !from || !canAnimate()) return
+  stopPanelAnimation()
+  panelAnimation = panel.animate(
+    { transform: [`translate3d(0, ${from}px, 0)`, 'translate3d(0, 0, 0)'] },
+    { duration: MOTION.spring, easing: SPRING }
+  )
+}
+
+const drag = useDrag({
+  axis: 'y',
+  canStart: event => asSheet.value && props.closable && !event.target.closest?.('button, a, input, textarea, select'),
+  onStart: () => stopPanelAnimation(),
+  // Para cima: um pouco de borracha; para baixo: segue o dedo
+  onMove: distance => setDrag(distance >= 0 ? distance : -rubberBand(-distance, 24)),
+  onEnd: async ({ distance, velocity }) => {
+    if (shouldComplete({ distance, velocity, size: panelHeight() })) {
+      if (!(await requestClose())) springBack()
+    } else {
+      springBack()
+    }
+  }
+})
+
+// Fechar animado no celular (folha desce, tela cheia esmaece); desktop fecha na hora
+function animateOut() {
+  const panel = panelEl.value
+  const dialog = dialogEl.value
+  if (!panel || !dialog || !(asSheet.value || asPage.value) || !canAnimate()) return Promise.resolve()
+  stopPanelAnimation()
+  const from = dragOffset
+  const fade = dialog.style.getPropertyValue('--sheet-fade') || '1'
+  const keyframes = asSheet.value
+    ? { transform: [`translate3d(0, ${from}px, 0)`, 'translate3d(0, 100%, 0)'] }
+    : { opacity: [1, 0], transform: ['translate3d(0, 0, 0)', 'translate3d(0, 24px, 0)'] }
+  panelAnimation = panel.animate(keyframes, { duration: MOTION.medium, easing: MOTION.easeExit, fill: 'forwards' })
+  dialog.animate({ opacity: [Number(fade) || 1, 0] }, { duration: MOTION.medium, easing: MOTION.easeExit, fill: 'forwards', pseudoElement: '::backdrop' })
+  const animation = panelAnimation
+  return animation.finished.then(() => animation === panelAnimation, () => false)
+}
 
 function lockScroll(lock) {
   document.documentElement.classList.toggle('dialog-open', lock || document.querySelectorAll('dialog.app-dialog[open]').length > 0)
@@ -94,19 +220,47 @@ async function open() {
   rendered.value = true
   await nextTick()
   const el = dialogEl.value
-  if (!el || el.open) return
+  if (!el) return
+  if (el.open) {
+    // Reaberto no meio da animação de fechar: interrompe e fica
+    if (panelAnimation) {
+      stopPanelAnimation()
+      el.getAnimations({ subtree: true }).forEach(animation => animation.cancel())
+      setDrag(0)
+      el.style.removeProperty('--sheet-fade')
+    }
+    return
+  }
   returnFocus = document.activeElement
   el.showModal()
   lockScroll(true)
+  watchBack()
   emit('show')
 }
 
-function close() {
+let closingAnimation = false
+async function close() {
   const el = dialogEl.value
-  if (el?.open) el.close()
+  if (!el?.open || closingAnimation) return
+  closingAnimation = true
+  try {
+    const finished = await animateOut()
+    // Reaberto durante a animação (open() cancelou): não fecha
+    if (finished === false && props.visible) return
+  } finally {
+    closingAnimation = false
+  }
+  if (props.visible) return
+  stopPanelAnimation()
+  el.getAnimations?.({ subtree: true }).forEach(animation => animation.cancel())
+  if (el.open) el.close()
 }
 
 function onNativeClose() {
+  dragOffset = 0
+  dialogEl.value?.style.removeProperty('--sheet-fade')
+  if (panelEl.value) panelEl.value.style.transform = ''
+  forgetBack()
   lockScroll(false)
   rendered.value = false
   if (props.visible) emit('update:visible', false)
@@ -116,17 +270,19 @@ function onNativeClose() {
 }
 
 let closing = false
+/** Pede para fechar (passa pelo beforeClose). Resolve true se vai fechar. */
 async function requestClose() {
-  if (closing) return
+  if (closing) return false
   if (props.beforeClose) {
     closing = true
     try {
-      if ((await props.beforeClose()) === false) return
+      if ((await props.beforeClose()) === false) return false
     } finally {
       closing = false
     }
   }
   emit('update:visible', false)
+  return true
 }
 
 function onCancel() {
@@ -142,7 +298,9 @@ function onBackdropClick() {
 watch(() => props.visible, value => (value ? open() : close()), { immediate: true })
 
 onBeforeUnmount(() => {
-  close()
+  stopPanelAnimation()
+  forgetBack()
+  if (dialogEl.value?.open) dialogEl.value.close()
   lockScroll(false)
   // Desmontado antes do evento "close": devolve o foco aqui mesmo
   if (returnFocus && document.contains(returnFocus)) returnFocus.focus({ preventScroll: true })
@@ -296,6 +454,111 @@ html.dialog-open {
 @keyframes app-dialog-fade {
   from {
     opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- celular
+ * Folha de baixo e tela cheia. Só abaixo de 640 px: as classes is-sheet e
+ * is-page nem aparecem acima disso (computed no script).
+ */
+.sheet-grabber {
+  display: flex;
+  justify-content: center;
+  flex: none;
+  padding: var(--space-2) 0 var(--space-1);
+  touch-action: none;
+  cursor: grab;
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--border-hover);
+}
+
+.app-dialog.is-sheet {
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100dvh - var(--safe-top, 0px) - var(--space-4));
+}
+
+.app-dialog.is-sheet .app-dialog-panel {
+  width: 100%;
+  max-height: inherit;
+  border-width: 1px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding-bottom: var(--safe-bottom, 0px);
+  overscroll-behavior: contain;
+  will-change: transform;
+}
+
+.app-dialog.is-sheet .app-dialog-header {
+  padding-top: var(--space-1);
+  touch-action: none;
+}
+
+.app-dialog.is-sheet .app-dialog-content,
+.app-dialog.is-page .app-dialog-panel {
+  overscroll-behavior: contain;
+}
+
+.app-dialog.is-sheet::backdrop,
+.app-dialog.is-page::backdrop {
+  opacity: var(--sheet-fade, 1);
+}
+
+.app-dialog.is-sheet[open] {
+  animation: none;
+}
+
+.app-dialog.is-sheet[open] .app-dialog-panel {
+  animation: app-sheet-in var(--dur-spring) var(--ease-spring);
+}
+
+.app-dialog.is-sheet[open]::backdrop {
+  animation: app-dialog-fade var(--dur-medium) var(--ease-enter);
+}
+
+.app-dialog.is-page {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+.app-dialog.is-page .app-dialog-panel {
+  width: 100%;
+  height: 100%;
+  max-height: 100dvh;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.app-dialog.is-page[open] {
+  animation: app-page-in var(--dur-medium) var(--ease-enter);
+}
+
+@keyframes app-sheet-in {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@keyframes app-page-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-dialog.is-sheet[open] .app-dialog-panel,
+  .app-dialog.is-page[open] {
+    animation: none;
   }
 }
 

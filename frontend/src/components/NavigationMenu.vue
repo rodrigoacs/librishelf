@@ -615,6 +615,24 @@ button.nav-item {
   }
 }
 
+/* Celular: bordas do aparelho; a barra fica parada nas trocas de tela */
+@media (max-width: 639.98px) {
+  .mobile-header {
+    height: calc(60px + var(--safe-top));
+    padding-top: calc(0.8rem + var(--safe-top));
+    view-transition-name: app-bar;
+  }
+
+  .sidebar {
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .nav-links {
+    overscroll-behavior: contain;
+  }
+}
+
 .scale-up-enter-active,
 .scale-up-leave-active {
   transition: all 0.2s ease-out;

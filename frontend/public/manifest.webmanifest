@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Librishelf",
   "short_name": "Librishelf",
   "description": "Sua biblioteca pessoal: cadastre livros, acompanhe o que já leu e encontre qualquer obra da sua coleção.",
@@ -6,8 +7,16 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#121212",
   "theme_color": "#121212",
+  "categories": [
+    "books",
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",
