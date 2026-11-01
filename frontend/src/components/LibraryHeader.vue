@@ -722,14 +722,21 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   width: 100%;
   background-color: var(--bg-panel);
   border-bottom: 1px solid var(--border-color);
-  padding: 1rem 1.5rem;
+  /* Mesma faixa das outras telas (.page > .page-header): título no recuo da
+     página, alinhado com o conteúdo embaixo */
+  padding: var(--space-4) var(--page-pad-x);
 }
 
+/* Título, busca logo depois (ocupando o espaço livre) e ações no canto */
 .top-bar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  gap: 1.5rem;
+  gap: var(--space-6);
+}
+
+.header-title :deep(.page-header.compact .page-header-title) {
+  font-size: var(--page-title-size);
 }
 
 .header-title {
@@ -897,6 +904,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  margin-left: auto;
 }
 
 .action-btn.btn {
@@ -1115,7 +1123,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   /* Celular: duas linhas só — título e ações em cima, busca embaixo. O
      cabeçalho é fixo no topo, então cada pixel aqui é um pixel a menos de estante. */
   .library-header-wrapper {
-    padding: 0.75rem 1rem;
+    padding-block: var(--space-3);
   }
 
   .top-bar {

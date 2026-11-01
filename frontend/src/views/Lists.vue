@@ -1,24 +1,24 @@
 <template>
-  <div class="lists-page">
-    <div class="lists-content">
-      <PageHeader
-        :title="t('lists.title')"
-        :subtitle="t('lists.subtitle')"
-        divider
+  <div class="page lists-page">
+    <PageHeader
+      :title="t('lists.title')"
+      :subtitle="t('lists.subtitle')"
+      divider
+    >
+      <template
+        v-if="lists.length"
+        #actions
       >
-        <template
-          v-if="lists.length"
-          #actions
-        >
-          <AppButton
-            :label="t('lists.new')"
-            icon="pi pi-plus"
-            class="btn-primary"
-            :disabled="isOffline"
-            @click="formOpen = true"
-          />
-        </template>
-      </PageHeader>
+        <AppButton
+          :label="t('lists.new')"
+          icon="pi pi-plus"
+          class="btn-primary"
+          :disabled="isOffline"
+          @click="formOpen = true"
+        />
+      </template>
+    </PageHeader>
+    <div class="lists-content">
 
       <div
         v-if="loading"
@@ -119,15 +119,8 @@ onMounted(load)
 
 <style scoped>
 .lists-page {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
-}
-
-.lists-content {
-  max-width: 1080px;
-  margin: 0 auto;
+  /* Casca e recuo em .page (main.css) */
+  --page-max: 1080px;
 }
 
 .grid {
@@ -146,12 +139,5 @@ onMounted(load)
 
 .grid > li > * {
   flex: 1;
-}
-
-@media (max-width: 639.98px) {
-  .lists-page {
-    padding: 1.25rem;
-  }
-
 }
 </style>

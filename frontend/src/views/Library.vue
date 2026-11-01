@@ -478,10 +478,9 @@ onUnmounted(() => {
 }
 
 .content-section {
-  padding: 1.5rem 2rem 4rem 2rem;
+  /* Mesmo recuo da faixa (--page-pad-x): grade alinhada ao título */
+  padding: var(--space-6) var(--page-pad-x) 4rem;
   flex: 1;
-  max-width: 1800px;
-  margin: 0 auto;
   width: 100%;
 }
 
@@ -580,7 +579,7 @@ onUnmounted(() => {
 
 @media (max-width: 639.98px) {
   .content-section {
-    padding: 1rem 1rem var(--space-6);
+    padding: var(--space-4) var(--page-pad-x) var(--space-6);
   }
 
   .books-grid {

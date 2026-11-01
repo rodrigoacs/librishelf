@@ -143,4 +143,27 @@ defineProps({
     font-size: var(--fs-2xl);
   }
 }
+
+/* Faixa: dentro de .page (main.css) o cabeçalho vira a mesma barra da
+   Biblioteca, de ponta a ponta, com o título no recuo da página. O divider
+   deixa de ter efeito (a borda da faixa já separa). */
+.page > .page-header {
+  align-items: center;
+  margin: 0 calc(-1 * var(--page-pad-x)) var(--space-6);
+  padding: var(--space-4) var(--page-pad-x);
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.page > .page-header .page-header-text {
+  gap: var(--space-1);
+}
+
+.page > .page-header .page-header-title {
+  font-size: var(--page-title-size);
+}
+
+.page > .page-header .page-header-subtitle {
+  font-size: var(--fs-sm);
+}
 </style>

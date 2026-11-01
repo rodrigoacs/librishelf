@@ -1,12 +1,12 @@
 <template>
-  <div class="community-container">
+  <div class="page community-container">
     <PullRefresh :state="pull" />
+    <PageHeader
+      :title="t('communityView.title')"
+      :subtitle="t('communityView.subtitle')"
+      divider
+    />
     <div class="community-content">
-      <PageHeader
-        :title="t('communityView.title')"
-        :subtitle="t('communityView.subtitle')"
-        divider
-      />
 
       <div
         v-if="!user?.showActivity"
@@ -958,15 +958,8 @@ onMounted(async () => {
 
 <style scoped>
 .community-container {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
-}
-
-.community-content {
-  max-width: 760px;
-  margin: 0 auto;
+  /* Casca e recuo em .page (main.css) */
+  --page-max: 760px;
 }
 
 .notice {
@@ -1309,9 +1302,6 @@ onMounted(async () => {
     font-size: var(--fs-md);
   }
 
-  .community-container {
-    padding: 1.25rem;
-  }
 
   .people-list li {
     flex-direction: column;

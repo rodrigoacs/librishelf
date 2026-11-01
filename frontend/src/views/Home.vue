@@ -1,5 +1,5 @@
 <template>
-  <div class="home-container">
+  <div class="page home-container">
     <PullRefresh :state="pull" />
     <PageHeader :title="greeting">
       <template #subtitle>
@@ -491,16 +491,8 @@ onMounted(async () => {
 
 <style scoped>
 .home-container {
-  width: 100%;
-  min-width: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
-  color: var(--text-primary);
-  padding: 2.5rem 2rem 3rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  box-sizing: border-box;
+  /* Casca e recuo em .page (main.css) */
+  --page-max: 1200px;
   display: flex;
   flex-direction: column;
   gap: 2.25rem;
@@ -799,7 +791,6 @@ onMounted(async () => {
 
 @media (max-width: 639.98px) {
   .home-container {
-    padding: 1.5rem 1rem 2.5rem;
     gap: 1.75rem;
   }
 

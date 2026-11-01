@@ -149,12 +149,44 @@
   /* Altura da barra do app no celular (NavigationMenu, presa no topo): os
      cabeçalhos sticky das telas começam logo abaixo dela */
   --app-bar-height: 0px;
+
+  /* Página: recuo lateral único (cabeçalho e conteúdo começam no mesmo x em
+     todas as telas) e tamanho do título da faixa */
+  --page-pad-x: var(--space-7);
+  --page-title-size: var(--fs-2xl);
 }
 
 @media (max-width: 1023.98px) {
   :root {
     --app-bar-height: 61px;
+    --page-pad-x: var(--space-6);
+    --page-title-size: var(--fs-xl);
   }
+}
+
+@media (max-width: 639.98px) {
+  :root {
+    --page-pad-x: var(--space-4);
+  }
+}
+
+/* Casca de página: faixa do cabeçalho de ponta a ponta e o conteúdo alinhado
+   à esquerda no mesmo recuo. --page-max só limita a largura do conteúdo
+   (não centraliza), então o título fica no mesmo lugar em toda tela. */
+.page {
+  --page-max: none;
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: 0 var(--page-pad-x) var(--space-8);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+.page > :not(.page-header) {
+  max-width: var(--page-max);
 }
 
 /* Navegador sem linear(): mola aproximada (mesma sobra, sem o assentar) */

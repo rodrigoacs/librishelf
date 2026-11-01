@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-container">
+  <div class="page dashboard-container">
     <PageHeader
       :title="t('dashboard.title')"
       :subtitle="t('dashboard.subtitle')"
@@ -773,16 +773,9 @@ onMounted(loadStats)
 }
 
 .dashboard-container {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
-  /* Sem width, como filho de flex encolhia até o esqueleto e esticava ao
-     carregar (tudo pulava para o lado) */
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  box-sizing: border-box;
+  /* Casca e recuo em .page (main.css, com width: 100% para não encolher até
+     o esqueleto) */
+  --page-max: 1100px;
 }
 
 .kpi-grid {
@@ -1261,10 +1254,6 @@ a.author-row:hover {
 }
 
 @media (max-width: 639.98px) {
-  .dashboard-container {
-    padding: 1.25rem 1rem;
-  }
-
   /* Dois por linha: os quatro números cabem na primeira tela. */
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

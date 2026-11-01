@@ -1,5 +1,5 @@
 <template>
-  <div class="entity-container">
+  <div class="page entity-container">
     <PageHeader
       :title="t(`${i18nKey}.title`)"
       :subtitle="t(`${i18nKey}.subtitle`)"
@@ -473,22 +473,26 @@ onMounted(load)
 </script>
 
 <style scoped>
-.entity-container {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
+/* Casca e recuo em .page (main.css) */
+
+/* Busca logo após o título, como na Biblioteca: o título não cresce e a busca
+   ocupa o espaço livre (até 760 px; linha inteira no celular) */
+.entity-container > .page-header {
+  justify-content: flex-start;
 }
 
-/* A busca ocupa a coluna de ações do cabeçalho (até 300 px; inteira no celular) */
+.entity-container > .page-header :deep(.page-header-main) {
+  flex: 0 1 auto;
+}
+
 .entity-container > .page-header :deep(.page-header-actions) {
-  flex: 0 1 300px;
+  flex: 1 1 300px;
+  max-width: 760px;
 }
 
 .search-wrapper {
   position: relative;
   width: 100%;
-  max-width: 300px;
 }
 
 .search-wrapper i {
@@ -521,7 +525,7 @@ onMounted(load)
   align-items: center;
   gap: 0.75rem 1rem;
   flex-wrap: wrap;
-  margin: -1.5rem 0 1.5rem;
+  margin: 0 0 var(--space-6);
 }
 
 .total {
@@ -856,15 +860,8 @@ button.entity-card {
 }
 
 @media (max-width: 639.98px) {
-  .entity-container {
-    padding: 1.25rem;
-  }
-
   .entity-container > .page-header :deep(.page-header-actions) {
     flex-basis: 100%;
-  }
-
-  .search-wrapper {
     max-width: none;
   }
 }

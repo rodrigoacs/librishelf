@@ -1,7 +1,7 @@
 <template>
-  <div class="settings-container">
+  <div class="page settings-container">
+    <PageHeader :title="t('settings.title')" />
     <div class="settings-content">
-      <PageHeader :title="t('settings.title')" />
 
       <!-- Perfil: foto (tocar troca), nome, e-mail e o atalho da biblioteca pública -->
       <section
@@ -1093,18 +1093,14 @@ async function deleteAccount() {
 
 <style scoped>
 .settings-container {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
+  /* Casca e recuo em .page (main.css) */
+  --page-max: 640px;
 }
 
 .settings-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  max-width: 640px;
-  margin: 0 auto;
 }
 
 /* Cabeçalho de perfil */
@@ -1481,10 +1477,6 @@ async function deleteAccount() {
 }
 
 @media (max-width: 639.98px) {
-  .settings-container {
-    padding: 1.25rem 1rem;
-  }
-
   .settings-content {
     gap: var(--space-4);
   }
