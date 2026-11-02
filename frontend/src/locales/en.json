@@ -466,15 +466,12 @@
       "exportJson": "Download everything (JSON)",
       "exportCsv": "Download books (CSV)",
       "importTitle": "Import books",
-      "importDesc": "Bring your Goodreads shelf (or a CSV exported from Librishelf). Books already here are skipped.",
+      "importDesc": "Bring your shelf from Goodreads, a Librishelf CSV or any spreadsheet saved as CSV. Books already here are skipped.",
       "step1": "On Goodreads, from a computer: My Books → Import and export → Export Library.",
       "step2": "Download the .csv file when the link appears.",
       "step3": "Choose the file below. Shelves become categories; \"read\", \"currently-reading\" and \"to-read\" become Read, Reading and Want to read.",
       "chooseFile": "Choose a .csv file",
       "importing": "Importing... this may take a few seconds.",
-      "imported": "No books imported | {n} book imported | {n} books imported",
-      "duplicates": "{n} was already on your shelf | {n} were already on your shelf",
-      "failed": "{n} with problems | {n} with problems",
       "errorLine": "Line {line} ({title})",
       "seeLibrary": "See in library",
       "exportJsonHelp": "Books, ratings, notes, goals and account data",
@@ -497,7 +494,42 @@
       "security": "Security"
     },
     "blockedCount": "{n} reader | {n} readers",
-    "blockedNone": "Nobody"
+    "blockedNone": "Nobody",
+    "plan": {
+      "title": "Plan",
+      "current": "Current plan",
+      "free": "Free",
+      "freeHelp": "See what Pro adds.",
+      "lifetime": "Lifetime, for as long as the service exists.",
+      "renews": "Renews on {date}.",
+      "canceledUntil": "Cancelled. Valid until {date}.",
+      "until": "Valid until {date}.",
+      "ended": "Your Pro ended on {date}. What you saved in the Pro features stays visible; changing it needs Pro again.",
+      "trial": "Try Pro for 14 days",
+      "trialHelp": "No card and no automatic charge.",
+      "trialStarted": "Free trial on until {date}.",
+      "history": "Billing history",
+      "noPayments": "No charges yet.",
+      "refunded": "refunded on {date}",
+      "methods": {
+        "pix": "Pix",
+        "card": "card"
+      },
+      "statuses": {
+        "paid": "paid",
+        "declined": "declined",
+        "reversed": "reversed",
+        "pending": "in progress"
+      },
+      "cancel": "Cancel subscription",
+      "cancelHelp": "Pro lasts until the end of the paid month.",
+      "cancelTitle": "Cancel the subscription?",
+      "cancelMessage": "There will be no new charges. Your Pro lasts until {date}, and your data stays saved after that.",
+      "cancelConfirm": "Cancel subscription",
+      "keep": "Keep",
+      "canceled": "Subscription cancelled. Pro lasts until {date}.",
+      "canceledNow": "Subscription cancelled."
+    }
   },
   "discover": {
     "tab": "Discover",
@@ -977,7 +1009,11 @@
     "list": "List",
     "publicList": "{name}'s list",
     "year": "Your year in books",
-    "admin": "Admin"
+    "admin": "Admin",
+    "pricing": "Plans",
+    "planReturn": "Payment",
+    "import": "Import books",
+    "importSkoob": "Coming from Skoob"
   },
   "password": {
     "show": "Show password",
@@ -1154,7 +1190,22 @@
     "PAYMENT_PROVIDER_ERROR": "We could not open the payment right now. Try again in a moment.",
     "CHECKOUT_NOT_FOUND": "Purchase not found.",
     "SUBSCRIPTION_ACTIVE": "You already have an active monthly subscription.",
-    "SUBSCRIPTION_NOT_FOUND": "You have no active monthly subscription."
+    "SUBSCRIPTION_NOT_FOUND": "You have no active monthly subscription.",
+    "PRO_GRANT_KIND_INVALID": "Invalid Pro type.",
+    "PRO_GRANT_DAYS_INVALID": "Invalid length: from {min} to {max} days.",
+    "ENTITLEMENT_NOT_FOUND": "Pro not found.",
+    "ENTITLEMENT_NOT_ACTIVE": "This Pro is not active.",
+    "PAYMENT_NOT_FOUND": "Payment not found.",
+    "PAYMENT_ALREADY_REFUNDED": "This payment was already marked as refunded.",
+    "PAYMENT_NOT_REFUNDABLE": "This payment was not approved: there is nothing to refund.",
+    "OFFER_WINDOW_INVALID": "The window end must be after its start.",
+    "OFFER_SLOTS_INVALID": "Invalid slots: it cannot be fewer than the {used} already used.",
+    "WEBHOOK_NOT_FOUND": "Notification not found.",
+    "IMPORT_NOT_FOUND": "Import not found.",
+    "IMPORT_NOT_DRAFT": "This import has already started.",
+    "IMPORT_RUNNING": "There is already an import in progress.",
+    "IMPORT_MAPPING_INVALID": "The chosen column does not exist in the file.",
+    "IMPORT_MAPPING_REQUIRED": "Choose the title column."
   },
   "block": {
     "block": "Block {name}",
@@ -1225,7 +1276,9 @@
     "profileTitle": "Reviews | 1 review | {n} reviews",
     "profileMore": "And {n} more — open the books on the shelf to read them.",
     "editAria": "Edit review",
-    "deleteAria": "Delete review"
+    "deleteAria": "Delete review",
+    "fromNotes": "Use the note as a review",
+    "fromNotesHint": "Opens the editor with the note text. The note stays private; the review only shows up after you save it."
   },
   "moderation": {
     "subtitle": "Moderation",
@@ -1417,7 +1470,9 @@
       "accounts": "Accounts",
       "log": "Log",
       "usage": "Usage",
-      "system": "System"
+      "system": "System",
+      "billing": "Pro",
+      "queue": "Queue"
     },
     "overview": {
       "users": "Accounts",
@@ -1560,7 +1615,12 @@
         "user_resend_verification": "Resent confirmation",
         "email_test": "Sent test email",
         "avatar_remove": "Removed profile photo",
-        "avatar_keep": "Kept profile photo"
+        "avatar_keep": "Kept profile photo",
+        "pro_grant": "Granted Pro",
+        "pro_revoke": "Revoked Pro",
+        "payment_refund": "Marked refund",
+        "offer_update": "Changed offer",
+        "webhook_reprocess": "Reprocessed webhook"
       },
       "review": "review #{id}",
       "deleted": "deleted account",
@@ -1752,6 +1812,160 @@
       "history": "Admin history",
       "resend": "Resend confirmation",
       "resent": "Confirmation resent to {email}."
+    },
+    "billing": {
+      "summary": "Summary",
+      "activePro": "Accounts with Pro now",
+      "none": "None",
+      "received30": "Received in 30 days",
+      "payments30": "{n} approved payments",
+      "refunded30": "Refunded in 30 days",
+      "offers": "Offers",
+      "offersHint": "Founder window, whether the offer is active, and slots. Prices are not changed here.",
+      "cols": {
+        "offer": "Offer",
+        "price": "Price",
+        "window": "Window",
+        "slots": "Slots",
+        "state": "State",
+        "when": "When",
+        "account": "Account",
+        "amount": "Amount",
+        "status": "Status"
+      },
+      "kinds": {
+        "monthly": "Monthly",
+        "annual": "Annual",
+        "founder_annual": "Founder annual",
+        "founder_lifetime": "Founder lifetime",
+        "vanguarda": "Vanguarda",
+        "trial": "Free trial"
+      },
+      "methods": {
+        "pix": "Pix",
+        "card": "Card"
+      },
+      "statuses": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "authorized": "Authorized",
+        "in_process": "In review",
+        "in_mediation": "In dispute",
+        "rejected": "Declined",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "charged_back": "Charged back"
+      },
+      "states": {
+        "open": "On sale",
+        "waiting": "Outside window",
+        "off": "Disabled"
+      },
+      "noWindow": "No window",
+      "slotsOf": "{used} of {total}",
+      "slotsLeft": "{n} left",
+      "slotsHeld": "{n} in checkout",
+      "edit": "Edit",
+      "editOffer": "Edit {name}",
+      "offerActive": "Offer active",
+      "windowStart": "Window start",
+      "windowEnd": "Window end (inclusive)",
+      "windowEmpty": "Leave empty for no limit.",
+      "threeMonths": "3-month window starting today",
+      "slotsTotal": "Total slots",
+      "slotsTotalHint": "{n} already used. It cannot go below that.",
+      "offerSaved": "Offer saved.",
+      "payments": "Payments",
+      "paymentsFilter": "Filter payments",
+      "paymentsHint": "The refund itself is made in the Mercado Pago dashboard. Here it is marked and the Pro from that purchase is removed.",
+      "filters": {
+        "all": "All",
+        "problem": "With a problem",
+        "refunded": "Refunded"
+      },
+      "empty": {
+        "all": "No payments yet.",
+        "problem": "No payments with a problem.",
+        "refunded": "No refunds marked."
+      },
+      "refundedOn": "Refunded on {date}",
+      "refund": "Mark refund",
+      "refundTitle": "Mark refund",
+      "refundDesc": "Make the refund in the Mercado Pago dashboard first. When you confirm, the Pro from this purchase is revoked (for monthly, the subscription is cancelled) and the payment stays in the history as refunded.",
+      "refundConfirm": "Mark and revoke Pro",
+      "refundDone": "Refund marked.",
+      "note": "Note (optional)"
+    },
+    "queue": {
+      "email": "Email sending",
+      "emailHint": "Rolling 24-hour window. The queue stops at {queue}; the remaining {reserve} are kept for email confirmation and password resets.",
+      "emailUsage": "{used} of {daily} in the last 24 hours",
+      "jobs": "Jobs",
+      "cols": {
+        "type": "Type",
+        "pending": "Queued",
+        "failed": "Failed",
+        "lastDone": "Last done",
+        "received": "Received",
+        "topic": "Topic",
+        "attempts": "Attempts",
+        "error": "Error"
+      },
+      "noJobs": "The queue has not run anything yet.",
+      "failed": "Recent failures",
+      "attempts": "{n} of {max} attempts",
+      "webhooks": "Mercado Pago notifications",
+      "webhooksFilter": "Filter notifications",
+      "webhooksHint": "Reprocessing queries the Mercado Pago API again. Repeating it does not duplicate anything.",
+      "filters": {
+        "error": "With error",
+        "pending": "Unprocessed",
+        "all": "All"
+      },
+      "empty": {
+        "error": "No notifications with errors.",
+        "pending": "No notifications waiting.",
+        "all": "No notifications received."
+      },
+      "processed": "Processed",
+      "waiting": "Waiting for the worker",
+      "reprocess": "Reprocess",
+      "requeued": "Notification back in the queue."
+    },
+    "userPro": {
+      "title": "Pro",
+      "grant": "Grant Pro",
+      "kind": "Type",
+      "days": "Length in days",
+      "daysHint": "Starts now.",
+      "note": "Note (optional)",
+      "grantConfirm": "Grant",
+      "granted": "Pro granted.",
+      "none": "Never had Pro.",
+      "current": "In effect",
+      "statuses": {
+        "active": "Active",
+        "canceled": "Revoked",
+        "expired": "Expired",
+        "refunded": "Refunded"
+      },
+      "sources": {
+        "mercadopago": "Mercado Pago",
+        "grant": "Granted",
+        "trial": "Trial",
+        "apple": "App Store",
+        "google": "Google Play"
+      },
+      "autoRenew": "renews automatically",
+      "fromTo": "{from} to {to}",
+      "fromLifetime": "since {from}, lifetime",
+      "trialUsed": "Used the free trial on {date}.",
+      "payments": "Charges",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke this Pro?",
+      "revokeMessage": "The account loses Pro right away. Its data stays saved.",
+      "revokeSubscription": "The monthly subscription is also cancelled on Mercado Pago. The account loses Pro right away; its data stays saved.",
+      "revoked": "Pro revoked."
     }
   },
   "readCard": {
@@ -1803,6 +2017,244 @@
       "impersonation": "Impersonating someone",
       "spam": "Spam or advertising",
       "other": "Other"
+    }
+  },
+  "plan": {
+    "title": "Plans",
+    "subtitle": "Librishelf stays free. Pro adds features for those who want more.",
+    "login": "Sign in",
+    "offersTitle": "Pro",
+    "kinds": {
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "founder_annual": "Founder annual",
+      "founder_lifetime": "Founder lifetime",
+      "vanguarda": "Vanguarda",
+      "trial": "Free trial"
+    },
+    "offers": {
+      "monthly": {
+        "name": "Monthly",
+        "period": "per month",
+        "point1": "Renews automatically on your card.",
+        "point2": "Cancel anytime in Account; it lasts until the end of the paid month."
+      },
+      "annual": {
+        "name": "Annual",
+        "period": "per year",
+        "point1": "Pix or card, one payment.",
+        "point2": "Does not renew on its own. We email you 7 days before it ends."
+      },
+      "founder_annual": {
+        "name": "Founder annual",
+        "period": "per year",
+        "point1": "Launch only. The price stays the same as long as you renew before it ends.",
+        "point2": "Pix or card. Does not renew on its own."
+      },
+      "founder_lifetime": {
+        "name": "Founder lifetime",
+        "period": "once",
+        "point1": "Pro for as long as the service exists, no monthly fee.",
+        "point2": "Launch only. Pix or card."
+      }
+    },
+    "slotsLeft": "{n} of {total} spots left",
+    "soldOut": "Sold out",
+    "until": "On sale until {date}",
+    "subscribe": "Subscribe",
+    "buy": "Buy",
+    "renew": "Renew",
+    "subscribed": "Your current subscription",
+    "haveLifetime": "You already have lifetime",
+    "currentLifetime": "Your plan: {name}, lifetime.",
+    "currentUntil": "Your plan: {name}, until {date}.",
+    "trialText": "Want to try it first? The free trial lasts 14 days, with no card and no automatic charge.",
+    "trialButton": "Try 14 days free",
+    "finePrint": "Payments by Mercado Pago. Librishelf never receives your card details. You can cancel the purchase within 7 days and get your money back.",
+    "proTitle": "What Pro brings",
+    "soon": "Soon",
+    "freeTitle": "Free forever",
+    "freeIntro": "Everything that exists today stays free, with no limit on books, lists or covers. No ads and no tracking.",
+    "free": {
+      "library": {
+        "name": "Full library",
+        "desc": "Books, readings, lists, goals, series, covers and the dashboard."
+      },
+      "importExport": {
+        "name": "Import and export",
+        "desc": "Bring your library from Goodreads or a CSV, and take everything with you whenever you want."
+      },
+      "community": {
+        "name": "Community",
+        "desc": "Public profile, reviews and following other readers."
+      },
+      "loans": {
+        "name": "Loans",
+        "desc": "Who borrowed each book, when, and its return."
+      }
+    }
+  },
+  "pro": {
+    "trialStarted": "Free trial started.",
+    "notice": {
+      "title": "Pro feature",
+      "readonly": "What you already saved here stays visible. To change it, turn on Pro.",
+      "ended": "Your Pro ended on {date}.",
+      "trial": "Try 14 days free",
+      "plans": "See the plans"
+    },
+    "features": {
+      "stats_advanced": {
+        "name": "Advanced stats",
+        "desc": "Compare periods, build charts, see your reading pace and publishers and authors over the years."
+      },
+      "collector": {
+        "name": "Collector",
+        "desc": "Photos of your copy, where it sits on the shelf, price paid, collection value and email loan reminders."
+      },
+      "personalization": {
+        "name": "Personalization",
+        "desc": "Extra themes and palettes, an alternate app icon and a cover background on your public profile."
+      },
+      "auto_backup": {
+        "name": "Automatic backup",
+        "desc": "A copy of your library made on its own every so often."
+      }
+    },
+    "vanguarda": {
+      "label": "Vanguarda",
+      "hint": "One of the first 100 Librishelf accounts"
+    }
+  },
+  "planReturn": {
+    "title": "Payment",
+    "reopen": "Open the payment again",
+    "tryAgain": "Try again",
+    "toAccount": "Go to Account",
+    "activeLifetime": "Your lifetime Pro is active. It lasts for as long as the service exists.",
+    "activeUntil": "Your Pro is active until {date}.",
+    "pendingUntil": "As soon as the payment is approved, Pro is turned on. You can pay until {date}.",
+    "slow": "This is taking longer than usual. When the payment is confirmed, you get an email and Pro shows up in Account.",
+    "states": {
+      "checking": {
+        "title": "Checking",
+        "body": "Checking the payment with Mercado Pago."
+      },
+      "processing": {
+        "title": "Confirming the payment",
+        "body": "The payment was approved. Pro is being turned on."
+      },
+      "pending": {
+        "title": "Waiting for the payment",
+        "body": "As soon as the payment is approved, Pro is turned on."
+      },
+      "waiting": {
+        "title": "Waiting for the payment",
+        "body": "We have not received the payment for this purchase yet."
+      },
+      "active": {
+        "title": "Payment confirmed",
+        "body": "Your Pro is active."
+      },
+      "rejected": {
+        "title": "Payment declined",
+        "body": "Nothing was charged. You can try again with another card or with Pix."
+      },
+      "expired": {
+        "title": "Time ran out",
+        "body": "This purchase was not paid in time and was closed. Nothing was charged."
+      },
+      "problem": {
+        "title": "We need to check",
+        "body": "We received the payment, but it needs a manual check. We will sort it out and email you; if Pro cannot be turned on, you get the money back."
+      },
+      "unknown": {
+        "title": "Purchase not found",
+        "body": "We could not find this purchase in your account. If you paid, Pro shows up in Account as soon as it is confirmed."
+      }
+    }
+  },
+  "import": {
+    "fromGoodreads": "From Goodreads",
+    "otherCsv": "Another CSV (spreadsheet, another app): you pick the columns in the next step. Semicolons work too.",
+    "skoobLink": "Coming from Skoob?",
+    "reading": "Reading the file...",
+    "previewTitle": "Preview",
+    "noName": "unnamed file",
+    "formats": {
+      "goodreads": "Goodreads",
+      "librishelf": "Librishelf CSV",
+      "generic": "Generic CSV"
+    },
+    "needsMapping": "We did not recognize the columns in this file. Choose at least the title column below and refresh the preview.",
+    "counts": {
+      "total": "Books in the file",
+      "duplicates": "Already on the shelf",
+      "withoutIsbn": "No ISBN",
+      "want": "Want to read",
+      "imported": "Imported",
+      "skippedWant": "Want to read skipped",
+      "failed": "With a problem"
+    },
+    "untitled": "{n} row without a title is left out. | {n} rows without a title are left out.",
+    "rereadsNote": "Goodreads keeps only the date of the last read: {n} reread comes in without a date. | Goodreads keeps only the date of the last read: {n} rereads come in without a date.",
+    "duplicatesHint": "Duplicates are counted by ISBN. Books without an ISBN are compared by title and author during the import.",
+    "mappingTitle": "Columns",
+    "mappingHint": "Tell us which column each piece of information comes from. Anything without a column is not imported.",
+    "skipColumn": "— do not import",
+    "refresh": "Refresh preview",
+    "fields": {
+      "title": "Title",
+      "authors": "Authors",
+      "isbn": "ISBN",
+      "publisher": "Publisher",
+      "status": "Status (read, reading, want to read)",
+      "rating": "Rating",
+      "readDate": "Date read",
+      "startedAt": "Date started",
+      "pubDate": "Publication",
+      "pages": "Pages",
+      "tags": "Categories",
+      "notes": "Private note",
+      "series": "Series",
+      "seriesIndex": "Volume"
+    },
+    "sampleTitle": "First rows",
+    "noAuthor": "no author",
+    "statuses": {
+      "read": "read",
+      "reading": "reading",
+      "want": "want to read",
+      "none": "no status"
+    },
+    "includeWant": "Also import \"Want to read\"",
+    "includeWantHint": "No books saved to read later. | {n} book saved to read later. When off, it is left out. | {n} books saved to read later. When off, they are left out.",
+    "otherFile": "Choose another file",
+    "start": "Nothing to import | Import {n} book | Import {n} books",
+    "progress": "{done} of {total} rows",
+    "canLeave": "You can leave this screen: the import keeps going and the report stays here.",
+    "reportTitle": "Report",
+    "failedTitle": "The import did not finish",
+    "rereadsDone": "{n} Goodreads reread came in without a date (the file only has the last one). | {n} Goodreads rereads came in without a date (the file only has the last one).",
+    "coversRunning": "Looking for covers on Open Library: {done} of {total}",
+    "coversDone": "Covers: {found} of {total} found on Open Library.",
+    "another": "Import another file",
+    "errorsTitle": "Rows with a problem",
+    "fileError": "File",
+    "skoob": {
+      "title": "Coming from Skoob?",
+      "intro": "Skoob has no option to export your shelf. You can still bring your books, but the way is outside of it.",
+      "toolsTitle": "Community tools",
+      "tools": "There are programs made by other readers that read your Skoob shelf and create a CSV file, some already in the Goodreads format. To do that, they ask for your Skoob login (email and password) or a cookie or token from your session.",
+      "risksTitle": "Know the risks before using one",
+      "risk1": "Whoever has your login, cookie or token can get into your Skoob account.",
+      "risk2": "Prefer open-source tools that run on your own computer, not websites that ask for your password.",
+      "risk3": "After exporting, change your Skoob password and sign out of other sessions.",
+      "risk4": "Librishelf has no connection with these tools and never asks for your Skoob details.",
+      "afterTitle": "Once you have the file",
+      "after": "Send the CSV on the import screen. If it is in the Goodreads format, it is recognized on its own; if not, you pick the columns (title, author, ISBN...) before importing.",
+      "manual": "No tool: a spreadsheet with title and author, one row per book, saved as CSV, also works.",
+      "toImport": "Go to the import"
     }
   }
 }

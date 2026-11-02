@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { loadSession, isAuthenticated, clearSession } from '../services/session.js'
-import { setSessionExpiredHandler } from '../services/fetchClient.js'
+import { setSessionExpiredHandler, setProRequiredHandler } from '../services/fetchClient.js'
+import { onProRequired } from '../services/plan.js'
 import { setRouteTitle } from '../services/pageTitle.js'
 import { installRouteFocus } from '../services/routeFocus.js'
 import { waitForContent } from '../services/scrollRestore.js'
@@ -50,6 +51,10 @@ const router = createRouter({
     { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, public: true, title: 'publicLibrary', noindex: 'server' } },
     { path: '/u/:username/lists/:id(\\d+)/:slug?', name: 'public-list', component: () => import('../views/PublicList.vue'), meta: { standalone: true, public: true, title: 'publicList', noindex: 'server' } },
     { path: '/privacy', name: 'privacy', component: () => import('../views/Privacy.vue'), meta: { public: true, title: 'privacy' } },
+    { path: '/import', name: 'import', component: () => import('../views/Import.vue'), meta: { requiresAuth: true, title: 'import', depth: 2 } },
+    { path: '/import/skoob', name: 'import-skoob', component: () => import('../views/ImportSkoob.vue'), meta: { public: true, title: 'importSkoob', depth: 2 } },
+    { path: '/pricing', name: 'pricing', component: () => import('../views/Pricing.vue'), meta: { public: true, title: 'pricing' } },
+    { path: '/plan/return', name: 'plan-return', component: () => import('../views/PlanReturn.vue'), meta: { requiresAuth: true, title: 'planReturn', noindex: true, depth: 2 } },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFound.vue'), meta: { public: true, title: 'notFound' } }
   ],
@@ -110,6 +115,8 @@ setSessionExpiredHandler(({ silent }) => {
     router.replace({ name: 'login', query: { redirect: current.fullPath } })
   }
 })
+// PRO_REQUIRED: o plano pode ter mudado; recarrega o /auth/me (services/plan.js)
+setProRequiredHandler(onProRequired)
 installRouteFocus(router)
 installViewTransitions(router)
 

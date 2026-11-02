@@ -48,7 +48,9 @@ const PROPER = new Set([
   // status e seções citados pelo nome dentro de uma frase
   'Quero', 'Lidos', 'Lido', 'Lendo', 'Read', 'Reading', 'Want', 'Conta', 'Account', 'Comunidade', 'Community',
   // exemplos ("Ex.: Duna", "E.g. Dune")
-  'Ex', 'Duna', 'Dune', 'Emprestados', 'Lent', 'Ficção', 'Clássicos', 'Fiction', 'Classics', 'I'
+  'Ex', 'Duna', 'Dune', 'Emprestados', 'Lent', 'Ficção', 'Clássicos', 'Fiction', 'Classics', 'I',
+  // plano e meios de pagamento
+  'Pro', 'Mercado', 'Pago', 'Pix', 'App', 'Store', 'Play', 'Apple', 'Skoob'
 ])
 
 /** Rótulo curto (botão, título, campo): até 5 palavras e sem ponto final. */

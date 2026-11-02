@@ -8,12 +8,14 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail, followDigestEmail, reviewReportEmail } from '../services/emailTemplates.js'
+import { renewalReminderEmail, trialEndingEmail, trialEndedEmail, paymentConfirmedEmail, paymentDeclinedEmail } from '../services/emailTemplates.js'
 
 const outDir = path.resolve(process.argv[2] || path.join(os.tmpdir(), 'librishelf-emails'))
 fs.mkdirSync(outDir, { recursive: true })
 
 const base = process.env.APP_URL || 'https://librishelf.com'
 const token = 'exemplo_de_token_com_43_caracteres_0123456789'
+const inDays = days => new Date(Date.now() + days * 24 * 60 * 60 * 1000)
 
 const emails = {
   'verificar-pt': verifyEmailEmail({ name: 'Rodrigo', link: `${base}/verify-email?token=${token}`, locale: 'pt' }),
@@ -24,7 +26,18 @@ const emails = {
   'seguidores-1-pt': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=requests`, locale: 'pt', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'request', actor: 'jesteves' }] }),
   'seguidores-varios-pt': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=requests`, locale: 'pt', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'request', actor: 'jesteves' }, { kind: 'request', actor: 'marina.lê' }, { kind: 'accepted', actor: 'caio_r' }] }),
   'seguidores-aceito-en': followDigestEmail({ name: 'Rodrigo', link: `${base}/community?tab=following`, locale: 'en', hours: 6, unsubscribe: `${base}/unsubscribe?token=1.${token.slice(0, 32)}`, items: [{ kind: 'accepted', actor: 'jesteves' }] }),
-  'denuncia-pt': reviewReportEmail({ name: 'moderação', link: `${base}/moderation?token=12.${token.slice(0, 32)}`, locale: 'pt', author: 'jesteves', title: 'Silas e o Inverno', excerpt: 'Demorei a engrenar, mas depois não consegui largar.\n\nO final, com a revelação de que o narrador mentia, muda tudo.', reason: 'spoiler', note: 'Conta o final sem marcar como spoiler.', total: 3, hidden: true })
+  'denuncia-pt': reviewReportEmail({ name: 'moderação', link: `${base}/moderation?token=12.${token.slice(0, 32)}`, locale: 'pt', author: 'jesteves', title: 'Silas e o Inverno', excerpt: 'Demorei a engrenar, mas depois não consegui largar.\n\nO final, com a revelação de que o narrador mentia, muda tudo.', reason: 'spoiler', note: 'Conta o final sem marcar como spoiler.', total: 3, hidden: true }),
+  'renovacao-anual-pt': renewalReminderEmail({ name: 'Rodrigo', link: `${base}/pricing?offer=annual`, locale: 'pt', plan: 'annual', endsAt: inDays(7), amountCents: 4990 }),
+  'renovacao-fundador-pt': renewalReminderEmail({ name: 'Rodrigo', link: `${base}/pricing?offer=founder_annual`, locale: 'pt', plan: 'founder_annual', endsAt: inDays(7), amountCents: 3990 }),
+  'renovacao-fundador-en': renewalReminderEmail({ name: 'Rodrigo', link: `${base}/pricing?offer=founder_annual`, locale: 'en', plan: 'founder_annual', endsAt: inDays(7), amountCents: 3990 }),
+  'teste-acabando-pt': trialEndingEmail({ name: 'Rodrigo', link: `${base}/pricing`, locale: 'pt', endsAt: inDays(3) }),
+  'teste-acabou-pt': trialEndedEmail({ name: 'Rodrigo', link: `${base}/pricing`, locale: 'pt' }),
+  'teste-acabou-en': trialEndedEmail({ name: 'Rodrigo', link: `${base}/pricing`, locale: 'en' }),
+  'pagamento-anual-pt': paymentConfirmedEmail({ name: 'Rodrigo', link: `${base}/settings`, locale: 'pt', plan: 'annual', amountCents: 4990, method: 'pix', endsAt: inDays(365) }),
+  'pagamento-vitalicio-pt': paymentConfirmedEmail({ name: 'Rodrigo', link: `${base}/settings`, locale: 'pt', plan: 'founder_lifetime', amountCents: 14990, method: 'card', endsAt: null }),
+  'pagamento-mensal-en': paymentConfirmedEmail({ name: 'Rodrigo', link: `${base}/settings`, locale: 'en', plan: 'monthly', amountCents: 690, method: 'card', endsAt: inDays(33) }),
+  'recusado-avulso-pt': paymentDeclinedEmail({ name: 'Rodrigo', link: `${base}/pricing?offer=annual`, locale: 'pt', plan: 'annual', amountCents: 4990 }),
+  'recusado-mensal-pt': paymentDeclinedEmail({ name: 'Rodrigo', link: `${base}/settings`, locale: 'pt', plan: 'monthly', amountCents: 690, monthly: true, renewal: true, activeUntil: inDays(3) })
 }
 
 for (const [file, mail] of Object.entries(emails)) {

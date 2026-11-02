@@ -226,7 +226,7 @@ function splitList(value, separator) {
   return String(value ?? '').split(separator).map(item => item.trim()).filter(Boolean)
 }
 
-function fromGoodreads(record) {
+export function fromGoodreads(record) {
   const { title, series, seriesIndex } = splitSeries(record.Title)
   const shelf = String(record['Exclusive Shelf'] ?? '').trim()
   const added = cleanDate(record['Date Added'])
@@ -264,11 +264,13 @@ function fromGoodreads(record) {
     pages: cleanPages(record['Number of Pages']),
     series,
     seriesIndex,
-    notes
+    notes,
+    // O Goodreads só exporta a data da última leitura; as outras ficam no relatório
+    readCount: Number(record['Read Count']) || 0
   }
 }
 
-function fromLibrishelf(record) {
+export function fromLibrishelf(record) {
   const status = ['read', 'reading', 'want'].includes(record.status) ? record.status : 'none'
   const rating = Number(record.rating)
   return {
@@ -296,13 +298,56 @@ function fromLibrishelf(record) {
   }
 }
 
-function detectFormat(headers) {
+export function detectFormat(headers) {
   if (headers.includes('Exclusive Shelf') || headers.includes('Author l-f')) return 'goodreads'
   if (headers.includes('title') && headers.includes('authors')) return 'librishelf'
   return null
 }
 
-const keyOf = (title, author) => `${String(title).toLocaleLowerCase()}\u0000${String(author ?? '').toLocaleLowerCase()}`
+export const keyOf = (title, author) => `${String(title).toLocaleLowerCase()}\u0000${String(author ?? '').toLocaleLowerCase()}`
+
+/**
+ * Grava um livro vindo de importação (Goodreads, Librishelf ou CSV genérico).
+ * `seen` = { isbns, keys } do que já está na estante; é atualizado aqui.
+ * → { result: 'imported', bookId, isbn13 } | { result: 'duplicate' }
+ */
+export async function insertImportedBook(userId, book, seen) {
+  const { isbns, keys } = seen
+  const input = normalizeBookInput({
+    title: book.title,
+    authors: book.authors,
+    publisher: book.publisher,
+    isbn: book.isbn,
+    tags: book.tags.join(', '),
+    rating: book.rating,
+    pubDate: book.pubDate,
+    readDate: book.status === 'read' ? book.readDate : null,
+    series: book.series,
+    seriesIndex: book.seriesIndex,
+    notes: book.notes
+  })
+
+  const isbn13 = input.isbn ? normalizeIsbn13(input.isbn) : null
+  const key = keyOf(input.title, input.authors[0])
+  if ((isbn13 && isbns.has(isbn13)) || keys.has(key)) return { result: 'duplicate' }
+
+  const bookId = await libraryRepository.createBook({ ...input, user_id: userId })
+  if (input.series || input.seriesIndex !== null || input.notes || book.pages) {
+    await libraryRepository.updateExtras(bookId, { ...input, pageCount: book.pages ?? null })
+  }
+  if (book.review) {
+    await db.query(REVIEW_QUERIES.UPSERT, [bookId, userId, book.review, book.reviewSpoiler, book.reviewVisibility])
+  }
+  await readingService.importReadings(bookId, {
+    status: book.status,
+    finishedDates: book.readDates ?? (book.status === 'read' && input.readDate ? [input.readDate] : []),
+    startedOn: book.status === 'reading' ? book.startedAt : null
+  })
+
+  if (isbn13) isbns.add(isbn13)
+  keys.add(key)
+  return { result: 'imported', bookId, isbn13 }
+}
 
 /**
  * Importa os livros do CSV. Pula o que já está na estante (mesmo ISBN, ou mesmo
@@ -332,42 +377,11 @@ export async function importCsv(userId, buffer) {
     const book = format === 'goodreads' ? fromGoodreads(record) : fromLibrishelf(record)
 
     try {
-      const input = normalizeBookInput({
-        title: book.title,
-        authors: book.authors,
-        publisher: book.publisher,
-        isbn: book.isbn,
-        tags: book.tags.join(', '),
-        rating: book.rating,
-        pubDate: book.pubDate,
-        readDate: book.status === 'read' ? book.readDate : null,
-        series: book.series,
-        seriesIndex: book.seriesIndex,
-        notes: book.notes
-      })
-
-      const isbn13 = input.isbn ? normalizeIsbn13(input.isbn) : null
-      const key = keyOf(input.title, input.authors[0])
-      if ((isbn13 && isbns.has(isbn13)) || keys.has(key)) {
+      const { result } = await insertImportedBook(userId, book, { isbns, keys })
+      if (result === 'duplicate') {
         summary.duplicates++
         continue
       }
-
-      const bookId = await libraryRepository.createBook({ ...input, user_id: userId })
-      if (input.series || input.seriesIndex !== null || input.notes || book.pages) {
-        await libraryRepository.updateExtras(bookId, { ...input, pageCount: book.pages ?? null })
-      }
-      if (book.review) {
-        await db.query(REVIEW_QUERIES.UPSERT, [bookId, userId, book.review, book.reviewSpoiler, book.reviewVisibility])
-      }
-      await readingService.importReadings(bookId, {
-        status: book.status,
-        finishedDates: book.readDates ?? (book.status === 'read' && input.readDate ? [input.readDate] : []),
-        startedOn: book.status === 'reading' ? book.startedAt : null
-      })
-
-      if (isbn13) isbns.add(isbn13)
-      keys.add(key)
       summary.imported++
     } catch (error) {
       if (summary.errors.length < 100) {

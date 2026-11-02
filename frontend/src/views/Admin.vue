@@ -122,6 +122,11 @@
           :version="accountsVersion"
           @open-user="openUser"
         />
+        <AdminBilling
+          v-else-if="activeTab === 'billing'"
+          @open-user="openUser"
+        />
+        <AdminQueue v-else-if="activeTab === 'queue'" />
         <AdminSystem v-else-if="activeTab === 'system'" />
         <AdminLog v-else-if="activeTab === 'log'" />
       </section>
@@ -150,6 +155,8 @@ import AdminLog from '../components/admin/AdminLog.vue'
 import AdminUsage from '../components/admin/AdminUsage.vue'
 import AdminSystem from '../components/admin/AdminSystem.vue'
 import AdminUserDrawer from '../components/admin/AdminUserDrawer.vue'
+import AdminBilling from '../components/admin/AdminBilling.vue'
+import AdminQueue from '../components/admin/AdminQueue.vue'
 import api from '../services/api.js'
 import { useToast } from '../services/toast.js'
 import { ADMIN_CALL, LockedError } from '../components/admin/adminCall.js'
@@ -168,7 +175,7 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
-const TAB_KEYS = ['overview', 'usage', 'moderation', 'accounts', 'system', 'log']
+const TAB_KEYS = ['overview', 'usage', 'moderation', 'accounts', 'billing', 'queue', 'system', 'log']
 const state = ref('loading') // loading | locked | unlocked
 const minutes = ref(30)
 const password = ref('')
@@ -187,6 +194,8 @@ const tabs = computed(() => [
   { key: 'usage', label: t('admin.tabs.usage'), icon: 'pi pi-th-large' },
   { key: 'moderation', label: t('admin.tabs.moderation'), icon: 'pi pi-flag', count: openReports.value },
   { key: 'accounts', label: t('admin.tabs.accounts'), icon: 'pi pi-users' },
+  { key: 'billing', label: t('admin.tabs.billing'), icon: 'pi pi-star' },
+  { key: 'queue', label: t('admin.tabs.queue'), icon: 'pi pi-list' },
   { key: 'system', label: t('admin.tabs.system'), icon: 'pi pi-server' },
   { key: 'log', label: t('admin.tabs.log'), icon: 'pi pi-history' }
 ])

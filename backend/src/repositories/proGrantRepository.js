@@ -57,7 +57,8 @@ export async function markTrialUsed(userId, client) {
   await client.query(q.MARK_TRIAL_USED, [userId])
 }
 
+/** → { id, ends_at } do teste criado */
 export async function insertTrial(userId, days, client) {
   const { rows } = await client.query(q.INSERT_TRIAL, [userId, days])
-  return rows[0].ends_at
+  return rows[0]
 }

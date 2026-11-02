@@ -428,6 +428,62 @@ export default {
     return client.get(`/library/public/u/${enc(username)}/book/${id}`)
   },
 
+  // --- Plano (Pro) ---
+  getOffers() {
+    return client.get('/plan/offers')
+  },
+
+  startTrial() {
+    return client.post('/plan/trial', {})
+  },
+
+  checkout(offer) {
+    return client.post('/plan/checkout', { offer })
+  },
+
+  checkoutStatus(reference) {
+    return client.get(`/plan/checkout/${encodeURIComponent(reference)}`)
+  },
+
+  syncCheckout(reference, paymentId) {
+    return client.post(`/plan/checkout/${encodeURIComponent(reference)}/sync`, { paymentId })
+  },
+
+  cancelSubscription() {
+    return client.post('/plan/subscription/cancel', {})
+  },
+
+  planPayments() {
+    return client.get('/plan/payments')
+  },
+
+  // --- Importação em etapas ---
+  importCreate(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return client.post('/library/imports', formData)
+  },
+
+  importPreview(id, mapping) {
+    return client.post(`/library/imports/${id}/preview`, { mapping })
+  },
+
+  importStart(id, { includeWant, mapping }) {
+    return client.post(`/library/imports/${id}/start`, { includeWant, mapping })
+  },
+
+  importStatus(id) {
+    return client.get(`/library/imports/${id}`)
+  },
+
+  importList() {
+    return client.get('/library/imports')
+  },
+
+  importDelete(id) {
+    return client.delete(`/library/imports/${id}`)
+  },
+
   // --- Área administrativa (só admin; as rotas pedem a senha a cada 30 min sem uso) ---
   adminSession() {
     return client.get('/admin/session')
@@ -511,5 +567,46 @@ export default {
 
   adminActions(params = {}) {
     return client.get(`/admin/actions${toQuery(params)}`)
+  },
+
+  // Monetização: Pro de uma conta, pagamentos, ofertas, webhooks e fila
+  adminUserBilling(id) {
+    return client.get(`/admin/users/${id}/billing`)
+  },
+
+  adminGrantPro(id, { kind, days, note }) {
+    return client.post(`/admin/users/${id}/pro`, { kind, days, note })
+  },
+
+  adminRevokePro(entitlementId, note = null) {
+    return client.post(`/admin/entitlements/${entitlementId}/revoke`, { note })
+  },
+
+  adminPayments(params = {}) {
+    return client.get(`/admin/payments${toQuery(params)}`)
+  },
+
+  adminRefundPayment(id, note = null) {
+    return client.post(`/admin/payments/${id}/refund`, { note })
+  },
+
+  adminOffers() {
+    return client.get('/admin/offers')
+  },
+
+  adminUpdateOffer(code, changes) {
+    return client.patch(`/admin/offers/${encodeURIComponent(code)}`, changes)
+  },
+
+  adminWebhooks(params = {}) {
+    return client.get(`/admin/webhooks${toQuery(params)}`)
+  },
+
+  adminReprocessWebhook(id) {
+    return client.post(`/admin/webhooks/${id}/reprocess`, {})
+  },
+
+  adminJobs() {
+    return client.get('/admin/jobs')
   }
 }

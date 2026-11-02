@@ -7,6 +7,7 @@ import * as reviewService from '../services/reviewService.js'
 import * as listService from '../services/listService.js'
 import * as libraryService from '../services/libraryService.js'
 import * as dataService from '../services/dataService.js'
+import * as importService from '../services/importService.js'
 import { authenticateToken, optionalAuth } from '../middlewares/auth.js'
 import * as communityService from '../services/communityService.js'
 import { fetchCover } from '../services/openLibraryService.js'
@@ -175,6 +176,27 @@ router.post('/import', uploadLimiter, handleUpload(csvUpload.single('file')), tr
     sendError(res, error, 'Erro ao importar')
   }
 })
+
+// Importação em etapas (services/importService.js): arquivo → prévia → começar → relatório
+const importRoute = (context, fn, status = STATUS.OK) => async (req, res) => {
+  try {
+    res.status(status).json(await fn(req))
+  } catch (error) {
+    sendError(res, error, context)
+  }
+}
+
+router.get('/imports', importRoute('Erro ao listar importações', req => importService.list(req.user.id)))
+router.post('/imports', uploadLimiter, handleUpload(csvUpload.single('file')), track('import.preview'),
+  importRoute('Erro ao ler o arquivo', req => importService.createDraft(req.user.id, req.file)))
+router.get('/imports/:id', validateNumericId(), importRoute('Erro ao abrir a importação',
+  req => importService.get(req.user.id, Number(req.params.id))))
+router.post('/imports/:id/preview', validateNumericId(), importRoute('Erro ao montar a prévia',
+  req => importService.preview(req.user.id, Number(req.params.id), req.body ?? {})))
+router.post('/imports/:id/start', uploadLimiter, validateNumericId(), track('import.csv'), importRoute('Erro ao começar a importação',
+  req => importService.start(req.user.id, Number(req.params.id), req.body ?? {})))
+router.delete('/imports/:id', validateNumericId(), importRoute('Erro ao apagar a importação',
+  req => importService.remove(req.user.id, Number(req.params.id))))
 
 // Ações em lote: { ids: [1, 2], action: 'status' | 'addTag' | 'removeTag' | 'delete', ... }
 router.post('/batch', async (req, res) => {

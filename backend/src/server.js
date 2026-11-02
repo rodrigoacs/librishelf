@@ -3,8 +3,8 @@ import logger from './utils/logger.js'
 import { db } from './database/connection.js'
 import { pendingMigrations } from './database/migrate.js'
 import { verifySmtp } from './services/mailService.js'
-import { startSweeper as startFollowEmails, stopSweeper as stopFollowEmails } from './services/followEmailService.js'
-import { deleteStale as deleteStaleTokens } from './repositories/tokenRepository.js'
+// Avisos de seguidores e limpeza de links de e-mail rodam no worker
+// (follow-emails.sweep e tokens.cleanup em jobs/registry.js).
 
 const PORT = process.env.PORT || 3050
 const MIN_SECRET_LENGTH = 32
@@ -67,17 +67,6 @@ const server = app.listen(PORT, () => {
 
 verifySmtp()
 
-// Links de e-mail vencidos ou usados saem do banco uma vez por dia.
-const TOKEN_CLEANUP_MS = 24 * 60 * 60 * 1000
-setInterval(() => {
-  deleteStaleTokens()
-    .then(removed => { if (removed) logger.info('Links de e-mail antigos removidos', { removed }) })
-    .catch(err => logger.warn('Falha ao limpar links de e-mail antigos', { message: err.message }))
-}, TOKEN_CLEANUP_MS).unref()
-
-// Avisos por e-mail de seguidores que esperavam o intervalo mínimo
-startFollowEmails()
-
 // `docker stop` manda SIGTERM: para de aceitar conexões, termina as requisições
 // em andamento e fecha o pool antes de sair, em vez de esperar o SIGKILL.
 let shuttingDown = false
@@ -87,7 +76,6 @@ function shutdown(signal) {
   shuttingDown = true
 
   logger.info('Encerrando', { signal })
-  stopFollowEmails()
 
   const forceExit = setTimeout(() => {
     logger.error('Encerramento demorou demais; saindo à força')

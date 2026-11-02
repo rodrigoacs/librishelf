@@ -14,6 +14,13 @@
         ></i>
         {{ t('review.title') }}
       </h3>
+      <button
+        v-if="!loading && !loadError && !review && !editing && notes.trim()"
+        type="button"
+        class="text-btn"
+        :title="t('review.fromNotesHint')"
+        @click="startFromNotes"
+      >{{ t('review.fromNotes') }}</button>
       <div
         v-if="review && !editing"
         class="head-actions"
@@ -224,7 +231,9 @@ import { formSnapshot, hasChanges } from '../../utils/formState.js'
  * anotações (privadas), aparece para outros leitores conforme a visibilidade.
  */
 const props = defineProps({
-  bookId: { type: Number, required: true }
+  bookId: { type: Number, required: true },
+  // Nota privada do livro: "Usar a nota como resenha" começa o texto com ela
+  notes: { type: String, default: '' }
 })
 const { t } = useI18n()
 const toast = useToast()
@@ -284,6 +293,12 @@ async function startEditing() {
   editing.value = true
   await nextTick()
   textareaEl.value?.focus()
+}
+
+/** Editor aberto com o texto da nota; só vira resenha quando a pessoa salvar. */
+async function startFromNotes() {
+  await startEditing()
+  draft.body = props.notes.trim().slice(0, MAX_BODY)
 }
 
 // Texto, spoiler e visibilidade ao começar a editar (utils/formState.js)

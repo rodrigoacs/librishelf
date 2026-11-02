@@ -1,5 +1,6 @@
 import * as repo from '../repositories/proGrantRepository.js'
 import * as entitlementRepository from '../repositories/entitlementRepository.js'
+import { queueTrialNotices } from './billingEmailService.js'
 import { httpError } from '../utils/httpError.js'
 import STATUS from '../utils/statusCodes.js'
 import logger from '../utils/logger.js'
@@ -28,7 +29,10 @@ export async function activate(userId) {
     }
 
     await repo.markTrialUsed(userId, client)
-    return repo.insertTrial(userId, TRIAL_DAYS, client)
+    const trial = await repo.insertTrial(userId, TRIAL_DAYS, client)
+    // Aviso antes do fim e no fim (a varredura periódica usa as mesmas chaves)
+    await queueTrialNotices({ entitlementId: Number(trial.id), endsAt: trial.ends_at }, client)
+    return trial.ends_at
   })
 
   logger.info('Teste grátis ativado', { userId, endsAt })

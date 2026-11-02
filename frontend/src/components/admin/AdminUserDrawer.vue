@@ -92,6 +92,11 @@
           >{{ t('admin.user.lastBook', { date: formatDate(user.totals.lastBookAt, locale) }) }}</p>
         </section>
 
+        <AdminUserPro
+          :user-id="user.id"
+          @changed="emit('changed')"
+        />
+
         <section
           v-if="user.reportedReviews.length"
           aria-labelledby="user-reported"
@@ -215,6 +220,7 @@ import AppButton from '../ui/AppButton.vue'
 import AppDialog from '../ui/AppDialog.vue'
 import TextField from '../form/TextField.vue'
 import PasswordField from '../form/PasswordField.vue'
+import AdminUserPro from './AdminUserPro.vue'
 import api from '../../services/api.js'
 import { useToast } from '../../services/toast.js'
 import { LockedError, useAdminCall, formatDate, formatDateTime } from './adminCall.js'

@@ -1,6 +1,6 @@
 import os from 'node:os'
 import { db } from '../database/connection.js'
-import { JOB_QUERIES as q } from '../database/queries.js'
+import { JOB_QUERIES as q, MAIL_QUEUE_QUERIES as mq } from '../database/queries.js'
 
 /**
  * Fila de jobs no Postgres (tabela librishelf.jobs, sem Redis).
@@ -45,6 +45,11 @@ export async function fail(job, worker, error, { permanent = false } = {}) {
   const message = String(error?.message || error).slice(0, 2000)
   const { rows } = await db.query(q.FAIL, [job.id, worker, message, permanent, backoffSeconds(job.attempts)])
   return rows[0]?.gave_up ?? false
+}
+
+/** Volta para a fila daqui a `seconds`, sem contar a tentativa (RetryLaterError). */
+export async function defer(job, worker, seconds) {
+  await db.query(mq.DEFER_JOB, [job.id, worker, seconds])
 }
 
 export async function cleanup(days) {

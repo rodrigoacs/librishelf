@@ -4,6 +4,7 @@ import * as mercadoPago from './mercadoPago.js'
 import { PermanentJobError } from '../jobs/errors.js'
 import { SUBSCRIPTION_QUERIES as s } from '../database/queries.js'
 import * as subscriptionService from './subscriptionService.js'
+import * as billingEmails from './billingEmailService.js'
 import logger from '../utils/logger.js'
 
 /**
@@ -70,6 +71,11 @@ export async function processPayment(paymentId, { expectedReference = null, prea
       : (await client.query(q.INSERT_PAYMENT, [reservation.user_id, reservation.offer_code, externalId, values.method, values.amount,
           payment.currency_id || 'BRL', payment.status, reservation.id, values.paidAt, values.raw])).rows[0]
 
+    // Recusado: avisa por e-mail (um por compra; no mensal, um por mês)
+    if (payment.status === 'rejected' && existing?.status !== 'rejected') {
+      await billingEmails.queuePaymentDeclined({ paymentId: row.id, reservationId: reservation.id, monthly: reservation.offer_code === 'monthly' }, client)
+    }
+
     // Estornado ou contestado: o Pro desta compra sai
     if (['refunded', 'charged_back'].includes(payment.status)) {
       if (row.entitlement_id) await client.query(q.REFUND_ENTITLEMENT, [row.entitlement_id])
@@ -118,6 +124,7 @@ export async function processPayment(paymentId, { expectedReference = null, prea
 
     await client.query(q.SET_PAYMENT_ENTITLEMENT, [row.id, entitlement.id])
     await client.query(q.CONFIRM_RESERVATION, [reservation.id])
+    await billingEmails.queuePaymentConfirmed(row.id, client)
     logger.info('Pro liberado por pagamento', { userId: reservation.user_id, offer: reservation.offer_code, paymentId: externalId, method: values.method })
     return { result: 'granted', paymentId: row.id, entitlementId: entitlement.id }
   })

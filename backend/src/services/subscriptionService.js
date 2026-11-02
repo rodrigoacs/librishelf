@@ -3,6 +3,7 @@ import { SUBSCRIPTION_QUERIES as s, CHECKOUT_QUERIES as q } from '../database/qu
 import { transaction } from '../repositories/proGrantRepository.js'
 import * as mercadoPago from './mercadoPago.js'
 import { PermanentJobError } from '../jobs/errors.js'
+import { queuePaymentConfirmed } from './billingEmailService.js'
 import { httpError } from '../utils/httpError.js'
 import STATUS from '../utils/statusCodes.js'
 import logger from '../utils/logger.js'
@@ -84,6 +85,7 @@ export async function applyPayment(client, reservation, row) {
 
   await client.query(q.SET_PAYMENT_ENTITLEMENT, [row.id, entitlementId])
   await client.query(q.CONFIRM_RESERVATION, [reservation.id])
+  await queuePaymentConfirmed(row.id, client)
   logger.info('Mensal renovado', { userId: reservation.user_id, preapprovalId, endsAt })
   return { result: 'granted', paymentId: row.id, entitlementId }
 }

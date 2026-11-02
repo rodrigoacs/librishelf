@@ -107,6 +107,74 @@ const TEXTS = {
       note: 'No link você vê a foto e as denúncias, e escolhe manter ou remover. O link para de valer se a pessoa trocar a foto.',
       ignore: 'Você recebeu este e-mail porque o endereço está em ADMIN_EMAIL no servidor do Librishelf.'
     },
+    renewal: {
+      subject: ({ date }) => `Seu Librishelf Pro vence em ${date}`,
+      preheader: ({ founder }) => (founder
+        ? 'Renovando até o vencimento, o preço de fundador continua o mesmo.'
+        : 'Renove até o vencimento para seguir com os recursos Pro sem interrupção.'),
+      title: 'Seu Pro está perto do vencimento',
+      greeting: name => `Olá, ${name}.`,
+      body: ({ founder }) => (founder
+        ? 'O plano anual de fundador não renova sozinho. Renovando até o vencimento, o preço de fundador continua valendo e o novo ano começa quando o atual acabar.'
+        : 'O plano anual não renova sozinho. Renovando agora, o novo ano começa quando o atual acabar, sem perder nenhum dia.'),
+      line: line => line,
+      button: 'Renovar o Pro',
+      note: 'Se não renovar, nada é apagado: o que você guardou nos recursos Pro continua visível, só não dá para mudar.',
+      ignore: 'Você recebe este aviso uma vez, 7 dias antes do vencimento de um plano que não renova sozinho.'
+    },
+    trialEnding: {
+      subject: ({ date }) => `Seu teste do Pro termina em ${date}`,
+      preheader: 'O teste não vira assinatura e não cobra nada.',
+      title: 'Seu teste do Pro está acabando',
+      greeting: name => `Olá, ${name}.`,
+      body: 'O teste grátis não vira assinatura sozinho e não cobra nada. Para continuar com os recursos Pro depois do fim, escolha um plano.',
+      line: line => line,
+      button: 'Ver os planos',
+      note: 'Se não assinar, nada é apagado: o que você guardou nos recursos Pro continua visível, só não dá para mudar.',
+      ignore: 'Você recebeu este aviso porque ativou o teste grátis do Pro.'
+    },
+    trialEnded: {
+      subject: 'Seu teste do Pro terminou',
+      preheader: 'Seus dados continuam guardados. Assine quando quiser para voltar a editar.',
+      title: 'Seu teste do Pro terminou',
+      greeting: name => `Olá, ${name}.`,
+      body: 'Os recursos Pro agora estão em modo de leitura: o que você criou continua guardado e visível, mas não dá para mudar. Assinando, tudo volta a funcionar como antes.',
+      button: 'Ver os planos',
+      note: 'Este é o último aviso sobre o teste.',
+      ignore: 'Você recebeu este aviso porque ativou o teste grátis do Pro.'
+    },
+    paid: {
+      subject: 'Pagamento confirmado no Librishelf',
+      preheader: ({ planLabel, amount }) => `Pro ${planLabel.toLowerCase()} · ${amount}`,
+      title: 'Pagamento confirmado',
+      greeting: name => `Olá, ${name}.`,
+      body: ({ lifetime, monthly }) => (lifetime
+        ? 'Seu Librishelf Pro vitalício está ativo. Ele vale enquanto o serviço existir.'
+        : monthly
+          ? 'A cobrança do mês foi aprovada e o seu Pro foi estendido.'
+          : 'Seu Librishelf Pro está ativo. Obrigado por apoiar o projeto.'),
+      line: line => line,
+      button: 'Ver minha conta',
+      note: 'O plano e o histórico de cobranças ficam em Conta.',
+      ignore: 'Você recebeu este e-mail porque fez um pagamento no Librishelf. Os dados do cartão ficam só com o Mercado Pago.'
+    },
+    declined: {
+      subject: 'Pagamento recusado no Librishelf',
+      preheader: ({ renewal }) => (renewal
+        ? 'A cobrança do mensal não passou. Seu Pro continua ativo por enquanto.'
+        : 'Nada foi cobrado. Dá para tentar de novo.'),
+      title: 'Pagamento recusado',
+      greeting: name => `Olá, ${name}.`,
+      body: ({ renewal, monthly }) => (renewal
+        ? 'A cobrança do mês da sua assinatura foi recusada. O Mercado Pago tenta de novo nos próximos dias; enquanto isso, seu Pro continua ativo até a data abaixo.'
+        : `O pagamento não foi aprovado e nada foi cobrado. Isso costuma acontecer por limite, dados do cartão ou recusa do banco. Dá para tentar de novo com outro cartão${monthly ? '' : ' ou com Pix'}.`),
+      line: line => line,
+      button: ({ renewal }) => (renewal ? 'Ver minha conta' : 'Tentar de novo'),
+      note: ({ renewal }) => (renewal
+        ? 'Se nenhuma tentativa passar, o Pro vale até a data acima e nada é apagado.'
+        : 'O Librishelf não recebe os dados do cartão: eles ficam só com o Mercado Pago.'),
+      ignore: 'Você recebeu este e-mail porque tentou fazer um pagamento no Librishelf.'
+    },
     fallback: 'Se o botão não funcionar, copie e cole este endereço no navegador:',
     tagline: 'Sua biblioteca pessoal, organizada.',
     footer: 'Você recebeu este e-mail porque ele está cadastrado no Librishelf. Este é um endereço automático: respostas não são lidas.'
@@ -183,6 +251,74 @@ const TEXTS = {
       button: 'Review the photo',
       note: 'The link shows the photo and the reports, and lets you keep or remove it. It stops working if the person changes the photo.',
       ignore: "You're receiving this email because this address is set as ADMIN_EMAIL on the Librishelf server."
+    },
+    renewal: {
+      subject: ({ date }) => `Your Librishelf Pro ends on ${date}`,
+      preheader: ({ founder }) => (founder
+        ? 'Renew before it ends and the founder price stays the same.'
+        : 'Renew before it ends to keep the Pro features without a break.'),
+      title: 'Your Pro is about to end',
+      greeting: name => `Hi, ${name}.`,
+      body: ({ founder }) => (founder
+        ? 'The founder annual plan does not renew on its own. Renew before it ends to keep the founder price; the new year starts when the current one ends.'
+        : 'The annual plan does not renew on its own. Renew now and the new year starts when the current one ends, so you lose no days.'),
+      line: line => line,
+      button: 'Renew Pro',
+      note: 'If you do not renew, nothing is deleted: what you saved in the Pro features stays visible, it just cannot be changed.',
+      ignore: 'You get this notice once, 7 days before a plan that does not renew on its own ends.'
+    },
+    trialEnding: {
+      subject: ({ date }) => `Your Pro trial ends on ${date}`,
+      preheader: 'The trial does not turn into a subscription and charges nothing.',
+      title: 'Your Pro trial is ending',
+      greeting: name => `Hi, ${name}.`,
+      body: 'The free trial does not turn into a subscription and charges nothing. To keep the Pro features after it ends, choose a plan.',
+      line: line => line,
+      button: 'See the plans',
+      note: 'If you do not subscribe, nothing is deleted: what you saved in the Pro features stays visible, it just cannot be changed.',
+      ignore: 'You got this notice because you started the free Pro trial.'
+    },
+    trialEnded: {
+      subject: 'Your Pro trial has ended',
+      preheader: 'Your data is still saved. Subscribe whenever you want to edit it again.',
+      title: 'Your Pro trial has ended',
+      greeting: name => `Hi, ${name}.`,
+      body: 'The Pro features are now read-only: what you created is still saved and visible, but cannot be changed. Subscribe and everything works as before.',
+      button: 'See the plans',
+      note: 'This is the last notice about the trial.',
+      ignore: 'You got this notice because you started the free Pro trial.'
+    },
+    paid: {
+      subject: 'Payment confirmed on Librishelf',
+      preheader: ({ planLabel, amount }) => `Pro ${planLabel.toLowerCase()} · ${amount}`,
+      title: 'Payment confirmed',
+      greeting: name => `Hi, ${name}.`,
+      body: ({ lifetime, monthly }) => (lifetime
+        ? 'Your lifetime Librishelf Pro is active. It lasts for as long as the service exists.'
+        : monthly
+          ? 'This month’s charge was approved and your Pro was extended.'
+          : 'Your Librishelf Pro is active. Thank you for supporting the project.'),
+      line: line => line,
+      button: 'Open my account',
+      note: 'Your plan and billing history are in Account.',
+      ignore: 'You got this email because you made a payment on Librishelf. Card details stay with Mercado Pago only.'
+    },
+    declined: {
+      subject: 'Payment declined on Librishelf',
+      preheader: ({ renewal }) => (renewal
+        ? 'The monthly charge did not go through. Your Pro is still active for now.'
+        : 'Nothing was charged. You can try again.'),
+      title: 'Payment declined',
+      greeting: name => `Hi, ${name}.`,
+      body: ({ renewal, monthly }) => (renewal
+        ? 'This month’s subscription charge was declined. Mercado Pago will try again over the next few days; meanwhile your Pro stays active until the date below.'
+        : `The payment was not approved and nothing was charged. This usually happens because of the card limit, card details or a bank refusal. You can try again with another card${monthly ? '' : ' or with Pix'}.`),
+      line: line => line,
+      button: ({ renewal }) => (renewal ? 'Open my account' : 'Try again'),
+      note: ({ renewal }) => (renewal
+        ? 'If no attempt goes through, Pro lasts until the date above and nothing is deleted.'
+        : 'Librishelf never receives your card details: they stay with Mercado Pago only.'),
+      ignore: 'You got this email because you tried to make a payment on Librishelf.'
     },
     fallback: "If the button doesn't work, copy and paste this address into your browser:",
     tagline: 'Your personal library, organized.',
@@ -411,4 +547,82 @@ export function avatarReportEmail({ username, reason, note, total, hidden, local
     `${L.count}: ${total}`
   ]
   return build('avatarReport', { ...rest, locale: code, items, username, reasonLabel, total, hidden })
+}
+
+// ------------------------------------------------------------------ cobrança
+
+const PLAN_LABELS = {
+  pt: { monthly: 'Mensal', annual: 'Anual', founder_annual: 'Anual de fundador', founder_lifetime: 'Vitalício de fundador', vanguarda: 'Vanguarda', trial: 'Teste grátis' },
+  en: { monthly: 'Monthly', annual: 'Annual', founder_annual: 'Founder annual', founder_lifetime: 'Founder lifetime', vanguarda: 'Vanguarda', trial: 'Free trial' }
+}
+
+const BILLING_LABELS = {
+  pt: { plan: 'Plano', endsAt: 'Vence em', renewPrice: 'Valor para renovar', amount: 'Valor', method: 'Forma de pagamento', validUntil: 'Pro válido até', duration: 'Duração', lifetime: 'Vitalício', activeUntil: 'Pro ativo até', trialEnds: 'Termina em', pix: 'Pix', card: 'Cartão' },
+  en: { plan: 'Plan', endsAt: 'Ends on', renewPrice: 'Renewal price', amount: 'Amount', method: 'Payment method', validUntil: 'Pro valid until', duration: 'Duration', lifetime: 'Lifetime', activeUntil: 'Pro active until', trialEnds: 'Ends on', pix: 'Pix', card: 'Card' }
+}
+
+/** Datas no fuso do app (APP_TIME_ZONE, padrão America/Sao_Paulo): "9 de novembro de 2026" */
+export function formatDate(date, locale) {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'pt-BR', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: process.env.APP_TIME_ZONE?.trim() || 'America/Sao_Paulo'
+  }).format(new Date(date))
+}
+
+export function formatMoney(cents, locale, currency = 'BRL') {
+  return new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'pt-BR', { style: 'currency', currency }).format(cents / 100)
+}
+
+const planLabel = (code, plan) => PLAN_LABELS[code][plan] || plan
+
+/** Lembrete de renovação: { name, link, locale, plan, endsAt, amountCents } */
+export function renewalReminderEmail({ plan, endsAt, amountCents, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  const L = BILLING_LABELS[code]
+  const date = formatDate(endsAt, code)
+  const items = [
+    `${L.plan}: ${planLabel(code, plan)}`,
+    `${L.endsAt}: ${date}`,
+    ...(amountCents != null ? [`${L.renewPrice}: ${formatMoney(amountCents, code)}`] : [])
+  ]
+  return build('renewal', { ...rest, locale: code, items, date, founder: plan === 'founder_annual' })
+}
+
+/** Aviso antes do fim do teste: { name, link, locale, endsAt } */
+export function trialEndingEmail({ endsAt, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  const date = formatDate(endsAt, code)
+  return build('trialEnding', { ...rest, locale: code, items: [`${BILLING_LABELS[code].trialEnds}: ${date}`], date })
+}
+
+/** Fim do teste: { name, link, locale } */
+export const trialEndedEmail = params => build('trialEnded', params)
+
+/** Pagamento confirmado: { name, link, locale, plan, amountCents, currency, method, endsAt } (endsAt nulo = vitalício) */
+export function paymentConfirmedEmail({ plan, amountCents, currency = 'BRL', method, endsAt, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  const L = BILLING_LABELS[code]
+  const amount = formatMoney(amountCents, code, currency)
+  const lifetime = !endsAt
+  const items = [
+    `${L.plan}: ${planLabel(code, plan)}`,
+    `${L.amount}: ${amount}`,
+    ...(method ? [`${L.method}: ${L[method] || method}`] : []),
+    lifetime ? `${L.duration}: ${L.lifetime}` : `${L.validUntil}: ${formatDate(endsAt, code)}`
+  ]
+  return build('paid', { ...rest, locale: code, items, amount, planLabel: planLabel(code, plan), lifetime, monthly: plan === 'monthly' })
+}
+
+/**
+ * Pagamento recusado: { name, link, locale, plan, amountCents, currency, monthly, renewal, activeUntil }
+ * renewal: cobrança de um mês seguinte do mensal, com o Pro ainda ativo até activeUntil.
+ */
+export function paymentDeclinedEmail({ plan, amountCents, currency = 'BRL', monthly = false, renewal = false, activeUntil = null, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  const L = BILLING_LABELS[code]
+  const items = [
+    `${L.plan}: ${planLabel(code, plan)}`,
+    `${L.amount}: ${formatMoney(amountCents, code, currency)}`,
+    ...(renewal && activeUntil ? [`${L.activeUntil}: ${formatDate(activeUntil, code)}`] : [])
+  ]
+  return build('declined', { ...rest, locale: code, items, monthly, renewal })
 }

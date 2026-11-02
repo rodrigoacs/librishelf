@@ -16,6 +16,10 @@
       <template #subtitle>
         <p class="owner-meta">
           <span class="handle">@{{ username }}</span>
+          <VanguardaBadge
+            v-if="profile?.badges?.includes('vanguarda')"
+            class="owner-badge"
+          />
           <span v-if="total > 0"> · {{ t('publicLibrary.count', { count: total }, total) }}</span>
         </p>
       </template>
@@ -438,6 +442,7 @@
 <script setup>
 import PageHeader from '../components/ui/PageHeader.vue'
 import PublicBar from '../components/PublicBar.vue'
+import VanguardaBadge from '../components/VanguardaBadge.vue'
 import ReviewCard from '../components/review/ReviewCard.vue'
 import ListCard from '../components/list/ListCard.vue'
 import { slugify } from '../utils/slug.js'

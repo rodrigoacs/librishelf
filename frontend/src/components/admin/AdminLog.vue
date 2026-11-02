@@ -103,7 +103,12 @@ const ICONS = {
   'user.suspend': 'pi pi-ban',
   'user.reactivate': 'pi pi-replay',
   'user.resend_verification': 'pi pi-envelope',
-  'email.test': 'pi pi-send'
+  'email.test': 'pi pi-send',
+  'pro.grant': 'pi pi-star',
+  'pro.revoke': 'pi pi-star-fill',
+  'payment.refund': 'pi pi-undo',
+  'offer.update': 'pi pi-tag',
+  'webhook.reprocess': 'pi pi-refresh'
 }
 
 const actions = ref([])
@@ -116,6 +121,8 @@ const pages = computed(() => Math.max(1, Math.ceil(total.value / LIMIT)))
 function describe(item) {
   const details = item.details || {}
   if (details.reason) return details.reason
+  if (details.note) return details.note
+  if (details.code) return details.code
   if (item.book) return item.book
   return ''
 }

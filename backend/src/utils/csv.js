@@ -1,10 +1,16 @@
 /**
  * CSV (RFC 4180) sem dependência: aspas, aspas duplicadas, quebras de linha
- * dentro de campos, CRLF e BOM do Excel.
+ * e separadores dentro de campos entre aspas, CRLF e BOM do Excel.
+ *   https://www.rfc-editor.org/rfc/rfc4180
+ *
+ * O separador padrão é a vírgula (Goodreads, Librishelf). CSV genérico pode
+ * vir com ponto e vírgula (Excel em português) ou tab: sniffDelimiter() olha
+ * a primeira linha, fora das aspas.
  */
+export const DELIMITERS = [',', ';', '\t']
 
 /** Texto CSV → lista de linhas (cada linha é uma lista de campos). */
-export function parseCsv(text) {
+export function parseCsv(text, { delimiter = ',' } = {}) {
   const input = String(text).replace(/^﻿/, '')
   const rows = []
   let row = []
@@ -30,7 +36,7 @@ export function parseCsv(text) {
 
     if (char === '"') {
       inQuotes = true
-    } else if (char === ',') {
+    } else if (char === delimiter) {
       row.push(field)
       field = ''
     } else if (char === '\n' || char === '\r') {
@@ -53,9 +59,22 @@ export function parseCsv(text) {
   return rows.filter(cells => cells.some(cell => cell.trim() !== ''))
 }
 
+/** Separador mais frequente na primeira linha (fora das aspas); vírgula no empate. */
+export function sniffDelimiter(text) {
+  const input = String(text).replace(/^﻿/, '')
+  const counts = Object.fromEntries(DELIMITERS.map(d => [d, 0]))
+  let inQuotes = false
+  for (const char of input) {
+    if (char === '"') inQuotes = !inQuotes
+    else if (!inQuotes && (char === '\n' || char === '\r')) break
+    else if (!inQuotes && char in counts) counts[char]++
+  }
+  return DELIMITERS.reduce((best, d) => (counts[d] > counts[best] ? d : best), ',')
+}
+
 /** Linhas → objetos usando a primeira linha como cabeçalho. */
-export function csvToObjects(text) {
-  const [header, ...rows] = parseCsv(text)
+export function csvToObjects(text, options = {}) {
+  const [header, ...rows] = parseCsv(text, options)
   if (!header) return { headers: [], records: [] }
   const headers = header.map(name => name.trim())
   const records = rows.map(cells => Object.fromEntries(headers.map((name, i) => [name, cells[i] ?? ''])))

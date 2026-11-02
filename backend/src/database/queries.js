@@ -1757,7 +1757,7 @@ export const PRO_GRANT_QUERIES = {
   INSERT_TRIAL: `
     INSERT INTO librishelf.entitlements (user_id, kind, source, status, ends_at)
     VALUES ($1, 'trial', 'trial', 'active', now() + make_interval(days => $2))
-    RETURNING ends_at
+    RETURNING id, ends_at
   `
 }
 
@@ -2133,5 +2133,367 @@ export const SUBSCRIPTION_QUERIES = {
       AND received_at > now() - interval '30 days' AND attempts < 20
     ORDER BY received_at
     LIMIT 500
+  `
+}
+
+// Limite de envio da caixa SMTP (librishelf.email_sends, janela de 24 h) e o
+// adiamento de jobs que esperam vaga.
+export const MAIL_QUEUE_QUERIES = {
+  // Uma reserva de cada vez entre todos os processos: contar e gravar não se cruzam
+  LOCK: `SELECT pg_advisory_xact_lock(hashtext('librishelf.email_sends'))`,
+
+  COUNT_24H: `
+    SELECT count(*)::int AS total FROM librishelf.email_sends
+    WHERE sent_at > now() - interval '24 hours'
+  `,
+
+  INSERT: `
+    INSERT INTO librishelf.email_sends (kind, user_id) VALUES ($1, $2)
+    RETURNING id
+  `,
+
+  DELETE: `DELETE FROM librishelf.email_sends WHERE id = $1`,
+
+  // Segundos até o envio mais antigo da janela sair dela (abre uma vaga)
+  NEXT_SLOT_SECONDS: `
+    SELECT COALESCE(ceil(EXTRACT(EPOCH FROM (min(sent_at) + interval '24 hours' - now()))), 0)::int AS seconds
+    FROM librishelf.email_sends
+    WHERE sent_at > now() - interval '24 hours'
+  `,
+
+  PURGE: `DELETE FROM librishelf.email_sends WHERE sent_at < now() - interval '2 days'`,
+
+  // Job sem vaga agora: volta para a fila mais tarde sem gastar tentativa
+  DEFER_JOB: `
+    UPDATE librishelf.jobs
+    SET locked_at = NULL, locked_by = NULL, attempts = GREATEST(attempts - 1, 0),
+        run_at = now() + make_interval(secs => $3::int)
+    WHERE id = $1 AND locked_by = $2
+  `
+}
+
+// E-mails de cobrança: o que o job precisa para montar o e-mail na hora de
+// enviar, e a varredura de vencimentos.
+export const BILLING_EMAIL_QUERIES = {
+  ENTITLEMENT: `
+    SELECT e.id, e.user_id, e.kind, e.source, e.status, e.ends_at, e.auto_renew,
+           u.name, u.email, u.email_locale, u.email_verified_at,
+           o.price_cents AS offer_cents,
+           -- Outro Pro que vai além deste (renovou, vitalício, mensal)
+           EXISTS (
+             SELECT 1 FROM librishelf.entitlements x
+             WHERE x.user_id = e.user_id AND x.id <> e.id AND x.status = 'active'
+               AND (x.ends_at IS NULL OR x.ends_at > e.ends_at)
+           ) AS covered,
+           EXISTS (
+             SELECT 1 FROM librishelf.entitlements x
+             WHERE x.user_id = e.user_id AND x.status = 'active' AND x.starts_at <= now()
+               AND (x.ends_at IS NULL OR x.ends_at > now())
+           ) AS pro_now
+    FROM librishelf.entitlements e
+    JOIN librishelf.users u ON u.id = e.user_id
+    LEFT JOIN librishelf.offers o ON o.code = e.kind
+    WHERE e.id = $1
+  `,
+
+  PAYMENT: `
+    SELECT p.id, p.user_id, p.offer_code, p.method, p.amount_cents, p.currency, p.status,
+           r.status AS reservation_status,
+           e.ends_at, e.status AS entitlement_status,
+           EXISTS (
+             SELECT 1 FROM librishelf.payments p2
+             WHERE p2.reservation_id = p.reservation_id AND p2.id <> p.id
+               AND p2.status = 'approved' AND p2.created_at >= p.created_at
+           ) AS approved_after,
+           (SELECT max(x.ends_at) FROM librishelf.entitlements x
+             WHERE x.user_id = p.user_id AND x.status = 'active' AND x.ends_at > now()) AS pro_until,
+           u.name, u.email, u.email_locale, u.email_verified_at
+    FROM librishelf.payments p
+    JOIN librishelf.users u ON u.id = p.user_id
+    LEFT JOIN librishelf.offer_reservations r ON r.id = p.reservation_id
+    LEFT JOIN librishelf.entitlements e ON e.id = p.entitlement_id
+    WHERE p.id = $1
+  `,
+
+  // Anual e fundador anual comprados, sem renovação automática, vencendo nos próximos $1 dias
+  RENEWAL_DUE: `
+    SELECT e.id FROM librishelf.entitlements e
+    JOIN librishelf.users u ON u.id = e.user_id
+    WHERE e.status = 'active' AND e.kind IN ('annual', 'founder_annual') AND e.source = 'mercadopago'
+      AND NOT e.auto_renew
+      AND e.ends_at > now() AND e.ends_at <= now() + make_interval(days => $1)
+      AND u.email_verified_at IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM librishelf.entitlements x
+        WHERE x.user_id = e.user_id AND x.id <> e.id AND x.status = 'active'
+          AND (x.ends_at IS NULL OR x.ends_at > e.ends_at)
+      )
+  `,
+
+  TRIAL_ENDING_DUE: `
+    SELECT e.id FROM librishelf.entitlements e
+    JOIN librishelf.users u ON u.id = e.user_id
+    WHERE e.kind = 'trial' AND e.status = 'active'
+      AND e.ends_at > now() AND e.ends_at <= now() + make_interval(days => $1)
+      AND u.email_verified_at IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM librishelf.entitlements x
+        WHERE x.user_id = e.user_id AND x.id <> e.id AND x.status = 'active'
+          AND (x.ends_at IS NULL OR x.ends_at > e.ends_at)
+      )
+  `,
+
+  // Teste que acabou nas últimas $1 horas, sem outro Pro agora
+  TRIAL_ENDED_DUE: `
+    SELECT e.id FROM librishelf.entitlements e
+    JOIN librishelf.users u ON u.id = e.user_id
+    WHERE e.kind = 'trial' AND e.status IN ('active', 'expired')
+      AND e.ends_at <= now() AND e.ends_at > now() - make_interval(hours => $1)
+      AND u.email_verified_at IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM librishelf.entitlements x
+        WHERE x.user_id = e.user_id AND x.status = 'active' AND x.starts_at <= now()
+          AND (x.ends_at IS NULL OR x.ends_at > now())
+      )
+  `
+}
+
+// Administração da monetização: conceder/revogar Pro, pagamentos e reembolso,
+// ofertas, webhooks e fila de jobs.
+export const ADMIN_BILLING_QUERIES = {
+  USER_LOCK: `SELECT id FROM librishelf.users WHERE id = $1 FOR UPDATE`,
+
+  // $3 nulo = vitalício
+  GRANT: `
+    INSERT INTO librishelf.entitlements (user_id, kind, source, status, starts_at, ends_at, granted_by, note)
+    VALUES ($1, $2, 'grant', 'active', now(),
+            CASE WHEN $3::int IS NULL THEN NULL ELSE now() + make_interval(days => $3::int) END,
+            $4, $5)
+    RETURNING id, kind, starts_at, ends_at
+  `,
+
+  ENTITLEMENT_LOCK: `
+    SELECT id, user_id, kind, source, status, auto_renew, external_id, ends_at
+    FROM librishelf.entitlements WHERE id = $1
+    FOR UPDATE
+  `,
+
+  REVOKE: `
+    UPDATE librishelf.entitlements
+    SET status = 'canceled', auto_renew = false, canceled_at = COALESCE(canceled_at, now()), updated_at = now()
+    WHERE id = $1 AND status = 'active'
+    RETURNING id
+  `,
+
+  REFUND_ENTITLEMENT: `
+    UPDATE librishelf.entitlements
+    SET status = 'refunded', auto_renew = false, canceled_at = COALESCE(canceled_at, now()), updated_at = now()
+    WHERE id = $1 AND status <> 'refunded'
+    RETURNING id
+  `,
+
+  USER_ENTITLEMENTS: `
+    SELECT e.id, e.kind, e.source, e.status, e.starts_at, e.ends_at, e.auto_renew, e.canceled_at,
+           e.note, e.created_at, g.name AS granted_by,
+           (e.status = 'active' AND e.starts_at <= now() AND (e.ends_at IS NULL OR e.ends_at > now())) AS current
+    FROM librishelf.entitlements e
+    LEFT JOIN librishelf.users g ON g.id = e.granted_by
+    WHERE e.user_id = $1
+    ORDER BY e.created_at DESC, e.id DESC
+  `,
+
+  USER_PAYMENTS: `
+    SELECT id, offer_code, method, amount_cents, currency, status, paid_at, refunded_at, problem, created_at
+    FROM librishelf.payments
+    WHERE user_id = $1
+    ORDER BY created_at DESC, id DESC
+    LIMIT 50
+  `,
+
+  USER_TRIAL: `SELECT pro_trial_used_at FROM librishelf.users WHERE id = $1`,
+
+  // $1: all | problem (aprovado sem Pro, ainda sem reembolso) | refunded
+  PAYMENTS: `
+    SELECT p.id, p.user_id, u.name AS username, p.offer_code, p.external_id, p.method, p.amount_cents,
+           p.currency, p.status, p.problem, p.paid_at, p.refunded_at, rb.name AS refunded_by,
+           p.entitlement_id, p.created_at, count(*) OVER ()::int AS total
+    FROM librishelf.payments p
+    LEFT JOIN librishelf.users u ON u.id = p.user_id
+    LEFT JOIN librishelf.users rb ON rb.id = p.refunded_by
+    WHERE $1::text = 'all'
+       OR ($1::text = 'problem' AND p.problem IS NOT NULL AND p.refunded_at IS NULL)
+       OR ($1::text = 'refunded' AND p.refunded_at IS NOT NULL)
+    ORDER BY p.created_at DESC, p.id DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  PAYMENT_LOCK: `
+    SELECT id, user_id, offer_code, external_id, amount_cents, status, entitlement_id, refunded_at, problem
+    FROM librishelf.payments WHERE id = $1
+    FOR UPDATE
+  `,
+
+  MARK_REFUNDED: `
+    UPDATE librishelf.payments SET refunded_at = now(), refunded_by = $2, updated_at = now()
+    WHERE id = $1
+    RETURNING refunded_at
+  `,
+
+  OFFERS: `
+    SELECT o.code, o.price_cents, o.currency, o.duration, o.auto_renew, o.slots_total, o.slots_used,
+           o.starts_at, o.ends_at, o.active, o.updated_at,
+           (SELECT count(*) FROM librishelf.offer_reservations r
+             WHERE r.offer_code = o.code AND r.status = 'pending' AND r.holds_slot)::int AS held_slots
+    FROM librishelf.offers o
+    ORDER BY array_position(ARRAY['monthly', 'annual', 'founder_annual', 'founder_lifetime', 'vanguarda'], o.code)
+  `,
+
+  OFFER_LOCK: `
+    SELECT code, price_cents, slots_total, slots_used, starts_at, ends_at, active
+    FROM librishelf.offers WHERE code = $1
+    FOR UPDATE
+  `,
+
+  OFFER_UPDATE: `
+    UPDATE librishelf.offers
+    SET active = $2, starts_at = $3, ends_at = $4, slots_total = $5, updated_at = now()
+    WHERE code = $1
+  `,
+
+  // Pro ativo agora, por tipo (só o que vale de verdade)
+  ACTIVE_PRO: `
+    SELECT kind, count(DISTINCT user_id)::int AS total
+    FROM librishelf.entitlements
+    WHERE status = 'active' AND starts_at <= now() AND (ends_at IS NULL OR ends_at > now())
+    GROUP BY kind
+  `,
+
+  REVENUE_30: `
+    SELECT COALESCE(sum(amount_cents) FILTER (WHERE refunded_at IS NULL AND status = 'approved'), 0)::int AS received,
+           COALESCE(sum(amount_cents) FILTER (WHERE refunded_at IS NOT NULL), 0)::int AS refunded,
+           count(*) FILTER (WHERE status = 'approved' AND refunded_at IS NULL)::int AS payments
+    FROM librishelf.payments
+    WHERE paid_at > now() - interval '30 days'
+  `,
+
+  // $1: error (falhou e não foi processado) | pending | all
+  WEBHOOKS: `
+    SELECT id, provider, topic, resource_id, received_at, processed_at, attempts, error,
+           count(*) OVER ()::int AS total
+    FROM librishelf.webhook_events
+    WHERE $1::text = 'all'
+       OR ($1::text = 'error' AND error IS NOT NULL AND processed_at IS NULL)
+       OR ($1::text = 'pending' AND processed_at IS NULL)
+    ORDER BY received_at DESC, id DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  WEBHOOK: `SELECT id, topic, resource_id FROM librishelf.webhook_events WHERE id = $1`,
+
+  FAILED_JOBS: `
+    SELECT id, type, attempts, max_attempts, last_error, failed_at, created_at
+    FROM librishelf.jobs
+    WHERE failed_at IS NOT NULL
+    ORDER BY failed_at DESC, id DESC
+    LIMIT 20
+  `
+}
+
+// Importação em etapas (services/importService.js). Tudo menos o arquivo:
+// content só é lido pelo job.
+const IMPORT_COLUMNS = `
+  id, user_id, status, format, filename, headers, mapping, include_want, total, processed, imported,
+  duplicates, skipped_want, failed, rereads_undated, errors, covers_total, covers_done, covers_found,
+  created_at, updated_at, started_at, finished_at
+`
+
+export const IMPORT_QUERIES = {
+  INSERT_DRAFT: `
+    INSERT INTO librishelf.imports (user_id, format, filename, content, headers, mapping, total)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING ${IMPORT_COLUMNS}
+  `,
+
+  GET: `SELECT ${IMPORT_COLUMNS}, content FROM librishelf.imports WHERE id = $1 AND user_id = $2`,
+
+  LIST: `
+    SELECT ${IMPORT_COLUMNS} FROM librishelf.imports
+    WHERE user_id = $1 AND status <> 'draft'
+    ORDER BY created_at DESC, id DESC
+    LIMIT 5
+  `,
+
+  SET_MAPPING: `UPDATE librishelf.imports SET mapping = $2, updated_at = now() WHERE id = $1`,
+
+  QUEUE: `
+    UPDATE librishelf.imports
+    SET status = 'queued', include_want = $2, mapping = $3, updated_at = now()
+    WHERE id = $1 AND status = 'draft'
+    RETURNING ${IMPORT_COLUMNS}
+  `,
+
+  // O job pega (ou retoma, se o worker caiu no meio)
+  CLAIM: `
+    UPDATE librishelf.imports
+    SET status = 'running', started_at = COALESCE(started_at, now()), updated_at = now()
+    WHERE id = $1 AND status IN ('queued', 'running')
+    RETURNING ${IMPORT_COLUMNS}, content
+  `,
+
+  PROGRESS: `
+    UPDATE librishelf.imports
+    SET processed = $2, imported = $3, duplicates = $4, skipped_want = $5, failed = $6,
+        rereads_undated = $7, errors = $8, updated_at = now()
+    WHERE id = $1
+  `,
+
+  FAIL: `
+    UPDATE librishelf.imports
+    SET status = 'failed', errors = $2, content = NULL, finished_at = now(), updated_at = now()
+    WHERE id = $1
+  `,
+
+  FINISH: `
+    UPDATE librishelf.imports
+    SET status = 'done', content = NULL, finished_at = now(), updated_at = now(),
+        covers_total = (SELECT count(*) FROM librishelf.import_covers WHERE import_id = $1)::int
+    WHERE id = $1
+    RETURNING covers_total
+  `,
+
+  ADD_COVER: `
+    INSERT INTO librishelf.import_covers (import_id, book_id, isbn13) VALUES ($1, $2, $3)
+    ON CONFLICT DO NOTHING
+  `,
+
+  PENDING_COVERS: `
+    SELECT ic.book_id, ic.isbn13, b.cover_version
+    FROM librishelf.import_covers ic
+    JOIN librishelf.books b ON b.id = ic.book_id
+    WHERE ic.import_id = $1 AND NOT ic.done
+    ORDER BY ic.book_id
+    LIMIT $2
+  `,
+
+  COVER_DONE: `UPDATE librishelf.import_covers SET done = true, found = $3 WHERE import_id = $1 AND book_id = $2`,
+
+  COUNT_COVERS: `
+    UPDATE librishelf.imports i
+    SET covers_total = c.total, covers_done = c.done, covers_found = c.found, updated_at = now()
+    FROM (
+      SELECT count(*)::int AS total,
+             count(*) FILTER (WHERE done)::int AS done,
+             count(*) FILTER (WHERE found)::int AS found
+      FROM librishelf.import_covers WHERE import_id = $1
+    ) c
+    WHERE i.id = $1
+    RETURNING i.covers_total, i.covers_done
+  `,
+
+  DELETE: `DELETE FROM librishelf.imports WHERE id = $1`,
+
+  CLEANUP: `
+    DELETE FROM librishelf.imports
+    WHERE status = 'draft' AND created_at < now() - make_interval(hours => $1)
   `
 }

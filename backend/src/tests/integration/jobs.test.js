@@ -131,9 +131,9 @@ describe('periódicos', () => {
 
   test('agendar duas vezes no mesmo intervalo não duplica', async () => {
     const at = Date.parse('2026-11-02T14:47:12Z')
-    expect(await scheduleRecurring(at)).toBe(4)
+    expect(await scheduleRecurring(at)).toBe(8)
     expect(await scheduleRecurring(at)).toBe(0)
-    expect(await scheduleRecurring(at + 5 * 60_000)).toBe(1) // só o de 5 minutos virou
+    expect(await scheduleRecurring(at + 5 * 60_000)).toBe(2) // só os de 5 minutos viraram
   })
 
   test('limpeza: some com terminados há mais de 30 dias, falhados ficam', async () => {

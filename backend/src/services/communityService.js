@@ -7,6 +7,7 @@ import * as readingService from './readingService.js'
 import * as reviewService from './reviewService.js'
 import * as listService from './listService.js'
 import STATUS from '../utils/statusCodes.js'
+import { badgesOf } from './entitlementService.js'
 import { httpError } from '../utils/httpError.js'
 import { createTtlCache } from '../utils/ttlCache.js'
 
@@ -101,6 +102,8 @@ export async function publicProfile(username, viewerId) {
     acceptsFollowers: Boolean(user.show_activity),
     inCommunity: Boolean(user.show_in_community),
     indexable: Boolean(user.allow_indexing),
+    // Selos (['vanguarda']): aparecem ao lado do nome
+    badges: await badgesOf(user.id),
     stats: {
       totalBooks: stats.total_books,
       readBooks: stats.read_books,

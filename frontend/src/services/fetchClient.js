@@ -14,6 +14,13 @@ export function setSessionExpiredHandler(handler) {
   onSessionExpired = handler
 }
 
+let onProRequired = () => {}
+
+/** O que fazer quando a API recusa com PRO_REQUIRED (o Pro acabou com a tela aberta). */
+export function setProRequiredHandler(handler) {
+  onProRequired = handler
+}
+
 export class ApiError extends Error {
   constructor(message, status, body) {
     super(message)
@@ -110,7 +117,9 @@ async function client(endpoint, { body, ...customConfig } = {}) {
   }
 
   if (!response.ok) {
-    throw await parseError(response)
+    const error = await parseError(response)
+    if (error.code === 'PRO_REQUIRED') onProRequired(error)
+    throw error
   }
 
   if (response.status === 204) {

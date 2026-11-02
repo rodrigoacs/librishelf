@@ -1,4 +1,5 @@
-import { parseCsv, csvToObjects, toCsv } from '../../utils/csv.js'
+import { parseCsv, csvToObjects, toCsv, sniffDelimiter } from '../../utils/csv.js'
+import { fromGoodreads } from '../../services/dataService.js'
 
 describe('CSV', () => {
   it('lê aspas, vírgulas, aspas duplicadas, quebras de linha, CRLF e BOM', () => {
@@ -22,5 +23,24 @@ describe('CSV', () => {
     expect(back[1]).toEqual(['Duna, 1', 'disse "oi"\nfim'])
     // fórmula vira texto
     expect(back[2]).toEqual(["'=SOMA(A1)", ''])
+  })
+})
+
+describe('CSV genérico e Goodreads', () => {
+  it('ponto e vírgula e tab, com o separador dentro das aspas', () => {
+    const semi = 'Título;Autor\r\n"Memórias; póstumas";"Machado\nde Assis"\r\n'
+    expect(sniffDelimiter(semi)).toBe(';')
+    expect(parseCsv(semi, { delimiter: ';' })).toEqual([['Título', 'Autor'], ['Memórias; póstumas', 'Machado\nde Assis']])
+    expect(sniffDelimiter('a\tb\tc\n1\t2\t3')).toBe('\t')
+    // Vírgulas dentro de aspas no cabeçalho não confundem
+    expect(sniffDelimiter('"a;b",c,d\n')).toBe(',')
+  })
+
+  it('ISBN do Goodreads como ="..." é sempre texto, com zero à esquerda', () => {
+    const { records } = csvToObjects('Title,Author,ISBN,ISBN13,Exclusive Shelf,My Rating\nX,Y,"=""0140328726""","=""""",read,0\n')
+    const book = fromGoodreads(records[0])
+    expect(book.isbn).toBe('0140328726')
+    expect(book.rating).toBeNull()
+    expect(book.status).toBe('read')
   })
 })

@@ -27,6 +27,10 @@
         </button>
         <div class="profile-text">
           <h2 id="settings-profile-name">{{ user?.name }}</h2>
+          <VanguardaBadge
+            v-if="user?.badges?.includes('vanguarda')"
+            class="profile-badge"
+          />
           <p class="profile-email">
             <span class="email-text">{{ user?.email }}</span>
             <span
@@ -101,6 +105,8 @@
           />
         </div>
       </section>
+
+      <SettingsPlan />
 
       <!-- Privacidade -->
       <section
@@ -288,7 +294,7 @@
             icon="pi pi-upload"
             interactive
             class="row-import"
-            @click="importSheetOpen = true"
+            @click="router.push({ name: 'import' })"
           />
         </div>
       </section>
@@ -528,68 +534,7 @@
       </form>
     </AppDialog>
 
-    <!-- Importar livros (Goodreads ou CSV do Librishelf) -->
-    <AppDialog
-      v-model:visible="importSheetOpen"
-      size="sm"
-      dialog-class="settings-sheet import-sheet"
-      :header="t('settings.data.importTitle')"
-    >
-      <div class="sheet-stack">
-        <p class="sheet-text">{{ t('settings.data.importDesc') }}</p>
-        <ol class="import-steps">
-          <li>{{ t('settings.data.step1') }}</li>
-          <li>{{ t('settings.data.step2') }}</li>
-          <li>{{ t('settings.data.step3') }}</li>
-        </ol>
-
-        <label
-          class="file-drop"
-          :class="{ busy: importing }"
-        >
-          <input
-            ref="importInput"
-            type="file"
-            accept=".csv,text/csv"
-            class="sr-only"
-            :disabled="importing"
-            @change="importFile"
-          />
-          <i
-            :class="importing ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
-            aria-hidden="true"
-          ></i>
-          <span>{{ importing ? t('settings.data.importing') : t('settings.data.chooseFile') }}</span>
-        </label>
-
-        <div
-          v-if="importResult"
-          class="import-result"
-          role="status"
-        >
-          <p class="import-summary">
-            <strong>{{ t('settings.data.imported', { n: importResult.imported }, importResult.imported) }}</strong>
-            <span v-if="importResult.duplicates"> · {{ t('settings.data.duplicates', { n: importResult.duplicates }, importResult.duplicates) }}</span>
-            <span v-if="importResult.failed"> · {{ t('settings.data.failed', { n: importResult.failed }, importResult.failed) }}</span>
-          </p>
-          <ul
-            v-if="importResult.errors?.length"
-            class="import-errors"
-          >
-            <li
-              v-for="error in importResult.errors.slice(0, 10)"
-              :key="error.line"
-            >{{ t('settings.data.errorLine', { line: error.line, title: error.title || '—' }) }}: {{ error.reason }}</li>
-          </ul>
-          <router-link
-            v-if="importResult.imported"
-            :to="{ name: 'library' }"
-            class="see-library"
-          >{{ t('settings.data.seeLibrary') }}</router-link>
-        </div>
-      </div>
-    </AppDialog>
-
+    <!-- A importação abre a tela /import -->
     <AppDialog
       v-model:visible="deleteDialogVisible"
       size="sm"
@@ -683,6 +628,8 @@ import TextField from '../components/form/TextField.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
 import AvatarCropSheet from '../components/AvatarCropSheet.vue'
 import SettingsRow from '../components/settings/SettingsRow.vue'
+import SettingsPlan from '../components/settings/SettingsPlan.vue'
+import VanguardaBadge from '../components/VanguardaBadge.vue'
 import { useConfirm } from '../services/confirm.js'
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -707,7 +654,7 @@ const { t, locale } = useI18n()
 const photoSheetOpen = ref(false)
 const blockedSheetOpen = ref(false)
 const passwordSheetOpen = ref(false)
-const importSheetOpen = ref(false)
+// importSheetOpen saiu: "Importar livros" abre /import
 
 const toast = useToast()
 const router = useRouter()
@@ -1011,9 +958,6 @@ async function saveAccount() {
 
 // --- Seus dados ---
 const exporting = ref(null)
-const importing = ref(false)
-const importResult = ref(null)
-const importInput = ref(null)
 
 async function downloadExport(format) {
   exporting.value = format
@@ -1034,20 +978,7 @@ async function downloadExport(format) {
   }
 }
 
-async function importFile(event) {
-  const file = event.target.files?.[0]
-  if (!file) return
-  importing.value = true
-  importResult.value = null
-  try {
-    importResult.value = await api.importBooks(file)
-  } catch (error) {
-    toast.add({ severity: 'error', detail: error.message, life: 5000 })
-  } finally {
-    importing.value = false
-    if (importInput.value) importInput.value.value = ''
-  }
-}
+// importFile saiu: a importação é a tela /import
 
 // --- Exclusão ---
 const deleteDialogVisible = ref(false)
@@ -1375,65 +1306,7 @@ async function deleteAccount() {
   white-space: nowrap;
 }
 
-.import-steps {
-  margin: 0;
-  padding-left: var(--space-5);
-  color: var(--text-secondary);
-  font-size: var(--fs-md);
-  line-height: 1.6;
-}
-
-.file-drop {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 56px;
-  padding: var(--space-4);
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.file-drop:hover,
-.file-drop:focus-within {
-  border-color: var(--main-color);
-  color: var(--text-primary);
-}
-
-.file-drop.busy {
-  cursor: progress;
-}
-
-.import-result {
-  padding: var(--space-4) var(--space-4);
-  border-radius: var(--radius-md);
-  background: rgba(var(--main-color-rgb), 0.08);
-  border: 1px solid rgba(var(--main-color-rgb), 0.3);
-}
-
-.import-summary {
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.import-errors {
-  margin: var(--space-2) 0 0;
-  padding-left: var(--space-4);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  line-height: 1.5;
-}
-
-.see-library {
-  display: inline-block;
-  margin-top: var(--space-2);
-  color: var(--main-color);
-  font-weight: 600;
-}
+/* Importação: tela /import (views/Import.vue) */
 
 /* Janelas de nome de usuário, e-mail e exclusão */
 .stack {

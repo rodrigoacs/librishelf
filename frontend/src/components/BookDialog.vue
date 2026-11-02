@@ -210,6 +210,7 @@
             v-if="!isReadOnly && !loading && !loadFailed"
             ref="reviewEditor"
             :book-id="bookId"
+            :notes="book.notes || ''"
           />
 
           <!-- Biblioteca de outra pessoa: a resenha dela, se puder ver -->

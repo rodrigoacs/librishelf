@@ -57,6 +57,27 @@ export function formatBytes(bytes, locale) {
   return `${value.toLocaleString(tag(locale), { maximumFractionDigits: value < 10 && unit > 0 ? 1 : 0 })} ${units[unit]}`
 }
 
+/** 4990 → "R$ 49,90" */
+export function formatMoney(cents, locale, currency = 'BRL') {
+  return (Number(cents || 0) / 100).toLocaleString(tag(locale), { style: 'currency', currency })
+}
+
+/** Data ISO → "2026-11-02" (dia local), para <input type="date"> */
+export function toDateInput(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = n => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+/** "2026-11-02" → ISO no começo do dia local (ou no fim, com endOfDay); vazio → null */
+export function fromDateInput(value, { endOfDay = false } = {}) {
+  if (!value) return null
+  const date = new Date(`${value}T${endOfDay ? '23:59:59' : '00:00:00'}`)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
 /** 93784 → "1d 2h 3min" */
 export function formatDuration(seconds) {
   const s = Math.max(0, Math.round(seconds))

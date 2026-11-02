@@ -62,8 +62,12 @@ export function testOutbox() {
  * List-Unsubscribe-Post para o descadastro de um clique do Gmail, Yahoo,
  * Apple Mail… (RFC 8058). O provedor faz um POST nessa URL.
  *   https://www.rfc-editor.org/rfc/rfc8058
+ *
+ * `counted`: o envio já reservou vaga no limite da caixa (fila de e-mails,
+ * avisos de seguidores). Sem isso, um envio real entra na conta depois de
+ * sair (services/emailQuota.js).
  */
-export async function sendMail({ to, subject, text, html, unsubscribeUrl }) {
+export async function sendMail({ to, subject, text, html, unsubscribeUrl, counted = false }) {
   const headers = unsubscribeUrl ? { 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : undefined
   const list = unsubscribeUrl ? { unsubscribe: unsubscribeUrl } : undefined
 
@@ -91,6 +95,10 @@ export async function sendMail({ to, subject, text, html, unsubscribeUrl }) {
   }
   count('email.sent')
   succeeded('email')
+  if (!counted) {
+    const { record } = await import('./emailQuota.js')
+    await record('direct').catch(err => logger.warn('Envio não registrado no limite da caixa', { message: err.message }))
+  }
   logger.info('E-mail enviado', { toDomain: recipientDomain(to), messageId: info.messageId })
 }
 

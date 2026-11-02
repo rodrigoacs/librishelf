@@ -280,6 +280,21 @@ export async function lookupIsbn(rawIsbn) {
   return result
 }
 
+/**
+ * Só o ID da capa de uma edição (uma requisição: /isbn/{isbn}.json), para
+ * baixar a capa pelo ID, que não tem limite. A capa por ISBN tem (100 a cada
+ * 5 minutos por IP). Usado na importação.
+ *   https://openlibrary.org/dev/docs/api/covers
+ */
+export async function coverIdForIsbn(rawIsbn) {
+  const isbn13 = normalizeIsbn13(rawIsbn)
+  if (!isbn13) return null
+  const cached = cacheGet(lookupCache, isbn13)
+  if (cached !== undefined) return cached?.coverId ?? null
+  const edition = await getJson(`/isbn/${isbn13}.json`)
+  return edition ? firstCoverId(edition.covers) : null
+}
+
 const COVER_SIZES = { L: { cache: coverCache, max: COVER_CACHE_MAX }, M: { cache: thumbCache, max: THUMB_CACHE_MAX } }
 
 /**

@@ -466,15 +466,12 @@
       "exportJson": "Baixar tudo (JSON)",
       "exportCsv": "Baixar livros (CSV)",
       "importTitle": "Importar livros",
-      "importDesc": "Traga sua estante do Goodreads (ou um CSV exportado do Librishelf). Livros que já estão aqui são pulados.",
+      "importDesc": "Traga sua estante do Goodreads, de um CSV do Librishelf ou de qualquer planilha em CSV. Livros que já estão aqui são pulados.",
       "step1": "No Goodreads, pelo computador: My Books → Import and export → Export Library.",
       "step2": "Baixe o arquivo .csv quando o link aparecer.",
       "step3": "Escolha o arquivo abaixo. Prateleiras viram categorias; \"read\", \"currently-reading\" e \"to-read\" viram Lido, Lendo e Quero ler.",
       "chooseFile": "Escolher arquivo .csv",
       "importing": "Importando... isso pode levar alguns segundos.",
-      "imported": "Nenhum livro importado | {n} livro importado | {n} livros importados",
-      "duplicates": "{n} já estava na estante | {n} já estavam na estante",
-      "failed": "{n} com problema | {n} com problema",
       "errorLine": "Linha {line} ({title})",
       "seeLibrary": "Ver na biblioteca",
       "exportJsonHelp": "Livros, notas, anotações, metas e dados da conta",
@@ -497,7 +494,42 @@
       "security": "Segurança"
     },
     "blockedCount": "{n} leitor | {n} leitores",
-    "blockedNone": "Ninguém"
+    "blockedNone": "Ninguém",
+    "plan": {
+      "title": "Plano",
+      "current": "Plano atual",
+      "free": "Grátis",
+      "freeHelp": "Veja o que o Pro acrescenta.",
+      "lifetime": "Vitalício, enquanto o serviço existir.",
+      "renews": "Renova em {date}.",
+      "canceledUntil": "Cancelado. Vale até {date}.",
+      "until": "Vale até {date}.",
+      "ended": "Seu Pro acabou em {date}. O que você guardou nos recursos Pro continua visível; para mudar, é preciso o Pro de novo.",
+      "trial": "Testar o Pro por 14 dias",
+      "trialHelp": "Sem cartão e sem cobrança automática.",
+      "trialStarted": "Teste grátis ativado até {date}.",
+      "history": "Histórico de cobranças",
+      "noPayments": "Nenhuma cobrança ainda.",
+      "refunded": "reembolsado em {date}",
+      "methods": {
+        "pix": "Pix",
+        "card": "cartão"
+      },
+      "statuses": {
+        "paid": "pago",
+        "declined": "recusado",
+        "reversed": "estornado",
+        "pending": "em andamento"
+      },
+      "cancel": "Cancelar assinatura",
+      "cancelHelp": "O Pro vale até o fim do mês pago.",
+      "cancelTitle": "Cancelar a assinatura?",
+      "cancelMessage": "Não haverá novas cobranças. Seu Pro vale até {date}, e seus dados continuam guardados depois disso.",
+      "cancelConfirm": "Cancelar assinatura",
+      "keep": "Manter",
+      "canceled": "Assinatura cancelada. O Pro vale até {date}.",
+      "canceledNow": "Assinatura cancelada."
+    }
   },
   "discover": {
     "tab": "Encontrar",
@@ -977,7 +1009,11 @@
     "list": "Lista",
     "publicList": "Lista de {name}",
     "year": "Seu ano em livros",
-    "admin": "Administração"
+    "admin": "Administração",
+    "pricing": "Planos",
+    "planReturn": "Pagamento",
+    "import": "Importar livros",
+    "importSkoob": "Vindo do Skoob"
   },
   "password": {
     "show": "Mostrar senha",
@@ -1154,7 +1190,22 @@
     "PAYMENT_PROVIDER_ERROR": "Não foi possível abrir o pagamento agora. Tente de novo em instantes.",
     "CHECKOUT_NOT_FOUND": "Compra não encontrada.",
     "SUBSCRIPTION_ACTIVE": "Você já tem uma assinatura mensal ativa.",
-    "SUBSCRIPTION_NOT_FOUND": "Você não tem assinatura mensal ativa."
+    "SUBSCRIPTION_NOT_FOUND": "Você não tem assinatura mensal ativa.",
+    "PRO_GRANT_KIND_INVALID": "Tipo de Pro inválido.",
+    "PRO_GRANT_DAYS_INVALID": "Prazo inválido: de {min} a {max} dias.",
+    "ENTITLEMENT_NOT_FOUND": "Pro não encontrado.",
+    "ENTITLEMENT_NOT_ACTIVE": "Este Pro não está ativo.",
+    "PAYMENT_NOT_FOUND": "Pagamento não encontrado.",
+    "PAYMENT_ALREADY_REFUNDED": "Este pagamento já foi marcado como reembolsado.",
+    "PAYMENT_NOT_REFUNDABLE": "Este pagamento não foi aprovado: não há o que reembolsar.",
+    "OFFER_WINDOW_INVALID": "O fim da janela precisa ser depois do início.",
+    "OFFER_SLOTS_INVALID": "Vagas inválidas: não pode ser menos do que as {used} já usadas.",
+    "WEBHOOK_NOT_FOUND": "Notificação não encontrada.",
+    "IMPORT_NOT_FOUND": "Importação não encontrada.",
+    "IMPORT_NOT_DRAFT": "Esta importação já começou.",
+    "IMPORT_RUNNING": "Já há uma importação em andamento.",
+    "IMPORT_MAPPING_INVALID": "Coluna escolhida não existe no arquivo.",
+    "IMPORT_MAPPING_REQUIRED": "Escolha a coluna do título."
   },
   "block": {
     "block": "Bloquear {name}",
@@ -1225,7 +1276,9 @@
     "profileTitle": "Resenhas | 1 resenha | {n} resenhas",
     "profileMore": "E mais {n} — abra os livros da estante para ler.",
     "editAria": "Editar resenha",
-    "deleteAria": "Excluir resenha"
+    "deleteAria": "Excluir resenha",
+    "fromNotes": "Usar a nota como resenha",
+    "fromNotesHint": "Abre o editor com o texto da nota. A nota continua privada; a resenha só aparece depois que você salvar."
   },
   "moderation": {
     "subtitle": "Moderação",
@@ -1417,7 +1470,9 @@
       "accounts": "Contas",
       "log": "Registro",
       "usage": "Uso",
-      "system": "Sistema"
+      "system": "Sistema",
+      "billing": "Pro",
+      "queue": "Fila"
     },
     "overview": {
       "users": "Contas",
@@ -1560,7 +1615,12 @@
         "user_resend_verification": "Reenviou confirmação",
         "email_test": "Enviou e-mail de teste",
         "avatar_remove": "Removeu foto de perfil",
-        "avatar_keep": "Manteve foto de perfil"
+        "avatar_keep": "Manteve foto de perfil",
+        "pro_grant": "Concedeu Pro",
+        "pro_revoke": "Revogou Pro",
+        "payment_refund": "Marcou reembolso",
+        "offer_update": "Alterou oferta",
+        "webhook_reprocess": "Reprocessou webhook"
       },
       "review": "resenha #{id}",
       "deleted": "conta excluída",
@@ -1752,6 +1812,160 @@
       "history": "Histórico na administração",
       "resend": "Reenviar confirmação",
       "resent": "Confirmação reenviada para {email}."
+    },
+    "billing": {
+      "summary": "Resumo",
+      "activePro": "Contas com Pro agora",
+      "none": "Nenhuma",
+      "received30": "Recebido em 30 dias",
+      "payments30": "{n} pagamentos aprovados",
+      "refunded30": "Reembolsado em 30 dias",
+      "offers": "Ofertas",
+      "offersHint": "Janela de fundador, se a oferta está ativa e as vagas. O preço não muda por aqui.",
+      "cols": {
+        "offer": "Oferta",
+        "price": "Preço",
+        "window": "Janela",
+        "slots": "Vagas",
+        "state": "Situação",
+        "when": "Quando",
+        "account": "Conta",
+        "amount": "Valor",
+        "status": "Status"
+      },
+      "kinds": {
+        "monthly": "Mensal",
+        "annual": "Anual",
+        "founder_annual": "Fundador anual",
+        "founder_lifetime": "Fundador vitalício",
+        "vanguarda": "Vanguarda",
+        "trial": "Teste grátis"
+      },
+      "methods": {
+        "pix": "Pix",
+        "card": "Cartão"
+      },
+      "statuses": {
+        "pending": "Pendente",
+        "approved": "Aprovado",
+        "authorized": "Autorizado",
+        "in_process": "Em análise",
+        "in_mediation": "Em disputa",
+        "rejected": "Recusado",
+        "cancelled": "Cancelado",
+        "refunded": "Estornado",
+        "charged_back": "Contestado"
+      },
+      "states": {
+        "open": "À venda",
+        "waiting": "Fora da janela",
+        "off": "Desativada"
+      },
+      "noWindow": "Sem janela",
+      "slotsOf": "{used} de {total}",
+      "slotsLeft": "{n} restantes",
+      "slotsHeld": "{n} em checkout",
+      "edit": "Editar",
+      "editOffer": "Editar {name}",
+      "offerActive": "Oferta ativa",
+      "windowStart": "Início da janela",
+      "windowEnd": "Fim da janela (inclusive)",
+      "windowEmpty": "Deixe em branco para não ter limite.",
+      "threeMonths": "Janela de 3 meses a partir de hoje",
+      "slotsTotal": "Total de vagas",
+      "slotsTotalHint": "{n} já usadas. Não dá para ficar abaixo disso.",
+      "offerSaved": "Oferta salva.",
+      "payments": "Pagamentos",
+      "paymentsFilter": "Filtrar pagamentos",
+      "paymentsHint": "O reembolso em si é feito no painel do Mercado Pago. Aqui ele é marcado e o Pro daquela compra sai.",
+      "filters": {
+        "all": "Todos",
+        "problem": "Com problema",
+        "refunded": "Reembolsados"
+      },
+      "empty": {
+        "all": "Nenhum pagamento ainda.",
+        "problem": "Nenhum pagamento com problema.",
+        "refunded": "Nenhum reembolso marcado."
+      },
+      "refundedOn": "Reembolsado em {date}",
+      "refund": "Marcar reembolso",
+      "refundTitle": "Marcar reembolso",
+      "refundDesc": "Faça o reembolso no painel do Mercado Pago antes. Ao confirmar, o Pro desta compra é revogado (no mensal, a assinatura é cancelada) e o pagamento fica no histórico como reembolsado.",
+      "refundConfirm": "Marcar e revogar o Pro",
+      "refundDone": "Reembolso marcado.",
+      "note": "Nota (opcional)"
+    },
+    "queue": {
+      "email": "Envio de e-mail",
+      "emailHint": "Janela móvel de 24 horas. A fila para em {queue}; os {reserve} restantes ficam para confirmar e-mail e redefinir senha.",
+      "emailUsage": "{used} de {daily} nas últimas 24 horas",
+      "jobs": "Jobs",
+      "cols": {
+        "type": "Tipo",
+        "pending": "Na fila",
+        "failed": "Falharam",
+        "lastDone": "Último concluído",
+        "received": "Recebido",
+        "topic": "Tópico",
+        "attempts": "Tentativas",
+        "error": "Erro"
+      },
+      "noJobs": "A fila ainda não rodou nada.",
+      "failed": "Falhas recentes",
+      "attempts": "{n} de {max} tentativas",
+      "webhooks": "Notificações do Mercado Pago",
+      "webhooksFilter": "Filtrar notificações",
+      "webhooksHint": "Reprocessar consulta a API do Mercado Pago de novo. Repetir não duplica nada.",
+      "filters": {
+        "error": "Com erro",
+        "pending": "Sem processar",
+        "all": "Todas"
+      },
+      "empty": {
+        "error": "Nenhuma notificação com erro.",
+        "pending": "Nenhuma notificação esperando.",
+        "all": "Nenhuma notificação recebida."
+      },
+      "processed": "Processada",
+      "waiting": "Esperando o worker",
+      "reprocess": "Reprocessar",
+      "requeued": "Notificação de volta na fila."
+    },
+    "userPro": {
+      "title": "Pro",
+      "grant": "Conceder Pro",
+      "kind": "Tipo",
+      "days": "Prazo em dias",
+      "daysHint": "Conta a partir de agora.",
+      "note": "Nota (opcional)",
+      "grantConfirm": "Conceder",
+      "granted": "Pro concedido.",
+      "none": "Nunca teve Pro.",
+      "current": "Valendo",
+      "statuses": {
+        "active": "Ativo",
+        "canceled": "Revogado",
+        "expired": "Vencido",
+        "refunded": "Reembolsado"
+      },
+      "sources": {
+        "mercadopago": "Mercado Pago",
+        "grant": "Concedido",
+        "trial": "Teste",
+        "apple": "App Store",
+        "google": "Google Play"
+      },
+      "autoRenew": "renova sozinho",
+      "fromTo": "{from} a {to}",
+      "fromLifetime": "desde {from}, vitalício",
+      "trialUsed": "Usou o teste grátis em {date}.",
+      "payments": "Cobranças",
+      "revoke": "Revogar",
+      "revokeTitle": "Revogar este Pro?",
+      "revokeMessage": "A conta perde o Pro na hora. Os dados continuam guardados.",
+      "revokeSubscription": "A assinatura mensal também é cancelada no Mercado Pago. A conta perde o Pro na hora; os dados continuam guardados.",
+      "revoked": "Pro revogado."
     }
   },
   "readCard": {
@@ -1803,6 +2017,244 @@
       "impersonation": "Se passando por outra pessoa",
       "spam": "Spam ou propaganda",
       "other": "Outro motivo"
+    }
+  },
+  "plan": {
+    "title": "Planos",
+    "subtitle": "O Librishelf continua grátis. O Pro acrescenta recursos para quem quer ir além.",
+    "login": "Entrar",
+    "offersTitle": "Pro",
+    "kinds": {
+      "monthly": "Mensal",
+      "annual": "Anual",
+      "founder_annual": "Fundador anual",
+      "founder_lifetime": "Fundador vitalício",
+      "vanguarda": "Vanguarda",
+      "trial": "Teste grátis"
+    },
+    "offers": {
+      "monthly": {
+        "name": "Mensal",
+        "period": "por mês",
+        "point1": "Renova sozinho no cartão.",
+        "point2": "Cancele quando quiser em Conta; vale até o fim do mês pago."
+      },
+      "annual": {
+        "name": "Anual",
+        "period": "por ano",
+        "point1": "Pix ou cartão, pagamento único.",
+        "point2": "Não renova sozinho. Avisamos por e-mail 7 dias antes do fim."
+      },
+      "founder_annual": {
+        "name": "Fundador anual",
+        "period": "por ano",
+        "point1": "Só no lançamento. O preço fica o mesmo enquanto você renovar antes do vencimento.",
+        "point2": "Pix ou cartão. Não renova sozinho."
+      },
+      "founder_lifetime": {
+        "name": "Fundador vitalício",
+        "period": "uma vez",
+        "point1": "Pro enquanto o serviço existir, sem mensalidade.",
+        "point2": "Só no lançamento. Pix ou cartão."
+      }
+    },
+    "slotsLeft": "{n} de {total} vagas restantes",
+    "soldOut": "Vagas esgotadas",
+    "until": "À venda até {date}",
+    "subscribe": "Assinar",
+    "buy": "Comprar",
+    "renew": "Renovar",
+    "subscribed": "Sua assinatura atual",
+    "haveLifetime": "Você já tem o vitalício",
+    "currentLifetime": "Seu plano: {name}, vitalício.",
+    "currentUntil": "Seu plano: {name}, até {date}.",
+    "trialText": "Quer experimentar antes? O teste grátis dura 14 dias, sem cartão e sem cobrança automática.",
+    "trialButton": "Testar 14 dias grátis",
+    "finePrint": "Pagamento pelo Mercado Pago. O Librishelf não recebe os dados do cartão. Você pode desistir da compra em até 7 dias e receber o valor de volta.",
+    "proTitle": "O que o Pro traz",
+    "soon": "Em breve",
+    "freeTitle": "Grátis para sempre",
+    "freeIntro": "Tudo o que existe hoje continua grátis, sem limite de livros, listas ou capas. Sem anúncios e sem rastreamento.",
+    "free": {
+      "library": {
+        "name": "Biblioteca completa",
+        "desc": "Livros, leituras, listas, metas, séries, capas e o painel."
+      },
+      "importExport": {
+        "name": "Importar e exportar",
+        "desc": "Traga sua biblioteca do Goodreads ou de um CSV e leve tudo embora quando quiser."
+      },
+      "community": {
+        "name": "Comunidade",
+        "desc": "Perfil público, resenhas e seguir outros leitores."
+      },
+      "loans": {
+        "name": "Empréstimos",
+        "desc": "Quem pegou cada livro, quando, e a devolução."
+      }
+    }
+  },
+  "pro": {
+    "trialStarted": "Teste grátis ativado.",
+    "notice": {
+      "title": "Recurso do Pro",
+      "readonly": "O que você já guardou aqui continua visível. Para mudar, ative o Pro.",
+      "ended": "Seu Pro acabou em {date}.",
+      "trial": "Testar 14 dias grátis",
+      "plans": "Ver os planos"
+    },
+    "features": {
+      "stats_advanced": {
+        "name": "Estatísticas avançadas",
+        "desc": "Compare períodos, monte gráficos, veja seu ritmo de leitura e as editoras e autores ao longo dos anos."
+      },
+      "collector": {
+        "name": "Colecionador",
+        "desc": "Fotos do exemplar, onde ele está na estante, preço pago, valor da coleção e lembrete de empréstimo por e-mail."
+      },
+      "personalization": {
+        "name": "Personalização",
+        "desc": "Temas e paletas extras, ícone alternativo do app e capa de fundo no perfil público."
+      },
+      "auto_backup": {
+        "name": "Backup automático",
+        "desc": "Uma cópia da sua biblioteca feita sozinha de tempos em tempos."
+      }
+    },
+    "vanguarda": {
+      "label": "Vanguarda",
+      "hint": "Uma das 100 primeiras contas do Librishelf"
+    }
+  },
+  "planReturn": {
+    "title": "Pagamento",
+    "reopen": "Abrir o pagamento de novo",
+    "tryAgain": "Tentar de novo",
+    "toAccount": "Ir para Conta",
+    "activeLifetime": "Seu Pro vitalício está ativo. Ele vale enquanto o serviço existir.",
+    "activeUntil": "Seu Pro está ativo até {date}.",
+    "pendingUntil": "Assim que o pagamento for aprovado, o Pro é liberado. O pagamento pode ser feito até {date}.",
+    "slow": "Está demorando mais que o normal. Quando o pagamento for confirmado, você recebe um e-mail e o Pro aparece em Conta.",
+    "states": {
+      "checking": {
+        "title": "Conferindo",
+        "body": "Conferindo o pagamento com o Mercado Pago."
+      },
+      "processing": {
+        "title": "Confirmando o pagamento",
+        "body": "O pagamento foi aprovado. Falta só liberar o Pro."
+      },
+      "pending": {
+        "title": "Esperando o pagamento",
+        "body": "Assim que o pagamento for aprovado, o Pro é liberado."
+      },
+      "waiting": {
+        "title": "Esperando o pagamento",
+        "body": "Ainda não recebemos o pagamento desta compra."
+      },
+      "active": {
+        "title": "Pagamento confirmado",
+        "body": "Seu Pro está ativo."
+      },
+      "rejected": {
+        "title": "Pagamento recusado",
+        "body": "Nada foi cobrado. Dá para tentar de novo com outro cartão ou com Pix."
+      },
+      "expired": {
+        "title": "O prazo acabou",
+        "body": "Esta compra não foi paga a tempo e foi encerrada. Nada foi cobrado."
+      },
+      "problem": {
+        "title": "Precisamos conferir",
+        "body": "Recebemos o pagamento, mas ele precisa de uma conferência manual. Vamos resolver e avisar por e-mail; se não for possível liberar o Pro, o valor volta para você."
+      },
+      "unknown": {
+        "title": "Compra não encontrada",
+        "body": "Não encontramos esta compra na sua conta. Se você pagou, o Pro aparece em Conta assim que for confirmado."
+      }
+    }
+  },
+  "import": {
+    "fromGoodreads": "Do Goodreads",
+    "otherCsv": "Outro CSV (planilha, outro app): você escolhe as colunas no passo seguinte. Ponto e vírgula também serve.",
+    "skoobLink": "Vindo do Skoob?",
+    "reading": "Lendo o arquivo...",
+    "previewTitle": "Prévia",
+    "noName": "arquivo sem nome",
+    "formats": {
+      "goodreads": "Goodreads",
+      "librishelf": "CSV do Librishelf",
+      "generic": "CSV genérico"
+    },
+    "needsMapping": "Não reconhecemos as colunas deste arquivo. Escolha abaixo pelo menos a coluna do título e atualize a prévia.",
+    "counts": {
+      "total": "Livros no arquivo",
+      "duplicates": "Já na estante",
+      "withoutIsbn": "Sem ISBN",
+      "want": "Quero ler",
+      "imported": "Importados",
+      "skippedWant": "Quero ler pulados",
+      "failed": "Com problema"
+    },
+    "untitled": "{n} linha sem título fica de fora. | {n} linhas sem título ficam de fora.",
+    "rereadsNote": "O Goodreads guarda só a data da última leitura: {n} releitura entra sem data. | O Goodreads guarda só a data da última leitura: {n} releituras entram sem data.",
+    "duplicatesHint": "Duplicados contam pelo ISBN. Livros sem ISBN são comparados por título e autor na hora de importar.",
+    "mappingTitle": "Colunas",
+    "mappingHint": "Diga de qual coluna vem cada informação. O que ficar sem coluna não é importado.",
+    "skipColumn": "— não importar",
+    "refresh": "Atualizar prévia",
+    "fields": {
+      "title": "Título",
+      "authors": "Autores",
+      "isbn": "ISBN",
+      "publisher": "Editora",
+      "status": "Situação (lido, lendo, quero ler)",
+      "rating": "Nota",
+      "readDate": "Data de leitura",
+      "startedAt": "Data de início",
+      "pubDate": "Publicação",
+      "pages": "Páginas",
+      "tags": "Categorias",
+      "notes": "Nota privada",
+      "series": "Série",
+      "seriesIndex": "Volume"
+    },
+    "sampleTitle": "Primeiras linhas",
+    "noAuthor": "sem autor",
+    "statuses": {
+      "read": "lido",
+      "reading": "lendo",
+      "want": "quero ler",
+      "none": "sem situação"
+    },
+    "includeWant": "Importar também \"Quero ler\"",
+    "includeWantHint": "Nenhum livro marcado para ler depois. | {n} livro marcado para ler depois. Desligado, ele fica de fora. | {n} livros marcados para ler depois. Desligado, eles ficam de fora.",
+    "otherFile": "Escolher outro arquivo",
+    "start": "Nada para importar | Importar {n} livro | Importar {n} livros",
+    "progress": "{done} de {total} linhas",
+    "canLeave": "Pode sair desta tela: a importação continua e o relatório fica aqui.",
+    "reportTitle": "Relatório",
+    "failedTitle": "A importação não terminou",
+    "rereadsDone": "{n} releitura do Goodreads entrou sem data (o arquivo só traz a última). | {n} releituras do Goodreads entraram sem data (o arquivo só traz a última).",
+    "coversRunning": "Buscando capas no Open Library: {done} de {total}",
+    "coversDone": "Capas: {found} de {total} encontradas no Open Library.",
+    "another": "Importar outro arquivo",
+    "errorsTitle": "Linhas com problema",
+    "fileError": "Arquivo",
+    "skoob": {
+      "title": "Vindo do Skoob?",
+      "intro": "O Skoob não tem uma opção para exportar a sua estante. Dá para trazer os livros, mas o caminho é por fora dele.",
+      "toolsTitle": "Ferramentas da comunidade",
+      "tools": "Existem programas feitos por outros leitores que leem a sua estante no Skoob e geram um arquivo CSV, alguns já no formato do Goodreads. Para isso, eles pedem o seu login do Skoob (e-mail e senha) ou um cookie ou token da sua sessão.",
+      "risksTitle": "Antes de usar, saiba dos riscos",
+      "risk1": "Quem tem o seu login, cookie ou token consegue entrar na sua conta do Skoob.",
+      "risk2": "Prefira ferramentas de código aberto que rodam no seu próprio computador, e não sites que pedem a sua senha.",
+      "risk3": "Depois de exportar, troque a senha do Skoob e saia das outras sessões.",
+      "risk4": "O Librishelf não tem ligação com essas ferramentas e nunca pede seus dados do Skoob.",
+      "afterTitle": "Com o arquivo em mãos",
+      "after": "Envie o CSV na tela de importação. Se ele vier no formato do Goodreads, é reconhecido sozinho; se não, você escolhe as colunas (título, autor, ISBN...) antes de importar.",
+      "manual": "Sem ferramenta: uma planilha com título e autor, uma linha por livro, salva em CSV, também funciona.",
+      "toImport": "Ir para a importação"
     }
   }
 }

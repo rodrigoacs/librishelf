@@ -6,6 +6,7 @@ import { sensitiveLimiter, mailLimiter } from '../middlewares/rateLimiter.js'
 import { validateNumericId } from '../middlewares/validateId.js'
 import { verifyCurrentPassword } from '../services/authService.js'
 import * as adminService from '../services/adminService.js'
+import * as billing from '../services/adminBillingService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 
@@ -88,5 +89,25 @@ router.get('/system', handle('Erro ao carregar o sistema', () => adminService.sy
 router.post('/email/test', mailLimiter, handle('Erro ao enviar e-mail de teste', req => adminService.sendTestEmail(req.user.id)))
 router.get('/moderation/insights', handle('Erro ao carregar sinais de moderação', () => adminService.moderationInsights()))
 router.get('/actions', handle('Erro ao carregar o registro', req => adminService.actions({ page: req.query.page, limit: req.query.limit })))
+
+// Monetização: Pro de uma conta, pagamentos e reembolso, ofertas, webhooks e fila
+router.get('/users/:id/billing', validateNumericId(), handle('Erro ao carregar o plano', req => billing.userBilling(Number(req.params.id))))
+router.post('/users/:id/pro', sensitiveLimiter, validateNumericId(), handle('Erro ao conceder Pro',
+  req => billing.grant(req.user.id, Number(req.params.id), req.body ?? {})))
+router.post('/entitlements/:id/revoke', sensitiveLimiter, validateNumericId(), handle('Erro ao revogar Pro',
+  req => billing.revoke(req.user.id, Number(req.params.id), req.body ?? {})))
+router.get('/payments', handle('Erro ao listar pagamentos', req => billing.payments({
+  filter: String(req.query.filter ?? 'all'), page: req.query.page, limit: req.query.limit
+})))
+router.post('/payments/:id/refund', sensitiveLimiter, validateNumericId(), handle('Erro ao marcar reembolso',
+  req => billing.refund(req.user.id, Number(req.params.id), req.body ?? {})))
+router.get('/offers', handle('Erro ao carregar ofertas', () => billing.offers()))
+router.patch('/offers/:code', handle('Erro ao salvar oferta', req => billing.updateOffer(req.user.id, String(req.params.code), req.body ?? {})))
+router.get('/webhooks', handle('Erro ao listar webhooks', req => billing.webhooks({
+  filter: String(req.query.filter ?? 'error'), page: req.query.page, limit: req.query.limit
+})))
+router.post('/webhooks/:id/reprocess', validateNumericId(), handle('Erro ao reprocessar webhook',
+  req => billing.reprocessWebhook(req.user.id, Number(req.params.id))))
+router.get('/jobs', handle('Erro ao carregar a fila', () => billing.jobs()))
 
 export default router

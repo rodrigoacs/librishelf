@@ -23,7 +23,7 @@ export async function clearDatabase() {
   await db.query('TRUNCATE TABLE librishelf.books_authors_link, librishelf.books_tags_link, librishelf.books, librishelf.authors, librishelf.publishers, librishelf.tags, librishelf.users RESTART IDENTITY CASCADE')
   // Sem FK para users: o TRUNCATE acima não alcança. As vagas voltam a zero.
   await db.query('TRUNCATE TABLE librishelf.jobs, librishelf.webhook_events RESTART IDENTITY')
-  await db.query("UPDATE librishelf.offers SET slots_used = 0, starts_at = NULL, ends_at = NULL, active = code NOT IN ('founder_annual', 'founder_lifetime')")
+  await db.query("UPDATE librishelf.offers SET slots_used = 0, slots_total = CASE WHEN code IN ('founder_annual', 'founder_lifetime', 'vanguarda') THEN 100 END, starts_at = NULL, ends_at = NULL, active = code NOT IN ('founder_annual', 'founder_lifetime')")
 }
 
 export async function closeDatabase() {
