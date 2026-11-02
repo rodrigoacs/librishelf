@@ -1,4 +1,5 @@
 import * as authRepository from '../repositories/authRepository.js'
+import * as vanguardaService from './vanguardaService.js'
 import { removeFiles as removeAvatarFiles } from './avatarService.js'
 import STATUS from '../utils/statusCodes.js'
 import { validatePassword } from '../utils/passwordPolicy.js'
@@ -223,6 +224,8 @@ async function verifyEmail(token) {
   if (!userId) throw httpError(INVALID_LINK, STATUS.BAD_REQUEST, 'LINK_INVALID')
   await authRepository.markEmailVerified(userId)
   logger.info('E-mail confirmado', { userId })
+  // Registro efetivo = e-mail confirmado + 10 livros: pode ter virado agora
+  await vanguardaService.checkSafely(userId)
 }
 
 /**

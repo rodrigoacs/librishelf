@@ -1140,7 +1140,21 @@
     "PAYLOAD_TOO_LARGE": "Os dados enviados são grandes demais.",
     "ENCODING_UNSUPPORTED": "Formato de envio não suportado.",
     "ROUTE_NOT_FOUND": "Endereço não encontrado.",
-    "UPLOAD_INVALID": "Envio inválido. Confira os arquivos e tente de novo."
+    "UPLOAD_INVALID": "Envio inválido. Confira os arquivos e tente de novo.",
+    "PRO_REQUIRED": "Este recurso é do Pro. Seus dados continuam guardados e visíveis.",
+    "TRIAL_USED": "Você já usou o teste grátis do Pro.",
+    "TRIAL_ALREADY_PRO": "Você já tem o Pro ativo. O teste fica guardado para depois.",
+    "EMAIL_NOT_VERIFIED_TRIAL": "Confirme seu e-mail para ativar o teste grátis.",
+    "OFFER_INVALID": "Oferta inválida.",
+    "OFFER_UNAVAILABLE": "Esta oferta não está disponível.",
+    "OFFER_SOLD_OUT": "As vagas desta oferta acabaram.",
+    "ALREADY_LIFETIME": "Você já tem o Pro vitalício.",
+    "EMAIL_NOT_VERIFIED_CHECKOUT": "Confirme seu e-mail para assinar o Pro.",
+    "PAYMENTS_UNAVAILABLE": "Pagamentos indisponíveis no momento.",
+    "PAYMENT_PROVIDER_ERROR": "Não foi possível abrir o pagamento agora. Tente de novo em instantes.",
+    "CHECKOUT_NOT_FOUND": "Compra não encontrada.",
+    "SUBSCRIPTION_ACTIVE": "Você já tem uma assinatura mensal ativa.",
+    "SUBSCRIPTION_NOT_FOUND": "Você não tem assinatura mensal ativa."
   },
   "block": {
     "block": "Bloquear {name}",

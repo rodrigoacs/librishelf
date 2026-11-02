@@ -17,6 +17,7 @@ services:
   backend:
     build:
       context: ./backend
+    image: librishelf-backend
     container_name: librishelf-backend
     restart: unless-stopped
     # Sem porta publicada: só o nginx do frontend fala com a API, em /api.
@@ -30,6 +31,34 @@ services:
       # O container roda como o usuário "node" (uid 1000): a pasta do host
       # precisa pertencer a ele → sudo chown -R 1000:1000 ./uploads
       - ./uploads:/app/uploads
+    networks:
+      - proxy
+
+  # Fila de jobs (expiração do Pro, vagas, e-mails, importação…). Mesma imagem
+  # e mesmo .env do backend, outro processo. Sem porta: só fala com o banco.
+  worker:
+    image: librishelf-backend
+    pull_policy: never
+    container_name: librishelf-worker
+    restart: unless-stopped
+    command: ["node", "src/worker.js"]
+    env_file:
+      - ./backend/src/.env
+    environment:
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - ./uploads:/app/uploads
+    # O HEALTHCHECK da imagem chama /ping (servidor HTTP); o worker não tem.
+    # Aqui: o laço grava a hora em /tmp a cada volta; parado há 2 min = doente.
+    healthcheck:
+      test: ["CMD", "node", "-e", "const t = Number(require('fs').readFileSync('/tmp/librishelf-worker-heartbeat', 'utf8')); process.exit(Date.now() - t < 120000 ? 0 : 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - proxy
 

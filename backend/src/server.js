@@ -30,6 +30,9 @@ function validateEnv() {
   if (process.env.NODE_ENV === 'production' && !process.env.APP_URL?.trim()) {
     logger.warn('APP_URL não definido: os links dos e-mails vão apontar para http://localhost:5173')
   }
+  if (process.env.NODE_ENV === 'production' && (!process.env.MP_ACCESS_TOKEN?.trim() || !process.env.MP_WEBHOOK_SECRET?.trim())) {
+    logger.warn('MP_ACCESS_TOKEN ou MP_WEBHOOK_SECRET não definido: checkout e webhooks do Mercado Pago ficam desligados')
+  }
   if (!process.env.SMTP_HOST?.trim()) {
     logger.warn(process.env.NODE_ENV === 'production'
       ? 'SMTP_HOST não definido: e-mails de senha e confirmação NÃO são enviados (nem aparecem no log)'

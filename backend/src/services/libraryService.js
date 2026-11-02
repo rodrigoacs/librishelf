@@ -10,6 +10,7 @@ import {
   MAX_TITLE_LENGTH, MAX_ISBN_LENGTH, MAX_PUBLISHER_LENGTH
 } from '../utils/bookFields.js'
 import * as readingService from './readingService.js'
+import * as vanguardaService from './vanguardaService.js'
 
 const READ_YEAR_PATTERN = /^\d{4}$/
 
@@ -217,6 +218,8 @@ async function addNewBook(bookData) {
   }
   // Data de leitura no cadastro = primeira leitura do histórico
   if (bookData.readDate) await readingService.applyFormReadDate(bookId, bookData.readDate)
+  // Chegar ao 10º livro pode completar o registro efetivo (Vanguarda)
+  await vanguardaService.checkSafely(bookData.user_id)
   return bookId
 }
 

@@ -3,6 +3,7 @@ import { DATA_QUERIES as q, REVIEW_QUERIES, LIST_QUERIES } from '../database/que
 import * as libraryRepository from '../repositories/libraryRepository.js'
 import { normalizeBookInput } from './libraryService.js'
 import * as readingService from './readingService.js'
+import * as vanguardaService from './vanguardaService.js'
 import { csvToObjects, toCsv } from '../utils/csv.js'
 import { normalizeIsbn13 } from '../utils/isbn.js'
 import STATUS from '../utils/statusCodes.js'
@@ -378,5 +379,6 @@ export async function importCsv(userId, buffer) {
 
   summary.failed = summary.total - summary.imported - summary.duplicates
   logger.info('Importação concluída', { userId, format, imported: summary.imported, duplicates: summary.duplicates, failed: summary.failed })
+  if (summary.imported > 0) await vanguardaService.checkSafely(userId)
   return summary
 }

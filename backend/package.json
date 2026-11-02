@@ -18,7 +18,10 @@
     "enrich:isbn": "node --env-file=./src/.env src/scripts/enrichIsbn.js",
     "enrich:isbn:docker": "node src/scripts/enrichIsbn.js",
     "test": "cross-env NODE_ENV=test node --env-file=./src/.env.test --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
-    "test:unit": "cross-env NODE_ENV=test SECRET_KEY=unit-test-secret-key-with-32-chars-min node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand src/tests/unit src/tests/integration/cors.test.js"
+    "test:unit": "cross-env NODE_ENV=test SECRET_KEY=unit-test-secret-key-with-32-chars-min node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand src/tests/unit src/tests/integration/cors.test.js",
+    "worker": "node --env-file=./src/.env --watch src/worker.js",
+    "worker:local": "node --env-file=./src/.env.local --watch src/worker.js",
+    "worker:docker": "node src/worker.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

@@ -173,6 +173,14 @@ ADMIN_EMAIL=you@example.com             # receives review and profile photo repo
 
 To send as `@librishelf.com` without landing in spam, add the SPF and DKIM records your SMTP provider gives you to the domain's DNS (and ideally a DMARC record). Without `SMTP_HOST` nothing is sent: the email content, links included, goes to the server log — handy for local development.
 
+### Background jobs (worker)
+
+The `worker` service runs the job queue (table `librishelf.jobs`, consumed with `FOR UPDATE SKIP LOCKED`; no Redis): Pro expiry, releasing founder slots held by unpaid checkouts, cleanup, and — in later releases — payment reconciliation, emails, imports and backups. It uses the same image and `.env` as the backend; `docker compose up -d` starts both. Locally: `npm run worker` (or `worker:local`). More than one worker is fine: each job is taken by one only.
+
+```sh
+docker compose logs -f worker
+```
+
 ### Upgrading an existing installation
 
 ```sh

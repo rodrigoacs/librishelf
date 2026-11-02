@@ -1140,7 +1140,21 @@
     "PAYLOAD_TOO_LARGE": "The data sent is too large.",
     "ENCODING_UNSUPPORTED": "Unsupported request encoding.",
     "ROUTE_NOT_FOUND": "Address not found.",
-    "UPLOAD_INVALID": "Invalid upload. Check the files and try again."
+    "UPLOAD_INVALID": "Invalid upload. Check the files and try again.",
+    "PRO_REQUIRED": "This is a Pro feature. Your data stays saved and visible.",
+    "TRIAL_USED": "You have already used your free Pro trial.",
+    "TRIAL_ALREADY_PRO": "You already have Pro. Your trial stays available for later.",
+    "EMAIL_NOT_VERIFIED_TRIAL": "Confirm your email to start the free trial.",
+    "OFFER_INVALID": "Invalid offer.",
+    "OFFER_UNAVAILABLE": "This offer is not available.",
+    "OFFER_SOLD_OUT": "This offer is sold out.",
+    "ALREADY_LIFETIME": "You already have lifetime Pro.",
+    "EMAIL_NOT_VERIFIED_CHECKOUT": "Confirm your email to subscribe to Pro.",
+    "PAYMENTS_UNAVAILABLE": "Payments are unavailable right now.",
+    "PAYMENT_PROVIDER_ERROR": "We could not open the payment right now. Try again in a moment.",
+    "CHECKOUT_NOT_FOUND": "Purchase not found.",
+    "SUBSCRIPTION_ACTIVE": "You already have an active monthly subscription.",
+    "SUBSCRIPTION_NOT_FOUND": "You have no active monthly subscription."
   },
   "block": {
     "block": "Block {name}",
