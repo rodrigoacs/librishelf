@@ -137,7 +137,7 @@ function onUpdate(values) {
 .authors-input {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: var(--space-1);
   width: 100%;
   min-width: 0;
 }
@@ -163,9 +163,9 @@ function onUpdate(values) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   min-height: 3.25rem;
-  padding: 1.4rem 0.6rem 0.4rem;
+  padding: var(--space-6) var(--space-2) var(--space-2);
   cursor: text;
 }
 
@@ -173,7 +173,7 @@ function onUpdate(values) {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.15rem 0.2rem 0.15rem 0.65rem;
+  padding: 0.15rem 0.2rem 0.15rem var(--space-3);
   border-radius: var(--radius-pill);
   background-color: rgba(var(--main-color-rgb), 0.15);
   color: var(--text-primary);
@@ -209,7 +209,7 @@ function onUpdate(values) {
 .chips-input {
   flex: 1;
   min-width: 8rem;
-  padding: 0.1rem 0.3rem;
+  padding: 0.1rem var(--space-1);
   border: none;
   background: transparent;
   color: var(--text-primary);
@@ -251,7 +251,7 @@ function onUpdate(values) {
 .field-error {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   color: var(--red);
   font-size: var(--fs-xs);
   font-weight: 500;

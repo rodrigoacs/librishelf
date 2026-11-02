@@ -10,7 +10,7 @@
     >
       <h3
         id="reading-card-title"
-        class="rc-title"
+        class="section-title rc-title"
       >{{ t('readCard.title') }}</h3>
       <span
         class="rc-percent"
@@ -162,7 +162,7 @@ const readDateText = computed(() => {
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--bg-app);
 }
 
@@ -175,9 +175,6 @@ const readDateText = computed(() => {
 
 .rc-title {
   margin: 0;
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
 }
 
 .rc-percent {

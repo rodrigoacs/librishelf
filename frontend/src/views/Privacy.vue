@@ -1,22 +1,15 @@
 <template>
-  <div class="privacy-container">
+  <div class="page privacy-container">
+    <PageHeader
+      :title="t('privacy.title')"
+      :back="isAuthenticated ? '/settings' : '/login'"
+      :back-label="t('common.back')"
+    >
+      <template #subtitle>
+        <p class="updated">{{ t('privacy.updated', { date: updatedAt }) }}</p>
+      </template>
+    </PageHeader>
     <article class="privacy-article">
-      <router-link
-        :to="isAuthenticated ? '/settings' : '/login'"
-        class="back-link"
-      >
-        <i
-          class="pi pi-arrow-left"
-          aria-hidden="true"
-        ></i>
-        {{ t('common.back') }}
-      </router-link>
-
-      <PageHeader :title="t('privacy.title')">
-        <template #subtitle>
-          <p class="updated">{{ t('privacy.updated', { date: updatedAt }) }}</p>
-        </template>
-      </PageHeader>
       <p class="intro">{{ t('privacy.intro') }}</p>
 
       <section
@@ -68,44 +61,24 @@ const updatedAt = computed(() => {
 
 <style scoped>
 .privacy-container {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100%;
-  background-color: var(--bg-app);
-  display: flex;
-  justify-content: center;
+  /* Casca e recuo em .page (main.css) */
+  --page-max: 720px;
 }
 
 .privacy-article {
-  max-width: 720px;
   width: 100%;
   color: var(--text-primary);
   line-height: 1.65;
 }
 
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: var(--fs-md);
-  margin-bottom: 1.5rem;
-}
-
-.back-link:hover {
-  color: var(--main-color);
-}
-
 h2 {
   font-size: var(--fs-lg);
-  margin: 2rem 0 0.5rem 0;
+  margin: var(--space-7) 0 var(--space-2) 0;
 }
 
 p {
   color: var(--text-secondary);
-  margin: 0.5rem 0;
+  margin: var(--space-2) 0;
 }
 
 .updated {
@@ -125,9 +98,5 @@ a {
 }
 
 @media (max-width: 639.98px) {
-  .privacy-container {
-    padding: 1.25rem;
-  }
-
 }
 </style>

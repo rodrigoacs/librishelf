@@ -121,7 +121,7 @@ defineExpose({ toggle })
   inset: auto;
   margin: 0;
   min-width: 12rem;
-  padding: 0.35rem;
+  padding: var(--space-1);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-panel);
@@ -132,9 +132,9 @@ defineExpose({ toggle })
 .popup-item {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   width: 100%;
-  padding: 0.6rem 0.85rem;
+  padding: var(--space-2) var(--space-3);
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
@@ -168,7 +168,7 @@ defineExpose({ toggle })
 }
 
 .popup-separator {
-  margin: 0.3rem 0.4rem;
+  margin: var(--space-1) var(--space-2);
   border: none;
   border-top: 1px solid var(--border-color);
 }

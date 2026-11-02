@@ -68,8 +68,8 @@ async function resend() {
 .email-banner {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 1.25rem;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-5);
   background: rgba(var(--main-color-rgb), 0.1);
   border-bottom: 1px solid rgba(var(--main-color-rgb), 0.3);
   color: var(--text-primary);
@@ -100,7 +100,7 @@ async function resend() {
 
 @media (max-width: 639.98px) {
   .email-banner {
-    padding: 0.6rem 1rem;
+    padding: var(--space-2) var(--space-4);
     flex-wrap: wrap;
   }
 }

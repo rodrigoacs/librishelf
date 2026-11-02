@@ -42,7 +42,7 @@
       </table>
       <p
         v-if="loading"
-        class="empty"
+        class="empty-note"
         role="status"
       >{{ t('common.loading') }}</p>
       <EmptyState
@@ -55,7 +55,7 @@
       />
       <p
         v-else-if="actions.length === 0"
-        class="empty"
+        class="empty-note"
       >{{ t('admin.log.empty') }}</p>
     </div>
 
@@ -146,7 +146,7 @@ onMounted(load)
 .log {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .intro {
@@ -159,7 +159,7 @@ onMounted(load)
   max-width: 100%;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   overflow-x: auto;
 }
 
@@ -172,7 +172,7 @@ table {
 th,
 td {
   text-align: left;
-  padding: 0.7rem 0.9rem;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-color);
   vertical-align: top;
   color: var(--text-primary);
@@ -199,7 +199,7 @@ tbody tr:last-child td {
 .action {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
   font-weight: 600;
 }
 
@@ -223,18 +223,11 @@ tbody tr:last-child td {
   max-width: 40ch;
 }
 
-.empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem 1rem;
-  margin: 0;
-}
-
 .pager {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
 }

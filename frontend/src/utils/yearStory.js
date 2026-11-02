@@ -177,9 +177,18 @@ export async function drawYearStory(canvas, { year, covers, text }) {
 
   // Cabeçalho
   ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
-  ctx.font = `700 30px ${SANS}`
   ctx.letterSpacing = '6px'
-  ctx.fillText(text.kicker, PAD, 150)
+  if (text.kicker === 'LIBRISHELF') {
+    // Marca: LIBRI sem serifa + SHELF serifado, como no app
+    ctx.font = `800 30px ${SANS}`
+    ctx.fillText('LIBRI', PAD, 150)
+    const libriWidth = ctx.measureText('LIBRI').width
+    ctx.font = `700 30px ${SERIF}`
+    ctx.fillText('SHELF', PAD + libriWidth, 150)
+  } else {
+    ctx.font = `700 30px ${SANS}`
+    ctx.fillText(text.kicker, PAD, 150)
+  }
   ctx.letterSpacing = '0px'
 
   ctx.fillStyle = '#fff'

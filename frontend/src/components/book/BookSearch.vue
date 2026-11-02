@@ -244,7 +244,7 @@ defineExpose({ focus: () => field.value?.focus() })
 .book-search {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .search-spinner {
@@ -252,7 +252,7 @@ defineExpose({ focus: () => field.value?.focus() })
   align-items: center;
   justify-content: center;
   width: 34px;
-  margin-right: 0.35rem;
+  margin-right: var(--space-1);
   color: var(--text-secondary);
 }
 
@@ -279,9 +279,9 @@ defineExpose({ focus: () => field.value?.focus() })
 .result {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 0.65rem 0.75rem;
+  padding: var(--space-3) var(--space-3);
   border: none;
   background: transparent;
   color: inherit;
@@ -349,7 +349,7 @@ button.result:focus-visible {
 .meta {
   display: flex;
   flex-wrap: wrap;
-  column-gap: 0.5rem;
+  column-gap: var(--space-2);
   min-width: 0;
   font-size: var(--fs-xs);
   color: var(--text-muted);
@@ -357,7 +357,7 @@ button.result:focus-visible {
 
 .meta > span + span::before {
   content: '·';
-  margin-right: 0.5rem;
+  margin-right: var(--space-2);
 }
 
 .isbn {
@@ -380,13 +380,13 @@ button.result:focus-visible {
 .skeleton-text {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
   flex: 1;
 }
 
 .message {
   margin: 0;
-  padding: 0.85rem 1rem;
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-secondary);

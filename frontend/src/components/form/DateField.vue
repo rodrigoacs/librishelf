@@ -92,7 +92,7 @@ function onNativeInput(event) {
 .date-field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -123,7 +123,7 @@ function onNativeInput(event) {
   color: var(--text-primary);
   font: inherit;
   font-size: var(--fs-md);
-  padding: 1.45rem 2.5rem 0.5rem 0.9rem;
+  padding: var(--space-6) 2.5rem var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
 }
 
@@ -203,7 +203,7 @@ function onNativeInput(event) {
 .field-error {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   color: var(--red);
   font-size: var(--fs-xs);
   font-weight: 500;

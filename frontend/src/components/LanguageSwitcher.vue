@@ -42,7 +42,7 @@ const { t, locale } = useI18n()
 .lang-switcher {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--space-1);
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text-muted);

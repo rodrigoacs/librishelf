@@ -36,7 +36,7 @@
         class="card"
         aria-labelledby="sys-service"
       >
-        <h2 id="sys-service"><i
+        <h2 class="section-title" id="sys-service"><i
             class="pi pi-server"
             aria-hidden="true"
           ></i> {{ t('admin.system.service.title') }}</h2>
@@ -85,7 +85,7 @@
         class="card"
         aria-labelledby="sys-db"
       >
-        <h2 id="sys-db"><i
+        <h2 class="section-title" id="sys-db"><i
             class="pi pi-database"
             aria-hidden="true"
           ></i> {{ t('admin.system.db.title') }}</h2>
@@ -134,7 +134,7 @@
         class="card"
         aria-labelledby="sys-storage"
       >
-        <h2 id="sys-storage"><i
+        <h2 class="section-title" id="sys-storage"><i
             class="pi pi-images"
             aria-hidden="true"
           ></i> {{ t('admin.system.storage.title') }}</h2>
@@ -167,7 +167,7 @@
         class="card"
         aria-labelledby="sys-email"
       >
-        <h2 id="sys-email"><i
+        <h2 class="section-title" id="sys-email"><i
             class="pi pi-envelope"
             aria-hidden="true"
           ></i> {{ t('admin.system.email.title') }}</h2>
@@ -219,7 +219,7 @@
         class="card wide"
         aria-labelledby="sys-ol"
       >
-        <h2 id="sys-ol"><i
+        <h2 class="section-title" id="sys-ol"><i
             class="pi pi-book"
             aria-hidden="true"
           ></i> Open Library</h2>
@@ -266,7 +266,7 @@
         class="card"
         aria-labelledby="sys-limits"
       >
-        <h2 id="sys-limits"><i
+        <h2 class="section-title" id="sys-limits"><i
             class="pi pi-shield"
             aria-hidden="true"
           ></i> {{ t('admin.system.limits.title') }}</h2>
@@ -299,7 +299,7 @@
             </tr>
           </tbody>
         </table>
-        <h3>{{ t('admin.system.limits.ips') }}</h3>
+        <h3 class="section-title">{{ t('admin.system.limits.ips') }}</h3>
         <p
           v-if="!data.rateLimits.topIps.length"
           class="muted"
@@ -325,7 +325,7 @@
         class="card wide"
         aria-labelledby="sys-errors"
       >
-        <h2 id="sys-errors"><i
+        <h2 class="section-title" id="sys-errors"><i
             class="pi pi-exclamation-triangle"
             aria-hidden="true"
           ></i> {{ t('admin.system.errors.title') }}</h2>
@@ -481,31 +481,31 @@ onMounted(load)
 .system {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .toolbar {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: start;
 }
 
 .card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem 1.5rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -515,35 +515,31 @@ onMounted(load)
 
 h2 {
   margin: 0;
-  font-size: var(--fs-lg);
-  color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 h2 .pi {
   color: var(--text-secondary);
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
 }
 
 h3 {
-  margin: 0.5rem 0 0;
-  font-size: var(--fs-md);
-  color: var(--text-primary);
+  margin: var(--space-2) 0 0;
 }
 
 dl {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 dl div {
   display: grid;
   grid-template-columns: minmax(120px, 40%) 1fr;
-  gap: 0.75rem;
+  gap: var(--space-3);
   font-size: var(--fs-sm);
 }
 
@@ -578,8 +574,8 @@ dd {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.75rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -617,7 +613,7 @@ dd {
 .ol-layout {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(0, 1.4fr);
-  gap: 1.5rem;
+  gap: var(--space-6);
   align-items: center;
 }
 
@@ -635,7 +631,7 @@ table {
 th,
 td {
   text-align: left;
-  padding: 0.45rem 0.4rem;
+  padding: var(--space-2) var(--space-2);
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
   font-weight: 400;
@@ -680,20 +676,14 @@ tbody tr:last-child td {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
   font-size: var(--fs-sm);
 }
 
 .ips li {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
-}
-
-.empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem 1rem;
 }
 
 @media (max-width: 1023.98px) {

@@ -46,7 +46,7 @@
         class="reports"
         :aria-label="t('moderation.reports')"
       >
-        <h2>{{ t('moderation.reportsCount', { n: data.reports.length }, data.reports.length) }}</h2>
+        <h2 class="section-title">{{ t('moderation.reportsCount', { n: data.reports.length }, data.reports.length) }}</h2>
         <ul>
           <li
             v-for="(report, index) in data.reports"
@@ -117,7 +117,7 @@
         class="reports"
         :aria-label="t('moderation.reports')"
       >
-        <h2>{{ t('moderation.reportsCount', { n: data.reports.length }, data.reports.length) }}</h2>
+        <h2 class="section-title">{{ t('moderation.reportsCount', { n: data.reports.length }, data.reports.length) }}</h2>
         <ul>
           <li
             v-for="(report, index) in data.reports"
@@ -248,9 +248,9 @@ onMounted(async () => {
 .state {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 1rem;
-  padding: 0.6rem 0.8rem;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -269,7 +269,7 @@ onMounted(async () => {
 .review-box {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
   text-align: left;
 }
 
@@ -301,22 +301,18 @@ onMounted(async () => {
 }
 
 .reports {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
   text-align: left;
 }
 
 .reports h2 {
-  margin: 0 0 0.5rem;
-  font-size: var(--fs-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
+  margin: 0 0 var(--space-2);
 }
 
 .reports ul {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -326,8 +322,8 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.25rem 0.6rem;
-  padding: 0.6rem 0.75rem;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
 }
@@ -352,7 +348,7 @@ onMounted(async () => {
 }
 
 .auth-form {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
 }
 
 .hint {

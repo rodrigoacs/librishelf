@@ -67,10 +67,10 @@ const { t } = useI18n()
 .list-card {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  padding: 1rem;
+  gap: var(--space-3);
+  padding: var(--space-4);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
   color: var(--text-primary);
   text-decoration: none;
@@ -128,7 +128,7 @@ const { t } = useI18n()
 .info {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -144,7 +144,7 @@ const { t } = useI18n()
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 0.75rem;
+  gap: var(--space-1) var(--space-3);
   font-size: var(--fs-sm);
   color: var(--text-secondary);
 }
@@ -152,7 +152,7 @@ const { t } = useI18n()
 .visibility {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--space-1);
 }
 
 .visibility .pi {

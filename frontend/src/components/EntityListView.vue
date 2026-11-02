@@ -5,28 +5,23 @@
       :subtitle="t(`${i18nKey}.subtitle`)"
       divider
     >
+      <template #after-title>
+        <AppSkeleton
+          v-if="loading"
+          width="5rem"
+          height="1.2rem"
+        />
+        <span
+          v-else-if="!loadError"
+          class="count-badge"
+        >{{ t(`${i18nKey}.total`, { n: items.length }, items.length) }}</span>
+      </template>
       <template #actions>
-      <div
-        class="search-wrapper"
-        role="search"
-      >
-        <i
-          class="pi pi-search"
-          aria-hidden="true"
-        ></i>
-        <label
-          :for="`${i18nKey}-search`"
-          class="sr-only"
-        >{{ t(`${i18nKey}.search_ph`) }}</label>
-        <input
+        <SearchField
           :id="`${i18nKey}-search`"
           v-model="search"
-          type="search"
           :placeholder="t(`${i18nKey}.search_ph`)"
-          class="modern-input"
-          autocomplete="off"
         />
-      </div>
       </template>
     </PageHeader>
 
@@ -36,17 +31,6 @@
       v-if="loading || (!loadError && items.length)"
       class="toolbar"
     >
-      <AppSkeleton
-        v-if="loading"
-        class="total"
-        width="6rem"
-        height="1.2rem"
-      />
-      <span
-        v-else
-        class="total"
-      >{{ t(`${i18nKey}.total`, { n: items.length }, items.length) }}</span>
-
       <div
         class="sort-group"
         role="group"
@@ -56,7 +40,7 @@
           v-for="option in sortOptions"
           :key="option.value"
           type="button"
-          class="pill"
+          class="pill-button"
           :class="{ active: sortBy === option.value }"
           :aria-pressed="sortBy === option.value"
           :disabled="loading"
@@ -66,7 +50,7 @@
 
       <button
         type="button"
-        class="pill merge-toggle"
+        class="pill-button merge-toggle"
         :class="{ active: merging }"
         :aria-pressed="merging"
         :disabled="loading"
@@ -262,7 +246,7 @@
           >
             <button
               type="button"
-              class="pill"
+              class="pill-button"
               :class="{ active: nameDialog.to === name }"
               @click="nameDialog.to = name"
             >{{ name }}</button>
@@ -278,7 +262,7 @@
         />
         <p
           v-if="mergeTarget"
-          class="name-warning"
+          class="notice"
         >
           <i
             class="pi pi-info-circle"
@@ -325,6 +309,7 @@ import AppSkeleton from './ui/AppSkeleton.vue'
 import EmptyState from './ui/EmptyState.vue'
 import AddBookDialog from './AddBookDialog.vue'
 import api from '../services/api.js'
+import SearchField from './ui/SearchField.vue'
 
 /**
  * Tela de lista usada por Autores, Editoras e Tags (antes eram três arquivos
@@ -490,90 +475,27 @@ onMounted(load)
   max-width: 760px;
 }
 
-.search-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.search-wrapper i {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-
-.modern-input {
-  width: 100%;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  padding: 0.8rem 1rem 0.8rem 2.5rem;
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-size: var(--fs-md);
-  transition: all 0.2s;
-}
-
-.modern-input:focus {
-  border-color: var(--main-color);
-  outline: none;
-  background-color: var(--bg-panel);
-}
-
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 0.75rem 1rem;
+  gap: var(--space-3) var(--space-4);
   flex-wrap: wrap;
   margin: 0 0 var(--space-6);
 }
 
-.total {
-  color: var(--text-secondary);
-  font-size: var(--fs-md);
-  margin-right: auto;
-}
-
 .sort-group {
   display: inline-flex;
-  gap: 0.35rem;
+  gap: var(--space-1);
   flex-wrap: wrap;
 }
 
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-color);
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pill:hover {
-  color: var(--text-primary);
-  border-color: var(--main-color);
-}
-
-.pill.active {
-  background: var(--main-solid);
-  border-color: var(--main-solid);
-  color: var(--on-main);
-}
-
-.pill:focus-visible,
 .rename-btn:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }
 
 .merge-help {
-  margin: -0.75rem 0 1.25rem;
+  margin: -0.75rem 0 var(--space-5);
   color: var(--text-secondary);
   font-size: var(--fs-md);
 }
@@ -619,7 +541,7 @@ button.entity-card {
 .read-bar {
   display: block;
   height: 4px;
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--bg-hover);
   overflow: hidden;
@@ -675,12 +597,12 @@ button.entity-card {
   position: sticky;
   bottom: 1rem;
   z-index: 50;
-  margin: 1.5rem auto 0;
+  margin: var(--space-6) auto 0;
   width: fit-content;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.6rem 0.75rem 0.6rem 1.1rem;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
   border-radius: var(--radius-lg);
   background: var(--bg-panel);
   border: 1px solid rgba(var(--main-color-rgb), 0.45);
@@ -692,7 +614,7 @@ button.entity-card {
 .name-form {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .name-form label,
@@ -708,14 +630,14 @@ button.entity-card {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .plain-input {
   width: 100%;
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
-  padding: 0.7rem 0.9rem;
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font: inherit;
@@ -726,23 +648,11 @@ button.entity-card {
   outline: none;
 }
 
-.name-warning {
-  margin: 0;
-  display: flex;
-  gap: 0.4rem;
-  align-items: flex-start;
-  font-size: var(--fs-sm);
-  color: var(--text-primary);
-  background: rgba(var(--main-color-rgb), 0.1);
-  border-radius: var(--radius-md);
-  padding: 0.6rem 0.75rem;
-}
-
 .name-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .entity-grid {
@@ -751,18 +661,18 @@ button.entity-card {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .entity-card {
   --accent-color: var(--main-color);
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
+  border-radius: var(--card-radius);
+  padding: var(--space-4);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;

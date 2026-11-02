@@ -401,14 +401,14 @@ async function remove(item) {
 .reading-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 .again {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .count-note {
@@ -424,8 +424,8 @@ async function remove(item) {
 .history summary {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
   list-style: none;
   font-size: var(--fs-sm);
@@ -449,7 +449,7 @@ async function remove(item) {
 
 .badge {
   min-width: 1.4rem;
-  padding: 0 0.4rem;
+  padding: 0 var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--bg-input);
   color: var(--text-secondary);
@@ -472,8 +472,8 @@ async function remove(item) {
 .history-body {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0 1rem 0.85rem;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-3);
 }
 
 .readings {
@@ -488,8 +488,8 @@ async function remove(item) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.6rem 0;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
   border-top: 1px solid var(--border-color);
 }
 
@@ -543,8 +543,8 @@ async function remove(item) {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.1rem;
+  gap: var(--space-1);
+  padding: var(--space-1) 0.1rem;
   border: none;
   background: none;
   color: var(--main-color);

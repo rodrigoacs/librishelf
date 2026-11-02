@@ -250,16 +250,16 @@ async function toggleLike() {
 .review-card {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.9rem 1rem;
+  gap: var(--space-2);
+  padding: var(--space-4);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
   min-width: 0;
 }
 
 .review-card.flat {
-  padding: 0.25rem 0 0;
+  padding: var(--space-1) 0 0;
   border: none;
   border-radius: 0;
   background: none;
@@ -269,20 +269,20 @@ async function toggleLike() {
 .review-head {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .who {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .author {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -327,14 +327,14 @@ async function toggleLike() {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.1rem 0.5rem;
+  gap: var(--space-1);
+  padding: 0.1rem var(--space-2);
   border-radius: var(--radius-pill);
   background: rgba(var(--main-color-rgb), 0.12);
   color: var(--main-color);
@@ -386,8 +386,8 @@ async function toggleLike() {
   height: fit-content;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.9rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border-hover);
   border-radius: var(--radius-pill);
   background: var(--bg-panel);
@@ -407,7 +407,7 @@ async function toggleLike() {
 .review-foot {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
   min-height: 2rem;
 }
 
@@ -416,7 +416,7 @@ async function toggleLike() {
 }
 
 .text-btn {
-  padding: 0.25rem 0;
+  padding: var(--space-1) 0;
   border: none;
   background: none;
   color: var(--main-color);
@@ -436,10 +436,10 @@ async function toggleLike() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   min-width: 2rem;
   height: 2rem;
-  padding: 0 0.5rem;
+  padding: 0 var(--space-2);
   border: none;
   border-radius: var(--radius-pill);
   background: none;
@@ -472,8 +472,8 @@ async function toggleLike() {
 .like-count {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0 0.5rem;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
   font-size: var(--fs-sm);
   color: var(--text-muted);
 }

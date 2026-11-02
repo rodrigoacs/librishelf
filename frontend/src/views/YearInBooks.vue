@@ -1,39 +1,39 @@
 <template>
-  <div class="year-page">
-    <div class="year-content">
-      <PageHeader
-        :title="t('year.title', { year })"
-        :subtitle="data?.isCurrentYear ? t('year.soFar', { date: todayLabel }) : ''"
-        divider
+  <div class="page year-page">
+    <PageHeader
+      :title="t('year.title', { year })"
+      :subtitle="data?.isCurrentYear ? t('year.soFar', { date: todayLabel }) : ''"
+      divider
+    >
+      <template #kicker>
+        <p class="kicker">
+          <i
+            class="pi pi-sparkles"
+            aria-hidden="true"
+          ></i>
+          {{ t('year.kicker') }}
+        </p>
+      </template>
+      <template
+        v-if="years.length > 1"
+        #actions
       >
-        <template #kicker>
-          <p class="kicker">
-            <i
-              class="pi pi-sparkles"
-              aria-hidden="true"
-            ></i>
-            {{ t('year.kicker') }}
-          </p>
-        </template>
-        <template
-          v-if="years.length > 1"
-          #actions
-        >
-        <nav
-          class="years"
-          :aria-label="t('year.chooseYear')"
-        >
-          <router-link
-            v-for="option in years"
-            :key="option"
-            :to="{ name: 'year', params: { year: option } }"
-            class="year-pill"
-            :class="{ active: option === year }"
-            :aria-current="option === year ? 'page' : undefined"
-          >{{ option }}</router-link>
-        </nav>
-        </template>
-      </PageHeader>
+      <nav
+        class="years"
+        :aria-label="t('year.chooseYear')"
+      >
+        <router-link
+          v-for="option in years"
+          :key="option"
+          :to="{ name: 'year', params: { year: option } }"
+          class="pill-button"
+          :class="{ active: option === year }"
+          :aria-current="option === year ? 'page' : undefined"
+        >{{ option }}</router-link>
+      </nav>
+      </template>
+    </PageHeader>
+    <div class="year-content">
 
       <div
         v-if="loading"
@@ -76,24 +76,24 @@
           class="hero"
           :aria-label="t('year.summary')"
         >
-          <div class="hero-card main">
-            <span class="hero-value">{{ formatNumber(data.totals.readings) }}</span>
-            <span class="hero-label">{{ t('year.booksRead', data.totals.readings) }}</span>
+          <div class="hero-card">
+            <span class="hero-value stat-value">{{ formatNumber(data.totals.readings) }}</span>
+            <span class="hero-label stat-label">{{ t('year.booksRead', data.totals.readings) }}</span>
             <span
               v-if="data.totals.rereads"
-              class="hero-note"
+              class="hero-note stat-note"
             >{{ t('year.rereads', { n: data.totals.rereads }, data.totals.rereads) }}</span>
           </div>
           <div class="hero-card">
-            <span class="hero-value">{{ formatNumber(data.totals.pages) }}</span>
-            <span class="hero-label">{{ t('year.pages', data.totals.pages) }}</span>
+            <span class="hero-value stat-value">{{ formatNumber(data.totals.pages) }}</span>
+            <span class="hero-label stat-label">{{ t('year.pages', data.totals.pages) }}</span>
             <span
               v-if="data.totals.pagesMissing"
-              class="hero-note"
+              class="hero-note stat-note"
             >{{ t('year.pagesMissing', { n: data.totals.pagesMissing }, data.totals.pagesMissing) }}</span>
           </div>
           <div class="hero-card">
-            <span class="hero-value">
+            <span class="hero-value stat-value">
               <template v-if="data.totals.averageRating">
                 {{ formatDecimal(data.totals.averageRating) }}<i
                   class="pi pi-star-fill star"
@@ -102,16 +102,16 @@
               </template>
               <template v-else>—</template>
             </span>
-            <span class="hero-label">{{ t('year.averageRating') }}</span>
+            <span class="hero-label stat-label">{{ t('year.averageRating') }}</span>
             <span
               v-if="data.totals.rated"
-              class="hero-note"
+              class="hero-note stat-note"
             >{{ t('year.ratedCount', { n: data.totals.rated }, data.totals.rated) }}</span>
           </div>
           <div class="hero-card">
-            <span class="hero-value">{{ compareValue }}</span>
-            <span class="hero-label">{{ t('year.vsLast', { year: year - 1 }) }}</span>
-            <span class="hero-note">{{ t('year.lastYearCount', { n: data.previousYear }, data.previousYear) }}</span>
+            <span class="hero-value stat-value">{{ compareValue }}</span>
+            <span class="hero-label stat-label">{{ t('year.vsLast', { year: year - 1 }) }}</span>
+            <span class="hero-note stat-note">{{ t('year.lastYearCount', { n: data.previousYear }, data.previousYear) }}</span>
           </div>
         </section>
 
@@ -121,7 +121,7 @@
           class="panel goal"
         >
           <div class="goal-head">
-            <h2>{{ t('year.goalTitle') }}</h2>
+            <h2 class="section-title">{{ t('year.goalTitle') }}</h2>
             <span class="goal-numbers">{{ t('year.goalProgress', { done: data.goal.done, target: data.goal.target }) }}</span>
           </div>
           <div
@@ -139,7 +139,7 @@
 
         <!-- Mês a mês -->
         <section class="panel">
-          <h2>{{ t('year.byMonth') }}</h2>
+          <h2 class="section-title">{{ t('year.byMonth') }}</h2>
           <p
             v-if="data.busiestMonth"
             class="panel-sub"
@@ -171,7 +171,7 @@
           class="panel"
         >
           <div class="panel-head">
-            <h2>{{ t('year.topRated') }}</h2>
+            <h2 class="section-title">{{ t('year.topRated') }}</h2>
             <AppButton
               :label="t('year.makeList')"
               icon="pi pi-list"
@@ -218,7 +218,7 @@
             v-if="data.authors.length || data.tags.length"
             class="panel"
           >
-            <h2>{{ t('year.authorsTitle') }}</h2>
+            <h2 class="section-title">{{ t('year.authorsTitle') }}</h2>
             <ol class="rank-list">
               <li
                 v-for="author in data.authors"
@@ -229,7 +229,7 @@
               </li>
             </ol>
             <template v-if="data.tags.length">
-              <h2 class="sub">{{ t('year.tagsTitle') }}</h2>
+              <h2 class="section-title sub">{{ t('year.tagsTitle') }}</h2>
               <div class="tags">
                 <span
                   v-for="tag in data.tags"
@@ -243,7 +243,7 @@
 
           <!-- Recordes -->
           <section class="panel">
-            <h2>{{ t('year.records') }}</h2>
+            <h2 class="section-title">{{ t('year.records') }}</h2>
             <dl class="records">
               <template
                 v-for="record in records"
@@ -523,24 +523,20 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .year-page {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
+  /* Casca e recuo em .page (main.css) */
+  --page-max: 1000px;
 }
 
 .year-content {
-  max-width: 1000px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .kicker {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
   margin: 0;
   color: var(--main-color);
   font-size: var(--fs-sm);
@@ -549,92 +545,42 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
 }
 
-/* 2rem até o conteúdo, contando o gap de 1.25rem do .year-content */
-.year-content > .page-header {
-  margin-bottom: 0.75rem;
-}
-
-.year-content > .page-header :deep(.page-header-actions) {
+.year-page > .page-header :deep(.page-header-actions) {
   min-width: 0;
   max-width: 100%;
 }
 
 .years {
   display: flex;
-  gap: 0.4rem;
+  gap: var(--space-2);
   overflow-x: auto;
   max-width: 100%;
   padding: 0.2rem;
   scrollbar-width: thin;
 }
 
-.year-pill {
-  flex-shrink: 0;
-  padding: 0.35rem 0.85rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  text-decoration: none;
-}
-
-.year-pill:hover {
-  border-color: var(--border-hover);
-  color: var(--text-primary);
-}
-
-.year-pill.active {
-  border-color: transparent;
-  background: var(--main-solid);
-  color: var(--on-main);
-}
-
-.year-pill:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-
 .skeletons {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 /* Números grandes */
 .hero {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .hero-card {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 1.1rem 1.25rem;
+  gap: var(--space-1);
+  padding: var(--card-pad);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
   min-width: 0;
-}
-
-.hero-card.main {
-  border-color: transparent;
-  background: linear-gradient(135deg, rgba(var(--main-solid-rgb), 1), rgba(var(--main-solid-rgb), 0.72));
-  color: var(--on-main);
-}
-
-.hero-value {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.25rem;
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  font-weight: 700;
-  line-height: 1.05;
-  font-variant-numeric: tabular-nums;
 }
 
 .hero-value .star {
@@ -642,54 +588,29 @@ onBeforeUnmount(() => {
   color: var(--rating);
 }
 
-.hero-label {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-}
-
-.hero-card:not(.main) .hero-label {
-  color: var(--text-secondary);
-}
-
-.hero-note {
-  font-size: var(--fs-xs);
-  opacity: 0.85;
-}
-
-.hero-card:not(.main) .hero-note {
-  color: var(--text-muted);
-  /* text-muted já está no limite (5,7:1); com a transparência caía para 4,1 */
-  opacity: 1;
-}
-
 /* Painéis */
 .panel {
-  padding: 1.25rem 1.4rem;
+  padding: var(--card-pad);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
   min-width: 0;
 }
 
 .panel h2 {
-  margin: 0 0 0.75rem;
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
+  margin: 0 0 var(--space-3);
 }
 
 .panel h2.sub {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
 }
 
 .panel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
 .panel-head h2 {
@@ -697,7 +618,7 @@ onBeforeUnmount(() => {
 }
 
 .panel-sub {
-  margin: -0.4rem 0 1rem;
+  margin: -0.4rem 0 var(--space-4);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
 }
@@ -711,7 +632,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .goal-numbers {
@@ -734,7 +655,7 @@ onBeforeUnmount(() => {
 }
 
 .goal-note {
-  margin: 0.6rem 0 0;
+  margin: var(--space-2) 0 0;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
 }
@@ -744,7 +665,7 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   align-items: end;
-  gap: 0.4rem;
+  gap: var(--space-2);
   height: 11rem;
   margin: 0;
   padding: 0;
@@ -756,7 +677,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.3rem;
+  gap: var(--space-1);
   height: 100%;
   min-width: 0;
 }
@@ -794,7 +715,7 @@ onBeforeUnmount(() => {
 .top-books {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -805,7 +726,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.4rem;
+  gap: var(--space-2);
   width: 100%;
   padding: 0;
   border: none;
@@ -865,13 +786,13 @@ onBeforeUnmount(() => {
 .two-cols {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .rank-list {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -880,7 +801,7 @@ onBeforeUnmount(() => {
 .rank-list li {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   font-size: var(--fs-md);
 }
 
@@ -894,11 +815,11 @@ onBeforeUnmount(() => {
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .tag {
-  padding: 0.25rem 0.65rem;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--tag-color) 45%, transparent);
   background: color-mix(in srgb, var(--tag-color) 12%, transparent);
@@ -915,7 +836,7 @@ onBeforeUnmount(() => {
 .records {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.55rem 1rem;
+  gap: var(--space-2) var(--space-4);
   margin: 0;
   font-size: var(--fs-md);
 }
@@ -968,7 +889,7 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 2rem;
+  gap: var(--space-7);
 }
 
 .story-preview {
@@ -1004,11 +925,11 @@ onBeforeUnmount(() => {
 }
 
 .story-text h2 {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
 .story-text p {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--space-4);
   color: var(--text-secondary);
   line-height: 1.5;
 }
@@ -1016,8 +937,8 @@ onBeforeUnmount(() => {
 .story-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .story-text .story-note {
@@ -1044,25 +965,17 @@ onBeforeUnmount(() => {
 
   .top-books {
     grid-template-columns: repeat(auto-fill, minmax(5.25rem, 1fr));
-    gap: 0.85rem 0.75rem;
+    gap: var(--space-3) var(--space-3);
   }
 }
 
 @media (max-width: 639.98px) {
-  .year-page {
-    padding: 1.25rem;
-  }
-
-  .hero-value {
-    font-size: var(--fs-2xl);
-  }
-
   .hero-card {
-    padding: 0.9rem 1rem;
+    padding: var(--space-4) var(--space-4);
   }
 
   .panel {
-    padding: 1.1rem;
+    padding: var(--space-4);
   }
 
   .months {

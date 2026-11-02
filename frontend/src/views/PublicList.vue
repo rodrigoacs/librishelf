@@ -1,20 +1,43 @@
 <template>
-  <div class="public-list-page">
-    <div class="public-list-content">
-      <div class="top">
-        <router-link
-          to="/"
-          class="brand"
-        >
-          <img
-            src="/bookshelf.png"
-            alt=""
-            width="28"
-            height="28"
-          />
-          <span>LIBRISHELF</span>
-        </router-link>
+  <div class="page public-list-page">
+    <PublicBar />
+    <PageHeader
+      v-if="list"
+      :title="list.title"
+    >
+      <template #kicker>
+      <router-link
+        :to="{ name: 'public-library', params: { username } }"
+        class="owner"
+      >
+        <ReaderAvatar
+          :username="list.owner.username"
+          :avatar="list.owner.avatarVersion ?? null"
+          size="sm"
+        />
+        <span>{{ t('lists.byOwner', { name: list.owner.username }) }}</span>
+      </router-link>
+      </template>
+      <template #subtitle>
+        <p
+          v-if="list.description"
+          class="description"
+        >{{ list.description }}</p>
+      </template>
+      <div class="meta-row">
+        <span class="meta">
+          {{ t('lists.count', { n: list.items.length }, list.items.length) }}
+          · {{ t('lists.updatedOn', { date: formatDate(list.updatedAt) }) }}
+        </span>
+        <AppButton
+          :label="t('lists.share')"
+          icon="pi pi-share-alt"
+          class="btn-outlined btn-secondary btn-sm"
+          @click="share"
+        />
       </div>
+    </PageHeader>
+    <div class="public-list-content">
 
       <div
         v-if="loading"
@@ -59,42 +82,6 @@
       />
 
       <template v-else-if="list">
-        <PageHeader
-          :title="list.title"
-          divider
-        >
-          <template #kicker>
-          <router-link
-            :to="{ name: 'public-library', params: { username } }"
-            class="owner"
-          >
-            <ReaderAvatar
-              :username="list.owner.username"
-              :avatar="list.owner.avatarVersion ?? null"
-              size="sm"
-            />
-            <span>{{ t('lists.byOwner', { name: list.owner.username }) }}</span>
-          </router-link>
-          </template>
-          <template #subtitle>
-            <p
-              v-if="list.description"
-              class="description"
-            >{{ list.description }}</p>
-          </template>
-          <div class="meta-row">
-            <span class="meta">
-              {{ t('lists.count', { n: list.items.length }, list.items.length) }}
-              · {{ t('lists.updatedOn', { date: formatDate(list.updatedAt) }) }}
-            </span>
-            <AppButton
-              :label="t('lists.share')"
-              icon="pi pi-share-alt"
-              class="btn-outlined btn-secondary btn-sm"
-              @click="share"
-            />
-          </div>
-        </PageHeader>
 
         <ol class="items">
           <li
@@ -136,6 +123,7 @@
 
 <script setup>
 import PageHeader from '../components/ui/PageHeader.vue'
+import PublicBar from '../components/PublicBar.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -224,46 +212,20 @@ onBeforeUnmount(() => setOverlayTitle(''))
 
 <style scoped>
 .public-list-page {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
-}
-
-.public-list-content {
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-.top {
-  margin-bottom: 2rem;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  font-size: var(--fs-sm);
-}
-
-.brand:hover {
-  color: var(--text-primary);
+  /* Casca e recuo em .page (main.css) */
+  --page-max: 760px;
 }
 
 .skeletons {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .owner {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   width: fit-content;
   color: var(--text-secondary);
   font-size: var(--fs-sm);
@@ -287,7 +249,7 @@ onBeforeUnmount(() => setOverlayTitle(''))
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.5rem 1rem;
+  gap: var(--space-2) var(--space-4);
 }
 
 .meta {
@@ -298,21 +260,21 @@ onBeforeUnmount(() => setOverlayTitle(''))
 .items {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .item {
-  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-panel);
 }
 
 .cta {
-  margin: 2rem 0 0;
+  margin: var(--space-7) 0 0;
   text-align: center;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
@@ -323,9 +285,5 @@ onBeforeUnmount(() => setOverlayTitle(''))
 }
 
 @media (max-width: 639.98px) {
-  .public-list-page {
-    padding: 1.25rem;
-  }
-
 }
 </style>

@@ -204,14 +204,14 @@ async function submit() {
 .list-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .suggestions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
   margin-top: -0.4rem;
 }
 
@@ -221,7 +221,7 @@ async function submit() {
 }
 
 .suggestion {
-  padding: 0.3rem 0.7rem;
+  padding: var(--space-1) var(--space-3);
   border: 1px dashed var(--border-hover);
   border-radius: var(--radius-pill);
   background: none;
@@ -244,14 +244,14 @@ async function submit() {
 .toggle-block {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 .toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .toggle-row label {
@@ -267,28 +267,6 @@ async function submit() {
   color: var(--text-secondary);
 }
 
-.notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-md);
-  background: rgba(var(--main-color-rgb), 0.08);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  line-height: 1.45;
-}
-
-.notice .pi {
-  margin-top: 0.15rem;
-  color: var(--main-color);
-}
-
-.notice a {
-  color: var(--main-color);
-}
-
 .error {
   color: var(--red);
   font-size: var(--fs-sm);
@@ -298,6 +276,6 @@ async function submit() {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 </style>

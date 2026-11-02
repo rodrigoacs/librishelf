@@ -145,7 +145,7 @@
         v-if="community.reviews?.length"
         class="community-reviews"
       >
-        <h3>{{ t('review.fromReaders', { n: community.reviews.length }, community.reviews.length) }}</h3>
+        <h3 class="section-title">{{ t('review.fromReaders', { n: community.reviews.length }, community.reviews.length) }}</h3>
         <ReviewCard
           v-for="item in shownReviews"
           :key="item.id"
@@ -243,19 +243,16 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 .community-reviews {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .community-reviews h3 {
   margin: 0;
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
 }
 
 .more-reviews {
   align-self: flex-start;
-  padding: 0.35rem 0.1rem;
+  padding: var(--space-1) 0.1rem;
   border: none;
   background: none;
   color: var(--main-color);
@@ -279,17 +276,17 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 /* Comunidade recolhida */
 .community-section {
   border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
+  padding-top: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .muted-line {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   color: var(--text-secondary);
   font-size: var(--fs-md);
 }
@@ -297,11 +294,11 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 .community-toggle {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   width: 100%;
   background: none;
   border: none;
-  padding: 0.35rem 0;
+  padding: var(--space-1) 0;
   font: inherit;
   color: var(--text-primary);
   cursor: pointer;
@@ -328,7 +325,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 }
 
 .avg-rating {
-  margin-left: 0.5rem;
+  margin-left: var(--space-2);
   color: var(--text-secondary);
   white-space: nowrap;
 }
@@ -357,7 +354,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 .community-panel {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .community-hint a {
@@ -386,7 +383,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
   min-height: 64px;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
   color: var(--text-primary);
   font: inherit;
@@ -454,7 +451,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 
 .sheet-eyebrow {
   margin: 0;
-  padding-right: 3rem;
+  padding-right: var(--space-8);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
 }
@@ -466,7 +463,7 @@ watch(() => props.bookId, loadCommunity, { immediate: true })
 
 .sheet-title {
   margin: 0;
-  padding-right: 3rem;
+  padding-right: var(--space-8);
   font-size: var(--fs-xl);
   line-height: 1.2;
 }

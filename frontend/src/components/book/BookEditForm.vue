@@ -843,8 +843,8 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
   overflow-y: auto;
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
-  gap: 2rem;
-  padding: 1.5rem 2.25rem;
+  gap: var(--space-7);
+  padding: var(--space-6) var(--space-7);
 }
 
 .cover-column {
@@ -856,14 +856,14 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 .fields-column {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: var(--space-4);
   min-width: 0;
 }
 
 /* Título fora da área que rola, com espaço para o X do canto */
 .form-header {
   flex-shrink: 0;
-  padding: 1.5rem 4rem 1rem 2.25rem;
+  padding: var(--space-6) 4rem var(--space-4) var(--space-7);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -877,7 +877,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 }
 
 .form-header p {
-  margin: 0.35rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--text-secondary);
   font-size: var(--fs-md);
 }
@@ -885,20 +885,20 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 .isbn-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: start;
 }
 
 .finder-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
   margin-bottom: -0.35rem;
 }
 
 .scan-btn {
   display: inline-flex;
-  margin-right: 0.35rem;
+  margin-right: var(--space-1);
 }
 
 .isbn-row.single {
@@ -912,12 +912,12 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 
 .form-group {
   border: none;
-  margin: 0.5rem 0 0;
-  padding: 1.1rem 0 0;
+  margin: var(--space-2) 0 0;
+  padding: var(--space-4) 0 0;
   border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
   min-width: 0;
 }
 
@@ -934,30 +934,30 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 .grid-2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .grid-series {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .status-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .status-caption {
-  margin: 0.45rem 0 0;
+  margin: var(--space-2) 0 0;
   font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
 .inline-error {
   display: block;
-  margin-top: 0.3rem;
+  margin-top: var(--space-1);
   color: var(--red);
   font-size: var(--fs-xs);
 }
@@ -967,8 +967,8 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
   flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 0.9rem 2.25rem;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-7);
   border-top: 1px solid var(--border-color);
   background: var(--bg-panel);
 }
@@ -980,8 +980,8 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 @media (max-width: 1023.98px) {
   .form-scroll {
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.25rem;
-    padding: 1.25rem 1.25rem 1rem;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-5) var(--space-4);
   }
 
   /* Capa compacta no topo: o formulário começa logo abaixo */
@@ -990,7 +990,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
   }
 
   .form-header {
-    padding: 1rem 3.75rem 0.85rem 1.25rem;
+    padding: var(--space-4) 3.75rem var(--space-3) var(--space-5);
   }
 
   .form-header h2 {
@@ -1100,7 +1100,7 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
   .isbn-found {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: var(--space-1);
     margin-right: var(--space-1);
     color: var(--success-strong, var(--success));
     font-size: var(--fs-sm);

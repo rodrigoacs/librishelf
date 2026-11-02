@@ -133,7 +133,7 @@ async function submit() {
 .report-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .intro {
@@ -146,7 +146,7 @@ async function submit() {
 .reasons {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   border: none;
@@ -155,9 +155,9 @@ async function submit() {
 .reason {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   min-height: 2.75rem;
-  padding: 0 0.85rem;
+  padding: 0 var(--space-3);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -188,7 +188,7 @@ async function submit() {
 .note-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .note-label {
@@ -199,7 +199,7 @@ async function submit() {
 .note {
   width: 100%;
   resize: vertical;
-  padding: 0.6rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-input);
@@ -230,6 +230,6 @@ async function submit() {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 </style>

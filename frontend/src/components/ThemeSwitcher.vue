@@ -51,10 +51,10 @@ const { currentTheme, accentColor, toggleTheme, setAccent, availableColors } = u
 .theme-switcher {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   background-color: transparent;
   border: 1px solid transparent;
-  padding: 0.25rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   width: fit-content;
   max-width: 100%;
@@ -99,7 +99,7 @@ const { currentTheme, accentColor, toggleTheme, setAccent, availableColors } = u
 .colors-list {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   flex-wrap: wrap;
   justify-content: flex-end;
 }

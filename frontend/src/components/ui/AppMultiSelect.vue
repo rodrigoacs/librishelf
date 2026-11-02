@@ -206,7 +206,7 @@ function onPanelKeydown(event) {
 .app-multiselect .count-badge {
   flex-shrink: 0;
   min-width: 1.4rem;
-  padding: 0.05rem 0.4rem;
+  padding: 0.05rem var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--main-solid);
   color: var(--on-main);
@@ -229,7 +229,7 @@ function onPanelKeydown(event) {
 
 .ms-search {
   position: relative;
-  padding: 0.5rem;
+  padding: var(--space-2);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -245,7 +245,7 @@ function onPanelKeydown(event) {
 .ms-search input {
   width: 100%;
   height: 2.5rem;
-  padding: 0 0.75rem 0 2.2rem;
+  padding: 0 var(--space-3) 0 var(--space-7);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: var(--bg-input);
@@ -263,7 +263,7 @@ function onPanelKeydown(event) {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 0.35rem;
+  padding: var(--space-1);
 }
 
 .app-select-option.ms-option {
@@ -301,13 +301,13 @@ function onPanelKeydown(event) {
 
 .ms-empty {
   margin: 0;
-  padding: 0.75rem 0.85rem;
+  padding: var(--space-3) var(--space-3);
   color: var(--text-muted);
   font-size: var(--fs-xs);
 }
 
 .ms-footer {
-  padding: 0.4rem 0.5rem;
+  padding: var(--space-2) var(--space-2);
   border-top: 1px solid var(--border-color);
 }
 
@@ -318,7 +318,7 @@ function onPanelKeydown(event) {
   font: inherit;
   font-size: var(--fs-sm);
   font-weight: 600;
-  padding: 0.4rem 0.5rem;
+  padding: var(--space-2) var(--space-2);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }

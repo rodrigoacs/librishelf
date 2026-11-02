@@ -72,7 +72,7 @@ const readLabel = computed(() => {
 .list-book-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -94,10 +94,10 @@ const readLabel = computed(() => {
 .open {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: var(--space-3);
   flex: 1;
   min-width: 0;
-  padding: 0.25rem;
+  padding: var(--space-1);
   border: none;
   border-radius: var(--radius-md);
   background: none;
@@ -151,7 +151,7 @@ const readLabel = computed(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.2rem 0.6rem;
+  gap: 0.2rem var(--space-2);
   margin-top: 0.1rem;
 }
 
@@ -172,7 +172,7 @@ const readLabel = computed(() => {
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-rows: auto auto;
     align-items: center;
-    column-gap: 0.4rem;
+    column-gap: var(--space-2);
   }
 
   .tools {
@@ -198,7 +198,7 @@ const readLabel = computed(() => {
   .open {
     grid-column: 2;
     grid-row: 1 / span 2;
-    gap: 0.7rem;
+    gap: var(--space-3);
   }
 
   .rank {
@@ -210,7 +210,7 @@ const readLabel = computed(() => {
     width: auto;
     min-width: 1.5rem;
     margin: 0;
-    padding: 0.05rem 0.4rem;
+    padding: 0.05rem var(--space-2);
     border-radius: var(--radius-pill);
     background: var(--bg-panel);
     border: 1px solid var(--border-color);

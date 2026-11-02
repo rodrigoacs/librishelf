@@ -126,11 +126,11 @@ async function finish() {
 <style scoped>
 .reading-card {
   display: flex;
-  gap: 1rem;
-  padding: 1rem;
+  gap: var(--space-4);
+  padding: var(--space-4);
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   min-width: 0;
 }
 
@@ -154,7 +154,7 @@ async function finish() {
 .reading-info {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: var(--space-1);
   min-width: 0;
   flex: 1;
 }
@@ -195,14 +195,14 @@ async function finish() {
 }
 
 .progress {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
 }
 
 .reading-since {
   margin: 0.15rem 0 0;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   color: var(--text-muted);
   font-size: var(--fs-xs);
 }

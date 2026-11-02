@@ -78,8 +78,8 @@ function choose(field) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
-  gap: 0.5rem;
-  padding-right: 0.75rem;
+  gap: var(--space-2);
+  padding-right: var(--space-3);
   border: 1px solid transparent;
   margin-bottom: -0.15rem;
 }
@@ -88,8 +88,8 @@ function choose(field) {
   display: grid;
   grid-template-columns: 40px minmax(0, 2.6fr) minmax(0, 1.3fr) 3.5rem 6rem 6rem;
   align-items: center;
-  gap: 1rem;
-  padding-left: 0.65rem;
+  gap: var(--space-4);
+  padding-left: var(--space-3);
 }
 
 .selecting .header-main {
@@ -108,7 +108,7 @@ function choose(field) {
 .col-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--space-1);
   min-width: 0;
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -121,7 +121,7 @@ function choose(field) {
   justify-self: start;
   min-height: 2rem;
   margin-left: -0.4rem;
-  padding: 0.2rem 0.4rem;
+  padding: 0.2rem var(--space-2);
   border: none;
   border-radius: var(--radius-sm);
   background: none;
@@ -164,7 +164,7 @@ function choose(field) {
 @media (max-width: 1023.98px) {
   .header-main {
     grid-template-columns: 40px minmax(0, 1fr) 5.75rem;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .selecting .header-main {

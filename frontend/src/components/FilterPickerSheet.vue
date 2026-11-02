@@ -7,26 +7,14 @@
     @update:visible="value => emit('update:visible', value)"
   >
     <div class="picker-body">
-      <div
+      <SearchField
         v-if="options.length > 8"
+        :id="`${uid}-q`"
+        v-model="query"
         class="picker-search"
-      >
-        <i
-          class="pi pi-search"
-          aria-hidden="true"
-        ></i>
-        <label
-          :for="`${uid}-q`"
-          class="sr-only"
-        >{{ t('library.pickerSearch', { name: title }) }}</label>
-        <input
-          :id="`${uid}-q`"
-          v-model="query"
-          type="search"
-          autocomplete="off"
-          :placeholder="t('library.pickerSearch', { name: title })"
-        />
-      </div>
+        :region="false"
+        :placeholder="t('library.pickerSearch', { name: title })"
+      />
       <ul
         class="picker-list"
         :aria-label="title"
@@ -66,6 +54,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppDialog from './ui/AppDialog.vue'
+import SearchField from './ui/SearchField.vue'
 
 /**
  * Escolher autores, editoras ou categorias pelos chips da Biblioteca no
@@ -112,32 +101,6 @@ function toggle(name) {
 
 .picker-search {
   position: relative;
-}
-
-.picker-search .pi {
-  position: absolute;
-  left: var(--space-3);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-
-.picker-search input {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 var(--space-3) 0 2.25rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font: inherit;
-  font-size: var(--fs-md);
-}
-
-.picker-search input:focus {
-  outline: none;
-  border-color: var(--main-color);
-  box-shadow: var(--focus-glow);
 }
 
 .picker-list {

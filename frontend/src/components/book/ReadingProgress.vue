@@ -268,7 +268,7 @@ async function save() {
 .reading-progress {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -303,7 +303,7 @@ async function save() {
   justify-content: space-between;
   flex-wrap: wrap;
   min-height: 2rem;
-  gap: 0.25rem 0.75rem;
+  gap: var(--space-1) var(--space-3);
   min-width: 0;
 }
 
@@ -318,8 +318,8 @@ async function save() {
 .total-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.1rem;
+  gap: var(--space-1);
+  padding: var(--space-1) 0.1rem;
   border: none;
   background: none;
   color: var(--main-color);
@@ -364,13 +364,13 @@ async function save() {
 .editor {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .inputs {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -385,7 +385,7 @@ async function save() {
   appearance: textfield;
   -moz-appearance: textfield;
   height: 2.4rem;
-  padding: 0 0.6rem;
+  padding: 0 var(--space-2);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-input);
@@ -418,7 +418,7 @@ async function save() {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .mode-btn {

@@ -163,10 +163,10 @@ function onListKeydown(event) {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.6rem;
+  gap: var(--space-2);
   width: 100%;
   min-height: 2.75rem;
-  padding: 0 0.85rem 0 1rem;
+  padding: 0 var(--space-3) 0 var(--space-4);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-input);
@@ -222,7 +222,7 @@ function onListKeydown(event) {
   margin: 0;
   max-height: min(22rem, 60vh);
   overflow-y: auto;
-  padding: 0.35rem;
+  padding: var(--space-1);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-panel);
@@ -234,9 +234,9 @@ function onListKeydown(event) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 0.6rem 0.85rem;
+  padding: var(--space-2) var(--space-3);
   border: none;
   border-radius: var(--radius-md);
   background: transparent;

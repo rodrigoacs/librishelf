@@ -233,14 +233,14 @@ function confirmDelete() {
   position: sticky;
   bottom: 1rem;
   z-index: 120;
-  margin: 1.5rem auto 0;
+  margin: var(--space-6) auto 0;
   width: fit-content;
   max-width: calc(100% - 2rem);
   display: flex;
   align-items: center;
-  gap: 0.75rem 1rem;
+  gap: var(--space-3) var(--space-4);
   flex-wrap: wrap;
-  padding: 0.6rem 0.75rem 0.6rem 1.1rem;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
   border-radius: var(--radius-lg);
   background: var(--bg-panel);
   border: 1px solid rgba(var(--main-color-rgb), 0.45);
@@ -256,7 +256,7 @@ function confirmDelete() {
 .batch-link {
   background: none;
   border: none;
-  padding: 0.25rem;
+  padding: var(--space-1);
   font: inherit;
   font-size: var(--fs-sm);
   color: var(--main-color);
@@ -268,7 +268,7 @@ function confirmDelete() {
 .batch-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -279,7 +279,7 @@ function confirmDelete() {
 .tag-form {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .tag-form label {
@@ -290,8 +290,8 @@ function confirmDelete() {
 .tag-form-actions {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 /* No celular a lista rola dentro de uma área mais alta que a tela: a barra
@@ -315,13 +315,13 @@ function confirmDelete() {
 @media (max-width: 639.98px) {
   .batch-bar {
     width: calc(100vw - 1.5rem);
-    padding: 0.5rem 0.6rem 0.6rem 0.9rem;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-areas:
       "count count close"
       "link  link  close";
-    gap: 0.1rem 0.4rem;
+    gap: 0.1rem var(--space-2);
     align-items: center;
   }
 
@@ -345,11 +345,11 @@ function confirmDelete() {
   }
 
   .batch-btn.btn {
-    margin-top: 0.35rem;
+    margin-top: var(--space-1);
     min-width: 0;
     flex-direction: column;
     gap: 0.15rem;
-    padding: 0.35rem 0.4rem;
+    padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-md);
     line-height: 1.15;
   }

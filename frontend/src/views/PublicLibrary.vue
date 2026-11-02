@@ -1,122 +1,109 @@
 <template>
-  <div class="public-library-container">
-    <header class="view-header">
-      <router-link
-        to="/"
-        class="brand"
-      >
-        <img
-          src="/bookshelf.png"
-          alt=""
-          width="28"
-          height="28"
-        />
-        <span>LIBRISHELF</span>
-      </router-link>
+  <div class="page public-library-container">
+    <PublicBar />
 
-      <PageHeader
-        v-if="!notFound"
-        :title="t('publicLibrary.title', { ownerName: ownerName || username })"
+    <PageHeader
+      v-if="!notFound"
+      :title="t('publicLibrary.title', { ownerName: ownerName || username })"
+    >
+      <template #lead>
+        <ReaderAvatar
+          :username="ownerName || username"
+          :avatar="profile?.avatarVersion ?? null"
+          size="lg"
+        />
+      </template>
+      <template #subtitle>
+        <p class="owner-meta">
+          <span class="handle">@{{ username }}</span>
+          <span v-if="total > 0"> · {{ t('publicLibrary.count', { count: total }, total) }}</span>
+        </p>
+      </template>
+      <template
+        v-if="profile"
+        #actions
       >
-        <template #lead>
-          <ReaderAvatar
+      <div class="follow-area">
+        <template v-if="viewer?.isOwner">
+          <span class="owner-note">{{ t('profile.own_page') }}</span>
+          <router-link
+            :to="{ name: 'settings' }"
+            class="owner-link"
+          >{{ t('profile.privacy_settings') }}</router-link>
+        </template>
+
+        <template v-else-if="viewer">
+          <!-- Bloqueado por mim: só o desbloquear -->
+          <AppButton
+            v-if="viewer.blockedByMe"
+            :label="t('block.unblock')"
+            icon="pi pi-lock-open"
+            class="btn-outlined btn-secondary"
+            :loading="blockBusy"
+            @click="unblock"
+          />
+          <AppButton
+            v-else-if="followStatus === 'accepted'"
+            :label="t('profile.following')"
+            icon="pi pi-check"
+            class="btn-outlined btn-secondary"
+            :loading="followBusy"
+            @click="unfollow"
+          />
+          <AppButton
+            v-else-if="followStatus === 'pending'"
+            :label="t('profile.cancel_request')"
+            icon="pi pi-clock"
+            class="btn-outlined btn-secondary"
+            :loading="followBusy"
+            @click="unfollow"
+          />
+          <AppButton
+            v-else-if="profile.acceptsFollowers"
+            :label="t('profile.follow')"
+            icon="pi pi-user-plus"
+            class="btn-primary"
+            :loading="followBusy"
+            @click="follow"
+          />
+          <IconButton
+            v-if="!viewer.blockedByMe"
+            icon="pi pi-ellipsis-h"
+            :label="t('block.moreActions')"
+            class="more-btn"
+            aria-haspopup="true"
+            aria-controls="profile-more-menu"
+            @click="event => moreMenu.toggle(event)"
+          />
+          <PopupMenu
+            id="profile-more-menu"
+            ref="moreMenu"
+            :items="moreItems"
+          />
+          <ReportDialog
+            v-if="profile?.avatarVersion"
+            v-model:visible="reportAvatarOpen"
+            kind="avatar"
             :username="ownerName || username"
-            :avatar="profile?.avatarVersion ?? null"
-            size="lg"
           />
         </template>
-        <template #subtitle>
-          <p class="owner-meta">
-            <span class="handle">@{{ username }}</span>
-            <span v-if="total > 0"> · {{ t('publicLibrary.count', { count: total }, total) }}</span>
-          </p>
-        </template>
-        <template
-          v-if="profile"
-          #actions
+
+        <!-- Sem sessão: o mesmo botão Seguir, que leva ao login e volta para cá -->
+        <router-link
+          v-else-if="profile.acceptsFollowers"
+          :to="{ name: 'login', query: { redirect: route.fullPath } }"
+          class="btn btn-primary"
+          :title="t('profile.login_to_follow')"
         >
-        <div class="follow-area">
-          <template v-if="viewer?.isOwner">
-            <span class="owner-note">{{ t('profile.own_page') }}</span>
-            <router-link
-              :to="{ name: 'settings' }"
-              class="owner-link"
-            >{{ t('profile.privacy_settings') }}</router-link>
-          </template>
-
-          <template v-else-if="viewer">
-            <!-- Bloqueado por mim: só o desbloquear -->
-            <AppButton
-              v-if="viewer.blockedByMe"
-              :label="t('block.unblock')"
-              icon="pi pi-lock-open"
-              class="btn-outlined btn-secondary"
-              :loading="blockBusy"
-              @click="unblock"
-            />
-            <AppButton
-              v-else-if="followStatus === 'accepted'"
-              :label="t('profile.following')"
-              icon="pi pi-check"
-              class="btn-outlined btn-secondary"
-              :loading="followBusy"
-              @click="unfollow"
-            />
-            <AppButton
-              v-else-if="followStatus === 'pending'"
-              :label="t('profile.cancel_request')"
-              icon="pi pi-clock"
-              class="btn-outlined btn-secondary"
-              :loading="followBusy"
-              @click="unfollow"
-            />
-            <AppButton
-              v-else-if="profile.acceptsFollowers"
-              :label="t('profile.follow')"
-              icon="pi pi-user-plus"
-              class="btn-primary"
-              :loading="followBusy"
-              @click="follow"
-            />
-            <IconButton
-              v-if="!viewer.blockedByMe"
-              icon="pi pi-ellipsis-h"
-              :label="t('block.moreActions')"
-              class="more-btn"
-              aria-haspopup="true"
-              aria-controls="profile-more-menu"
-              @click="event => moreMenu.toggle(event)"
-            />
-            <PopupMenu
-              id="profile-more-menu"
-              ref="moreMenu"
-              :items="moreItems"
-            />
-            <ReportDialog
-              v-if="profile?.avatarVersion"
-              v-model:visible="reportAvatarOpen"
-              kind="avatar"
-              :username="ownerName || username"
-            />
-          </template>
-
-          <!-- Sem sessão: o mesmo botão Seguir, que leva ao login e volta para cá -->
-          <router-link
-            v-else-if="profile.acceptsFollowers"
-            :to="{ name: 'login', query: { redirect: route.fullPath } }"
-            class="btn btn-primary"
-            :title="t('profile.login_to_follow')"
-          >
-            <i
-              class="pi pi-user-plus"
-              aria-hidden="true"
-            ></i>
-            <span>{{ t('profile.follow') }}</span>
-          </router-link>
-        </div>
-        </template>
-      </PageHeader>
-    </header>
+          <i
+            class="pi pi-user-plus"
+            aria-hidden="true"
+          ></i>
+          <span>{{ t('profile.follow') }}</span>
+        </router-link>
+      </div>
+      </template>
+    </PageHeader>
 
     <!-- Perfil ainda carregando: esqueleto no lugar dele, e a grade só entra
          depois (antes a grade aparecia primeiro e era empurrada para baixo) -->
@@ -154,14 +141,12 @@
       <div class="stat-row">
         <div
           class="stat"
-          style="--stat-color: var(--green)"
         >
           <span class="stat-value">{{ stats.totalBooks }}</span>
           <span class="stat-label">{{ t('profile.books') }}</span>
         </div>
         <div
           class="stat"
-          style="--stat-color: var(--red)"
         >
           <span class="stat-value">{{ stats.readBooks }}</span>
           <span class="stat-label">{{ t('profile.read') }}</span>
@@ -169,7 +154,6 @@
         <div
           v-if="stats.averageRating"
           class="stat"
-          style="--stat-color: var(--yellow)"
         >
           <span class="stat-value">
             <i
@@ -183,7 +167,6 @@
         <div
           v-if="viewer && !viewer.isOwner && viewer.commonCount !== null"
           class="stat"
-          style="--stat-color: var(--purple)"
         >
           <span class="stat-value">{{ viewer.commonCount }}</span>
           <span class="stat-label">{{ t('profile.in_common', viewer.commonCount) }}</span>
@@ -195,7 +178,7 @@
           v-if="yearBars.length"
           class="panel"
         >
-          <h2>{{ t('profile.by_year') }}</h2>
+          <h2 class="section-title">{{ t('profile.by_year') }}</h2>
           <ul class="year-bars">
             <li
               v-for="bar in yearBars"
@@ -218,7 +201,7 @@
           v-if="stats.topAuthors.length"
           class="panel"
         >
-          <h2>{{ t('profile.top_authors') }}</h2>
+          <h2 class="section-title">{{ t('profile.top_authors') }}</h2>
           <ol class="rank-list">
             <li
               v-for="author in stats.topAuthors"
@@ -236,7 +219,7 @@
             </li>
           </ol>
           <template v-if="stats.topTags.length">
-            <h2 class="sub-heading">{{ t('profile.top_tags') }}</h2>
+            <h2 class="section-title sub-heading">{{ t('profile.top_tags') }}</h2>
             <div class="tag-row">
               <span
                 v-for="tag in stats.topTags"
@@ -252,7 +235,7 @@
           v-if="stats.recentlyRead.length"
           class="panel"
         >
-          <h2>{{ t('profile.recently_read') }}</h2>
+          <h2 class="section-title">{{ t('profile.recently_read') }}</h2>
           <ul class="recent-list">
             <li
               v-for="item in stats.recentlyRead"
@@ -286,7 +269,7 @@
           v-if="viewer && !viewer.isOwner && viewer.commonBooks.length"
           class="panel"
         >
-          <h2>{{ t('profile.common_books') }}</h2>
+          <h2 class="section-title">{{ t('profile.common_books') }}</h2>
           <ul class="recent-list">
             <li
               v-for="item in viewer.commonBooks"
@@ -318,7 +301,7 @@
         v-if="lists.length"
         class="panel lists-panel"
       >
-        <h2>{{ t('lists.profileTitle', { n: lists.length }, lists.length) }}</h2>
+        <h2 class="section-title">{{ t('lists.profileTitle', { n: lists.length }, lists.length) }}</h2>
         <ul class="list-grid">
           <li
             v-for="list in lists"
@@ -336,7 +319,7 @@
         v-if="reviews.items.length"
         class="panel reviews-panel"
       >
-        <h2>{{ t('review.profileTitle', { n: reviews.total }, reviews.total) }}</h2>
+        <h2 class="section-title">{{ t('review.profileTitle', { n: reviews.total }, reviews.total) }}</h2>
         <div class="review-grid">
           <ReviewCard
             v-for="item in reviews.items"
@@ -454,6 +437,7 @@
 
 <script setup>
 import PageHeader from '../components/ui/PageHeader.vue'
+import PublicBar from '../components/PublicBar.vue'
 import ReviewCard from '../components/review/ReviewCard.vue'
 import ListCard from '../components/list/ListCard.vue'
 import { slugify } from '../utils/slug.js'
@@ -711,42 +695,15 @@ watch(username, () => {
 
 <style scoped>
 .public-library-container {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100%;
-  background-color: var(--bg-app);
+  /* Casca e recuo em .page (main.css) */
   display: flex;
   flex-direction: column;
-}
-
-.view-header {
-  margin-bottom: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  font-size: var(--fs-sm);
-  width: fit-content;
-}
-
-.brand:hover {
-  color: var(--text-primary);
 }
 
 .follow-area {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
@@ -764,35 +721,23 @@ watch(username, () => {
   margin-bottom: 2.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .stat-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
 }
 
 .stat {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.9rem 1.25rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
   display: flex;
   flex-direction: column;
-  min-width: 120px;
-  border-top: 3px solid var(--stat-color, var(--border-color));
-}
-
-.stat-value {
-  font-size: var(--fs-xl);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.stat-label {
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
+  gap: var(--space-1);
 }
 
 .star {
@@ -803,35 +748,30 @@ watch(username, () => {
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 1.1rem 1.25rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
   min-width: 0;
 }
 
 .panel h2 {
-  margin: 0 0 0.75rem;
-  font-size: var(--fs-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  font-weight: 600;
+  margin: 0 0 var(--space-3);
 }
 
 .reviews-panel,
 .lists-panel {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .list-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
-  gap: 0.75rem;
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -850,15 +790,15 @@ watch(username, () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   align-items: start;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .reviews-panel .small {
-  margin: 0.75rem 0 0;
+  margin: var(--space-3) 0 0;
 }
 
 .panel .sub-heading {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .year-bars,
@@ -873,7 +813,7 @@ watch(username, () => {
   display: grid;
   grid-template-columns: 3rem 1fr 2rem;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font-size: var(--fs-sm);
   padding: 0.15rem 0;
 }
@@ -905,8 +845,8 @@ watch(username, () => {
 .rank-list li {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.3rem 0;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
   color: var(--text-primary);
   font-size: var(--fs-md);
 }
@@ -914,7 +854,7 @@ watch(username, () => {
 .ranked-name {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -929,12 +869,12 @@ watch(username, () => {
 .tag-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .tag-pill {
   border-radius: var(--radius-pill);
-  padding: 0.2rem 0.65rem;
+  padding: 0.2rem var(--space-3);
   font-size: var(--fs-sm);
   font-weight: 500;
   color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
@@ -946,8 +886,8 @@ watch(username, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.4rem 0;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1000,7 +940,7 @@ watch(username, () => {
 }
 
 .small {
-  margin: 0.5rem 0 0;
+  margin: var(--space-2) 0 0;
 }
 
 .handle {
@@ -1012,15 +952,10 @@ watch(username, () => {
   color: var(--text-secondary);
 }
 
-/* O .view-header já dá 2rem até o conteúdo */
-.view-header > .page-header {
-  margin-bottom: 0;
-}
-
 .books-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 2rem;
+  gap: var(--space-7);
   justify-content: center;
 }
 
@@ -1029,7 +964,7 @@ watch(username, () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .loading-more-icon {
@@ -1040,14 +975,14 @@ watch(username, () => {
 .book-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .cover-skeleton {
   aspect-ratio: 2 / 3;
   height: auto !important;
-  margin-bottom: 0.4rem;
+  margin-bottom: var(--space-2);
 }
 
 .stat-skeleton {
@@ -1056,9 +991,9 @@ watch(username, () => {
 
 .public-footer {
   margin-top: auto;
-  padding-top: 3rem;
+  padding-top: var(--space-8);
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   justify-content: center;
   color: var(--text-muted);
   font-size: var(--fs-sm);
@@ -1069,17 +1004,18 @@ watch(username, () => {
 }
 
 @media (max-width: 639.98px) {
-  .public-library-container {
-    padding: 1.25rem;
+  .stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
   }
 
   .books-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   /* Botão Seguir na largura toda, embaixo do nome (o ⋯ fica ao lado) */
-  .view-header > .page-header :deep(.page-header-actions),
+  .public-library-container > .page-header :deep(.page-header-actions),
   .follow-area {
     width: 100%;
     flex-wrap: nowrap;

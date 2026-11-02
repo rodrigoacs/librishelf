@@ -133,7 +133,7 @@ function select(value) {
 
 .clear-btn {
   color: var(--text-secondary);
-  margin-left: 0.25rem;
+  margin-left: var(--space-1);
 }
 
 .clear-btn .pi {

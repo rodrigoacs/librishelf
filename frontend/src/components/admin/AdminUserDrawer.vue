@@ -49,7 +49,7 @@
         >{{ t('admin.accounts.suspendedOn', { date: formatDate(user.suspendedAt, locale) }) }}<template v-if="user.suspendedReason"> — {{ user.suspendedReason }}</template></p>
 
         <section aria-labelledby="user-account">
-          <h3 id="user-account">{{ t('admin.user.account') }}</h3>
+          <h3 class="section-title" id="user-account">{{ t('admin.user.account') }}</h3>
           <dl>
             <div><dt>{{ t('admin.accounts.cols.email') }}</dt><dd>{{ user.email }} <span class="muted">({{ user.emailLocale }})</span></dd></div>
             <div><dt>{{ t('admin.user.created') }}</dt><dd>{{ formatDateTime(user.createdAt, locale) }}</dd></div>
@@ -60,7 +60,7 @@
         </section>
 
         <section aria-labelledby="user-privacy">
-          <h3 id="user-privacy">{{ t('admin.user.privacy') }}</h3>
+          <h3 class="section-title" id="user-privacy">{{ t('admin.user.privacy') }}</h3>
           <ul class="flags">
             <li
               v-for="(on, key) in user.privacy"
@@ -77,7 +77,7 @@
         </section>
 
         <section aria-labelledby="user-totals">
-          <h3 id="user-totals">{{ t('admin.user.totals') }}</h3>
+          <h3 class="section-title" id="user-totals">{{ t('admin.user.totals') }}</h3>
           <dl class="totals">
             <div><dt>{{ t('admin.user.t.books') }}</dt><dd>{{ user.totals.books }} <small>{{ t('admin.user.t.read', { n: user.totals.readBooks }) }}</small></dd></div>
             <div><dt>{{ t('admin.user.t.reviews') }}</dt><dd>{{ user.totals.reviews }} <small v-if="user.totals.hiddenReviews">{{ t('admin.user.t.hidden', { n: user.totals.hiddenReviews }) }}</small></dd></div>
@@ -96,7 +96,7 @@
           v-if="user.reportedReviews.length"
           aria-labelledby="user-reported"
         >
-          <h3 id="user-reported">{{ t('admin.user.reportedReviews') }}</h3>
+          <h3 class="section-title" id="user-reported">{{ t('admin.user.reportedReviews') }}</h3>
           <ul class="list">
             <li
               v-for="review in user.reportedReviews"
@@ -112,7 +112,7 @@
           v-if="user.history.length"
           aria-labelledby="user-history"
         >
-          <h3 id="user-history">{{ t('admin.user.history') }}</h3>
+          <h3 class="section-title" id="user-history">{{ t('admin.user.history') }}</h3>
           <ul class="list">
             <li
               v-for="item in user.history"
@@ -322,14 +322,14 @@ async function confirmDialog() {
 .drawer-body {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding-bottom: 1rem;
+  gap: var(--space-5);
+  padding-bottom: var(--space-4);
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
   align-items: center;
 }
 
@@ -337,7 +337,7 @@ async function confirmDialog() {
   font-size: var(--fs-xs);
   font-weight: 600;
   border-radius: var(--radius-pill);
-  padding: 0.1rem 0.55rem;
+  padding: 0.1rem var(--space-2);
   color: var(--text-primary);
 }
 
@@ -354,7 +354,7 @@ async function confirmDialog() {
 
 .suspension {
   margin: 0;
-  padding: 0.6rem 0.8rem;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   background: rgba(var(--red-rgb), 0.1);
   color: var(--text-primary);
@@ -362,24 +362,20 @@ async function confirmDialog() {
 }
 
 h3 {
-  margin: 0 0 0.6rem;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  margin: 0 0 var(--space-2);
 }
 
 dl {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--space-2);
 }
 
 dl div {
   display: grid;
   grid-template-columns: 40% 1fr;
-  gap: 0.75rem;
+  gap: var(--space-3);
   font-size: var(--fs-sm);
 }
 
@@ -395,7 +391,7 @@ dd {
 
 dd small {
   color: var(--text-muted);
-  margin-left: 0.25rem;
+  margin-left: var(--space-1);
 }
 
 dd.warn {
@@ -409,7 +405,7 @@ dd.warn {
   padding: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.35rem 1rem;
+  gap: var(--space-1) var(--space-4);
   font-size: var(--fs-sm);
   color: var(--text-secondary);
 }
@@ -433,7 +429,7 @@ dd.warn {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font-size: var(--fs-sm);
 }
 
@@ -455,7 +451,7 @@ dd.warn {
 }
 
 .muted.after {
-  margin-top: 0.6rem;
+  margin-top: var(--space-2);
 }
 
 .list .muted {
@@ -465,15 +461,15 @@ dd.warn {
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding-top: 1rem;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--border-color);
 }
 
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .desc {
@@ -485,7 +481,7 @@ dd.warn {
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 </style>

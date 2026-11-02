@@ -33,10 +33,10 @@ const { t } = useI18n()
 .app-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
   max-width: 100%;
   min-height: 1.9rem;
-  padding: 0.15rem 0.3rem 0.15rem 0.75rem;
+  padding: 0.15rem var(--space-1) 0.15rem var(--space-3);
   border-radius: var(--radius-pill);
   font-size: var(--fs-sm);
   line-height: 1.2;

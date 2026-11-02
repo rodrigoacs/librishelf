@@ -2,7 +2,6 @@
   <span
     class="reader-avatar"
     :class="[`size-${size}`, { 'has-photo': showPhoto }]"
-    :style="{ '--reader-color': colorFor(username) }"
     aria-hidden="true"
   >
     <picture
@@ -32,7 +31,6 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { colorFor } from '../utils/tagColors.js'
 import { avatarUrl } from '../utils/avatars.js'
 
 /**

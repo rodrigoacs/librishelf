@@ -30,16 +30,16 @@ const { t } = useI18n()
 .offline-banner {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 1.25rem;
-  background: rgba(var(--yellow-rgb), 0.14);
-  border-bottom: 1px solid rgba(var(--yellow-rgb), 0.45);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-5);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
   color: var(--text-primary);
   font-size: var(--fs-sm);
 }
 
 .offline-banner > .pi {
-  color: var(--yellow);
+  color: var(--warning);
   position: relative;
 }
 
@@ -64,12 +64,12 @@ const { t } = useI18n()
 }
 
 .offline-banner strong {
-  margin-right: 0.25rem;
+  margin-right: var(--space-1);
 }
 
 @media (max-width: 639.98px) {
   .offline-banner {
-    padding: 0.6rem 1rem;
+    padding: var(--space-2) var(--space-4);
   }
 }
 </style>

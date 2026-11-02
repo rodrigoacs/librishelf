@@ -41,7 +41,7 @@ const { t } = useI18n()
 
 <style scoped>
 .chart-data {
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   font-size: var(--fs-sm);
   color: var(--text-muted);
 }
@@ -67,7 +67,7 @@ const { t } = useI18n()
 }
 
 .chart-data table {
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   border-collapse: collapse;
   width: 100%;
   max-width: 320px;
@@ -75,7 +75,7 @@ const { t } = useI18n()
 
 .chart-data th,
 .chart-data td {
-  padding: 0.25rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   text-align: left;
   border-bottom: 1px solid var(--border-color);
   font-weight: 400;

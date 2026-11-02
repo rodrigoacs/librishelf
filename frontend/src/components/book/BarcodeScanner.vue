@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
 .scanner {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .viewport {
@@ -358,9 +358,9 @@ onBeforeUnmount(() => {
   bottom: 18%;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   margin: 0;
-  padding: 0.35rem 0.8rem;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   background: #15803d;
   color: #ffffff;
@@ -419,8 +419,8 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  padding: 1.25rem;
+  gap: var(--space-2);
+  padding: var(--space-5);
   text-align: center;
   color: #e4e4e7;
   font-size: var(--fs-sm);
@@ -451,6 +451,6 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 </style>

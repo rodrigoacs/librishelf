@@ -377,8 +377,8 @@ html.dialog-open {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 1.25rem 0.5rem 1.5rem;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-2) var(--space-6);
 }
 
 .app-dialog-header h2 {
@@ -411,7 +411,7 @@ html.dialog-open {
 }
 
 .app-dialog-content {
-  padding: 0.5rem 1.5rem 1.5rem;
+  padding: var(--space-2) var(--space-6) var(--space-6);
   overflow-y: auto;
 }
 

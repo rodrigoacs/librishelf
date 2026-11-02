@@ -64,7 +64,7 @@
     <template v-else-if="!editing">
       <p
         v-if="review.hidden"
-        class="notice warn"
+        class="notice is-warn"
         role="status"
       >
         <i
@@ -353,25 +353,23 @@ function remove() {
 .review-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
   border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
+  padding-top: var(--space-4);
 }
 
 .section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .section-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
-  font-size: var(--fs-md);
-  font-weight: 600;
 }
 
 .section-title .pi {
@@ -380,11 +378,11 @@ function remove() {
 
 .head-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .text-btn {
-  padding: 0.25rem 0.1rem;
+  padding: var(--space-1) 0.1rem;
   border: none;
   background: none;
   color: var(--main-color);
@@ -419,9 +417,9 @@ function remove() {
 .write-btn {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 0.85rem 1rem;
+  padding: var(--space-3) var(--space-4);
   border: 1px dashed var(--border-hover);
   border-radius: var(--radius-md);
   background: none;
@@ -456,37 +454,11 @@ function remove() {
   font-size: var(--fs-xs);
 }
 
-.notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-md);
-  background: rgba(var(--main-color-rgb), 0.08);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  line-height: 1.45;
-}
-
-.notice .pi {
-  margin-top: 0.15rem;
-  color: var(--main-color);
-}
-
-.notice.warn {
-  background: rgba(var(--orange-rgb), 0.12);
-}
-
-.notice.warn .pi {
-  color: var(--orange);
-}
-
 .editor {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  gap: var(--space-3);
+  padding: var(--space-3);
   border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.05);
   border: 1px solid var(--border-color);
@@ -496,7 +468,7 @@ function remove() {
   width: 100%;
   min-height: 8rem;
   resize: vertical;
-  padding: 0.65rem 0.75rem;
+  padding: var(--space-3) var(--space-3);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-input);
@@ -527,7 +499,7 @@ function remove() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .option-label {
@@ -546,13 +518,13 @@ function remove() {
 .visibility {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .error {
@@ -563,6 +535,6 @@ function remove() {
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 </style>

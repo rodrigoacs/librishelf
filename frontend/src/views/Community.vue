@@ -34,7 +34,7 @@
       >
         <div
           ref="tabsEl"
-          class="tabs"
+          class="app-tabs"
           role="tablist"
           :aria-label="t('communityView.title')"
           @scroll.passive="updateTabsFade"
@@ -45,7 +45,7 @@
             :key="tab.key"
             type="button"
             role="tab"
-            class="tab"
+            class="app-tab"
             :class="{ active: activeTab === tab.key }"
             :aria-selected="activeTab === tab.key"
             :aria-controls="`panel-${tab.key}`"
@@ -57,7 +57,7 @@
             {{ tab.label }}
             <span
               v-if="tab.count"
-              class="tab-count"
+              class="app-tab-count"
             >{{ tab.count }}</span>
           </button>
         </div>
@@ -416,29 +416,14 @@
         aria-labelledby="tab-discover"
         class="panel"
       >
-        <div
-          class="discover-search"
-          role="search"
-        >
-          <i
-            class="pi pi-search"
-            aria-hidden="true"
-          ></i>
-          <label
-            for="discover-search"
-            class="sr-only"
-          >{{ t('discover.search_label') }}</label>
-          <input
-            id="discover-search"
-            v-model="readerQuery"
-            type="search"
-            class="discover-input"
-            :placeholder="t('discover.search_ph')"
-            autocomplete="off"
-            maxlength="50"
-            @input="searchReaders"
-          />
-        </div>
+        <SearchField
+          id="discover-search"
+          v-model="readerQuery"
+          :label="t('discover.search_label')"
+          :placeholder="t('discover.search_ph')"
+          maxlength="50"
+          @input="searchReaders"
+        />
         <p class="muted small">
           {{ readerQuery.trim() ? t('discover.results_hint') : t('discover.suggest_hint') }}
           <template v-if="!user?.showInCommunity">
@@ -722,6 +707,7 @@ import { refreshPendingRequests } from '../services/social.js'
 import { useIsPhone } from '../composables/useIsPhone.js'
 import { usePullToRefresh } from '../composables/usePullToRefresh.js'
 import PullRefresh from '../components/ui/PullRefresh.vue'
+import SearchField from '../components/ui/SearchField.vue'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -957,32 +943,14 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.community-container {
-  /* Casca e recuo em .page (main.css) */
-  --page-max: 760px;
-}
-
+/* Visual do aviso em main.css (.notice) */
 .notice {
-  display: flex;
-  gap: 0.6rem;
-  align-items: flex-start;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.85rem 1rem;
-  margin-bottom: 1.25rem;
-  color: var(--text-secondary);
-  font-size: var(--fs-md);
-  line-height: 1.45;
-}
-
-.notice a {
-  color: var(--main-color);
+  margin: 0 0 var(--space-5);
 }
 
 .tabs-wrap {
   position: relative;
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-5);
 }
 
 .tabs-wrap::before,
@@ -1013,54 +981,10 @@ onMounted(async () => {
   opacity: 1;
 }
 
-.tabs {
-  display: flex;
-  gap: 0.25rem;
-  border-bottom: 1px solid var(--border-color);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.tab {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 0.7rem 1rem;
-  color: var(--text-secondary);
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  white-space: nowrap;
-}
-
-.tab.active {
-  color: var(--text-primary);
-  border-bottom-color: var(--main-color);
-}
-
-.tab:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: -2px;
-}
-
-.tab-count {
-  background: var(--bg-input);
-  border-radius: var(--radius-pill);
-  padding: 0 0.45rem;
-  font-size: var(--fs-xs);
-}
-
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .muted {
@@ -1068,7 +992,7 @@ onMounted(async () => {
 }
 
 .skeleton-gap {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
 }
 
 .feed-list,
@@ -1081,11 +1005,11 @@ onMounted(async () => {
 .feed-days {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .day-title {
-  margin: 0 0 0.25rem;
+  margin: 0 0 var(--space-1);
   font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
@@ -1096,8 +1020,8 @@ onMounted(async () => {
 .feed-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.85rem;
-  padding: 0.85rem 0;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1135,7 +1059,7 @@ onMounted(async () => {
 .person {
   display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: var(--space-3);
   min-width: 0;
   max-width: 100%;
 }
@@ -1157,11 +1081,11 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .feed-rating {
-  margin-left: 0.4rem;
+  margin-left: var(--space-2);
 }
 
 /* Título do livro em texto forte (o @nome já é o link colorido) */
@@ -1193,15 +1117,15 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 0;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--border-color);
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-shrink: 0;
 }
 
@@ -1210,38 +1134,9 @@ onMounted(async () => {
   background: rgba(var(--main-color-rgb), 0.12);
 }
 
-.discover-search {
-  position: relative;
-  margin-bottom: 0.5rem;
-}
-
-.discover-search .pi {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-
-.discover-input {
-  width: 100%;
-  box-sizing: border-box;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  padding: 0.8rem 1rem 0.8rem 2.6rem;
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font: inherit;
-}
-
-.discover-input:focus {
-  border-color: var(--main-color);
-  outline: none;
-}
-
 .muted.small {
   font-size: var(--fs-sm);
-  margin: 0 0 1rem;
+  margin: 0 0 var(--space-4);
 }
 
 .reader-info {
@@ -1275,7 +1170,7 @@ onMounted(async () => {
   color: var(--text-secondary);
   background: var(--bg-input);
   border-radius: var(--radius-pill);
-  padding: 0.15rem 0.6rem;
+  padding: 0.15rem var(--space-2);
 }
 
 .load-more {
@@ -1285,28 +1180,14 @@ onMounted(async () => {
 
 @media (max-width: 639.98px) {
   /* Cinco abas: no celular a fileira rola para o lado (sem esticar a página). */
-  .tabs {
+  .app-tabs {
     contain: inline-size;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
-
-  .tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tab {
-    flex: 0 0 auto;
-    justify-content: center;
-    padding: 0.7rem 0.6rem;
-    font-size: var(--fs-md);
-  }
-
 
   .people-list li {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   /* Feed em cartões, como no trailer: capa à direita, resenha e lista com
@@ -1325,7 +1206,7 @@ onMounted(async () => {
   .feed-item:last-child {
     padding: var(--space-3) var(--space-4);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
+    border-radius: var(--card-radius);
     background: var(--bg-panel);
     animation: feed-in var(--dur-medium) var(--ease-enter) both;
     animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));

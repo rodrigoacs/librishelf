@@ -56,7 +56,7 @@
           class="chart-card"
           aria-labelledby="admin-funnel-title"
         >
-          <h2 id="admin-funnel-title">{{ t('admin.overview.funnel') }}</h2>
+          <h2 class="section-title" id="admin-funnel-title">{{ t('admin.overview.funnel') }}</h2>
           <ol class="funnel">
             <li
               v-for="step in funnel"
@@ -78,7 +78,7 @@
           class="chart-card"
           aria-labelledby="admin-activity-title"
         >
-          <h2 id="admin-activity-title">{{ t('admin.overview.activity') }}</h2>
+          <h2 class="section-title" id="admin-activity-title">{{ t('admin.overview.activity') }}</h2>
           <dl class="activity">
             <div><dt>{{ t('admin.overview.books7') }}</dt><dd>{{ formatNumber(stats.engagement.books7, locale) }}</dd></div>
             <div><dt>{{ t('admin.overview.books30') }}</dt><dd>{{ formatNumber(stats.engagement.books30, locale) }}</dd></div>
@@ -89,7 +89,7 @@
       </div>
 
       <div class="chart-card">
-        <h2>{{ t('admin.overview.signupsByWeek') }}</h2>
+        <h2 class="section-title">{{ t('admin.overview.signupsByWeek') }}</h2>
         <div class="chart-wrapper">
           <ChartCanvas
             type="bar"
@@ -212,13 +212,13 @@ onMounted(load)
 .overview {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .kpi-card {
@@ -226,11 +226,11 @@ onMounted(load)
   position: relative;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   text-align: left;
   font: inherit;
   color: inherit;
@@ -309,14 +309,12 @@ onMounted(load)
 .chart-card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem 1.5rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
 }
 
 .chart-card h2 {
-  margin: 0 0 1rem;
-  font-size: var(--fs-lg);
-  color: var(--text-primary);
+  margin: 0 0 var(--space-4);
 }
 
 .chart-wrapper {
@@ -326,7 +324,7 @@ onMounted(load)
 .two-cols {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .funnel {
@@ -335,15 +333,15 @@ onMounted(load)
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .funnel-row {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font-size: var(--fs-sm);
-  margin-bottom: 0.3rem;
+  margin-bottom: var(--space-1);
 }
 
 .funnel-label {
@@ -359,7 +357,7 @@ onMounted(load)
 .funnel-value small {
   color: var(--text-muted);
   font-weight: 500;
-  margin-left: 0.25rem;
+  margin-left: var(--space-1);
 }
 
 .bar {
@@ -377,7 +375,7 @@ onMounted(load)
 }
 
 .note {
-  margin: 1rem 0 0;
+  margin: var(--space-4) 0 0;
   color: var(--text-secondary);
   font-size: var(--fs-sm);
 }
@@ -386,7 +384,7 @@ onMounted(load)
   margin: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .activity div {
@@ -408,9 +406,4 @@ onMounted(load)
   font-variant-numeric: tabular-nums;
 }
 
-.empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem 1rem;
-}
 </style>

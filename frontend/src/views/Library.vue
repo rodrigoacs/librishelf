@@ -487,7 +487,7 @@ onUnmounted(() => {
 .books-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 2rem;
+  gap: var(--space-7);
   width: 100%;
 }
 
@@ -497,13 +497,13 @@ onUnmounted(() => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .book-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: var(--space-3);
   aspect-ratio: 2/3.5;
 }
 
@@ -515,7 +515,7 @@ onUnmounted(() => {
 .info-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .sentinel {
@@ -524,7 +524,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .loading-more-icon {
@@ -584,7 +584,7 @@ onUnmounted(() => {
 
   .books-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 1rem;
+    gap: var(--space-4);
   }
 }
 </style>

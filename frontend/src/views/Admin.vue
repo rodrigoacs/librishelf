@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-container">
+  <div class="page admin-container">
     <PageHeader
       :title="t('admin.title')"
       :subtitle="t('admin.subtitle')"
@@ -67,7 +67,7 @@
     <template v-else>
       <div
         ref="tabsEl"
-        class="tabs"
+        class="app-tabs"
         :class="{ 'more-start': tabsEdges.moreStart.value, 'more-end': tabsEdges.moreEnd.value }"
         role="tablist"
         :aria-label="t('admin.title')"
@@ -78,7 +78,7 @@
           :key="tab.key"
           type="button"
           role="tab"
-          class="tab"
+          class="app-tab"
           :class="{ active: activeTab === tab.key }"
           :aria-selected="activeTab === tab.key"
           :aria-controls="`admin-panel-${tab.key}`"
@@ -94,7 +94,7 @@
           {{ tab.label }}
           <span
             v-if="tab.count"
-            class="tab-count"
+            class="app-tab-count"
           >{{ tab.count }}</span>
         </button>
       </div>
@@ -292,44 +292,37 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.admin-container {
-  min-width: 0;
-  width: 100%;
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
-  max-width: 1280px;
-  margin: 0 auto;
-  box-sizing: border-box;
+/* Abas em main.css (.app-tabs) */
+.app-tabs {
+  margin-bottom: var(--space-6);
 }
 
 .loading {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   color: var(--text-secondary);
-  padding: 2rem 0;
+  padding: var(--space-7) 0;
 }
 
 .unlock-card {
   max-width: 420px;
-  margin: 3rem auto;
+  margin: var(--space-8) auto;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 2rem;
+  border-radius: var(--card-radius);
+  padding: var(--space-7);
   text-align: center;
 }
 
 .unlock-card h2 {
-  margin: 0.75rem 0 0.5rem;
+  margin: var(--space-3) 0 var(--space-2);
   font-size: var(--fs-xl);
   color: var(--text-primary);
 }
 
 .unlock-card .stack {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   text-align: left;
 }
 
@@ -353,68 +346,22 @@ onMounted(async () => {
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-
-.tabs {
-  display: flex;
-  gap: 0.25rem;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 1.5rem;
-  overflow-x: auto;
-  scrollbar-width: none;
+  gap: var(--space-4);
 }
 
 /* Há abas escondidas: a borda some num degradê (antes cortava em "Modera") */
-.tabs.more-end {
+.app-tabs.more-end {
   mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
 }
 
-.tabs.more-start {
+.app-tabs.more-start {
   mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
 }
 
-.tabs.more-start.more-end {
+.app-tabs.more-start.more-end {
   mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
 }
 
-.tab {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 0.7rem 1rem;
-  color: var(--text-secondary);
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  white-space: nowrap;
-}
-
-.tab:hover {
-  color: var(--text-primary);
-}
-
-.tab.active {
-  color: var(--text-primary);
-  border-bottom-color: var(--main-color);
-}
-
-.tab:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: -2px;
-}
-
-.tab-count {
-  background: rgba(var(--orange-rgb), 0.18);
-  color: var(--text-primary);
-  border-radius: var(--radius-pill);
-  padding: 0 0.45rem;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-}
 .panel {
   min-width: 0;
 }

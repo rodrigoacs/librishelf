@@ -1,16 +1,79 @@
 <template>
-  <div class="list-page">
-    <div class="list-content">
-      <router-link
-        :to="{ name: 'lists' }"
-        class="back"
+  <div class="page list-page">
+    <PageHeader
+      :title="list?.title || (loading ? '' : t('lists.title'))"
+      :back="{ name: 'lists' }"
+      :back-label="t('lists.back')"
+    >
+      <!-- Carregando: título em esqueleto, a faixa já no lugar -->
+      <template
+        v-if="!list && loading"
+        #title
       >
-        <i
-          class="pi pi-arrow-left"
-          aria-hidden="true"
-        ></i>
-        {{ t('lists.back') }}
-      </router-link>
+        <AppSkeleton
+          width="16rem"
+          height="1.75rem"
+        />
+      </template>
+      <template
+        v-if="list"
+        #subtitle
+      >
+        <p
+          v-if="list.description"
+          class="description"
+        >{{ list.description }}</p>
+      </template>
+      <p
+        v-if="list"
+        class="meta"
+      >
+        <span>{{ t('lists.count', { n: list.items.length }, list.items.length) }}</span>
+        <span
+          class="visibility"
+          :class="{ public: list.isPublic }"
+        >
+          <i
+            :class="list.isPublic ? 'pi pi-globe' : 'pi pi-lock'"
+            aria-hidden="true"
+          ></i>
+          {{ list.isPublic ? t('lists.public') : t('lists.private') }}
+        </span>
+        <span v-if="list.ranked">{{ t('lists.rankedShort') }}</span>
+      </p>
+      <template
+        v-if="list"
+        #actions
+      >
+        <AppButton
+          :label="t('lists.addBooks')"
+          icon="pi pi-plus"
+          class="btn-primary"
+          :disabled="isOffline"
+          @click="pickerOpen = true"
+        />
+        <AppButton
+          v-if="canShare"
+          :label="t('lists.share')"
+          icon="pi pi-share-alt"
+          class="btn-outlined btn-secondary share-btn"
+          @click="share"
+        />
+        <IconButton
+          icon="pi pi-ellipsis-h"
+          :label="t('lists.moreActions')"
+          aria-haspopup="true"
+          aria-controls="list-more-menu"
+          @click="event => moreMenu.toggle(event)"
+        />
+        <PopupMenu
+          id="list-more-menu"
+          ref="moreMenu"
+          :items="moreItems"
+        />
+      </template>
+    </PageHeader>
+    <div class="list-content">
 
       <div
         v-if="loading && !list"
@@ -18,10 +81,6 @@
         :aria-label="t('common.loading')"
         class="skeletons"
       >
-        <AppSkeleton
-          width="60%"
-          height="2.5rem"
-        />
         <AppSkeleton
           v-for="n in 4"
           :key="n"
@@ -33,7 +92,6 @@
       <EmptyState
         v-else-if="notFound"
         icon="pi pi-list"
-        :level="1"
         :title="t('lists.notFound')"
       >
         <template #action>
@@ -48,66 +106,12 @@
       <EmptyState
         v-else-if="loadError && !list"
         variant="error"
-        :level="1"
         :title="t('lists.loadOneFailed')"
         :loading="loading"
         @action="load"
       />
 
       <template v-else-if="list">
-        <PageHeader
-          :title="list.title"
-          divider
-        >
-          <template #subtitle>
-            <p
-              v-if="list.description"
-              class="description"
-            >{{ list.description }}</p>
-          </template>
-            <p class="meta">
-              <span>{{ t('lists.count', { n: list.items.length }, list.items.length) }}</span>
-              <span
-                class="visibility"
-                :class="{ public: list.isPublic }"
-              >
-                <i
-                  :class="list.isPublic ? 'pi pi-globe' : 'pi pi-lock'"
-                  aria-hidden="true"
-                ></i>
-                {{ list.isPublic ? t('lists.public') : t('lists.private') }}
-              </span>
-              <span v-if="list.ranked">{{ t('lists.rankedShort') }}</span>
-            </p>
-          <template #actions>
-            <AppButton
-              :label="t('lists.addBooks')"
-              icon="pi pi-plus"
-              class="btn-primary"
-              :disabled="isOffline"
-              @click="pickerOpen = true"
-            />
-            <AppButton
-              v-if="canShare"
-              :label="t('lists.share')"
-              icon="pi pi-share-alt"
-              class="btn-outlined btn-secondary share-btn"
-              @click="share"
-            />
-            <IconButton
-              icon="pi pi-ellipsis-h"
-              :label="t('lists.moreActions')"
-              aria-haspopup="true"
-              aria-controls="list-more-menu"
-              @click="event => moreMenu.toggle(event)"
-            />
-            <PopupMenu
-              id="list-more-menu"
-              ref="moreMenu"
-              :items="moreItems"
-            />
-          </template>
-        </PageHeader>
 
         <p
           v-if="list.isPublic && !currentUser?.isPublic"
@@ -532,36 +536,20 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Visual do aviso em main.css (.notice) */
+.notice {
+  margin: 0 0 var(--space-4);
+}
+
 .list-page {
-  padding: 2rem;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--bg-app);
-}
-
-.list-content {
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-.back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  text-decoration: none;
-}
-
-.back:hover {
-  color: var(--main-color);
+  /* Casca e recuo em .page (main.css) */
+  --page-max: 760px;
 }
 
 .skeletons {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .description {
@@ -576,8 +564,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 1rem;
-  margin: 0.25rem 0 0;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-1) 0 0;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
 }
@@ -585,7 +573,7 @@ onBeforeUnmount(() => {
 .visibility {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .visibility.public {
@@ -596,33 +584,11 @@ onBeforeUnmount(() => {
   font-size: var(--fs-xs);
 }
 
-.notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin: 0 0 1rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: var(--radius-md);
-  background: rgba(var(--main-color-rgb), 0.08);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  line-height: 1.45;
-}
-
-.notice .pi {
-  margin-top: 0.15rem;
-  color: var(--main-color);
-}
-
-.notice a {
-  color: var(--main-color);
-}
-
 .reorder-help {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 0 0 0.6rem;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
   font-size: var(--fs-xs);
   color: var(--text-muted);
 }
@@ -630,14 +596,14 @@ onBeforeUnmount(() => {
 .items {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .item {
-  padding: 0.5rem 0.6rem 0.5rem 0.35rem;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-1);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-panel);
@@ -734,23 +700,19 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
 
-  .list-content > .page-header :deep(.page-header-actions) {
+  .list-page > .page-header :deep(.page-header-actions) {
     flex-wrap: nowrap;
     width: 100%;
   }
 
-  .list-content > .page-header :deep(.page-header-actions > :first-child) {
+  .list-page > .page-header :deep(.page-header-actions > :first-child) {
     flex: 1;
   }
 }
 
 @media (max-width: 639.98px) {
-  .list-page {
-    padding: 1.25rem;
-  }
-
   .item {
-    padding: 0.4rem 0.35rem 0.4rem 0.2rem;
+    padding: var(--space-2) var(--space-1) var(--space-2) 0.2rem;
   }
 }
 </style>

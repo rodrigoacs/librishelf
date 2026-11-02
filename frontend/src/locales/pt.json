@@ -72,7 +72,7 @@
     "close": "Fechar",
     "retry": "Tentar de novo",
     "copy": "Copiar",
-    "copied": "Copiado!",
+    "copied": "Copiado",
     "loadError": "Não foi possível carregar. Verifique sua conexão e tente de novo.",
     "back": "Voltar",
     "skipToContent": "Pular para o conteúdo",
@@ -91,7 +91,7 @@
     "undo": "Desfazer"
   },
   "book": {
-    "toast_added": "Livro adicionado com sucesso!",
+    "toast_added": "Livro adicionado",
     "toast_error": "Não foi possível adicionar o livro.",
     "file_too_large": "A imagem pode ter no máximo {mb} MB.",
     "file_not_image": "Selecione um arquivo de imagem.",
@@ -350,12 +350,12 @@
     "passwordTooWeak": "A senha precisa ter pelo menos 8 caracteres, incluindo letras e números.",
     "error": "Erro",
     "accountCreated": "Sua conta foi criada. Você já pode fazer login.",
-    "errorCreating": "Erro ao criar a conta. Tente novamente.",
+    "errorCreating": "Erro ao criar a conta. Tente de novo.",
     "success": "Sucesso",
     "privacyNotice": "Ao criar a conta, você concorda com a",
     "privacyLink": "política de privacidade",
     "invalidUsername": "Use só letras, números, ponto, hífen e sublinhado.",
-    "accountCreatedVerify": "Conta criada! Enviamos um link para confirmar seu e-mail."
+    "accountCreatedVerify": "Conta criada. Enviamos um link para confirmar seu e-mail."
   },
   "publicLibrary": {
     "title": "Biblioteca de { ownerName }",
@@ -702,7 +702,7 @@
   "history": {
     "panelTitle": "Suas leituras",
     "readAgain": "Ler de novo",
-    "readAgainToast": "Boa releitura! A leitura anterior continua no histórico.",
+    "readAgainToast": "Releitura começada. A leitura anterior continua no histórico.",
     "readTimes": "Lido uma vez | Lido {n} vezes",
     "title": "Histórico de leituras",
     "loading": "Carregando…",
@@ -843,7 +843,7 @@
   "verify": {
     "loading": "Confirmando seu e-mail…",
     "doneTitle": "E-mail confirmado",
-    "doneText": "Pronto! Agora você pode deixar a biblioteca pública, participar da comunidade e recuperar a senha por e-mail.",
+    "doneText": "Pronto. Agora você pode deixar a biblioteca pública, participar da comunidade e recuperar a senha por e-mail.",
     "failedTitle": "Não deu para confirmar",
     "failedText": "Este link é inválido ou expirou.",
     "goHome": "Ir para o início",
@@ -875,7 +875,7 @@
     "remove": "Remover meta",
     "question": "Quantos livros você quer ler em {year}?",
     "ofTarget": "de {goal} livro | de {goal} livros",
-    "done": "Meta cumprida! 🎉",
+    "done": "Meta cumprida",
     "ahead": "{n} livro à frente do ritmo | {n} livros à frente do ritmo",
     "behind": "{n} livro atrás do ritmo para fechar o ano | {n} livros atrás do ritmo para fechar o ano",
     "onTrack": "No ritmo certo",
@@ -1114,7 +1114,7 @@
     "REVIEW_OWN": "Você não pode curtir nem denunciar a sua própria resenha.",
     "REVIEW_NOT_FOUND": "Resenha não encontrada.",
     "MODERATION_TOKEN_INVALID": "Este link de moderação é inválido ou venceu. Abra a resenha pela área administrativa.",
-    "RATE_LIMIT_REPORTS": "Muitas denúncias em pouco tempo. Tente novamente mais tarde.",
+    "RATE_LIMIT_REPORTS": "Muitas denúncias em pouco tempo. Tente de novo mais tarde.",
     "LIST_NOT_FOUND": "Lista não encontrada.",
     "LIST_TITLE_REQUIRED": "Dê um nome para a lista.",
     "LIST_TITLE_TOO_LONG": "O nome pode ter no máximo {max} caracteres.",
@@ -1242,6 +1242,7 @@
     "avatarKeptDone": "Foto mantida"
   },
   "lists": {
+    "total": "Nenhuma lista | 1 lista | {n} listas",
     "title": "Listas",
     "subtitle": "Separe livros da sua estante em listas, na ordem que quiser — e compartilhe as que forem públicas.",
     "new": "Nova lista",
@@ -1345,7 +1346,7 @@
     "lastYearCount": "nenhum livro no ano anterior | 1 livro no ano anterior | {n} livros no ano anterior",
     "goalTitle": "Meta do ano",
     "goalProgress": "{done} de {target}",
-    "goalDone": "Meta cumprida! 🎉",
+    "goalDone": "Meta cumprida",
     "goalLeft": "Faltam {n} livros | Falta 1 livro | Faltam {n} livros",
     "byMonth": "Mês a mês",
     "busiest": "Mês mais intenso: {month} ({n} livros) | Mês mais intenso: {month} (1 livro) | Mês mais intenso: {month} ({n} livros)",

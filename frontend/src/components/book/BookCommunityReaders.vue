@@ -40,7 +40,7 @@
     v-if="community.alsoHave.length"
     class="also-have"
   >
-    <h3>{{ t('community.also_have') }}</h3>
+    <h3 class="section-title">{{ t('community.also_have') }}</h3>
     <ul>
       <li
         v-for="item in community.alsoHave.slice(0, ALSO_HAVE_SHOWN)"
@@ -90,16 +90,16 @@ const ALSO_HAVE_SHOWN = 3
 .reader-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .reader-list li {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
   background: var(--bg-input);
   border-radius: var(--radius-pill);
-  padding: 0.25rem 0.7rem;
+  padding: var(--space-1) var(--space-3);
   font-size: var(--fs-sm);
 }
 
@@ -115,18 +115,15 @@ const ALSO_HAVE_SHOWN = 3
 }
 
 .also-have h3 {
-  margin: 0 0 0.35rem;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  font-weight: 500;
+  margin: 0 0 var(--space-1);
 }
 
 .also-have li {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 1rem;
-  padding: 0.45rem 0;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--border-color);
 }
 

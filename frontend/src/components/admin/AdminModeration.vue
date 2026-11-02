@@ -60,7 +60,7 @@
           :key="group.key"
           :aria-labelledby="`ins-${group.key}`"
         >
-          <h2 :id="`ins-${group.key}`">{{ t(`admin.moderation.insights.${group.key}`) }}</h2>
+          <h2 class="section-title" :id="`ins-${group.key}`">{{ t(`admin.moderation.insights.${group.key}`) }}</h2>
           <p class="hint">{{ t(`admin.moderation.insights.${group.key}Hint`) }}</p>
           <p
             v-if="!group.rows.length"
@@ -113,7 +113,7 @@
         />
         <p
           v-else-if="items.length === 0"
-          class="empty"
+          class="empty-note"
         >
           <i
             class="pi pi-check-circle"
@@ -168,7 +168,7 @@
       >
         <p
           v-if="!selectedId"
-          class="empty"
+          class="empty-note"
         >{{ t('admin.moderation.pick') }}</p>
         <AppSkeleton
           v-else-if="detailLoading && !detail"
@@ -232,7 +232,7 @@
           </div>
           <p class="hint">{{ t('moderation.keepHint') }}</p>
 
-          <h2 class="reports-title">{{ t('moderation.reportsCount', { n: detail.reports.length }, detail.reports.length) }}</h2>
+          <h2 class="section-title reports-title">{{ t('moderation.reportsCount', { n: detail.reports.length }, detail.reports.length) }}</h2>
           <ul class="reports">
             <li
               v-for="(report, index) in detail.reports"
@@ -384,7 +384,7 @@ onMounted(() => {
 .moderation {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .filters {
@@ -403,7 +403,7 @@ onMounted(() => {
   font: inherit;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
-  padding: 0.4rem 0.95rem;
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-pill);
   cursor: pointer;
 }
@@ -422,17 +422,17 @@ onMounted(() => {
 .layout {
   display: grid;
   grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
-  gap: 1.25rem;
+  gap: var(--space-5);
   align-items: start;
 }
 
 .queue {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
   max-height: calc(100dvh - 15rem);
   overflow-y: auto;
-  padding-right: 0.25rem;
+  padding-right: var(--space-1);
 }
 
 .queue-list {
@@ -441,21 +441,21 @@ onMounted(() => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .queue-item {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
   text-align: left;
   font: inherit;
   color: inherit;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 0.85rem 1rem;
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
 }
 
@@ -476,7 +476,7 @@ onMounted(() => {
 .queue-head {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: baseline;
 }
 
@@ -501,7 +501,7 @@ onMounted(() => {
 .queue-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
+  gap: var(--space-1) var(--space-3);
   font-size: var(--fs-xs);
   color: var(--text-muted);
 }
@@ -516,7 +516,7 @@ onMounted(() => {
   display: inline-block;
   width: 0.45rem;
   height: 0.45rem;
-  margin-right: 0.3rem;
+  margin-right: var(--space-1);
   border-radius: 50%;
   background: var(--orange);
 }
@@ -526,7 +526,7 @@ onMounted(() => {
   font-size: var(--fs-xs);
   font-weight: 600;
   border-radius: var(--radius-pill);
-  padding: 0.1rem 0.5rem;
+  padding: 0.1rem var(--space-2);
 }
 
 .state-tag {
@@ -544,11 +544,11 @@ onMounted(() => {
 .detail {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem 1.5rem;
+  border-radius: var(--card-radius);
+  padding: var(--space-5) var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--space-3);
   min-height: 320px;
 }
 
@@ -556,16 +556,16 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
 .state {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
-  padding: 0.45rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -604,7 +604,7 @@ onMounted(() => {
 
 .actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -615,9 +615,7 @@ onMounted(() => {
 }
 
 .reports-title {
-  margin: 0.5rem 0 0;
-  font-size: var(--fs-md);
-  color: var(--text-primary);
+  margin: var(--space-2) 0 0;
 }
 
 .reports {
@@ -626,16 +624,16 @@ onMounted(() => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .reports li {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 0.6rem 0.8rem;
+  padding: var(--space-2) var(--space-3);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 0.75rem;
+  gap: var(--space-1) var(--space-3);
   align-items: baseline;
 }
 
@@ -660,25 +658,18 @@ onMounted(() => {
   font-size: var(--fs-sm);
 }
 
-.empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem 1rem;
-  margin: 0;
-}
-
 .insights {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
 }
 
 .insights summary {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -698,18 +689,16 @@ onMounted(() => {
 .insight-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
-  margin-top: 1rem;
+  gap: var(--space-5);
+  margin-top: var(--space-4);
 }
 
 .insight-grid h2 {
   margin: 0;
-  font-size: var(--fs-sm);
-  color: var(--text-primary);
 }
 
 .insight-grid .hint {
-  margin: 0.2rem 0 0.6rem;
+  margin: 0.2rem 0 var(--space-2);
 }
 
 .insight-grid ul {
@@ -718,7 +707,7 @@ onMounted(() => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--space-2);
   font-size: var(--fs-sm);
 }
 
@@ -726,7 +715,7 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.3rem 0.5rem;
+  gap: var(--space-1) var(--space-2);
 }
 
 .insight-grid .muted {

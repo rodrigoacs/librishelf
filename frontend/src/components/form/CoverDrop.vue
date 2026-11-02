@@ -117,7 +117,7 @@ function onPick(event) {
 .cover-drop {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
   width: 100%;
 }
 
@@ -174,8 +174,8 @@ function onPick(event) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.6rem;
+  gap: var(--space-2);
+  padding: var(--space-2);
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
   color: #ffffff;
   font-size: var(--fs-sm);
@@ -199,8 +199,8 @@ function onPick(event) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  padding: 1rem;
+  gap: var(--space-2);
+  padding: var(--space-4);
   text-align: center;
 }
 
@@ -230,7 +230,7 @@ function onPick(event) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   color: var(--red);
   font-size: var(--fs-xs);
   font-weight: 500;
@@ -245,7 +245,7 @@ function onPick(event) {
   .cover-drop {
     flex-direction: row;
     align-items: center;
-    gap: 0.9rem;
+    gap: var(--space-4);
   }
 
   .drop-zone {

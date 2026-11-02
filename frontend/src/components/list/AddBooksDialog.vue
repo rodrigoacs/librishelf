@@ -8,25 +8,12 @@
       @update:visible="value => emit('update:visible', value)"
     >
       <div class="picker">
-        <div class="search">
-          <i
-            class="pi pi-search"
-            aria-hidden="true"
-          ></i>
-          <label
-            :for="`${uid}-search`"
-            class="sr-only"
-          >{{ t('lists.searchShelf') }}</label>
-          <input
-            :id="`${uid}-search`"
-            ref="searchEl"
-            v-model="query"
-            type="search"
-            :placeholder="t('lists.searchShelf')"
-            autocomplete="off"
-            enterkeyhint="search"
-          />
-        </div>
+        <SearchField
+          :id="`${uid}-search`"
+          ref="searchEl"
+          v-model="query"
+          :placeholder="t('lists.searchShelf')"
+        />
         <p class="hint">{{ query.trim() ? t('lists.resultsFor', { q: query.trim() }) : t('lists.recentBooks') }}</p>
 
         <p
@@ -107,6 +94,7 @@ import AppButton from '../ui/AppButton.vue'
 import BookCover from '../BookCover.vue'
 import api from '../../services/api.js'
 import { useToast } from '../../services/toast.js'
+import SearchField from '../ui/SearchField.vue'
 
 /**
  * Escolher livros da própria estante para a lista: busca (ou os mais
@@ -190,38 +178,8 @@ async function toggle(book) {
 .picker {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
   min-height: min(60vh, 32rem);
-}
-
-.search {
-  position: relative;
-}
-
-.search .pi {
-  position: absolute;
-  left: 0.85rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-}
-
-.search input {
-  width: 100%;
-  height: 2.75rem;
-  padding: 0 0.85rem 0 2.4rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font: inherit;
-}
-
-.search input:focus {
-  outline: none;
-  border-color: var(--main-color);
-  box-shadow: var(--focus-glow);
 }
 
 .hint,
@@ -245,8 +203,8 @@ async function toggle(book) {
 .results li {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.25rem;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-1);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -283,10 +241,10 @@ async function toggle(book) {
 .toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   flex-shrink: 0;
   min-height: 2.25rem;
-  padding: 0 0.85rem;
+  padding: 0 var(--space-3);
   border: 1px solid var(--border-hover);
   border-radius: var(--radius-pill);
   background: none;
@@ -326,8 +284,8 @@ async function toggle(book) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding-top: 0.5rem;
+  gap: var(--space-4);
+  padding-top: var(--space-2);
 }
 
 .count {

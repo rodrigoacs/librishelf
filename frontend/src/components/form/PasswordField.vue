@@ -91,14 +91,14 @@ defineExpose({ focus: () => field.value?.focus() })
 .password-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .reveal-btn {
   flex-shrink: 0;
   width: 2.5rem;
   height: 2.5rem;
-  margin-right: 0.35rem;
+  margin-right: var(--space-1);
   border: none;
   border-radius: 50%;
   background: transparent;
@@ -118,7 +118,7 @@ defineExpose({ focus: () => field.value?.focus() })
 .strength {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   font-size: var(--fs-xs);
   font-weight: 600;
 }

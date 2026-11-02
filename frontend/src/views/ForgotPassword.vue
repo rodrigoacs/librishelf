@@ -101,7 +101,7 @@ async function submit() {
 <style scoped>
 .state-note {
   display: flex;
-  gap: 0.6rem;
+  gap: var(--space-2);
   align-items: flex-start;
   margin: 0;
   color: var(--text-secondary);

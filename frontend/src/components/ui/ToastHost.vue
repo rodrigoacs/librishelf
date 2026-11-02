@@ -137,15 +137,15 @@ onMounted(bringToFront)
 .toast-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .toast {
   --toast-color: var(--blue);
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.85rem 0.9rem;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--bg-panel);
   color: var(--text-primary);
@@ -194,7 +194,7 @@ onMounted(bringToFront)
   flex-shrink: 0;
   align-self: center;
   min-height: 2rem;
-  padding: 0.3rem 0.6rem;
+  padding: var(--space-1) var(--space-2);
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
@@ -269,7 +269,7 @@ onMounted(bringToFront)
     align-items: center;
     gap: var(--space-2);
     max-width: 100%;
-    padding: 0.4rem 0.4rem 0.4rem 1rem;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-pill);
     background: var(--toast-bg);

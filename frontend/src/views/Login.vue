@@ -104,7 +104,7 @@ async function handleLogin() {
 .forgot-link {
   display: block;
   width: fit-content;
-  margin: 0.5rem 0 0 auto;
+  margin: var(--space-2) 0 0 auto;
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--main-color);
@@ -118,7 +118,7 @@ async function handleLogin() {
 
 @media (pointer: coarse) {
   .forgot-link {
-    padding: 0.6rem 0;
+    padding: var(--space-2) 0;
     margin-top: 0;
   }
 }

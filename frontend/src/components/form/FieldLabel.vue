@@ -26,6 +26,6 @@ defineProps({
   color: var(--text-secondary);
   font-size: var(--fs-xs);
   font-weight: 600;
-  margin-bottom: 0.45rem;
+  margin-bottom: var(--space-2);
 }
 </style>

@@ -171,7 +171,7 @@
         aria-labelledby="home-reading-title"
       >
         <div class="shelf-head">
-          <h2 id="home-reading-title">{{ t('home.readingNow') }}</h2>
+          <h2 class="section-title" id="home-reading-title">{{ t('home.readingNow') }}</h2>
           <router-link
             v-if="readingTotal > READING_SHOWN"
             :to="{ name: 'library', query: { status: 'reading' } }"
@@ -206,17 +206,12 @@
             <h3>{{ t('home.inviteTitle') }}</h3>
             <p>{{ t('home.inviteText') }}</p>
             <div class="invite-search">
-              <label
-                for="home-invite-search"
-                class="sr-only"
-              >{{ t('library.search_label') }}</label>
-              <input
+              <SearchField
                 id="home-invite-search"
                 v-model="inviteSearch"
-                type="search"
-                class="invite-input"
+                :region="false"
+                :label="t('library.search_label')"
                 :placeholder="t('library.search_ph')"
-                autocomplete="off"
               />
               <AppButton
                 type="submit"
@@ -239,7 +234,7 @@
         aria-labelledby="home-recent-title"
       >
         <div class="shelf-head">
-          <h2 id="home-recent-title">{{ t('home.recentlyAdded') }}</h2>
+          <h2 class="section-title" id="home-recent-title">{{ t('home.recentlyAdded') }}</h2>
           <router-link
             :to="{ name: 'library' }"
             class="see-all"
@@ -262,7 +257,7 @@
         aria-labelledby="home-recs-title"
       >
         <div class="shelf-head">
-          <h2 id="home-recs-title">{{ t('home.recommended') }}</h2>
+          <h2 class="section-title" id="home-recs-title">{{ t('home.recommended') }}</h2>
           <router-link
             :to="{ name: 'community', query: { tab: 'discover' } }"
             class="see-all"
@@ -301,7 +296,7 @@
         aria-labelledby="home-activity-title"
       >
         <div class="shelf-head">
-          <h2 id="home-activity-title">{{ t('home.community') }}</h2>
+          <h2 class="section-title" id="home-activity-title">{{ t('home.community') }}</h2>
           <router-link
             :to="{ name: 'community' }"
             class="see-all"
@@ -359,6 +354,7 @@ import { pendingRequests } from '../services/social.js'
 import { useToast } from '../services/toast.js'
 import { useRouter } from 'vue-router'
 import { holdScroll } from '../services/scrollRestore.js'
+import SearchField from '../components/ui/SearchField.vue'
 
 const SHELF_SIZE = 6
 // "Lendo agora" em destaque: até 3 cards grandes
@@ -490,12 +486,16 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Visual do aviso em main.css (.notice) */
+.notice {
+  margin-top: -1rem;
+}
+
 .home-container {
-  /* Casca e recuo em .page (main.css) */
-  --page-max: 1200px;
+  /* Casca e recuo em .page (main.css); conteúdo na largura toda */
   display: flex;
   flex-direction: column;
-  gap: 2.25rem;
+  gap: var(--space-7);
 }
 
 .summary {
@@ -508,45 +508,16 @@ onMounted(async () => {
   margin-bottom: 0;
 }
 
-.notice {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1.1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(var(--main-color-rgb), 0.35);
-  background: rgba(var(--main-color-rgb), 0.08);
-  color: var(--text-primary);
-  text-decoration: none;
-  margin-top: -1rem;
-}
-
-.notice .pi-user-plus,
-.notice .pi-sparkles {
-  color: var(--main-color);
-}
-
-.notice-arrow {
-  margin-left: auto;
-  color: var(--text-secondary);
-}
-
-.notice:hover {
-  background: rgba(var(--main-color-rgb), 0.14);
-}
-
 .shelf-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .shelf-head h2 {
   margin: 0;
-  font-size: var(--fs-lg);
-  font-weight: 600;
 }
 
 .see-all {
@@ -564,7 +535,7 @@ onMounted(async () => {
 .shelf-skeleton {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 /* Esqueleto com as medidas das seções reais: card de "Lendo agora" e livros
@@ -572,7 +543,7 @@ onMounted(async () => {
 .home-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 2.25rem;
+  gap: var(--space-7);
 }
 
 .reading-skeleton {
@@ -583,14 +554,14 @@ onMounted(async () => {
 .book-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .cover-skeleton {
   aspect-ratio: 2 / 3;
   height: auto !important;
-  margin-bottom: 0.4rem;
+  margin-bottom: var(--space-2);
 }
 
 .summary-skeleton {
@@ -600,17 +571,17 @@ onMounted(async () => {
 .reading-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .reading-invite {
   display: flex;
-  gap: 1.25rem;
+  gap: var(--space-5);
   align-items: flex-start;
-  padding: 1.5rem;
+  padding: var(--space-6);
   background: var(--bg-panel);
   border: 1px dashed var(--border-hover);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
 }
 
 .invite-icon {
@@ -624,7 +595,7 @@ onMounted(async () => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .invite-body h3 {
@@ -641,37 +612,14 @@ onMounted(async () => {
 
 .invite-search {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.35rem;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
   max-width: 520px;
-}
-
-.invite-input {
-  flex: 1;
-  min-width: 0;
-  height: 2.75rem;
-  padding: 0 1rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font: inherit;
-  font-size: var(--fs-md);
-}
-
-.invite-input:focus {
-  outline: none;
-  border-color: var(--main-color);
-  box-shadow: var(--focus-glow);
-}
-
-.invite-input::placeholder {
-  color: var(--text-muted);
 }
 
 .invite-btn.btn {
   height: 2.75rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   flex-shrink: 0;
 }
 
@@ -690,7 +638,7 @@ onMounted(async () => {
 .rec-item {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -725,8 +673,8 @@ onMounted(async () => {
 .activity-list li {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1.1rem;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-color);
   color: var(--text-secondary);
   line-height: 1.45;
@@ -746,28 +694,28 @@ onMounted(async () => {
   width: 100%;
   margin: 0 auto;
   min-height: 0;
-  padding-top: 1rem;
+  padding-top: var(--space-4);
 }
 
 .tips {
   list-style: none;
-  margin: 1.5rem 0 0;
+  margin: var(--space-6) 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
   text-align: left;
   width: 100%;
 }
 
 .tips li {
   display: flex;
-  gap: 0.85rem;
+  gap: var(--space-3);
   align-items: flex-start;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 0.9rem 1rem;
+  padding: var(--space-4) var(--space-4);
   color: var(--text-secondary);
   line-height: 1.45;
 }
@@ -791,7 +739,7 @@ onMounted(async () => {
 
 @media (max-width: 639.98px) {
   .home-container {
-    gap: 1.75rem;
+    gap: var(--space-6);
   }
 
   /* Adicionar fica no "+" da barra de abas */
@@ -805,8 +753,8 @@ onMounted(async () => {
 
   .reading-invite {
     flex-direction: column;
-    gap: 0.75rem;
-    padding: 1.25rem;
+    gap: var(--space-3);
+    padding: var(--space-5);
   }
 
   .invite-btn :deep(.btn-label) {
@@ -828,9 +776,9 @@ onMounted(async () => {
     scroll-snap-type: x mandatory;
     /* Sem isto o snap encosta o primeiro livro na borda da tela */
     scroll-padding-inline: 1rem;
-    gap: 0.85rem;
+    gap: var(--space-3);
     margin: 0 -1rem;
-    padding: 0 1rem 0.5rem;
+    padding: 0 var(--space-4) var(--space-2);
   }
 
   .shelf-row > * {
@@ -846,7 +794,7 @@ onMounted(async () => {
   .shelf-skeleton {
     display: flex;
     overflow: hidden;
-    gap: 0.85rem;
+    gap: var(--space-3);
   }
 
   .shelf-skeleton > * {
@@ -858,7 +806,7 @@ onMounted(async () => {
   }
 
   .home-skeleton {
-    gap: 1.75rem;
+    gap: var(--space-6);
   }
 
   .reading-skeleton {

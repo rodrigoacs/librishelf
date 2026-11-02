@@ -101,7 +101,7 @@ onMounted(async () => {
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   grid-auto-rows: 180px;
   grid-auto-flow: dense;
-  gap: 0.5rem;
+  gap: var(--space-2);
   opacity: 0.35;
   filter: blur(3px) grayscale(30%);
   transform: rotate(-2deg);
@@ -151,7 +151,7 @@ onMounted(async () => {
   position: relative;
   z-index: 2;
   text-align: center;
-  padding: 3rem;
+  padding: var(--space-8);
   max-width: 600px;
 }
 
@@ -170,7 +170,7 @@ onMounted(async () => {
 .visual-subtitle {
   font-size: var(--fs-lg);
   color: #fff;
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   font-weight: 300;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -190,7 +190,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   background-color: var(--bg-panel);
-  padding: 2rem;
+  padding: var(--space-7);
   min-width: 450px;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
   z-index: 5;
@@ -209,7 +209,7 @@ onMounted(async () => {
 .form-wrapper :deep(.header h1) {
   font-size: var(--fs-2xl);
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 var(--space-2) 0;
 }
 
 .form-wrapper :deep(.subtitle) {
@@ -220,7 +220,7 @@ onMounted(async () => {
 .form-wrapper :deep(.auth-form) {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .form-wrapper :deep(.w-full) {
@@ -229,20 +229,20 @@ onMounted(async () => {
 
 .form-wrapper :deep(.field-hint) {
   display: block;
-  margin-top: 0.4rem;
+  margin-top: var(--space-2);
   font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
 .form-wrapper :deep(.footer) {
-  margin-top: 2rem;
+  margin-top: var(--space-7);
   text-align: center;
   color: var(--text-secondary);
   font-size: var(--fs-md);
 }
 
 .form-wrapper :deep(.footer p) {
-  margin: 0.5rem 0;
+  margin: var(--space-2) 0;
 }
 
 .form-wrapper :deep(.footer a) {
@@ -289,13 +289,13 @@ onMounted(async () => {
     flex: 1;
     min-width: 0;
     width: 100%;
-    padding: 2rem 1.25rem;
+    padding: var(--space-7) var(--space-5);
     align-items: center;
     box-shadow: none;
   }
 
   .form-wrapper :deep(.header) {
-    margin-bottom: 1.75rem;
+    margin-bottom: var(--space-6);
     text-align: center;
   }
 }

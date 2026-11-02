@@ -21,7 +21,7 @@
     />
     <p
       v-else-if="items.length === 0"
-      class="empty"
+      class="empty-note"
     >
       <i
         class="pi pi-check-circle"
@@ -162,14 +162,6 @@ onMounted(load)
   gap: var(--space-3);
 }
 
-.empty {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-  color: var(--text-secondary);
-}
-
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
@@ -184,7 +176,7 @@ onMounted(load)
   gap: var(--space-3);
   padding: var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
 }
 
@@ -234,7 +226,7 @@ onMounted(load)
 }
 
 .state-tag {
-  padding: 0.1rem 0.5rem;
+  padding: 0.1rem var(--space-2);
   border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: 600;

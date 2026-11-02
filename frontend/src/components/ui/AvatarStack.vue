@@ -73,7 +73,7 @@ const extra = computed(() => Math.max(props.total, list.value.length) - shown.va
   justify-content: center;
   min-width: 1.6rem;
   height: 1.6rem;
-  padding: 0 0.35rem;
+  padding: 0 var(--space-1);
   border-radius: var(--radius-pill);
   background: var(--bg-input);
   color: var(--text-secondary);

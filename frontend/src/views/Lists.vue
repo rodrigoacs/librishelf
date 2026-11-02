@@ -6,6 +6,12 @@
       divider
     >
       <template
+        v-if="!loading && lists.length"
+        #after-title
+      >
+        <span class="count-badge">{{ t('lists.total', { n: lists.length }, lists.length) }}</span>
+      </template>
+      <template
         v-if="lists.length"
         #actions
       >
@@ -118,15 +124,10 @@ onMounted(load)
 </script>
 
 <style scoped>
-.lists-page {
-  /* Casca e recuo em .page (main.css) */
-  --page-max: 1080px;
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;

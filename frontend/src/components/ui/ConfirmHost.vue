@@ -51,12 +51,12 @@ const current = computed(() => pendingConfirm.value)
 <style>
 .confirm-body {
   display: flex;
-  gap: 1rem;
-  padding: 1.5rem 1.5rem 1rem;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-6) var(--space-4);
 }
 
 .confirm-body h2 {
-  margin: 0 0 0.4rem;
+  margin: 0 0 var(--space-2);
   font-size: var(--fs-lg);
 }
 
@@ -79,7 +79,7 @@ const current = computed(() => pendingConfirm.value)
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.6rem;
-  padding: 0.85rem 1.5rem 1.25rem;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6) var(--space-5);
 }
 </style>

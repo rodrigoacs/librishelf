@@ -101,9 +101,9 @@ function submit() {
 .reading-editor {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 0.75rem;
+  padding: var(--space-3);
   border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.05);
   border: 1px solid var(--border-color);
@@ -112,13 +112,13 @@ function submit() {
 .dates {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .rating-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
@@ -135,7 +135,7 @@ function submit() {
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 @media (max-width: 639.98px) {

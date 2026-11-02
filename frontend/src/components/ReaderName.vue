@@ -69,7 +69,7 @@ const { t } = useI18n()
   color: var(--text-primary);
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--space-1);
   cursor: default;
   border-radius: var(--radius-sm);
 }

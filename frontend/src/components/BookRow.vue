@@ -168,11 +168,11 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding-right: 0.75rem;
+  padding-right: var(--space-3);
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
@@ -216,8 +216,8 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
   display: grid;
   grid-template-columns: 40px minmax(0, 2.6fr) minmax(0, 1.3fr) 3.5rem 6rem 6rem;
   align-items: center;
-  gap: 1rem;
-  padding: 0.55rem 0 0.55rem 0.65rem;
+  gap: var(--space-4);
+  padding: var(--space-2) 0 var(--space-2) var(--space-3);
   border: none;
   background: none;
   font: inherit;
@@ -266,7 +266,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
 .title-line {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -281,7 +281,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
 
 .status-badge {
   flex-shrink: 0;
-  padding: 0.05rem 0.5rem;
+  padding: 0.05rem var(--space-2);
   border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -390,7 +390,7 @@ const statusBadge = computed(() => (status.value === 'reading' || status.value =
 @media (max-width: 1023.98px) {
   .row-main {
     grid-template-columns: 40px minmax(0, 1fr) 5.75rem;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .row-main:has(.row-check) {

@@ -18,7 +18,7 @@
         class="card"
         aria-labelledby="admin-adoption-title"
       >
-        <h2 id="admin-adoption-title">{{ t('admin.usage.adoption') }}</h2>
+        <h2 class="section-title" id="admin-adoption-title">{{ t('admin.usage.adoption') }}</h2>
         <p class="hint">{{ t('admin.usage.adoptionHint', { n: data.adoption.users }) }}</p>
         <table>
           <thead>
@@ -56,7 +56,7 @@
         class="card"
         aria-labelledby="admin-events-title"
       >
-        <h2 id="admin-events-title">{{ t('admin.usage.events') }}</h2>
+        <h2 class="section-title" id="admin-events-title">{{ t('admin.usage.events') }}</h2>
         <p class="hint">{{ t('admin.usage.eventsHint') }}</p>
         <table>
           <thead>
@@ -142,32 +142,30 @@ onMounted(load)
 .usage {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: start;
 }
 
 .card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem 1.5rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
 }
 
 h2 {
   margin: 0;
-  font-size: var(--fs-lg);
-  color: var(--text-primary);
 }
 
 .hint,
 .note {
-  margin: 0.35rem 0 1rem;
+  margin: var(--space-1) 0 var(--space-4);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
 }
 
 .note {
-  margin: 1rem 0 0;
+  margin: var(--space-4) 0 0;
 }
 
 table {
@@ -179,7 +177,7 @@ table {
 th,
 td {
   text-align: left;
-  padding: 0.5rem 0.4rem;
+  padding: var(--space-2) var(--space-2);
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
   font-weight: 400;
@@ -211,7 +209,7 @@ tbody tr:last-child td {
 .share {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .bar {
@@ -237,9 +235,4 @@ tbody tr:last-child td {
   font-variant-numeric: tabular-nums;
 }
 
-.empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem 1rem;
-}
 </style>

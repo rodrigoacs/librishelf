@@ -132,7 +132,7 @@ function onCreated(list) {
 .add-to-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .book {
@@ -153,7 +153,7 @@ function onCreated(list) {
 .lists {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -164,9 +164,9 @@ function onCreated(list) {
 .option {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: var(--space-3);
   min-height: 2.75rem;
-  padding: 0 0.85rem;
+  padding: 0 var(--space-3);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -209,7 +209,7 @@ function onCreated(list) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  padding-top: 0.25rem;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
 }
 </style>

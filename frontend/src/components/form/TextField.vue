@@ -110,7 +110,7 @@ defineExpose({ focus: () => control.value?.focus() })
 .text-field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -147,7 +147,7 @@ defineExpose({ focus: () => control.value?.focus() })
   color: var(--text-primary);
   font: inherit;
   font-size: var(--fs-md);
-  padding: 1.45rem 0.9rem 0.5rem;
+  padding: var(--space-6) var(--space-4) var(--space-2);
   border-radius: var(--radius-md);
 }
 
@@ -213,7 +213,7 @@ defineExpose({ focus: () => control.value?.focus() })
 .field-error {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   color: var(--red);
   font-size: var(--fs-xs);
   font-weight: 500;

@@ -24,11 +24,7 @@
           width="30"
           height="30"
         />
-        <div class="logo-text">
-          <span class="text-main">LIBRI</span>SHELF
-        </div>
-        <!-- Celular: o nome como no ícone do app, ao lado do ☰ -->
-        <span class="logo-word">Librishelf</span>
+        <BrandWordmark class="logo-text" />
       </div>
       <!-- Contrapeso do botão do menu, para o logo ficar no centro (tablet) -->
       <div
@@ -165,9 +161,7 @@
             width="40"
             height="40"
           />
-          <div class="logo-text">
-            <span class="text-main">LIBRI</span>SHELF
-          </div>
+          <BrandWordmark class="logo-text" />
         </div>
         <button
           ref="closeButton"
@@ -323,6 +317,7 @@ import { pushOverlay } from '../services/backStack.js'
 import { requestLibrarySearch } from '../services/librarySearch.js'
 import { shouldComplete } from '../utils/motion.js'
 import { drawerOpen } from '../services/appNav.js'
+import BrandWordmark from './BrandWordmark.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -530,7 +525,7 @@ const items = computed(() => [
   margin-left: auto;
   min-width: 1.25rem;
   height: 1.25rem;
-  padding: 0 0.35rem;
+  padding: 0 var(--space-1);
   border-radius: var(--radius-pill);
   background: var(--main-solid);
   color: var(--on-main);
@@ -539,10 +534,6 @@ const items = computed(() => [
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.text-main {
-  color: var(--main-color);
 }
 
 .navigation-container {
@@ -573,7 +564,7 @@ const items = computed(() => [
 }
 
 .sidebar-header {
-  padding: 2rem 1.5rem;
+  padding: var(--space-7) var(--space-6);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -582,15 +573,11 @@ const items = computed(() => [
 .logo-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: var(--space-3);
 }
 
 .logo-text {
-  font-family: var(--font-display);
-  font-weight: 700;
   font-size: var(--fs-xl);
-  color: var(--text-primary);
-  letter-spacing: -1px;
 }
 
 .close-sidebar-btn {
@@ -599,18 +586,18 @@ const items = computed(() => [
 
 .nav-links {
   flex: 1;
-  padding: 1rem;
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   overflow-y: auto;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.8rem 1rem;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   text-decoration: none;
@@ -649,11 +636,11 @@ button.nav-item {
 .separator {
   height: 1px;
   background-color: var(--border-color);
-  margin: 0.5rem 0;
+  margin: var(--space-2) 0;
 }
 
 .sidebar-footer {
-  padding: 1.2rem;
+  padding: var(--space-5);
   border-top: 1px solid var(--border-color);
   background-color: var(--bg-app);
   position: relative;
@@ -663,13 +650,13 @@ button.nav-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: var(--space-3);
   overflow: hidden;
 }
 
@@ -755,12 +742,12 @@ button.nav-item {
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 1rem;
+  padding: var(--space-4);
   box-shadow: var(--shadow-3);
   z-index: 50;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: var(--space-3);
 }
 
 .settings-header {
@@ -803,7 +790,7 @@ button.nav-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.8rem 1rem;
+    padding: var(--space-3) var(--space-4);
     background-color: var(--bg-app);
     height: 60px;
   }
@@ -817,14 +804,11 @@ button.nav-item {
   .mobile-logo-wrapper {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .mobile-header .logo-text {
     font-size: var(--fs-lg);
-    color: var(--text-primary);
-    font-weight: 700;
-    font-family: var(--font-display);
   }
 
   .sidebar {
@@ -873,7 +857,6 @@ button.nav-item {
   }
 }
 
-.logo-word,
 .bar-actions,
 .drawer-edge {
   display: none;
@@ -908,19 +891,10 @@ button.nav-item {
     height: 26px;
   }
 
-  .mobile-header .logo-text,
   .header-spacer {
     display: none;
   }
 
-  .logo-word {
-    display: block;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: var(--fs-lg);
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-  }
 
   .bar-actions {
     display: flex;

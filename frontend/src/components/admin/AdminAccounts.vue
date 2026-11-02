@@ -1,27 +1,15 @@
 <template>
   <div class="accounts">
     <div class="toolbar">
-      <div
+      <SearchField
+        id="admin-user-search"
+        v-model="query"
         class="search"
-        role="search"
-      >
-        <i
-          class="pi pi-search"
-          aria-hidden="true"
-        ></i>
-        <label
-          class="sr-only"
-          for="admin-user-search"
-        >{{ t('admin.accounts.search') }}</label>
-        <input
-          id="admin-user-search"
-          v-model="query"
-          type="search"
-          maxlength="100"
-          autocomplete="off"
-          :placeholder="t('admin.accounts.searchPh')"
-        />
-      </div>
+        size="sm"
+        :label="t('admin.accounts.search')"
+        :placeholder="t('admin.accounts.searchPh')"
+        maxlength="100"
+      />
       <div
         class="filters"
         role="radiogroup"
@@ -137,7 +125,7 @@
       </table>
       <p
         v-if="loading"
-        class="empty"
+        class="empty-note"
         role="status"
       >{{ t('common.loading') }}</p>
       <EmptyState
@@ -150,7 +138,7 @@
       />
       <p
         v-else-if="users.length === 0"
-        class="empty"
+        class="empty-note"
       >{{ t('common.noResults') }}</p>
     </div>
 
@@ -187,6 +175,7 @@ import AppButton from '../ui/AppButton.vue'
 import EmptyState from '../ui/EmptyState.vue'
 import api from '../../services/api.js'
 import { LockedError, useAdminCall, formatShortDate, formatDateTime, formatNumber, formatDate } from './adminCall.js'
+import SearchField from '../ui/SearchField.vue'
 
 const props = defineProps({
   initialStatus: { type: String, default: 'all' },
@@ -263,13 +252,13 @@ onMounted(load)
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
@@ -277,32 +266,6 @@ onMounted(load)
   position: relative;
   flex: 1 1 280px;
   max-width: 420px;
-}
-
-.search .pi {
-  position: absolute;
-  left: 0.9rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search input {
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 2.6rem;
-  padding: 0 1rem 0 2.5rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-color);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font: inherit;
-}
-
-.search input:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 1px;
 }
 
 .filters {
@@ -320,7 +283,7 @@ onMounted(load)
   font: inherit;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
-  padding: 0.4rem 0.95rem;
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-pill);
   cursor: pointer;
 }
@@ -347,7 +310,7 @@ onMounted(load)
   max-width: 100%;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   overflow-x: auto;
 }
 
@@ -358,8 +321,8 @@ onMounted(load)
 .scroll-hint {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 0 0 0.5rem;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
   font-size: var(--fs-xs);
   color: var(--text-secondary);
 }
@@ -373,7 +336,7 @@ table {
 th,
 td {
   text-align: left;
-  padding: 0.7rem 0.9rem;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-color);
   vertical-align: top;
   color: var(--text-primary);
@@ -425,7 +388,7 @@ td.warn {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .username {
@@ -459,7 +422,7 @@ tbody tr {
   font-size: var(--fs-xs);
   font-weight: 600;
   border-radius: var(--radius-pill);
-  padding: 0.05rem 0.5rem;
+  padding: 0.05rem var(--space-2);
 }
 
 .tag.admin {
@@ -478,7 +441,7 @@ tbody tr {
 }
 
 .reason {
-  margin: 0.3rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--text-secondary);
   font-size: var(--fs-xs);
   max-width: 32ch;
@@ -489,18 +452,11 @@ tbody tr {
   white-space: nowrap;
 }
 
-.empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem 1rem;
-  margin: 0;
-}
-
 .pager {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
 }

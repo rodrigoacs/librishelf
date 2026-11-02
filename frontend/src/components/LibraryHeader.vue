@@ -11,45 +11,19 @@
           class="count-badge"
           v-if="booksQuantity !== undefined"
           aria-live="polite"
-        >{{ phone ? countLabelLong : countLabel }}</span>
+        >{{ countLabelLong }}</span>
       </div>
 
       <div class="search-area">
-        <div
+        <SearchField
+          id="library-search"
+          ref="searchInput"
           class="search-input-wrapper"
-          role="search"
-        >
-          <i
-            class="pi pi-search search-icon"
-            aria-hidden="true"
-          />
-          <label
-            for="library-search"
-            class="sr-only"
-          >{{ t('library.search_label') }}</label>
-          <input
-            id="library-search"
-            ref="searchInput"
-            v-model="searchText"
-            type="search"
-            :placeholder="longPlaceholderFits ? t('library.search_ph') : t('library.search_ph_short')"
-            class="custom-search-input"
-            autocomplete="off"
-            @input="emitFilter('search', searchText)"
-          />
-          <button
-            v-if="searchText"
-            type="button"
-            class="clear-icon"
-            :aria-label="t('library.clear_search')"
-            @click="clearSearch"
-          >
-            <i
-              class="pi pi-times"
-              aria-hidden="true"
-            ></i>
-          </button>
-        </div>
+          :model-value="searchText"
+          :label="t('library.search_label')"
+          :placeholder="longPlaceholderFits ? t('library.search_ph') : t('library.search_ph_short')"
+          @update:model-value="onSearch"
+        />
 
         <!-- Ordenar à mão, ao lado da busca (antes só dentro da gaveta de filtros).
              AppSelect, e não <select>: a lista nativa não segue o tema. -->
@@ -475,6 +449,7 @@
 
 <script setup>
 import PageHeader from './ui/PageHeader.vue'
+import SearchField from './ui/SearchField.vue'
 import { tagColor } from '../utils/tagColors.js'
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import AppButton from './ui/AppButton.vue'
@@ -550,7 +525,7 @@ const searchInput = ref(null)
 const longPlaceholderFits = ref(true)
 let measureCtx = null
 function measurePlaceholder() {
-  const el = searchInput.value
+  const el = searchInput.value?.input
   if (!el || !el.clientWidth) return
   const style = getComputedStyle(el)
   const available = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
@@ -562,9 +537,9 @@ function measurePlaceholder() {
 let placeholderObserver = null
 onMounted(() => {
   measurePlaceholder()
-  if (typeof ResizeObserver !== 'undefined' && searchInput.value) {
+  if (typeof ResizeObserver !== 'undefined' && searchInput.value?.input) {
     placeholderObserver = new ResizeObserver(() => measurePlaceholder())
-    placeholderObserver.observe(searchInput.value)
+    placeholderObserver.observe(searchInput.value.input)
   }
   document.fonts?.ready?.then(measurePlaceholder)
 })
@@ -671,9 +646,9 @@ function emitFilter(key, value) {
   emit('filter-change', { key, value })
 }
 
-function clearSearch() {
-  searchText.value = ''
-  emitFilter('search', '')
+function onSearch(value) {
+  searchText.value = value
+  emitFilter('search', value)
 }
 
 function removeFromList(key, name) {
@@ -742,17 +717,8 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 .header-title {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: var(--space-3);
   white-space: nowrap;
-}
-
-.count-badge {
-  background-color: var(--main-solid);
-  color: var(--on-main);
-  font-weight: 800;
-  font-size: var(--fs-xs);
-  padding: 0.15rem 0.6rem;
-  border-radius: var(--radius-lg);
 }
 
 .view-toggle {
@@ -797,7 +763,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   max-width: 760px;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -813,13 +779,13 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 .sort-quick :deep(.app-select-trigger) {
   min-height: 2.75rem;
   border-radius: var(--radius-pill);
-  padding: 0 0.85rem 0 0.95rem;
+  padding: 0 var(--space-3) 0 var(--space-4);
 }
 
 .sort-quick-content {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   min-width: 0;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
@@ -839,70 +805,9 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   max-width: 11rem;
 }
 
-.search-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-/* 24 × 24 px no mouse (WCAG 2.5.8); no toque o ::after leva a 44 px, como
-   no .view-btn (bloco sem escopo no fim do arquivo) */
-.clear-icon {
-  position: absolute;
-  right: 1rem;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: var(--fs-sm);
-}
-
-.clear-icon:hover {
-  color: var(--text-primary);
-}
-
-.custom-search-input::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.custom-search-input {
-  width: 100%;
-  background-color: var(--bg-input);
-  border: 1px solid transparent;
-  color: var(--text-primary);
-  padding: 0.75rem 2.5rem;
-  border-radius: var(--radius-pill);
-  font-family: inherit;
-  font-size: var(--fs-md);
-  transition: all 0.2s ease;
-}
-
-.custom-search-input:focus {
-  background-color: var(--bg-panel);
-  border-color: var(--main-color);
-  box-shadow: 0 0 0 2px rgba(var(--main-color-rgb), 0.2);
-  outline: none;
-}
-
 .actions {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
   align-items: center;
   margin-left: auto;
 }
@@ -925,16 +830,16 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
 .add-btn {
   font-weight: 600;
-  padding: 0.6rem 1.2rem;
+  padding: var(--space-2) var(--space-5);
   font-size: var(--fs-md);
 }
 
 .active-filters-bar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 0.8rem;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--border-color);
   animation: slideDown 0.2s ease-out;
 }
@@ -961,7 +866,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 .chips-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex: 1;
 }
 
@@ -993,8 +898,8 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-7);
 }
 
 .sidebar-header h3 {
@@ -1004,7 +909,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 }
 
 .sidebar-header p {
-  margin: 0.5rem 0 0;
+  margin: var(--space-2) 0 0;
   color: var(--text-secondary);
   font-size: var(--fs-md);
 }
@@ -1012,7 +917,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 .sidebar-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .filter-group label,
@@ -1020,14 +925,14 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   display: block;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
   font-weight: 600;
   text-transform: uppercase;
 }
 
 .sort-row {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: center;
   width: 100%;
 }
@@ -1044,7 +949,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
 .sidebar-footer {
   margin-top: auto;
-  padding-top: 2rem;
+  padding-top: var(--space-7);
 }
 
 /* Grade/lista dentro da gaveta: só no celular (no resto ele fica no cabeçalho) */
@@ -1061,7 +966,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   flex: 1;
   width: auto;
   height: 2.75rem;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font: inherit;
   font-size: var(--fs-md);
   font-weight: 600;
@@ -1078,7 +983,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     grid-template-areas:
       "title actions"
       "search search";
-    gap: 0.6rem 0.75rem;
+    gap: var(--space-2) var(--space-3);
   }
 
   .header-title {
@@ -1132,27 +1037,22 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     grid-template-areas:
       "title actions"
       "search search";
-    gap: 0.6rem 0.75rem;
+    gap: var(--space-2) var(--space-3);
   }
 
   /* Contagem embaixo do título: ao lado, as ações a cobriam ("12 de 150"
      não cabe na coluna do título) */
+  /* Quantidade na linha do título, como no celular */
   .header-title {
     grid-area: title;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
+    align-items: center;
+    gap: var(--space-2);
     min-width: 0;
-  }
-
-  .count-badge {
-    padding: 0 0.45rem;
-    white-space: nowrap;
   }
 
   .actions {
     grid-area: actions;
-    gap: 0.25rem;
+    gap: var(--space-1);
   }
 
   .search-area {
@@ -1161,14 +1061,8 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     max-width: none;
   }
 
-  .custom-search-input {
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
-  }
-
   .sort-quick :deep(.app-select-trigger) {
-    min-height: 2.6rem;
-    padding-left: 0.8rem;
+    padding-left: var(--space-3);
   }
 
   .sort-quick-prefix {
@@ -1185,14 +1079,14 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
   .add-btn {
     width: auto;
-    padding: 0.5rem 0.95rem;
+    padding: var(--space-2) var(--space-4);
   }
 
   /* Filtros ativos numa linha só: os chips rolam para o lado e o
      "Limpar tudo" fica sempre à mão no fim. */
   .active-filters-bar {
-    margin-top: 0.6rem;
-    gap: 0.5rem;
+    margin-top: var(--space-2);
+    gap: var(--space-2);
     flex-wrap: nowrap;
   }
 
@@ -1218,7 +1112,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
   .clear-all-btn.btn {
     flex-shrink: 0;
-    padding: 0.35rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
   }
 }
 
@@ -1231,22 +1125,6 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
   .library-header-wrapper {
     padding-bottom: var(--space-2);
-  }
-
-  .header-title {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
-  .count-badge {
-    flex: none;
-    padding: 0.15rem 0.55rem;
-    border-radius: var(--radius-pill);
-    background: rgba(var(--main-color-rgb), 0.15);
-    color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
-    font-weight: 700;
-    font-size: var(--fs-xs);
   }
 
   /* Linha dos três filtros: sempre à esquerda, no mesmo lugar */
@@ -1292,7 +1170,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
   .fchip-count {
     min-width: 1.15rem;
-    padding: 0 0.3rem;
+    padding: 0 var(--space-1);
     border-radius: var(--radius-pill);
     background: var(--main-solid);
     color: var(--on-main);
@@ -1424,15 +1302,6 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     text-overflow: ellipsis;
   }
 }
-
-@media (pointer: coarse) {
-  .clear-icon::after {
-    content: '';
-    position: absolute;
-    inset: -10px;
-    border-radius: 50%;
-  }
-}
 </style>
 
 <style>
@@ -1441,7 +1310,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 1.5rem 1.5rem 1.75rem 2rem;
+  padding: var(--space-6) var(--space-6) var(--space-6) var(--space-7);
   overflow-y: auto;
 }
 

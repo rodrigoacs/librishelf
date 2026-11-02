@@ -192,7 +192,7 @@
               >
                 <h3
                   id="rate-block-title"
-                  class="rate-title"
+                  class="section-title rate-title"
                 >{{ t('rating.yours') }}</h3>
                 <StarRating
                   :model-value="book.rating"
@@ -220,7 +220,7 @@
           >
             <h3
               id="public-review-title"
-              class="public-review-title"
+              class="section-title public-review-title"
             >
               <i
                 class="pi pi-comment"
@@ -687,18 +687,16 @@ onBeforeUnmount(() => {
 .public-review {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
+  padding-top: var(--space-4);
 }
 
 .public-review-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
-  font-size: var(--fs-md);
-  font-weight: 600;
 }
 
 .public-review-title .pi {
@@ -761,7 +759,7 @@ onBeforeUnmount(() => {
 .image-container {
   position: relative;
   z-index: 2;
-  padding: 2rem;
+  padding: var(--space-7);
   display: flex;
   justify-content: center;
   width: 100%;
@@ -791,7 +789,7 @@ onBeforeUnmount(() => {
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
   overflow-y: auto;
   max-height: inherit;
 }
@@ -804,10 +802,10 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   /* Na altura do X (top 1rem) e sem encostar nele (44 px + folga) */
   margin-top: -1.5rem;
-  padding-right: 1.75rem;
+  padding-right: var(--space-6);
 }
 
 .action-edit.btn {
@@ -852,8 +850,8 @@ onBeforeUnmount(() => {
     flex: 1;
     min-height: 0;
     max-height: none;
-    padding: 1.25rem;
-    gap: 1.25rem;
+    padding: var(--space-5);
+    gap: var(--space-5);
   }
 
   /* O X está sobre a faixa da capa: a linha das ações não precisa desviar */
@@ -864,7 +862,7 @@ onBeforeUnmount(() => {
 
   /* Capa inteira e pequena, em vez de um recorte gigante. */
   .image-container {
-    padding: 1rem;
+    padding: var(--space-4);
     height: 100%;
     box-sizing: border-box;
   }
@@ -977,9 +975,6 @@ onBeforeUnmount(() => {
 
   .rate-title {
     margin: 0;
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    color: var(--text-secondary);
   }
 
   /* 5 estrelas de 44 px + o X de limpar = 264 px: cabe a partir de 296 px

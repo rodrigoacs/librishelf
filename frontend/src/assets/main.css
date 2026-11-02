@@ -154,6 +154,10 @@
      todas as telas) e tamanho do título da faixa */
   --page-pad-x: var(--space-7);
   --page-title-size: var(--fs-2xl);
+
+  /* Card: raio e respiro únicos (painéis, KPIs, gráficos, listas) */
+  --card-radius: var(--radius-md);
+  --card-pad: var(--space-5);
 }
 
 @media (max-width: 1023.98px) {
@@ -167,6 +171,7 @@
 @media (max-width: 639.98px) {
   :root {
     --page-pad-x: var(--space-4);
+    --card-pad: var(--space-4);
   }
 }
 
@@ -185,8 +190,267 @@
   color: var(--text-primary);
 }
 
-.page > :not(.page-header) {
+.page > :not(.page-header, .public-bar) {
   max-width: var(--page-max);
+}
+
+/* Título de seção (h2/h3 dentro da página): pequeno, caixa-alta, um estilo só
+   em Painel, Início, Retrospectiva, Conta, Admin, perfis e livro aberto.
+   A margem fica com cada tela. */
+.section-title {
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Número em destaque (KPI): valor, rótulo e nota, igual no Painel, na
+   Retrospectiva e na biblioteca pública. Sem ícone, gradiente ou borda colorida. */
+.stat-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+.stat-note {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+@media (max-width: 639.98px) {
+  .stat-value {
+    font-size: var(--fs-xl);
+  }
+}
+
+/* Aviso: um componente visual só (Início, Painel, Comunidade, listas,
+   resenhas, mesclar). Tom informativo na cor de destaque; .is-warn no
+   amarelo de alerta (--warning). Como link/botão ganha seta e hover. */
+.notice {
+  --notice-color: var(--main-color);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--notice-color) 30%, transparent);
+  border-radius: var(--card-radius);
+  background: color-mix(in srgb, var(--notice-color) 8%, transparent);
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.notice.is-warn {
+  --notice-color: var(--warning);
+}
+
+.notice > .pi:first-child {
+  margin-top: 0.2em;
+  color: var(--notice-color);
+}
+
+.notice a {
+  color: var(--main-color);
+}
+
+a.notice,
+button.notice {
+  align-items: center;
+  cursor: pointer;
+}
+
+a.notice > .pi:first-child,
+button.notice > .pi:first-child {
+  margin-top: 0;
+}
+
+a.notice:hover,
+button.notice:hover {
+  background: color-mix(in srgb, var(--notice-color) 14%, transparent);
+}
+
+.notice-arrow {
+  margin-left: auto;
+  color: var(--text-secondary);
+}
+
+/* Abas de página (Comunidade, Admin): sublinhado na cor de destaque */
+.app-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.app-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.app-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.app-tab:hover {
+  color: var(--text-primary);
+}
+
+.app-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--main-color);
+}
+
+.app-tab:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.app-tab-count {
+  padding: 0 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 639.98px) {
+  .app-tab {
+    flex: 0 0 auto;
+    padding-inline: var(--space-2);
+  }
+}
+
+/* Pílula de alternar (PillButton e links/botões com a mesma cara: ordenar,
+   escolher ano). Ativa = fundo na cor de destaque. */
+.pill-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.pill-button.icon-only {
+  width: 2.25rem;
+  padding: 0;
+}
+
+.pill-button .pi {
+  font-size: var(--fs-sm);
+}
+
+.pill-button:hover:not(:disabled) {
+  border-color: var(--main-color);
+  color: var(--text-primary);
+}
+
+.pill-button.active {
+  background: var(--main-solid);
+  border-color: var(--main-solid);
+  color: var(--on-main);
+}
+
+.pill-button.active:hover:not(:disabled) {
+  color: var(--on-main);
+}
+
+.pill-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.pill-button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (pointer: coarse) {
+  .pill-button {
+    min-height: 2.75rem;
+  }
+
+  .pill-button.icon-only {
+    width: 2.75rem;
+  }
+}
+
+/* Vazio/carregando dentro de tabela ou lista (admin): texto centralizado.
+   Para tela ou seção vazia, use o EmptyState. */
+.empty-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-7) var(--space-4);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Quantidade ao lado do título (Biblioteca, Autores, Editoras, Categorias,
+   Listas): por extenso e em fundo claro, como no celular */
+.count-badge {
+  flex: none;
+  padding: 0.15rem var(--space-2);
+  border-radius: var(--radius-pill);
+  background: rgba(var(--main-color-rgb), 0.15);
+  color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Barra de marca das páginas públicas (sem menu): igual à barra do app no
+   celular, de ponta a ponta acima da faixa do cabeçalho */
+.page > .public-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 calc(-1 * var(--page-pad-x));
+  padding: var(--space-3) var(--page-pad-x);
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Navegador sem linear(): mola aproximada (mesma sobra, sem o assentar) */

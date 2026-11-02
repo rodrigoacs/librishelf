@@ -177,7 +177,7 @@
         class="notes-section"
         aria-labelledby="book-notes-title"
       >
-        <h3 id="book-notes-title">
+        <h3 class="section-title" id="book-notes-title">
           <i
             class="pi pi-pencil"
             aria-hidden="true"
@@ -313,23 +313,23 @@ const statusCaption = computed(() => {
 .book-view {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .details-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
+  gap: var(--space-4);
   /* Espaço para o X do canto não encostar no título. */
-  padding-right: 2rem;
+  padding-right: var(--space-7);
 }
 
 .title-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .book-title {
@@ -349,22 +349,22 @@ const statusCaption = computed(() => {
 }
 
 .rating-row {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1);
 }
 
 /* Lido / marcar como lido */
 .read-state {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
 .read-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.85rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
   background: rgba(var(--main-color-rgb), 0.12);
   color: var(--main-color);
@@ -379,13 +379,13 @@ const statusCaption = computed(() => {
 .read-state:has(.status-picker) {
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .status-picker {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .status-caption {
@@ -394,14 +394,14 @@ const statusCaption = computed(() => {
   color: var(--text-secondary);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
 .link-btn {
   background: none;
   border: none;
-  padding: 0.25rem;
+  padding: var(--space-1);
   color: var(--text-secondary);
   font: inherit;
   font-size: var(--fs-sm);
@@ -423,8 +423,8 @@ const statusCaption = computed(() => {
 .series-line {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.35rem;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
   color: var(--main-color);
   font-size: var(--fs-md);
   font-weight: 600;
@@ -442,7 +442,7 @@ a.series-line:hover {
 .series-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 6.5rem;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .notes-input {
@@ -460,20 +460,15 @@ a.series-line:hover {
 .notes-section {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 0.85rem 1rem;
+  padding: var(--space-3) var(--space-4);
   background: rgba(var(--main-color-rgb), 0.05);
 }
 
 .notes-section h3 {
-  margin: 0 0 0.4rem;
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--text-secondary);
+  margin: 0 0 var(--space-2);
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .notes-text {
@@ -499,14 +494,14 @@ a.series-line:hover {
 
 .meta-line li+li::before {
   content: '·';
-  margin: 0 0.5rem;
+  margin: 0 var(--space-2);
   color: var(--text-muted);
 }
 
 .isbn-warning {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
   margin: -0.4rem 0 0;
   color: var(--warning);
   font-size: var(--fs-sm);
@@ -515,13 +510,13 @@ a.series-line:hover {
 .tags-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .tag-chip {
   font-size: var(--fs-sm);
   font-weight: 500;
-  padding: 0.25rem 0.7rem;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
   background: color-mix(in srgb, var(--tag-color) 12%, transparent);
@@ -531,14 +526,14 @@ a.series-line:hover {
 .details-content {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: var(--space-4);
 }
 
 .title-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .book-title {
@@ -598,13 +593,13 @@ a.series-line:hover {
    linha no topo, na altura do X; o título fica logo abaixo, com a largura toda */
 @media (max-width: 639.98px) {
   .details-header {
-    padding-right: 2.25rem;
-    gap: 0.9rem;
+    padding-right: var(--space-7);
+    gap: var(--space-4);
   }
 
   .title-area {
     min-width: 0;
-    gap: 0.35rem;
+    gap: var(--space-1);
   }
 
   /* Tela cheia (sem o X ao lado do título) */

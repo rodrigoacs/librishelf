@@ -34,7 +34,7 @@
     "close": "Close",
     "retry": "Try again",
     "copy": "Copy",
-    "copied": "Copied!",
+    "copied": "Copied",
     "loadError": "Could not load. Check your connection and try again.",
     "back": "Back",
     "skipToContent": "Skip to content",
@@ -91,7 +91,7 @@
     "loadErrorTitle": "Couldn't load your shelf"
   },
   "book": {
-    "toast_added": "Book added successfully!",
+    "toast_added": "Book added",
     "toast_error": "Could not add the book.",
     "file_too_large": "The image can be at most {mb} MB.",
     "file_not_image": "Please select an image file.",
@@ -355,7 +355,7 @@
     "privacyNotice": "By creating an account, you agree to the",
     "privacyLink": "privacy policy",
     "invalidUsername": "Use only letters, numbers, dot, hyphen and underscore.",
-    "accountCreatedVerify": "Account created! We sent you a link to confirm your email."
+    "accountCreatedVerify": "Account created. We sent you a link to confirm your email."
   },
   "publicLibrary": {
     "title": "{ ownerName }'s Library",
@@ -702,7 +702,7 @@
   "history": {
     "panelTitle": "Your readings",
     "readAgain": "Read again",
-    "readAgainToast": "Enjoy the reread! Your previous reading stays in the history.",
+    "readAgainToast": "Reread started. Your previous reading stays in the history.",
     "readTimes": "Read once | Read {n} times",
     "title": "Reading history",
     "loading": "Loading…",
@@ -843,7 +843,7 @@
   "verify": {
     "loading": "Confirming your email…",
     "doneTitle": "Email confirmed",
-    "doneText": "Done! You can now make your library public, join the community and recover your password by email.",
+    "doneText": "Done. You can now make your library public, join the community and recover your password by email.",
     "failedTitle": "Couldn't confirm",
     "failedText": "This link is invalid or has expired.",
     "goHome": "Go to home",
@@ -875,7 +875,7 @@
     "remove": "Remove goal",
     "question": "How many books do you want to read in {year}?",
     "ofTarget": "of {goal} book | of {goal} books",
-    "done": "Goal reached! 🎉",
+    "done": "Goal reached",
     "ahead": "{n} book ahead of pace | {n} books ahead of pace",
     "behind": "{n} book behind pace to finish the year | {n} books behind pace to finish the year",
     "onTrack": "Right on pace",
@@ -984,8 +984,8 @@
     "hide": "Hide password"
   },
   "errors": {
-    "UNKNOWN": "Something went wrong. Please try again.",
-    "INTERNAL_ERROR": "Server error. Please try again shortly.",
+    "UNKNOWN": "Something went wrong. Try again.",
+    "INTERNAL_ERROR": "Server error. Try again shortly.",
     "NETWORK": "Can't reach the server. Check your connection.",
     "SESSION_EXPIRED": "Your session expired. Please sign in again.",
     "AUTH_REQUIRED": "Sign in to continue.",
@@ -1242,6 +1242,7 @@
     "avatarKeptDone": "Photo kept"
   },
   "lists": {
+    "total": "No lists | 1 list | {n} lists",
     "title": "Lists",
     "subtitle": "Group books from your shelf into lists, in any order you like — and share the public ones.",
     "new": "New list",
@@ -1345,7 +1346,7 @@
     "lastYearCount": "no books the year before | 1 book the year before | {n} books the year before",
     "goalTitle": "Yearly goal",
     "goalProgress": "{done} of {target}",
-    "goalDone": "Goal reached! 🎉",
+    "goalDone": "Goal reached",
     "goalLeft": "{n} books to go | 1 book to go | {n} books to go",
     "byMonth": "Month by month",
     "busiest": "Busiest month: {month} ({n} books) | Busiest month: {month} (1 book) | Busiest month: {month} ({n} books)",

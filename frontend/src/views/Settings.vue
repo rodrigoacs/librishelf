@@ -72,7 +72,7 @@
       >
         <h2
           id="settings-group-profile"
-          class="group-title"
+          class="section-title group-title"
         >{{ t('settings.groups.profile') }}</h2>
         <div class="group-list">
           <SettingsRow
@@ -111,7 +111,7 @@
       >
         <h2
           id="settings-group-privacy"
-          class="group-title"
+          class="section-title group-title"
         >{{ t('settings.groups.privacy') }}</h2>
         <div class="group-list">
           <SettingsRow
@@ -207,7 +207,7 @@
       >
         <h2
           id="settings-group-notifications"
-          class="group-title"
+          class="section-title group-title"
         >{{ t('settings.notifications.title') }}</h2>
         <div class="group-list">
           <SettingsRow
@@ -236,7 +236,7 @@
       >
         <h2
           id="settings-group-security"
-          class="group-title"
+          class="section-title group-title"
         >{{ t('settings.groups.security') }}</h2>
         <div class="group-list">
           <SettingsRow
@@ -257,7 +257,7 @@
       >
         <h2
           id="settings-group-data"
-          class="group-title"
+          class="section-title group-title"
         >{{ t('settings.data.title') }}</h2>
         <div class="group-list">
           <SettingsRow
@@ -1092,11 +1092,6 @@ async function deleteAccount() {
 </script>
 
 <style scoped>
-.settings-container {
-  /* Casca e recuo em .page (main.css) */
-  --page-max: 640px;
-}
-
 .settings-content {
   display: flex;
   flex-direction: column;
@@ -1108,9 +1103,9 @@ async function deleteAccount() {
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--card-pad);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
 }
 
@@ -1175,8 +1170,8 @@ async function deleteAccount() {
 .email-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.05rem 0.5rem;
+  gap: var(--space-1);
+  padding: 0.05rem var(--space-2);
   border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -1210,10 +1205,10 @@ async function deleteAccount() {
 
 .verify-note {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: flex-start;
   margin: 0;
-  padding: 0.7rem 0.9rem;
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
   color: var(--text-primary);
@@ -1240,22 +1235,19 @@ async function deleteAccount() {
 .group-title {
   margin: 0;
   padding: 0 var(--space-4);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  font-weight: 600;
 }
 
 .group-list {
   overflow: hidden;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
 }
 
 .privacy-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 44px;
   padding: 0 var(--space-4);
   color: var(--text-secondary);
@@ -1366,13 +1358,13 @@ async function deleteAccount() {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .blocked-list li {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .blocked-name {
@@ -1385,7 +1377,7 @@ async function deleteAccount() {
 
 .import-steps {
   margin: 0;
-  padding-left: 1.2rem;
+  padding-left: var(--space-5);
   color: var(--text-secondary);
   font-size: var(--fs-md);
   line-height: 1.6;
@@ -1395,9 +1387,9 @@ async function deleteAccount() {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   min-height: 56px;
-  padding: 1.1rem;
+  padding: var(--space-4);
   border: 2px dashed var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
@@ -1417,7 +1409,7 @@ async function deleteAccount() {
 }
 
 .import-result {
-  padding: 0.9rem 1rem;
+  padding: var(--space-4) var(--space-4);
   border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
   border: 1px solid rgba(var(--main-color-rgb), 0.3);
@@ -1429,8 +1421,8 @@ async function deleteAccount() {
 }
 
 .import-errors {
-  margin: 0.6rem 0 0;
-  padding-left: 1.1rem;
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
   line-height: 1.5;
@@ -1438,7 +1430,7 @@ async function deleteAccount() {
 
 .see-library {
   display: inline-block;
-  margin-top: 0.6rem;
+  margin-top: var(--space-2);
   color: var(--main-color);
   font-weight: 600;
 }
@@ -1447,7 +1439,7 @@ async function deleteAccount() {
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: stretch;
 }
 
@@ -1458,7 +1450,7 @@ async function deleteAccount() {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .card-desc,
@@ -1472,8 +1464,8 @@ async function deleteAccount() {
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 @media (max-width: 639.98px) {

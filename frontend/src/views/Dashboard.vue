@@ -74,7 +74,7 @@
       <router-link
         v-if="stats.invalidIsbn > 0"
         :to="{ name: 'library', query: { isbn: 'invalid' } }"
-        class="isbn-notice"
+        class="notice is-warn isbn-notice"
       >
         <i
           class="pi pi-exclamation-triangle"
@@ -82,7 +82,7 @@
         ></i>
         <span>{{ t('dashboard.invalidIsbn', { n: stats.invalidIsbn }, stats.invalidIsbn) }}</span>
         <i
-          class="pi pi-angle-right"
+          class="pi pi-angle-right notice-arrow"
           aria-hidden="true"
         ></i>
       </router-link>
@@ -113,7 +113,7 @@
         aria-labelledby="goal-title"
       >
         <div class="goal-head">
-          <h2 id="goal-title">{{ t('goal.title', { year }) }}</h2>
+          <h2 class="section-title" id="goal-title">{{ t('goal.title', { year }) }}</h2>
           <div
             v-if="!editingGoal"
             class="goal-actions"
@@ -217,10 +217,9 @@
             class="pi pi-arrow-up-right kpi-arrow"
             aria-hidden="true"
           ></i>
-          <div class="kpi-icon"><i class="pi pi-book" aria-hidden="true"></i></div>
           <div class="kpi-info">
-            <span class="label">{{ $t('dashboard.totalBooks') }}</span>
-            <span class="value">{{ stats.totalBooks }}</span>
+            <span class="stat-value">{{ stats.totalBooks }}</span>
+            <span class="stat-label">{{ $t('dashboard.totalBooks') }}</span>
           </div>
         </router-link>
 
@@ -232,11 +231,10 @@
             class="pi pi-arrow-up-right kpi-arrow"
             aria-hidden="true"
           ></i>
-          <div class="kpi-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
           <div class="kpi-info">
-            <span class="label">{{ $t('dashboard.readBooks') }}</span>
-            <span class="value">{{ stats.readBooks }}</span>
-            <span class="sub">{{ t('dashboard.ofShelf', { n: readingRate }) }}</span>
+            <span class="stat-value">{{ stats.readBooks }}</span>
+            <span class="stat-label">{{ $t('dashboard.readBooks') }}</span>
+            <span class="stat-note">{{ t('dashboard.ofShelf', { n: readingRate }) }}</span>
           </div>
         </router-link>
 
@@ -248,10 +246,9 @@
             class="pi pi-arrow-up-right kpi-arrow"
             aria-hidden="true"
           ></i>
-          <div class="kpi-icon"><i class="pi pi-eye" aria-hidden="true"></i></div>
           <div class="kpi-info">
-            <span class="label">{{ t('dashboard.readingNow') }}</span>
-            <span class="value">{{ stats.readingBooks }}</span>
+            <span class="stat-value">{{ stats.readingBooks }}</span>
+            <span class="stat-label">{{ t('dashboard.readingNow') }}</span>
           </div>
         </router-link>
 
@@ -263,10 +260,9 @@
             class="pi pi-arrow-up-right kpi-arrow"
             aria-hidden="true"
           ></i>
-          <div class="kpi-icon"><i class="pi pi-bookmark" aria-hidden="true"></i></div>
           <div class="kpi-info">
-            <span class="label">{{ t('dashboard.wantToRead') }}</span>
-            <span class="value">{{ stats.wantBooks }}</span>
+            <span class="stat-value">{{ stats.wantBooks }}</span>
+            <span class="stat-label">{{ t('dashboard.wantToRead') }}</span>
           </div>
         </router-link>
       </div>
@@ -276,7 +272,7 @@
           v-if="!phone"
           class="chart-card main-chart"
         >
-          <h3>{{ t('dashboard.readingByMonth', { year }) }}</h3>
+          <h3 class="section-title">{{ t('dashboard.readingByMonth', { year }) }}</h3>
           <p class="chart-hint">{{ t('dashboard.clickHint') }}</p>
           <div class="chart-wrapper flex-center">
             <div
@@ -302,7 +298,7 @@
         </div>
 
         <div class="chart-card main-chart">
-          <h3>{{ $t('dashboard.readingByYear') }}</h3>
+          <h3 class="section-title">{{ $t('dashboard.readingByYear') }}</h3>
           <div class="chart-wrapper flex-center">
             <div
               v-if="stats.readingByYear.length === 0"
@@ -333,7 +329,7 @@
           v-if="!phone"
           class="chart-card"
         >
-          <h3>{{ $t('dashboard.favoriteGenres') }}</h3>
+          <h3 class="section-title">{{ $t('dashboard.favoriteGenres') }}</h3>
           <div class="chart-wrapper flex-center">
             <div
               v-if="stats.topTags.length === 0"
@@ -374,7 +370,7 @@
         </div>
 
         <div class="chart-card authors-list">
-          <h3>{{ $t('dashboard.topAuthors') }}</h3>
+          <h3 class="section-title">{{ $t('dashboard.topAuthors') }}</h3>
           <div class="authors-wrapper">
             <div
               v-if="stats.topAuthors.length === 0"
@@ -395,7 +391,7 @@
         </div>
 
         <div class="chart-card authors-list">
-          <h3>{{ t('dashboard.topPublishers') }}</h3>
+          <h3 class="section-title">{{ t('dashboard.topPublishers') }}</h3>
           <div class="authors-wrapper">
             <div
               v-if="stats.topPublishers.length === 0"
@@ -745,57 +741,30 @@ onMounted(loadStats)
 </script>
 
 <style scoped>
+/* Visual do aviso em main.css (.notice) */
 .isbn-notice {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1.1rem;
-  margin-bottom: 1.5rem;
-  border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
-  background: color-mix(in srgb, var(--warning) 8%, transparent);
-  color: var(--text-primary);
-  text-decoration: none;
-  font-size: var(--fs-md);
-}
-
-.isbn-notice .pi-exclamation-triangle {
-  color: var(--warning);
-}
-
-.isbn-notice .pi-angle-right {
-  margin-left: auto;
-  color: var(--text-secondary);
-}
-
-.isbn-notice:hover {
-  background: color-mix(in srgb, var(--warning) 14%, transparent);
-}
-
-.dashboard-container {
-  /* Casca e recuo em .page (main.css, com width: 100% para não encolher até
-     o esqueleto) */
-  --page-max: 1100px;
+  margin-bottom: var(--space-6);
 }
 
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: var(--space-6);
+  margin-bottom: var(--space-7);
 }
 
 .kpi-card {
   position: relative;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: var(--space-1);
   cursor: pointer;
   transition: transform 0.2s, border-color 0.2s;
+  flex-direction: column;
 }
 
 .kpi-card:hover {
@@ -835,8 +804,8 @@ onMounted(loadStats)
   display: grid;
   grid-template-columns: minmax(0, 8rem) minmax(0, 1fr) 2.5rem;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.4rem 0.5rem;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2);
   margin: 0 -0.5rem;
   border-radius: var(--radius-md);
   color: inherit;
@@ -882,17 +851,6 @@ onMounted(loadStats)
   text-align: right;
 }
 
-.kpi-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-xl);
-  flex-shrink: 0;
-}
-
 .kpi-card {
   --kpi-color: var(--main-color);
 }
@@ -924,46 +882,23 @@ a.author-row:focus-visible {
   outline-offset: var(--focus-offset);
 }
 
-.kpi-icon {
-  background: color-mix(in srgb, var(--kpi-color) 14%, transparent);
-  color: var(--kpi-color);
-}
-
 .kpi-info {
   display: flex;
   flex-direction: column;
-}
-
-.kpi-info .label {
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.kpi-info .value {
-  color: var(--text-primary);
-  font-size: var(--fs-2xl);
-  font-weight: 700;
-}
-
-.kpi-info .sub {
-  color: var(--text-secondary);
-  font-size: var(--fs-xs);
 }
 
 /* Ano + data no cabeçalho */
 .header-side {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .year-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.95rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-pill);
   background: rgba(var(--main-color-rgb), 0.12);
   color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
@@ -990,31 +925,28 @@ a.author-row:focus-visible {
 .goal-card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+  margin-bottom: var(--space-6);
 }
 
 .goal-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .goal-head h2 {
   margin: 0;
-  font-size: var(--fs-lg);
-  font-weight: 600;
-  color: var(--text-primary);
 }
 
 .goal-numbers {
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: var(--space-2);
   color: var(--text-secondary);
 }
 
@@ -1054,7 +986,7 @@ a.author-row:focus-visible {
 }
 
 .goal-status {
-  margin: 0.75rem 0 0;
+  margin: var(--space-3) 0 0;
   font-size: var(--fs-md);
   color: var(--text-secondary);
 }
@@ -1075,7 +1007,7 @@ a.author-row:focus-visible {
 .goal-form {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .goal-form label {
@@ -1086,12 +1018,12 @@ a.author-row:focus-visible {
 .goal-form-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
 .chart-hint {
-  margin: -1rem 0 1rem;
+  margin: -1rem 0 var(--space-4);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
 }
@@ -1099,15 +1031,15 @@ a.author-row:focus-visible {
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .chart-card {
   min-width: 0;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
   display: flex;
   flex-direction: column;
 }
@@ -1117,10 +1049,7 @@ a.author-row:focus-visible {
 }
 
 .chart-card h3 {
-  margin: 0 0 1.5rem 0;
-  color: var(--text-primary);
-  font-size: var(--fs-lg);
-  font-weight: 600;
+  margin: 0 0 var(--space-6) 0;
 }
 
 .chart-wrapper {
@@ -1138,7 +1067,7 @@ a.author-row:focus-visible {
 
 .charts-grid.lower {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
 }
 
 .charts-grid.lower .chart-wrapper {
@@ -1159,15 +1088,15 @@ a.author-row:focus-visible {
 .authors-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .author-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   position: relative;
-  padding: 0.5rem 0.5rem;
+  padding: var(--space-2) var(--space-2);
   margin: 0 -0.5rem;
   border-radius: var(--radius-md);
   text-decoration: none;
@@ -1213,13 +1142,13 @@ a.author-row:hover {
 
 .kpi-skeleton {
   background-color: var(--bg-panel);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
 }
 
 .chart-skeleton {
   background-color: var(--bg-panel);
-  border-radius: var(--radius-lg);
-  margin-bottom: 1.5rem;
+  border-radius: var(--card-radius);
+  margin-bottom: var(--space-6);
 }
 
 @media (max-width: 1279.98px) {
@@ -1257,38 +1186,16 @@ a.author-row:hover {
   /* Dois por linha: os quatro números cabem na primeira tela. */
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .kpi-card {
-    padding: 1rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
-  }
-
-  .kpi-icon {
-    width: 36px;
-    height: 36px;
-    font-size: var(--fs-lg);
-    border-radius: var(--radius-md);
-  }
-
-  .kpi-info .label {
-    font-size: var(--fs-xs);
-  }
-
-  .kpi-info .value {
-    font-size: var(--fs-xl);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
   }
 
   .charts-grid {
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .chart-card {
-    padding: 1.1rem;
+    padding: var(--space-4);
   }
 
   .dashboard-container > .page-header :deep(.page-header-actions),
@@ -1300,11 +1207,11 @@ a.author-row:hover {
   /* A 320 o link da retrospectiva e o ano não cabem lado a lado */
   .header-side {
     flex-wrap: wrap;
-    gap: 0.5rem 1rem;
+    gap: var(--space-2) var(--space-4);
   }
 
   .goal-card {
-    padding: 1.1rem;
-    margin-bottom: 1rem;
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
   }
 }</style>

@@ -14,26 +14,17 @@
       role="search"
       @submit.prevent="search"
     >
-      <label
-        for="not-found-search"
-        class="sr-only"
-      >{{ t('notFound.searchLabel') }}</label>
-      <i
-        class="pi pi-search search-icon"
-        aria-hidden="true"
-      ></i>
-      <input
+      <SearchField
         id="not-found-search"
         v-model="query"
-        type="search"
+        :region="false"
+        :label="t('notFound.searchLabel')"
         :placeholder="t('notFound.searchPh')"
-        autocomplete="off"
-        enterkeyhint="search"
       />
       <AppButton
         type="submit"
         :label="t('notFound.searchButton')"
-        class="btn-sm"
+        class="btn-primary"
         :disabled="!query.trim()"
       />
     </form>
@@ -72,6 +63,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../components/ui/AppButton.vue'
 import { isAuthenticated } from '../services/session.js'
+import SearchField from '../components/ui/SearchField.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -88,7 +80,7 @@ function search() {
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
-  padding: 2rem 1.25rem;
+  padding: var(--space-7) var(--space-5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -108,60 +100,34 @@ function search() {
 }
 
 h1 {
-  margin: 1rem 0 0.5rem 0;
+  margin: var(--space-4) 0 var(--space-2) 0;
   font-size: var(--fs-xl);
 }
 
 .message {
   color: var(--text-secondary);
-  margin: 0 0 2rem 0;
+  margin: 0 0 var(--space-7) 0;
 }
 
 .search-form {
-  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   width: min(100%, 26rem);
-  margin-bottom: 1.5rem;
-  padding: 0.3rem 0.3rem 0.3rem 2.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  background: var(--bg-panel);
-}
-
-.search-form:focus-within {
-  border-color: var(--main-color);
-  box-shadow: var(--focus-glow);
-}
-
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  color: var(--text-muted);
-}
-
-.search-form input {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  font: inherit;
-  font-size: var(--fs-md);
-  padding: 0.45rem 0;
-  outline: none;
+  margin-bottom: var(--space-6);
 }
 
 .search-form .btn {
+  height: 2.75rem;
   border-radius: var(--radius-pill);
+  flex-shrink: 0;
 }
 
 .links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .links .btn {

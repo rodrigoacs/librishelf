@@ -10,6 +10,17 @@
     <div class="page-header-main">
       <slot name="lead"></slot>
       <div class="page-header-text">
+        <router-link
+          v-if="back"
+          :to="back"
+          class="page-header-back"
+        >
+          <i
+            class="pi pi-arrow-left"
+            aria-hidden="true"
+          ></i>
+          {{ backLabel }}
+        </router-link>
         <slot name="kicker"></slot>
         <div class="page-header-title-row">
           <h1 class="page-header-title">
@@ -41,12 +52,17 @@
  *   <PageHeader :title="t('lists.title')" :subtitle="t('lists.subtitle')" divider>
  *     <template #actions><AppButton … /></template>
  *   </PageHeader>
+ * Voltar: :back="{ name: 'lists' }" :back-label="t('lists.back')" (link
+ * acima do título, no lugar dos links soltos de cada tela).
  * Slots: kicker (acima do título), lead (à esquerda, ex.: avatar), title,
  * after-title (na linha do título, ex.: contagem), subtitle, default (abaixo
  * do subtítulo) e actions (à direita; abaixo do texto no celular).
  */
 defineProps({
   title: { type: String, default: '' },
+  // Destino e rótulo do link de voltar, acima do título
+  back: { type: [String, Object], default: null },
+  backLabel: { type: String, default: '' },
   subtitle: { type: String, default: '' },
   // Linha embaixo do cabeçalho, separando do conteúdo
   divider: { type: Boolean, default: false },
@@ -105,6 +121,26 @@ defineProps({
   color: var(--text-primary);
   overflow-wrap: break-word;
   min-width: 0;
+}
+
+.page-header-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+}
+
+.page-header-back:hover {
+  color: var(--text-primary);
+}
+
+.page-header-back:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-sm);
 }
 
 .page-header-subtitle {

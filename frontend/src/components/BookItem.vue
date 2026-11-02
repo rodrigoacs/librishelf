@@ -177,15 +177,15 @@ function onCoverError(event) {
 }
 
 /* Marcar como lido sem abrir o livro: a fita do canto superior direito é o
-   botão. Lido = fita cheia; não lido = fita escura vazada, que no mouse só
-   aparece ao passar por cima e no toque fica sempre visível. */
+   botão. Lido = fita cheia; não lido = fita escura vazada, sempre visível
+   (o celular é o padrão: mesma fita e tamanho no mouse e no toque). */
 .quick-read {
   position: absolute;
   top: -2px;
-  right: 12px;
+  right: 8px;
   z-index: 4;
-  width: 28px;
-  height: 42px;
+  width: 34px;
+  height: 46px;
   padding: 6px 0 0;
   border: none;
   /* O desenho da fita fica no ::before: com o clip-path no próprio botão, a
@@ -223,30 +223,18 @@ function onCoverError(event) {
 
 .quick-read:focus-visible {
   outline: none;
-  height: 48px;
+  height: 52px;
   --ribbon-bg: var(--main-solid);
   color: var(--on-main);
   opacity: 1;
 }
 
 @media (hover: hover) {
-  .quick-read:not(.is-read) {
-    opacity: 0;
-  }
-
-  /* Teclado: aparece com o foco no card ou no próprio botão (antes o
-     opacity: 0 acima vencia o :focus-visible e o botão ficava invisível) */
-  .book-card-wrapper:hover .quick-read,
-  .book-card-wrapper:focus-within .quick-read,
-  .quick-read.busy {
-    opacity: 1;
-  }
-
   /* Acompanha o card, que sobe 5 px ao passar o mouse, e cresce para
      baixo: a ponta desce 6 px na tela (com 48 px a ponta ficava no lugar e
      a fita parecia crescer para cima) */
   .book-card-wrapper:hover .quick-read {
-    height: 53px;
+    height: 57px;
     transform: translateY(-5px);
   }
 
@@ -335,9 +323,9 @@ button.book-card {
 .bookmark-ribbon {
   position: absolute;
   top: -2px;
-  right: 12px;
-  width: 28px;
-  height: 42px;
+  right: 8px;
+  width: 34px;
+  height: 46px;
   background-color: var(--main-solid);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
@@ -350,7 +338,7 @@ button.book-card {
 
 /* O card sobe 5 px: com 53 px a ponta da fita desce 6 px na tela */
 .book-card:hover .bookmark-ribbon {
-  height: 53px;
+  height: 57px;
 }
 
 .bookmark-ribbon i {
@@ -397,7 +385,7 @@ button.book-card {
   left: 8px;
   bottom: 8px;
   z-index: 3;
-  padding: 0.2rem 0.55rem;
+  padding: 0.2rem var(--space-2);
   border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -458,14 +446,5 @@ button.book-card {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */
-@media (pointer: coarse) {
-  .quick-read {
-    width: 34px;
-    height: 46px;
-    right: 8px;
-  }
 }
 </style>

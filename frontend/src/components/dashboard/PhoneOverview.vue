@@ -11,16 +11,16 @@
   >
     <dl class="tiles">
       <div class="tile">
-        <dt>{{ t('dashboard.tileRead') }}</dt>
-        <dd>{{ formatNumber(totals?.books ?? readInYear) }}</dd>
+        <dt class="stat-label">{{ t('dashboard.tileRead') }}</dt>
+        <dd class="stat-value">{{ formatNumber(totals?.books ?? readInYear) }}</dd>
       </div>
       <div class="tile">
-        <dt>{{ t('dashboard.tilePages') }}</dt>
-        <dd>{{ totals ? formatNumber(totals.pages) : '—' }}</dd>
+        <dt class="stat-label">{{ t('dashboard.tilePages') }}</dt>
+        <dd class="stat-value">{{ totals ? formatNumber(totals.pages) : '—' }}</dd>
       </div>
       <div class="tile">
-        <dt>{{ t('dashboard.tileRating') }}</dt>
-        <dd>
+        <dt class="stat-label">{{ t('dashboard.tileRating') }}</dt>
+        <dd class="stat-value">
           <template v-if="totals?.averageRating">
             {{ formatAverage(totals.averageRating) }}
             <i
@@ -34,7 +34,7 @@
     </dl>
 
     <div class="card">
-      <h3>{{ t('dashboard.readingByMonth', { year }) }}</h3>
+      <h3 class="section-title">{{ t('dashboard.readingByMonth', { year }) }}</h3>
       <p
         v-if="readInYear === 0"
         class="no-data"
@@ -69,7 +69,7 @@
     </div>
 
     <div class="card">
-      <h3>{{ t('dashboard.favoriteGenres') }}</h3>
+      <h3 class="section-title">{{ t('dashboard.favoriteGenres') }}</h3>
       <p
         v-if="slices.length === 0"
         class="no-data"
@@ -221,23 +221,21 @@ onBeforeUnmount(() => observer?.disconnect())
 }
 
 .tile {
+  /* Número em cima, rótulo embaixo (igual aos KPIs do desktop); no HTML o
+     <dt> continua antes do <dd> */
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: var(--space-1);
   padding: var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
   min-width: 0;
 }
 
-.tile dt {
-  color: var(--text-secondary);
-  font-size: var(--fs-xs);
-}
-
 .tile dd {
-  margin: var(--space-1) 0 0;
-  font-size: var(--fs-xl);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  margin: 0;
   white-space: nowrap;
 }
 
@@ -247,15 +245,14 @@ onBeforeUnmount(() => observer?.disconnect())
 }
 
 .card {
-  padding: var(--space-4);
+  padding: var(--card-pad);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--bg-panel);
 }
 
 .card h3 {
   margin: 0 0 var(--space-3);
-  font-size: var(--fs-md);
 }
 
 .no-data {
@@ -311,7 +308,7 @@ onBeforeUnmount(() => observer?.disconnect())
   flex: 1;
   width: 100%;
   max-width: 18px;
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .bar-fill {

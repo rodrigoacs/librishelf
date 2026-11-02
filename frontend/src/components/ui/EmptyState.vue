@@ -90,16 +90,16 @@ const actionClassValue = computed(() => props.actionClass || (isError.value ? 'b
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 40vh;
-  padding: 3rem 1rem;
+  padding: var(--space-8) var(--space-4);
   text-align: center;
   color: var(--text-secondary);
 }
 
 .empty-state-box.compact {
   min-height: 0;
-  padding: 2rem 1rem;
+  padding: var(--space-7) var(--space-4);
 }
 
 .empty-state-icon {
@@ -108,7 +108,7 @@ const actionClassValue = computed(() => props.actionClass || (isError.value ? 'b
   justify-content: center;
   width: 88px;
   height: 88px;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
   border-radius: 50%;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
@@ -122,7 +122,7 @@ const actionClassValue = computed(() => props.actionClass || (isError.value ? 'b
 .compact .empty-state-icon {
   width: 56px;
   height: 56px;
-  margin-bottom: 0.4rem;
+  margin-bottom: var(--space-2);
 }
 
 .compact .empty-state-icon .pi {
@@ -158,7 +158,7 @@ const actionClassValue = computed(() => props.actionClass || (isError.value ? 'b
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
 }
 </style>
