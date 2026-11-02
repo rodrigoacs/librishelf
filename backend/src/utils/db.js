@@ -21,6 +21,9 @@ export async function clearDatabase() {
 
   logger.info('Limpando banco de teste', { dbName })
   await db.query('TRUNCATE TABLE librishelf.books_authors_link, librishelf.books_tags_link, librishelf.books, librishelf.authors, librishelf.publishers, librishelf.tags, librishelf.users RESTART IDENTITY CASCADE')
+  // Sem FK para users: o TRUNCATE acima não alcança. As vagas voltam a zero.
+  await db.query('TRUNCATE TABLE librishelf.jobs, librishelf.webhook_events RESTART IDENTITY')
+  await db.query('UPDATE librishelf.offers SET slots_used = 0')
 }
 
 export async function closeDatabase() {
