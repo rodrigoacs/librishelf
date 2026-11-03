@@ -411,6 +411,8 @@
           </div>
         </div>
       </div>
+
+      <ProStats :year="year" />
     </div>
   </div>
 </template>
@@ -432,6 +434,7 @@ import api from '../services/api.js'
 import { useTheme, cssVar } from '../composables/useTheme.js'
 import { colorFor, tagColorName } from '../utils/tagColors.js'
 import PhoneOverview from '../components/dashboard/PhoneOverview.vue'
+import ProStats from '../components/dashboard/ProStats.vue'
 import { useIsPhone } from '../composables/useIsPhone.js'
 
 const { t, locale } = useI18n()

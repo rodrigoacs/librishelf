@@ -1205,7 +1205,11 @@
     "IMPORT_NOT_DRAFT": "Esta importação já começou.",
     "IMPORT_RUNNING": "Já há uma importação em andamento.",
     "IMPORT_MAPPING_INVALID": "Coluna escolhida não existe no arquivo.",
-    "IMPORT_MAPPING_REQUIRED": "Escolha a coluna do título."
+    "IMPORT_MAPPING_REQUIRED": "Escolha a coluna do título.",
+    "STATS_DATE_INVALID": "Data inválida: use o formato AAAA-MM-DD.",
+    "STATS_PERIOD_INVALID": "O fim do período precisa ser depois do início.",
+    "STATS_RANGE_TOO_LONG": "Período longo demais para agrupar por mês: use até {max} meses.",
+    "STATS_OPTION_INVALID": "Opção de estatística inválida."
   },
   "block": {
     "block": "Bloquear {name}",
@@ -2255,6 +2259,111 @@
       "after": "Envie o CSV na tela de importação. Se ele vier no formato do Goodreads, é reconhecido sozinho; se não, você escolhe as colunas (título, autor, ISBN...) antes de importar.",
       "manual": "Sem ferramenta: uma planilha com título e autor, uma linha por livro, salva em CSV, também funciona.",
       "toImport": "Ir para a importação"
+    }
+  },
+  "proStats": {
+    "title": "Estatísticas avançadas",
+    "from": "De",
+    "to": "Até",
+    "days": "{n} dia | {n} dias",
+    "compare": {
+      "title": "Comparar períodos",
+      "measure": "Medida",
+      "change": "Variação",
+      "apply": "Aplicar",
+      "period": {
+        "a": "Primeiro período",
+        "b": "Segundo período"
+      },
+      "presets": {
+        "yearToDate": "Este ano × mesmo trecho do ano passado",
+        "lastYears": "Ano passado × retrasado",
+        "monthToDate": "Este mês × mesmo mês do ano passado",
+        "rolling": "Últimos 12 meses × os 12 anteriores",
+        "custom": "Escolher as datas"
+      },
+      "rows": {
+        "readings": "Leituras",
+        "books": "Livros diferentes",
+        "pages": "Páginas",
+        "avgRating": "Nota média",
+        "avgDays": "Dias por livro",
+        "rereads": "Releituras",
+        "topAuthor": "Autor mais lido",
+        "topPublisher": "Editora mais lida",
+        "topCategory": "Categoria mais lida"
+      }
+    },
+    "pace": {
+      "title": "Ritmo de leitura em {year}",
+      "empty": "Nenhuma leitura com data de início e de fim em {year}.",
+      "avgDays": "Dias por livro",
+      "median": "Mediana: {n}",
+      "pagesPerDay": "Páginas por dia",
+      "fastest": "Mais rápido",
+      "slowest": "Mais demorado",
+      "chart": "Dias por livro, mês a mês, em {year}",
+      "current": "Em leitura agora",
+      "dayN": "dia {n}",
+      "expected": "Previsão de término: {date}",
+      "noProgress": "Salve o progresso para ver a previsão de término."
+    },
+    "overYears": {
+      "title": "Ao longo dos anos",
+      "authors": "Autores",
+      "publishers": "Editoras",
+      "empty": "Nenhuma leitura concluída ainda.",
+      "summary": "Leituras por ano: {list}",
+      "discovered": {
+        "authors": "Autores novos por ano",
+        "publishers": "Editoras novas por ano"
+      }
+    },
+    "chart": {
+      "title": "Monte seu gráfico",
+      "empty": "Nenhuma leitura concluída nesse período.",
+      "stars": "{n} estrela | {n} estrelas",
+      "summary": "Gráfico de {metric} por {group}",
+      "fields": {
+        "metric": "Medida",
+        "group": "Agrupar por",
+        "type": "Tipo",
+        "period": "Período"
+      },
+      "metrics": {
+        "readings": "Leituras",
+        "pages": "Páginas",
+        "rating": "Nota média",
+        "days": "Dias por livro"
+      },
+      "groups": {
+        "month": "Mês",
+        "year": "Ano",
+        "weekday": "Dia da semana",
+        "author": "Autor",
+        "publisher": "Editora",
+        "category": "Categoria",
+        "rating": "Nota",
+        "length": "Tamanho"
+      },
+      "types": {
+        "bar": "Barras",
+        "line": "Linha",
+        "doughnut": "Rosca"
+      },
+      "periods": {
+        "last12": "Últimos 12 meses",
+        "thisYear": "Este ano",
+        "lastYear": "Ano passado",
+        "last5": "Últimos 5 anos",
+        "custom": "Escolher as datas"
+      }
+    },
+    "length": {
+      "short": "Até 149 páginas",
+      "medium": "150 a 299 páginas",
+      "long": "300 a 499 páginas",
+      "epic": "500 páginas ou mais"
     }
   }
 }

@@ -16,6 +16,9 @@ import {
   BarElement,
   DoughnutController,
   ArcElement,
+  LineController,
+  LineElement,
+  PointElement,
   CategoryScale,
   LinearScale,
   Tooltip,
@@ -25,7 +28,7 @@ import {
 // Só o que o app usa (barras e rosca, com dica e legenda). O chart.js/auto
 // registrava todos os tipos e plugins: ~210 KB a mais no Painel.
 // Gráfico de outro tipo precisa do controller/elemento registrado aqui.
-Chart.register(BarController, BarElement, DoughnutController, ArcElement, CategoryScale, LinearScale, Tooltip, Legend)
+Chart.register(BarController, BarElement, DoughnutController, ArcElement, LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 /**
  * Gráfico do Chart.js direto, sem o embrulho do PrimeVue.

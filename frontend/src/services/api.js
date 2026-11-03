@@ -415,6 +415,23 @@ export default {
     return client.get(`/dashboard/year/${year}${toQuery({ current: new Date().getFullYear() })}`)
   },
 
+  // --- Estatísticas avançadas (Pro) ---
+  getProCompare(periods) {
+    return client.get(`/dashboard/pro/compare${toQuery(periods)}`)
+  },
+
+  getProPace(year) {
+    return client.get(`/dashboard/pro/pace${toQuery({ year })}`)
+  },
+
+  getProOverYears(dimension) {
+    return client.get(`/dashboard/pro/over-years${toQuery({ dimension })}`)
+  },
+
+  getProChart(params) {
+    return client.get(`/dashboard/pro/chart${toQuery(params)}`)
+  },
+
   // --- Público ---
   getRandomCovers() {
     return client.get('/library/covers/random')

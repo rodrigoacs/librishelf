@@ -1205,7 +1205,11 @@
     "IMPORT_NOT_DRAFT": "This import has already started.",
     "IMPORT_RUNNING": "There is already an import in progress.",
     "IMPORT_MAPPING_INVALID": "The chosen column does not exist in the file.",
-    "IMPORT_MAPPING_REQUIRED": "Choose the title column."
+    "IMPORT_MAPPING_REQUIRED": "Choose the title column.",
+    "STATS_DATE_INVALID": "Invalid date: use the YYYY-MM-DD format.",
+    "STATS_PERIOD_INVALID": "The end of the period must come after the start.",
+    "STATS_RANGE_TOO_LONG": "Period too long to group by month: use up to {max} months.",
+    "STATS_OPTION_INVALID": "Invalid statistics option."
   },
   "block": {
     "block": "Block {name}",
@@ -2255,6 +2259,111 @@
       "after": "Send the CSV on the import screen. If it is in the Goodreads format, it is recognized on its own; if not, you pick the columns (title, author, ISBN...) before importing.",
       "manual": "No tool: a spreadsheet with title and author, one row per book, saved as CSV, also works.",
       "toImport": "Go to the import"
+    }
+  },
+  "proStats": {
+    "title": "Advanced stats",
+    "from": "From",
+    "to": "To",
+    "days": "{n} day | {n} days",
+    "compare": {
+      "title": "Compare periods",
+      "measure": "Measure",
+      "change": "Change",
+      "apply": "Apply",
+      "period": {
+        "a": "First period",
+        "b": "Second period"
+      },
+      "presets": {
+        "yearToDate": "This year vs. the same span last year",
+        "lastYears": "Last year vs. the year before",
+        "monthToDate": "This month vs. the same month last year",
+        "rolling": "Last 12 months vs. the 12 before",
+        "custom": "Choose the dates"
+      },
+      "rows": {
+        "readings": "Readings",
+        "books": "Distinct books",
+        "pages": "Pages",
+        "avgRating": "Average rating",
+        "avgDays": "Days per book",
+        "rereads": "Rereads",
+        "topAuthor": "Most read author",
+        "topPublisher": "Most read publisher",
+        "topCategory": "Most read category"
+      }
+    },
+    "pace": {
+      "title": "Reading pace in {year}",
+      "empty": "No reading with both a start and a finish date in {year}.",
+      "avgDays": "Days per book",
+      "median": "Median: {n}",
+      "pagesPerDay": "Pages per day",
+      "fastest": "Fastest",
+      "slowest": "Slowest",
+      "chart": "Days per book, month by month, in {year}",
+      "current": "Reading now",
+      "dayN": "day {n}",
+      "expected": "Expected to finish: {date}",
+      "noProgress": "Save your progress to see when you will finish."
+    },
+    "overYears": {
+      "title": "Over the years",
+      "authors": "Authors",
+      "publishers": "Publishers",
+      "empty": "No finished readings yet.",
+      "summary": "Readings per year: {list}",
+      "discovered": {
+        "authors": "New authors per year",
+        "publishers": "New publishers per year"
+      }
+    },
+    "chart": {
+      "title": "Build your chart",
+      "empty": "No finished readings in this period.",
+      "stars": "{n} star | {n} stars",
+      "summary": "Chart of {metric} by {group}",
+      "fields": {
+        "metric": "Measure",
+        "group": "Group by",
+        "type": "Type",
+        "period": "Period"
+      },
+      "metrics": {
+        "readings": "Readings",
+        "pages": "Pages",
+        "rating": "Average rating",
+        "days": "Days per book"
+      },
+      "groups": {
+        "month": "Month",
+        "year": "Year",
+        "weekday": "Day of the week",
+        "author": "Author",
+        "publisher": "Publisher",
+        "category": "Category",
+        "rating": "Rating",
+        "length": "Length"
+      },
+      "types": {
+        "bar": "Bars",
+        "line": "Line",
+        "doughnut": "Doughnut"
+      },
+      "periods": {
+        "last12": "Last 12 months",
+        "thisYear": "This year",
+        "lastYear": "Last year",
+        "last5": "Last 5 years",
+        "custom": "Choose the dates"
+      }
+    },
+    "length": {
+      "short": "Up to 149 pages",
+      "medium": "150 to 299 pages",
+      "long": "300 to 499 pages",
+      "epic": "500 pages or more"
     }
   }
 }
