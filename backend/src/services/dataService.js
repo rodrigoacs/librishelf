@@ -4,6 +4,7 @@ import * as libraryRepository from '../repositories/libraryRepository.js'
 import { normalizeBookInput } from './libraryService.js'
 import * as readingService from './readingService.js'
 import * as vanguardaService from './vanguardaService.js'
+import * as collectionService from './collectionService.js'
 import { csvToObjects, toCsv } from '../utils/csv.js'
 import { normalizeIsbn13 } from '../utils/isbn.js'
 import STATUS from '../utils/statusCodes.js'
@@ -100,6 +101,7 @@ export async function exportJson(userId) {
     },
     ...social,
     readingGoals: goals,
+    collection: await collectionService.exportData(userId),
     books: books.map(book => ({
       title: book.title,
       authors: book.authors,

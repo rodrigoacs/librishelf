@@ -508,6 +508,7 @@ const items = computed(() => [
   { label: t('menu.authors'), icon: 'pi pi-users', route: '/authors' },
   { label: t('menu.publishers'), icon: 'pi pi-building', route: '/publishers' },
   { label: t('menu.categories'), icon: 'pi pi-tags', route: '/tags' },
+  { label: t('menu.loans'), icon: 'pi pi-arrow-up-right', route: '/loans' },
   { label: t('menu.dashboard'), icon: 'pi pi-chart-bar', route: '/dashboard' },
   { label: t('menu.community'), icon: 'pi pi-globe', route: '/community', badge: pendingRequests.value },
   { label: t('menu.settings'), icon: 'pi pi-user', route: '/settings' },

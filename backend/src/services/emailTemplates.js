@@ -143,6 +143,26 @@ const TEXTS = {
       note: 'Este é o último aviso sobre o teste.',
       ignore: 'Você recebeu este aviso porque ativou o teste grátis do Pro.'
     },
+    loanReminder: {
+      subject: ({ title }) => `Lembrete: “${title}” está emprestado`,
+      preheader: ({ borrower, date }) => `O prazo combinado com ${borrower} é ${date}.`,
+      title: 'Lembrete de empréstimo',
+      greeting: name => `Olá, ${name}.`,
+      body: ({ borrower, title, date }) => `O prazo combinado para ${borrower} devolver “${title}” é ${date}.`,
+      button: 'Ver os empréstimos',
+      note: 'Quando o livro voltar, marque a devolução no app. Este é o único lembrete deste prazo.',
+      ignore: 'Você recebeu este lembrete porque o ligou no empréstimo deste livro.'
+    },
+    backupReady: {
+      subject: 'Seu backup do Librishelf está pronto',
+      preheader: ({ date }) => `Cópia da sua biblioteca de ${date}, pronta para baixar.`,
+      title: 'Backup pronto',
+      greeting: name => `Olá, ${name}.`,
+      body: ({ date, books }) => `A cópia automática da sua biblioteca de ${date} está pronta, com ${books === 1 ? '1 livro' : `${books} livros`}. Ela fica guardada na sua conta, em Conta → Backup automático.`,
+      button: 'Baixar o backup',
+      note: ({ keep }) => `Guardamos os ${keep} backups mais recentes; os mais antigos saem sozinhos. O arquivo é o mesmo da exportação em JSON.`,
+      ignore: 'Você recebeu este aviso porque ligou o backup automático com aviso por e-mail.'
+    },
     paid: {
       subject: 'Pagamento confirmado no Librishelf',
       preheader: ({ planLabel, amount }) => `Pro ${planLabel.toLowerCase()} · ${amount}`,
@@ -287,6 +307,26 @@ const TEXTS = {
       button: 'See the plans',
       note: 'This is the last notice about the trial.',
       ignore: 'You got this notice because you started the free Pro trial.'
+    },
+    loanReminder: {
+      subject: ({ title }) => `Reminder: “${title}” is on loan`,
+      preheader: ({ borrower, date }) => `The date you agreed on with ${borrower} is ${date}.`,
+      title: 'Loan reminder',
+      greeting: name => `Hi, ${name}.`,
+      body: ({ borrower, title, date }) => `The date you agreed on for ${borrower} to return “${title}” is ${date}.`,
+      button: 'See your loans',
+      note: 'When the book comes back, mark it as returned in the app. This is the only reminder for this date.',
+      ignore: 'You got this reminder because you turned it on for this loan.'
+    },
+    backupReady: {
+      subject: 'Your Librishelf backup is ready',
+      preheader: ({ date }) => `A copy of your library from ${date}, ready to download.`,
+      title: 'Backup ready',
+      greeting: name => `Hi, ${name}.`,
+      body: ({ date, books }) => `The automatic copy of your library from ${date} is ready, with ${books === 1 ? '1 book' : `${books} books`}. It is kept in your account, under Account → Automatic backup.`,
+      button: 'Download the backup',
+      note: ({ keep }) => `We keep the ${keep} most recent backups; older ones are removed on their own. The file is the same as the JSON export.`,
+      ignore: 'You got this notice because you turned on automatic backup with email notices.'
     },
     paid: {
       subject: 'Payment confirmed on Librishelf',
@@ -596,6 +636,18 @@ export function trialEndingEmail({ endsAt, locale, ...rest }) {
 
 /** Fim do teste: { name, link, locale } */
 export const trialEndedEmail = params => build('trialEnded', params)
+
+/** Backup pronto: { name, link, locale, books, createdAt, keep } */
+export function backupReadyEmail({ createdAt, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  return build('backupReady', { ...rest, locale: code, date: formatDate(createdAt, code) })
+}
+
+/** Lembrete de empréstimo: { name, link, locale, title, borrower, dueOn (AAAA-MM-DD) } */
+export function loanReminderEmail({ dueOn, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  return build('loanReminder', { ...rest, locale: code, date: formatDate(`${dueOn}T12:00:00Z`, code) })
+}
 
 /** Pagamento confirmado: { name, link, locale, plan, amountCents, currency, method, endsAt } (endsAt nulo = vitalício) */
 export function paymentConfirmedEmail({ plan, amountCents, currency = 'BRL', method, endsAt, locale, ...rest }) {

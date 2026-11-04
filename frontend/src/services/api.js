@@ -415,6 +415,83 @@ export default {
     return client.get(`/dashboard/year/${year}${toQuery({ current: new Date().getFullYear() })}`)
   },
 
+  // --- Backup automático (Pro); baixar é sempre permitido ---
+  getBackups() {
+    return client.get('/backups')
+  },
+
+  saveBackupSettings(changes) {
+    return client.put('/backups/settings', changes)
+  },
+
+  requestBackup() {
+    return client.post('/backups/run', {})
+  },
+
+  deleteBackup(id) {
+    return client.delete(`/backups/${id}`)
+  },
+
+  // --- Personalização (Pro); voltar ao padrão é sempre permitido ---
+  savePersonalization(changes) {
+    return client.put('/personalization', changes)
+  },
+
+  resetPersonalization(item) {
+    return client.delete(`/personalization/${item}`)
+  },
+
+  getPersonalizationCovers() {
+    return client.get('/personalization/covers')
+  },
+
+  // --- Coleção: empréstimos (grátis) e exemplar (Pro) ---
+  getBookCollection(bookId) {
+    return client.get(`/collection/books/${bookId}`)
+  },
+
+  getLoans(status = 'open') {
+    return client.get(`/collection/loans${toQuery({ status })}`)
+  },
+
+  getCollectionSummary() {
+    return client.get('/collection/summary')
+  },
+
+  lendBook(bookId, loan) {
+    return client.post(`/collection/books/${bookId}/loan`, loan)
+  },
+
+  updateLoan(loanId, loan) {
+    return client.patch(`/collection/loans/${loanId}`, loan)
+  },
+
+  returnLoan(loanId, returnedOn) {
+    return client.post(`/collection/loans/${loanId}/return`, returnedOn ? { returnedOn } : {})
+  },
+
+  deleteLoan(loanId) {
+    return client.delete(`/collection/loans/${loanId}`)
+  },
+
+  setLoanReminder(loanId, remind) {
+    return client.put(`/collection/loans/${loanId}/reminder`, { remind })
+  },
+
+  saveBookCopy(bookId, copy) {
+    return client.put(`/collection/books/${bookId}/copy`, copy)
+  },
+
+  uploadCopyPhoto(bookId, file) {
+    const formData = new FormData()
+    formData.append('photo', file, file.name || 'foto.jpg')
+    return client.post(`/collection/books/${bookId}/photos`, formData)
+  },
+
+  deleteCopyPhoto(bookId, photoId) {
+    return client.delete(`/collection/books/${bookId}/photos/${photoId}`)
+  },
+
   // --- Estatísticas avançadas (Pro) ---
   getProCompare(periods) {
     return client.get(`/dashboard/pro/compare${toQuery(periods)}`)

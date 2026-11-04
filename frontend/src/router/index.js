@@ -34,6 +34,7 @@ const router = createRouter({
     { path: '/lists', name: 'lists', component: () => import('../views/Lists.vue'), meta: { requiresAuth: true, title: 'lists' } },
     { path: '/lists/:id(\\d+)', name: 'list', component: () => import('../views/ListDetail.vue'), meta: { requiresAuth: true, title: 'list', depth: 2 } },
     { path: '/year/:year(\\d{4})?', name: 'year', component: () => import('../views/YearInBooks.vue'), meta: { requiresAuth: true, title: 'year', depth: 2 } },
+    { path: '/loans', name: 'loans', component: () => import('../views/Loans.vue'), meta: { requiresAuth: true, title: 'loans' } },
     { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { requiresAuth: true, title: 'dashboard' } },
     { path: '/community', name: 'community', component: () => import('../views/Community.vue'), meta: { requiresAuth: true, title: 'community' } },
     { path: '/settings', name: 'settings', component: () => import('../views/Settings.vue'), meta: { requiresAuth: true, title: 'settings' } },

@@ -24,7 +24,8 @@
     "search": "Search books",
     "appearance": "Appearance",
     "menuTab": "Menu",
-    "tabsLabel": "Main navigation"
+    "tabsLabel": "Main navigation",
+    "loans": "Loans"
   },
   "common": {
     "save": "Save",
@@ -1013,7 +1014,8 @@
     "pricing": "Plans",
     "planReturn": "Payment",
     "import": "Import books",
-    "importSkoob": "Coming from Skoob"
+    "importSkoob": "Coming from Skoob",
+    "loans": "Loans"
   },
   "password": {
     "show": "Show password",
@@ -1209,7 +1211,25 @@
     "STATS_DATE_INVALID": "Invalid date: use the YYYY-MM-DD format.",
     "STATS_PERIOD_INVALID": "The end of the period must come after the start.",
     "STATS_RANGE_TOO_LONG": "Period too long to group by month: use up to {max} months.",
-    "STATS_OPTION_INVALID": "Invalid statistics option."
+    "STATS_OPTION_INVALID": "Invalid statistics option.",
+    "LOAN_DATE_INVALID": "Invalid date.",
+    "LOAN_BORROWER_REQUIRED": "Say who has the book.",
+    "LOAN_DUE_BEFORE_LENT": "The due date must come after the loan.",
+    "LOAN_RETURN_BEFORE_LENT": "The return must come after the loan.",
+    "LOAN_ALREADY_OPEN": "This book is already on loan. Mark it as returned first.",
+    "LOAN_ALREADY_RETURNED": "This loan was already returned.",
+    "LOAN_NOT_FOUND": "Loan not found.",
+    "LOAN_DUE_REQUIRED": "Set a due date to get the reminder.",
+    "COPY_VALUE_INVALID": "Invalid amount.",
+    "COPY_CURRENCY_INVALID": "Invalid currency.",
+    "COPY_PHOTO_QUOTA": "You reached the limit of {max} copy photos.",
+    "COPY_PHOTO_BOOK_LIMIT": "Each book can have up to {max} photos.",
+    "PHOTO_NOT_FOUND": "Photo not found.",
+    "PERSONALIZATION_INVALID": "Invalid personalization option.",
+    "PROFILE_COVER_INVALID": "Choose one of your books that has a cover.",
+    "BACKUP_OPTION_INVALID": "Invalid backup option.",
+    "BACKUP_TOO_SOON": "You already requested a backup this hour. Try again later.",
+    "BACKUP_NOT_FOUND": "Backup not found."
   },
   "block": {
     "block": "Block {name}",
@@ -2365,5 +2385,150 @@
       "long": "300 to 499 pages",
       "epic": "500 pages or more"
     }
+  },
+  "collection": {
+    "title": "Collection",
+    "save": "Save",
+    "loan": {
+      "title": "Loan",
+      "with": "With {name}",
+      "since": "since {date}",
+      "due": "due {date}",
+      "overdue": "overdue since {date}",
+      "remind": "Email reminder on the due date",
+      "remindPro": "The email reminder is a Pro feature.",
+      "markReturned": "Mark as returned",
+      "edit": "Edit",
+      "borrower": "Who has it",
+      "lentOn": "Lent on",
+      "dueOn": "Due date",
+      "notes": "Note",
+      "remove": "Delete record",
+      "removeTitle": "Delete this loan?",
+      "removeMessage": "The record leaves this book's history. This cannot be undone.",
+      "none": "On the shelf, not on loan.",
+      "lend": "Lend",
+      "history": "{n} earlier loan | {n} earlier loans",
+      "saved": "Loan updated.",
+      "lent": "Loan saved.",
+      "returned": "Return saved.",
+      "remindOn": "You will get an email on the due date."
+    },
+    "copy": {
+      "title": "Your copy",
+      "location": "Where it is",
+      "locationHint": "E.g. living room shelf, second row",
+      "price": "Price paid",
+      "value": "Value today",
+      "valueHint": "Empty: the price paid counts",
+      "acquiredOn": "Bought on",
+      "amountInvalid": "Use only numbers, like 89.90.",
+      "saved": "Copy saved."
+    },
+    "photos": {
+      "title": "Photos of the copy",
+      "quota": "{used} of {max} photos in your account",
+      "alt": "Photo of your copy of {title}",
+      "add": "Add photo",
+      "remove": "Delete photo",
+      "removeTitle": "Delete this photo?",
+      "removeMessage": "The photo leaves your account. This cannot be undone.",
+      "accountFull": "You reached the limit of {max} copy photos.",
+      "bookFull": "This book already has {max} photos."
+    }
+  },
+  "loans": {
+    "title": "Loans",
+    "subtitle": "Who has your books and what the collection is worth.",
+    "summaryLabel": "Collection summary",
+    "open": "On loan now",
+    "overdue": "Past due",
+    "collectionValue": "Collection value",
+    "paid": "{amount} paid for {n} book | {amount} paid for {n} books",
+    "lists": {
+      "open": "On loan now",
+      "returned": "Already returned",
+      "all": "All loans"
+    },
+    "empty": {
+      "open": "No books on loan right now",
+      "returned": "No returns yet",
+      "all": "No loans yet"
+    },
+    "emptyHint": "To record a loan, open the book and use Lend in the Collection section.",
+    "reminderOn": "Email reminder on",
+    "since": "Since {from}",
+    "dueOn": "Since {from} · due {due}",
+    "lateSince": "Since {from} · overdue since {due}",
+    "returnedOn": "From {from} to {to}"
+  },
+  "personalization": {
+    "title": "Personalization",
+    "palette": {
+      "title": "Palette",
+      "default": "Default",
+      "options": {
+        "paper": "Paper",
+        "amoled": "True black",
+        "slate": "Slate",
+        "forest": "Forest"
+      }
+    },
+    "accent": {
+      "title": "Extra accent color",
+      "default": "The 6 free ones",
+      "options": {
+        "teal": "Teal",
+        "pink": "Pink",
+        "indigo": "Indigo"
+      }
+    },
+    "icon": {
+      "title": "App icon",
+      "default": "Default",
+      "options": {
+        "night": "Night",
+        "paper": "Paper",
+        "mono": "Mono"
+      },
+      "help": "Changes the tab icon right away. For the installed app it applies on the next install: to switch, uninstall and install it again."
+    },
+    "cover": {
+      "title": "Background cover on your public profile",
+      "current": "Chosen cover",
+      "none": "No cover chosen.",
+      "choose": "Choose cover",
+      "change": "Change cover",
+      "remove": "Remove cover",
+      "help": "Shows at the top of your public library. Only your books that have a cover.",
+      "empty": "No books with a cover yet."
+    }
+  },
+  "backup": {
+    "title": "Automatic backup",
+    "enabled": "Back up automatically",
+    "help": "A copy of your library in the same format as the JSON export. We keep the {n} most recent.",
+    "frequency": "Frequency",
+    "frequencies": {
+      "weekly": "Every week",
+      "monthly": "Every month"
+    },
+    "notify": "Email me the link",
+    "next": "Next backup: {date}",
+    "runNow": "Back up now",
+    "queued": "Backup requested. It shows up here in a few minutes.",
+    "list": "Saved backups",
+    "empty": "No backups yet.",
+    "trigger": {
+      "scheduled": "automatic",
+      "manual": "requested by you"
+    },
+    "books": "{n} book | {n} books",
+    "kb": "{n} KB",
+    "mb": "{n} MB",
+    "download": "Download",
+    "remove": "Delete",
+    "removeTitle": "Delete this backup?",
+    "removeMessage": "The file leaves your account. This cannot be undone."
   }
 }

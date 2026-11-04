@@ -235,6 +235,12 @@
             />
           </section>
 
+          <BookCollection
+            v-if="!isReadOnly && !loading && !loadFailed"
+            :book-id="bookId"
+            :book-title="book.title"
+          />
+
           <BookCommunity
             v-if="!isReadOnly && !loading && !loadFailed"
             :book-id="bookId"
@@ -269,6 +275,7 @@ import BookView from './book/BookView.vue'
 import BookEditForm from './book/BookEditForm.vue'
 import ReadingPanel from './book/ReadingPanel.vue'
 import BookCommunity from './book/BookCommunity.vue'
+import BookCollection from './book/BookCollection.vue'
 import ReviewEditor from './review/ReviewEditor.vue'
 import ReviewCard from './review/ReviewCard.vue'
 import AddToListDialog from './list/AddToListDialog.vue'

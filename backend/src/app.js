@@ -8,6 +8,9 @@ import authorRoutes from './routes/author.js'
 import publisherRoutes from './routes/publisher.js'
 import tagsRoutes from './routes/tags.js'
 import dashboardRoutes from './routes/dashboard.js'
+import collectionRoutes from './routes/collection.js'
+import personalizationRoutes from './routes/personalization.js'
+import backupRoutes from './routes/backups.js'
 import isbnRoutes from './routes/isbn.js'
 import communityRoutes from './routes/community.js'
 import socialRoutes from './routes/social.js'
@@ -45,6 +48,9 @@ app.use('/author', authorRoutes)
 app.use('/publisher', publisherRoutes)
 app.use('/tags', tagsRoutes)
 app.use('/dashboard', dashboardRoutes)
+app.use('/collection', collectionRoutes)
+app.use('/personalization', personalizationRoutes)
+app.use('/backups', backupRoutes)
 app.use('/isbn', isbnRoutes)
 app.use('/community', communityRoutes)
 app.use('/social', socialRoutes)

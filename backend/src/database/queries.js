@@ -2634,3 +2634,212 @@ export const PRO_STATS_QUERIES = {
     `
   }
 }
+
+// ---------------------------------------------------------------------------
+// Coleção (pacote 28): empréstimos (grátis) e exemplar (Pro: collector).
+// Datas saem como texto (AAAA-MM-DD).
+// ---------------------------------------------------------------------------
+const COLLECTION_LOAN_FIELDS = `l.id, l.book_id, l.borrower, l.lent_on::text AS lent_on, l.due_on::text AS due_on,
+       l.returned_on::text AS returned_on, l.notes, l.remind`
+
+export const COLLECTION_QUERIES = {
+  OWNED_BOOK: 'SELECT id, title FROM librishelf.books WHERE id = $1 AND user_id = $2',
+  LOANS_OF_BOOK: `
+    SELECT ${COLLECTION_LOAN_FIELDS}
+    FROM librishelf.loans l
+    WHERE l.book_id = $1 AND l.user_id = $2
+    ORDER BY l.returned_on IS NULL DESC, l.lent_on DESC, l.id DESC
+  `,
+  // status: 'open' | 'returned' | 'all'
+  LOANS: `
+    SELECT ${COLLECTION_LOAN_FIELDS}, b.title, b.cover_version,
+           (SELECT string_agg(a.name, ', ' ORDER BY bal.position, a.id)
+              FROM librishelf.books_authors_link bal JOIN librishelf.authors a ON a.id = bal.author_id
+             WHERE bal.book_id = b.id) AS authors,
+           (l.returned_on IS NULL AND l.due_on < CURRENT_DATE) AS overdue
+    FROM librishelf.loans l
+    JOIN librishelf.books b ON b.id = l.book_id
+    WHERE l.user_id = $1
+      AND ($2 = 'all' OR ($2 = 'open' AND l.returned_on IS NULL) OR ($2 = 'returned' AND l.returned_on IS NOT NULL))
+    ORDER BY l.returned_on IS NULL DESC, l.due_on NULLS LAST, l.lent_on DESC, l.id DESC
+    LIMIT 500
+  `,
+  LOAN: `SELECT ${COLLECTION_LOAN_FIELDS}, l.user_id FROM librishelf.loans l WHERE l.id = $1 AND l.user_id = $2`,
+  INSERT_LOAN: `
+    INSERT INTO librishelf.loans (user_id, book_id, borrower, lent_on, due_on, notes)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id
+  `,
+  UPDATE_LOAN: `
+    UPDATE librishelf.loans
+    SET borrower = $3, lent_on = $4, due_on = $5, notes = $6, updated_at = now()
+    WHERE id = $1 AND user_id = $2
+  `,
+  RETURN_LOAN: `
+    UPDATE librishelf.loans SET returned_on = $3, updated_at = now()
+    WHERE id = $1 AND user_id = $2 AND returned_on IS NULL
+  `,
+  DELETE_LOAN: 'DELETE FROM librishelf.loans WHERE id = $1 AND user_id = $2',
+  SET_REMIND: 'UPDATE librishelf.loans SET remind = $3, updated_at = now() WHERE id = $1 AND user_id = $2',
+
+  // E-mail de lembrete: montado na hora de enviar
+  REMINDER: `
+    SELECT l.id, l.user_id, l.borrower, l.due_on::text AS due_on, l.returned_on, l.remind, l.book_id,
+           b.title, u.name, u.email, u.email_verified_at, u.email_locale
+    FROM librishelf.loans l
+    JOIN librishelf.books b ON b.id = l.book_id
+    JOIN librishelf.users u ON u.id = l.user_id
+    WHERE l.id = $1
+  `,
+
+  COPY: `
+    SELECT location, price_cents, value_cents, currency, acquired_on::text AS acquired_on
+    FROM librishelf.book_copies WHERE book_id = $1 AND user_id = $2
+  `,
+  UPSERT_COPY: `
+    INSERT INTO librishelf.book_copies (book_id, user_id, location, price_cents, value_cents, currency, acquired_on)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (book_id) DO UPDATE SET
+      location = EXCLUDED.location, price_cents = EXCLUDED.price_cents, value_cents = EXCLUDED.value_cents,
+      currency = EXCLUDED.currency, acquired_on = EXCLUDED.acquired_on, updated_at = now()
+  `,
+  DELETE_COPY: 'DELETE FROM librishelf.book_copies WHERE book_id = $1 AND user_id = $2',
+
+  PHOTOS_OF_BOOK: `
+    SELECT id, width, height, created_at FROM librishelf.copy_photos
+    WHERE book_id = $1 AND user_id = $2 ORDER BY id
+  `,
+  PHOTO: 'SELECT id, book_id, user_id FROM librishelf.copy_photos WHERE id = $1 AND book_id = $2 AND user_id = $3',
+  // Trava a conta enquanto confere a cota (dois envios juntos não passam do limite)
+  LOCK_USER: 'SELECT id FROM librishelf.users WHERE id = $1 FOR UPDATE',
+  PHOTO_COUNTS: `
+    SELECT count(*)::int AS total, count(*) FILTER (WHERE book_id = $2)::int AS in_book
+    FROM librishelf.copy_photos WHERE user_id = $1
+  `,
+  INSERT_PHOTO: `
+    INSERT INTO librishelf.copy_photos (book_id, user_id, bytes, width, height)
+    VALUES ($1, $2, $3, $4, $5) RETURNING id, width, height, created_at
+  `,
+  DELETE_PHOTO: 'DELETE FROM librishelf.copy_photos WHERE id = $1 AND user_id = $2',
+
+  SUMMARY: `
+    SELECT
+      (SELECT count(*)::int FROM librishelf.loans WHERE user_id = $1 AND returned_on IS NULL) AS open_loans,
+      (SELECT count(*)::int FROM librishelf.loans WHERE user_id = $1 AND returned_on IS NULL AND due_on < CURRENT_DATE) AS overdue_loans,
+      (SELECT count(*)::int FROM librishelf.book_copies WHERE user_id = $1 AND location IS NOT NULL) AS located,
+      (SELECT count(*)::int FROM librishelf.copy_photos WHERE user_id = $1) AS photos,
+      COALESCE((
+        SELECT json_agg(x ORDER BY x.currency)
+        FROM (
+          SELECT currency, count(*)::int AS books,
+                 COALESCE(sum(price_cents), 0)::bigint::text AS paid_cents,
+                 COALESCE(sum(COALESCE(value_cents, price_cents)), 0)::bigint::text AS value_cents
+          FROM librishelf.book_copies
+          WHERE user_id = $1 AND (price_cents IS NOT NULL OR value_cents IS NOT NULL)
+          GROUP BY currency
+        ) x
+      ), '[]'::json) AS totals
+  `,
+
+  EXPORT_LOANS: `
+    SELECT l.book_id, b.title, l.borrower, l.lent_on::text AS lent_on, l.due_on::text AS due_on,
+           l.returned_on::text AS returned_on, l.notes, l.remind
+    FROM librishelf.loans l JOIN librishelf.books b ON b.id = l.book_id
+    WHERE l.user_id = $1 ORDER BY l.lent_on, l.id
+  `,
+  EXPORT_COPIES: `
+    SELECT c.book_id, b.title, c.location, c.price_cents, c.value_cents, c.currency, c.acquired_on::text AS acquired_on,
+           (SELECT count(*)::int FROM librishelf.copy_photos p WHERE p.book_id = c.book_id) AS photos
+    FROM librishelf.book_copies c JOIN librishelf.books b ON b.id = c.book_id
+    WHERE c.user_id = $1 ORDER BY b.title, c.book_id
+  `,
+  BOOKS_OF_USER: 'SELECT id FROM librishelf.books WHERE user_id = $1'
+}
+
+// ---------------------------------------------------------------------------
+// Personalização (pacote 29, Pro: personalization)
+// ---------------------------------------------------------------------------
+export const PERSONALIZATION_QUERIES = {
+  GET: `
+    SELECT u.ui_palette, u.ui_accent, u.app_icon, u.profile_cover_book_id, b.cover_version AS profile_cover_version
+    FROM librishelf.users u
+    LEFT JOIN librishelf.books b ON b.id = u.profile_cover_book_id AND b.user_id = u.id
+    WHERE u.id = $1
+  `,
+  // $2..$5: valor novo; $6..$9: mudar aquele campo?
+  UPDATE: `
+    UPDATE librishelf.users SET
+      ui_palette = CASE WHEN $6 THEN $2 ELSE ui_palette END,
+      ui_accent = CASE WHEN $7 THEN $3 ELSE ui_accent END,
+      app_icon = CASE WHEN $8 THEN $4 ELSE app_icon END,
+      profile_cover_book_id = CASE WHEN $9 THEN $5::int ELSE profile_cover_book_id END
+    WHERE id = $1
+  `,
+  BOOK_WITH_COVER: 'SELECT id FROM librishelf.books WHERE id = $1 AND user_id = $2 AND cover_version IS NOT NULL',
+  COVERS: `
+    SELECT id, title, cover_version FROM librishelf.books
+    WHERE user_id = $1 AND cover_version IS NOT NULL
+    ORDER BY lower(title), id
+    LIMIT 300
+  `,
+  // Capa de fundo no perfil público: só livro da própria pessoa e com capa
+  PUBLIC_COVER: `
+    SELECT b.id, b.cover_version
+    FROM librishelf.users u
+    JOIN librishelf.books b ON b.id = u.profile_cover_book_id AND b.user_id = u.id
+    WHERE u.id = $1 AND b.cover_version IS NOT NULL
+  `
+}
+
+// ---------------------------------------------------------------------------
+// Backup automático (pacote 30, Pro: auto_backup)
+// ---------------------------------------------------------------------------
+export const BACKUP_QUERIES = {
+  SETTINGS: `
+    SELECT enabled, frequency, notify, next_run_at FROM librishelf.backup_settings WHERE user_id = $1
+  `,
+  SAVE_SETTINGS: `
+    INSERT INTO librishelf.backup_settings (user_id, enabled, frequency, notify, next_run_at)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (user_id) DO UPDATE SET
+      enabled = EXCLUDED.enabled, frequency = EXCLUDED.frequency, notify = EXCLUDED.notify,
+      next_run_at = EXCLUDED.next_run_at, updated_at = now()
+  `,
+  SET_NEXT: 'UPDATE librishelf.backup_settings SET next_run_at = $2 WHERE user_id = $1',
+  // Vencidos de quem tem Pro agora (sem Pro, o agendamento espera e nada é excluído)
+  DUE: `
+    SELECT s.user_id, s.next_run_at
+    FROM librishelf.backup_settings s
+    WHERE s.enabled AND s.next_run_at <= now()
+      AND EXISTS (
+        SELECT 1 FROM librishelf.entitlements e
+        WHERE e.user_id = s.user_id AND e.status = 'active' AND e.starts_at <= now()
+          AND (e.ends_at IS NULL OR e.ends_at > now())
+      )
+    ORDER BY s.next_run_at
+    LIMIT 200
+  `,
+  LIST: `
+    SELECT id, trigger, books, bytes, created_at FROM librishelf.backups
+    WHERE user_id = $1 ORDER BY created_at DESC, id DESC
+  `,
+  ONE: 'SELECT id, user_id, created_at FROM librishelf.backups WHERE id = $1 AND user_id = $2',
+  INSERT: `
+    INSERT INTO librishelf.backups (user_id, trigger, books, bytes) VALUES ($1, $2, $3, $4)
+    RETURNING id, trigger, books, bytes, created_at
+  `,
+  DELETE: 'DELETE FROM librishelf.backups WHERE id = $1 AND user_id = $2',
+  // Os mais antigos além dos que ficam guardados
+  OVERFLOW: `
+    SELECT id FROM librishelf.backups WHERE user_id = $1
+    ORDER BY created_at DESC, id DESC OFFSET $2
+  `,
+  EMAIL: `
+    SELECT b.id, b.user_id, b.books, b.created_at, u.name, u.email, u.email_verified_at, u.email_locale,
+           s.notify
+    FROM librishelf.backups b
+    JOIN librishelf.users u ON u.id = b.user_id
+    LEFT JOIN librishelf.backup_settings s ON s.user_id = b.user_id
+    WHERE b.id = $1
+  `
+}

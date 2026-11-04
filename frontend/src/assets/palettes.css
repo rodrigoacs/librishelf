@@ -1,0 +1,85 @@
+/* Paletas e cores extras (Pro: personalization, pacote 29).
+   A paleta vale por cima do tema de base (data-theme), que o useTheme
+   escolhe junto: papel em cima do claro, as outras em cima do escuro.
+   Textos conferidos com ≥ 4,5:1 no fundo do app e no painel. */
+
+/* --- Cores de destaque extras (escuro / claro) */
+:root {
+  --teal: #2dd4bf;
+  --pink: #f472b6;
+  --indigo: #8b95fa;
+  --teal-rgb: 45, 212, 191;
+  --pink-rgb: 244, 114, 182;
+  --indigo-rgb: 139, 149, 250;
+  --teal-solid-rgb: 15, 118, 110;
+  --pink-solid-rgb: 190, 24, 93;
+  --indigo-solid-rgb: 79, 70, 229;
+}
+
+:root[data-theme="light"] {
+  --teal: #0f766e;
+  --pink: #be185d;
+  --indigo: #4f46e5;
+  --teal-rgb: 15, 118, 110;
+  --pink-rgb: 190, 24, 93;
+  --indigo-rgb: 79, 70, 229;
+  --teal-solid-rgb: var(--teal-rgb);
+  --pink-solid-rgb: var(--pink-rgb);
+  --indigo-solid-rgb: var(--indigo-rgb);
+}
+
+/* --- Papel: claro e quente, para leitura longa */
+:root[data-palette="paper"] {
+  --bg-app: #f3ecdf;
+  --bg-panel: #fbf7ef;
+  --bg-input: #e9dfcc;
+  --bg-hover: #ddd0b8;
+  --bg-overlay: rgba(251, 247, 239, 0.65);
+  --text-primary: #2b2116;
+  --text-secondary: #5a4a38;
+  --text-muted: #6a5845;
+  --border-color: rgba(70, 45, 10, 0.14);
+  --border-hover: rgba(70, 45, 10, 0.26);
+  /* Amarelo do claro fica abaixo de 4,5:1 neste fundo */
+  --yellow: #805a00;
+  --yellow-rgb: 128, 90, 0;
+}
+
+/* --- Preto total: telas OLED */
+:root[data-palette="amoled"] {
+  --bg-app: #000000;
+  --bg-panel: #0c0c0e;
+  --bg-input: #1a1a1e;
+  --bg-hover: #2a2a2f;
+  --bg-overlay: rgba(0, 0, 0, 0.8);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-hover: rgba(255, 255, 255, 0.22);
+}
+
+/* --- Ardósia: escuro azulado */
+:root[data-palette="slate"] {
+  --bg-app: #0f172a;
+  --bg-panel: #1a2438;
+  --bg-input: #253148;
+  --bg-hover: #314059;
+  --bg-overlay: rgba(15, 23, 42, 0.75);
+  --text-primary: #f1f5f9;
+  --text-secondary: #b0bccd;
+  --text-muted: #9aa8bc;
+  --border-color: rgba(148, 163, 184, 0.16);
+  --border-hover: rgba(148, 163, 184, 0.3);
+}
+
+/* --- Floresta: escuro esverdeado */
+:root[data-palette="forest"] {
+  --bg-app: #0f1a14;
+  --bg-panel: #16241c;
+  --bg-input: #1f3328;
+  --bg-hover: #2a4435;
+  --bg-overlay: rgba(15, 26, 20, 0.75);
+  --text-primary: #eef5ef;
+  --text-secondary: #aec4b3;
+  --text-muted: #98b09e;
+  --border-color: rgba(174, 196, 179, 0.15);
+  --border-hover: rgba(174, 196, 179, 0.28);
+}

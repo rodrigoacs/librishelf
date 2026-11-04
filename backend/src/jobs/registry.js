@@ -5,6 +5,7 @@ import { sendEmail, billingReminders, sweepFollowEmails } from './handlers/email
 import { runImport, runCovers, cleanup as cleanupImports } from '../services/importService.js'
 import { processWebhookEvent } from './handlers/webhooks.js'
 import { reconcile } from './handlers/reconcile.js'
+import * as backupService from '../services/backupService.js'
 
 /**
  * Tipo de job → função(payload, job). Lançar erro = tentar de novo depois
@@ -27,7 +28,9 @@ export const HANDLERS = {
   'tokens.cleanup': () => cleanupTokens(),
   'import.run': payload => runImport(payload.importId),
   'import.covers': payload => runCovers(payload.importId, payload.round ?? 0),
-  'imports.cleanup': () => cleanupImports()
+  'imports.cleanup': () => cleanupImports(),
+  'backups.sweep': () => backupService.sweep(),
+  'backup.create': payload => backupService.create(payload),
 }
 
 /**
@@ -43,5 +46,6 @@ export const RECURRING = [
   { type: 'billing.reminders', everyMinutes: 60 },
   { type: 'follow-emails.sweep', everyMinutes: 5 },
   { type: 'tokens.cleanup', everyMinutes: 24 * 60 },
-  { type: 'imports.cleanup', everyMinutes: 24 * 60 }
+  { type: 'imports.cleanup', everyMinutes: 24 * 60 },
+  { type: 'backups.sweep', everyMinutes: 60 }
 ]

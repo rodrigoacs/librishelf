@@ -2,6 +2,13 @@
   <div class="page public-library-container">
     <PublicBar />
 
+    <div
+      v-if="profileCoverUrl && !notFound"
+      class="profile-cover"
+      aria-hidden="true"
+      :style="{ backgroundImage: `url(${profileCoverUrl})` }"
+    ></div>
+
     <PageHeader
       v-if="!notFound"
       :title="t('publicLibrary.title', { ownerName: ownerName || username })"
@@ -465,6 +472,7 @@ import { useConfirm } from '../services/confirm.js'
 import { tagColor, colorFor } from '../utils/tagColors.js'
 import { fromApiDate } from '../utils/dates.js'
 import { setRobots } from '../services/pageTitle.js'
+import { coverUrl as profileCoverSrc } from '../utils/covers.js'
 
 const PAGE_SIZE = 20
 
@@ -476,6 +484,11 @@ const router = useRouter()
 const toast = useToast()
 
 const profile = ref(null)
+// Capa de fundo escolhida no Pro (continua aparecendo se o Pro acabar)
+const profileCoverUrl = computed(() => {
+  const cover = profile.value?.profileCover
+  return cover ? profileCoverSrc(cover.bookId, cover.version) : null
+})
 const followBusy = ref(false)
 const openedBookId = ref(null)
 const bookDialogVisible = ref(false)
@@ -699,6 +712,25 @@ watch(username, () => {
 </script>
 
 <style scoped>
+/* Faixa com a capa escolhida, desfocada e esmaecida até o fundo da página */
+.profile-cover {
+  position: relative;
+  height: clamp(6rem, 18vw, 11rem);
+  margin-bottom: var(--space-2);
+  overflow: hidden;
+  border-radius: var(--card-radius);
+  background-position: center 30%;
+  background-size: cover;
+}
+
+.profile-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(6px) saturate(1.1);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), var(--bg-app));
+}
+
 .public-library-container {
   /* Casca e recuo em .page (main.css) */
   display: flex;

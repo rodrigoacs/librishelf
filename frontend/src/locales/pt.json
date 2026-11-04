@@ -62,7 +62,8 @@
     "search": "Buscar livros",
     "appearance": "Aparência",
     "menuTab": "Menu",
-    "tabsLabel": "Navegação principal"
+    "tabsLabel": "Navegação principal",
+    "loans": "Empréstimos"
   },
   "common": {
     "save": "Salvar",
@@ -1013,7 +1014,8 @@
     "pricing": "Planos",
     "planReturn": "Pagamento",
     "import": "Importar livros",
-    "importSkoob": "Vindo do Skoob"
+    "importSkoob": "Vindo do Skoob",
+    "loans": "Empréstimos"
   },
   "password": {
     "show": "Mostrar senha",
@@ -1209,7 +1211,25 @@
     "STATS_DATE_INVALID": "Data inválida: use o formato AAAA-MM-DD.",
     "STATS_PERIOD_INVALID": "O fim do período precisa ser depois do início.",
     "STATS_RANGE_TOO_LONG": "Período longo demais para agrupar por mês: use até {max} meses.",
-    "STATS_OPTION_INVALID": "Opção de estatística inválida."
+    "STATS_OPTION_INVALID": "Opção de estatística inválida.",
+    "LOAN_DATE_INVALID": "Data inválida.",
+    "LOAN_BORROWER_REQUIRED": "Diga com quem o livro está.",
+    "LOAN_DUE_BEFORE_LENT": "O prazo precisa ser depois do empréstimo.",
+    "LOAN_RETURN_BEFORE_LENT": "A devolução precisa ser depois do empréstimo.",
+    "LOAN_ALREADY_OPEN": "Este livro já está emprestado. Marque a devolução antes.",
+    "LOAN_ALREADY_RETURNED": "Este empréstimo já foi devolvido.",
+    "LOAN_NOT_FOUND": "Empréstimo não encontrado.",
+    "LOAN_DUE_REQUIRED": "Defina um prazo para receber o lembrete.",
+    "COPY_VALUE_INVALID": "Valor inválido.",
+    "COPY_CURRENCY_INVALID": "Moeda inválida.",
+    "COPY_PHOTO_QUOTA": "Você chegou ao limite de {max} fotos de exemplar.",
+    "COPY_PHOTO_BOOK_LIMIT": "Cada livro pode ter até {max} fotos.",
+    "PHOTO_NOT_FOUND": "Foto não encontrada.",
+    "PERSONALIZATION_INVALID": "Opção de personalização inválida.",
+    "PROFILE_COVER_INVALID": "Escolha um livro seu que tenha capa.",
+    "BACKUP_OPTION_INVALID": "Opção de backup inválida.",
+    "BACKUP_TOO_SOON": "Você já pediu um backup nesta hora. Tente de novo mais tarde.",
+    "BACKUP_NOT_FOUND": "Backup não encontrado."
   },
   "block": {
     "block": "Bloquear {name}",
@@ -2365,5 +2385,150 @@
       "long": "300 a 499 páginas",
       "epic": "500 páginas ou mais"
     }
+  },
+  "collection": {
+    "title": "Coleção",
+    "save": "Salvar",
+    "loan": {
+      "title": "Empréstimo",
+      "with": "Com {name}",
+      "since": "desde {date}",
+      "due": "prazo: {date}",
+      "overdue": "prazo vencido em {date}",
+      "remind": "Lembrete por e-mail no dia do prazo",
+      "remindPro": "O lembrete por e-mail é do Pro.",
+      "markReturned": "Marcar devolução",
+      "edit": "Editar",
+      "borrower": "Com quem está",
+      "lentOn": "Emprestado em",
+      "dueOn": "Prazo",
+      "notes": "Observação",
+      "remove": "Excluir registro",
+      "removeTitle": "Excluir este empréstimo?",
+      "removeMessage": "O registro sai do histórico deste livro. Isso não pode ser desfeito.",
+      "none": "Na estante, sem empréstimo.",
+      "lend": "Emprestar",
+      "history": "{n} empréstimo anterior | {n} empréstimos anteriores",
+      "saved": "Empréstimo atualizado.",
+      "lent": "Empréstimo registrado.",
+      "returned": "Devolução registrada.",
+      "remindOn": "Você vai receber um e-mail no dia do prazo."
+    },
+    "copy": {
+      "title": "Seu exemplar",
+      "location": "Onde está",
+      "locationHint": "Ex.: estante da sala, segunda prateleira",
+      "price": "Preço pago",
+      "value": "Valor hoje",
+      "valueHint": "Vazio: conta o preço pago",
+      "acquiredOn": "Comprado em",
+      "amountInvalid": "Use só números, como 89,90.",
+      "saved": "Exemplar salvo."
+    },
+    "photos": {
+      "title": "Fotos do exemplar",
+      "quota": "{used} de {max} fotos na conta",
+      "alt": "Foto do exemplar de {title}",
+      "add": "Adicionar foto",
+      "remove": "Excluir foto",
+      "removeTitle": "Excluir esta foto?",
+      "removeMessage": "A foto sai da sua conta. Isso não pode ser desfeito.",
+      "accountFull": "Você chegou ao limite de {max} fotos de exemplar.",
+      "bookFull": "Este livro já tem {max} fotos."
+    }
+  },
+  "loans": {
+    "title": "Empréstimos",
+    "subtitle": "Quem está com seus livros e quanto vale a coleção.",
+    "summaryLabel": "Resumo da coleção",
+    "open": "Emprestados agora",
+    "overdue": "Com prazo vencido",
+    "collectionValue": "Valor da coleção",
+    "paid": "{amount} pagos em {n} livro | {amount} pagos em {n} livros",
+    "lists": {
+      "open": "Emprestados agora",
+      "returned": "Já devolvidos",
+      "all": "Todos os empréstimos"
+    },
+    "empty": {
+      "open": "Nenhum livro emprestado agora",
+      "returned": "Nenhuma devolução registrada",
+      "all": "Nenhum empréstimo registrado"
+    },
+    "emptyHint": "Para registrar um empréstimo, abra o livro e use Emprestar na seção Coleção.",
+    "reminderOn": "Lembrete por e-mail ligado",
+    "since": "Desde {from}",
+    "dueOn": "Desde {from} · prazo {due}",
+    "lateSince": "Desde {from} · prazo vencido em {due}",
+    "returnedOn": "De {from} a {to}"
+  },
+  "personalization": {
+    "title": "Personalização",
+    "palette": {
+      "title": "Paleta",
+      "default": "Padrão",
+      "options": {
+        "paper": "Papel",
+        "amoled": "Preto total",
+        "slate": "Ardósia",
+        "forest": "Floresta"
+      }
+    },
+    "accent": {
+      "title": "Cor de destaque extra",
+      "default": "As 6 grátis",
+      "options": {
+        "teal": "Turquesa",
+        "pink": "Rosa",
+        "indigo": "Índigo"
+      }
+    },
+    "icon": {
+      "title": "Ícone do app",
+      "default": "Padrão",
+      "options": {
+        "night": "Noite",
+        "paper": "Papel",
+        "mono": "Mono"
+      },
+      "help": "Muda o ícone da aba na hora. No app instalado, vale na próxima instalação: para trocar, desinstale e instale de novo."
+    },
+    "cover": {
+      "title": "Capa de fundo no perfil público",
+      "current": "Capa escolhida",
+      "none": "Nenhuma capa escolhida.",
+      "choose": "Escolher capa",
+      "change": "Trocar capa",
+      "remove": "Tirar capa",
+      "help": "Aparece no alto da sua biblioteca pública. Só livros seus que têm capa.",
+      "empty": "Nenhum livro com capa ainda."
+    }
+  },
+  "backup": {
+    "title": "Backup automático",
+    "enabled": "Fazer backup automático",
+    "help": "Uma cópia da biblioteca no mesmo formato da exportação em JSON. Guardamos as {n} mais recentes.",
+    "frequency": "Frequência",
+    "frequencies": {
+      "weekly": "Toda semana",
+      "monthly": "Todo mês"
+    },
+    "notify": "Avisar por e-mail com o link",
+    "next": "Próximo backup: {date}",
+    "runNow": "Fazer um backup agora",
+    "queued": "Backup pedido. Ele aparece aqui em alguns minutos.",
+    "list": "Backups guardados",
+    "empty": "Nenhum backup ainda.",
+    "trigger": {
+      "scheduled": "automático",
+      "manual": "pedido por você"
+    },
+    "books": "{n} livro | {n} livros",
+    "kb": "{n} KB",
+    "mb": "{n} MB",
+    "download": "Baixar",
+    "remove": "Excluir",
+    "removeTitle": "Excluir este backup?",
+    "removeMessage": "O arquivo sai da sua conta. Isso não pode ser desfeito."
   }
 }

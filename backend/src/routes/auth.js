@@ -2,6 +2,7 @@ import express from 'express'
 import * as authService from '../services/authService.js'
 import * as dataService from '../services/dataService.js'
 import * as entitlementService from '../services/entitlementService.js'
+import * as personalizationService from '../services/personalizationService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimiter } from '../middlewares/rateLimiter.js'
@@ -76,12 +77,13 @@ router.get('/me', authenticateToken, async (req, res) => {
     if (!user) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
 
     // Plano, recursos liberados e selos: o servidor decide, o app só mostra
-    const [plan, badges] = await Promise.all([
+    const [plan, badges, personalization] = await Promise.all([
       entitlementService.planOf(req.user.id),
-      entitlementService.badgesOf(req.user.id)
+      entitlementService.badgesOf(req.user.id),
+      personalizationService.get(req.user.id)
     ])
 
-    res.status(STATUS.OK).json({ user: { ...user, plan, badges } })
+    res.status(STATUS.OK).json({ user: { ...user, plan, badges, personalization } })
   } catch (error) {
     sendError(res, error, 'Erro ao buscar usuário')
   }

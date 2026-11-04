@@ -2,6 +2,7 @@ import * as libraryRepository from '../repositories/libraryRepository.js'
 import * as authRepository from '../repositories/authRepository.js'
 import STATUS from '../utils/statusCodes.js'
 import { deleteBookCover, saveBookCover } from '../utils/imageProcessor.js'
+import { removeBookPhotoFiles } from './collectionService.js'
 import logger from '../utils/logger.js'
 import { parseNameList, parseTagList, nameListError } from '../utils/nameList.js'
 import { httpError } from '../utils/httpError.js'
@@ -277,6 +278,7 @@ async function deleteBook(bookId, userId) {
   await libraryRepository.pruneUserNames(userId)
 
   await deleteBookCover(bookId)
+  await removeBookPhotoFiles(userId, [bookId])
 }
 
 async function setRating(bookId, userId, value) {
@@ -364,6 +366,7 @@ async function batchUpdate(userId, body = {}) {
     try { await deleteBookCover(id) } catch { failed.push(id) }
   }
   if (failed.length) logger.warn('Capas não removidas na exclusão em lote', { userId, failed })
+  await removeBookPhotoFiles(userId, ids)
   return { updated: deleted }
 }
 

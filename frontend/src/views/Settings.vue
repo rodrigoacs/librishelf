@@ -108,6 +108,10 @@
 
       <SettingsPlan />
 
+      <SettingsPersonalization />
+
+      <SettingsBackup />
+
       <!-- Privacidade -->
       <section
         id="settings-privacy"
@@ -629,6 +633,8 @@ import ReaderAvatar from '../components/ReaderAvatar.vue'
 import AvatarCropSheet from '../components/AvatarCropSheet.vue'
 import SettingsRow from '../components/settings/SettingsRow.vue'
 import SettingsPlan from '../components/settings/SettingsPlan.vue'
+import SettingsPersonalization from '../components/settings/SettingsPersonalization.vue'
+import SettingsBackup from '../components/settings/SettingsBackup.vue'
 import VanguardaBadge from '../components/VanguardaBadge.vue'
 import { useConfirm } from '../services/confirm.js'
 import { ref, reactive, computed, watch, onMounted } from 'vue'

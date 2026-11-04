@@ -9,6 +9,8 @@ import os from 'node:os'
 import path from 'node:path'
 import { resetPasswordEmail, verifyEmailEmail, emailChangedEmail, followDigestEmail, reviewReportEmail } from '../services/emailTemplates.js'
 import { renewalReminderEmail, trialEndingEmail, trialEndedEmail, paymentConfirmedEmail, paymentDeclinedEmail } from '../services/emailTemplates.js'
+import { loanReminderEmail } from '../services/emailTemplates.js'
+import { backupReadyEmail } from '../services/emailTemplates.js'
 
 const outDir = path.resolve(process.argv[2] || path.join(os.tmpdir(), 'librishelf-emails'))
 fs.mkdirSync(outDir, { recursive: true })
@@ -33,6 +35,10 @@ const emails = {
   'teste-acabando-pt': trialEndingEmail({ name: 'Rodrigo', link: `${base}/pricing`, locale: 'pt', endsAt: inDays(3) }),
   'teste-acabou-pt': trialEndedEmail({ name: 'Rodrigo', link: `${base}/pricing`, locale: 'pt' }),
   'teste-acabou-en': trialEndedEmail({ name: 'Rodrigo', link: `${base}/pricing`, locale: 'en' }),
+  'backup-pt': backupReadyEmail({ name: 'Rodrigo', link: `${base}/settings#settings-backup`, locale: 'pt', books: 312, createdAt: new Date(), keep: 5 }),
+  'backup-en': backupReadyEmail({ name: 'Rodrigo', link: `${base}/settings#settings-backup`, locale: 'en', books: 1, createdAt: new Date(), keep: 5 }),
+  'emprestimo-pt': loanReminderEmail({ name: 'Rodrigo', link: `${base}/loans`, locale: 'pt', title: 'Silas e o Inverno', borrower: 'Marina', dueOn: '2026-11-20' }),
+  'emprestimo-en': loanReminderEmail({ name: 'Rodrigo', link: `${base}/loans`, locale: 'en', title: 'Silas and the Winter', borrower: 'Marina', dueOn: '2026-11-20' }),
   'pagamento-anual-pt': paymentConfirmedEmail({ name: 'Rodrigo', link: `${base}/settings`, locale: 'pt', plan: 'annual', amountCents: 4990, method: 'pix', endsAt: inDays(365) }),
   'pagamento-vitalicio-pt': paymentConfirmedEmail({ name: 'Rodrigo', link: `${base}/settings`, locale: 'pt', plan: 'founder_lifetime', amountCents: 14990, method: 'card', endsAt: null }),
   'pagamento-mensal-en': paymentConfirmedEmail({ name: 'Rodrigo', link: `${base}/settings`, locale: 'en', plan: 'monthly', amountCents: 690, method: 'card', endsAt: inDays(33) }),

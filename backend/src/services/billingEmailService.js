@@ -6,6 +6,10 @@ import { sendMail } from './mailService.js'
 import * as quota from './emailQuota.js'
 import { renewalReminderEmail, trialEndingEmail, trialEndedEmail, paymentConfirmedEmail, paymentDeclinedEmail } from './emailTemplates.js'
 import logger from '../utils/logger.js'
+import { loanReminderEmail } from './emailTemplates.js'
+import { loanReminderMessage } from './collectionService.js'
+import { backupReadyMessage } from './backupService.js'
+import { backupReadyEmail } from './emailTemplates.js'
 
 /**
  * E-mails de cobrança, sempre pela fila (job email.send).
@@ -102,6 +106,18 @@ async function paymentRow(id) {
 const base = row => ({ userId: row.user_id, to: row.email, name: row.name, locale: row.email_locale })
 
 const BUILDERS = {
+  // Pacote 30: backup automático pronto (só o link; o arquivo fica na conta)
+  async backup_ready(payload) {
+    const message = await backupReadyMessage(payload)
+    return message.skip ? message : { ...message, build: backupReadyEmail }
+  },
+
+  // Pacote 28: lembrete de empréstimo (Pro), para a própria pessoa
+  async loan_reminder(payload) {
+    const message = await loanReminderMessage(payload)
+    return message.skip ? message : { ...message, build: loanReminderEmail }
+  },
+
   async renewal_reminder({ entitlementId }) {
     const row = await entitlementRow(entitlementId)
     if (!row) return skip('Pro não existe mais')

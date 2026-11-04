@@ -5,7 +5,7 @@
 export const PRO_FEATURES_READY = ['stats_advanced']
 
 /** Recursos grátis que já existem (os outros aparecem como "em breve"). */
-export const FREE_FEATURES_READY = ['library', 'importExport', 'community']
+export const FREE_FEATURES_READY = ['library', 'importExport', 'community', 'loans']
 
 /** Ordem dos recursos na página de preços */
 export const PRO_FEATURES = ['stats_advanced', 'collector', 'personalization', 'auto_backup']

@@ -2070,3 +2070,112 @@ CREATE INDEX IF NOT EXISTS idx_import_covers_book ON librishelf.import_covers (b
 INSERT INTO librishelf.schema_migrations (version)
 VALUES ('021_imports')
 ON CONFLICT (version) DO NOTHING;
+
+-- 022_collector
+-- Pacote 28: empréstimos (grátis) e dados do exemplar (Pro: collector).
+
+-- Um empréstimo por linha; no máximo um em aberto por livro. O lembrete por
+-- e-mail (remind) é do Pro e vai para a própria pessoa, nunca para quem pegou.
+CREATE TABLE IF NOT EXISTS librishelf.loans (
+  id           serial PRIMARY KEY,
+  user_id      integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  book_id      integer NOT NULL REFERENCES librishelf.books(id) ON DELETE CASCADE,
+  borrower     text NOT NULL CHECK (char_length(btrim(borrower)) BETWEEN 1 AND 120),
+  lent_on      date NOT NULL DEFAULT CURRENT_DATE,
+  due_on       date,
+  returned_on  date,
+  notes        text CHECK (notes IS NULL OR char_length(notes) <= 500),
+  remind       boolean NOT NULL DEFAULT false,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT loans_due_after_lent CHECK (due_on IS NULL OR due_on >= lent_on),
+  CONSTRAINT loans_returned_after_lent CHECK (returned_on IS NULL OR returned_on >= lent_on)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_loans_one_open ON librishelf.loans (book_id) WHERE returned_on IS NULL;
+CREATE INDEX IF NOT EXISTS idx_loans_user ON librishelf.loans (user_id, returned_on);
+
+-- Exemplar físico (Pro): onde está, quanto custou, quanto vale hoje.
+CREATE TABLE IF NOT EXISTS librishelf.book_copies (
+  book_id      integer PRIMARY KEY REFERENCES librishelf.books(id) ON DELETE CASCADE,
+  user_id      integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  location     text CHECK (location IS NULL OR char_length(location) <= 200),
+  price_cents  integer CHECK (price_cents IS NULL OR price_cents BETWEEN 0 AND 100000000),
+  value_cents  integer CHECK (value_cents IS NULL OR value_cents BETWEEN 0 AND 100000000),
+  currency     char(3) NOT NULL DEFAULT 'BRL' CHECK (currency ~ '^[A-Z]{3}$'),
+  acquired_on  date,
+  updated_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_book_copies_user ON librishelf.book_copies (user_id);
+
+-- Fotos do exemplar (Pro), com cota por conta. Os arquivos ficam em
+-- UPLOAD_DIR/copies/{usuário}/{livro}-{foto}-{sm|lg}.jpg
+CREATE TABLE IF NOT EXISTS librishelf.copy_photos (
+  id          serial PRIMARY KEY,
+  book_id     integer NOT NULL REFERENCES librishelf.books(id) ON DELETE CASCADE,
+  user_id     integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  bytes       integer NOT NULL CHECK (bytes > 0),
+  width       integer NOT NULL,
+  height      integer NOT NULL,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_copy_photos_book ON librishelf.copy_photos (book_id, id);
+CREATE INDEX IF NOT EXISTS idx_copy_photos_user ON librishelf.copy_photos (user_id);
+INSERT INTO librishelf.schema_migrations (version) VALUES ('022_collector') ON CONFLICT (version) DO NOTHING;
+
+-- 023_personalization
+-- Pacote 29: personalização (Pro). Fica na conta para valer em todo aparelho
+-- e para o perfil público mostrar a capa de fundo. Sem Pro, o que foi
+-- escolhido continua valendo; só a troca é recusada.
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS ui_palette text;
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS ui_accent text;
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS app_icon text;
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS profile_cover_book_id integer
+  REFERENCES librishelf.books(id) ON DELETE SET NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_ui_palette_check' AND conrelid = 'librishelf.users'::regclass) THEN
+    ALTER TABLE librishelf.users ADD CONSTRAINT users_ui_palette_check
+      CHECK (ui_palette IS NULL OR ui_palette IN ('paper', 'amoled', 'slate', 'forest'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_ui_accent_check' AND conrelid = 'librishelf.users'::regclass) THEN
+    ALTER TABLE librishelf.users ADD CONSTRAINT users_ui_accent_check
+      CHECK (ui_accent IS NULL OR ui_accent IN ('teal', 'pink', 'indigo'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_app_icon_check' AND conrelid = 'librishelf.users'::regclass) THEN
+    ALTER TABLE librishelf.users ADD CONSTRAINT users_app_icon_check
+      CHECK (app_icon IS NULL OR app_icon IN ('night', 'paper', 'mono'));
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_users_profile_cover ON librishelf.users (profile_cover_book_id) WHERE profile_cover_book_id IS NOT NULL;
+INSERT INTO librishelf.schema_migrations (version) VALUES ('023_personalization') ON CONFLICT (version) DO NOTHING;
+
+-- 024_backups
+-- Pacote 30: backup automático (Pro: auto_backup). O conteúdo é o mesmo da
+-- exportação JSON; o arquivo (gzip) fica em BACKUP_DIR/{usuário}/{id}.json.gz
+CREATE TABLE IF NOT EXISTS librishelf.backup_settings (
+  user_id      integer PRIMARY KEY REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  enabled      boolean NOT NULL DEFAULT false,
+  frequency    text NOT NULL DEFAULT 'weekly' CHECK (frequency IN ('weekly', 'monthly')),
+  notify       boolean NOT NULL DEFAULT true,
+  next_run_at  timestamptz,
+  updated_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_backup_settings_due ON librishelf.backup_settings (next_run_at) WHERE enabled;
+
+CREATE TABLE IF NOT EXISTS librishelf.backups (
+  id          serial PRIMARY KEY,
+  user_id     integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  trigger     text NOT NULL CHECK (trigger IN ('scheduled', 'manual')),
+  books       integer NOT NULL,
+  bytes       integer NOT NULL CHECK (bytes > 0),
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_backups_user ON librishelf.backups (user_id, created_at DESC);
+INSERT INTO librishelf.schema_migrations (version) VALUES ('024_backups') ON CONFLICT (version) DO NOTHING;

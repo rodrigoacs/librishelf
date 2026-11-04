@@ -11,6 +11,7 @@ import '@fontsource-variable/inter'
 import '@fontsource-variable/source-serif-4'
 import 'primeicons/primeicons.css'
 import './assets/main.css'
+import './assets/palettes.css'
 
 // Registra o tratamento de sessão expirada antes da primeira requisição.
 import './services/session.js'

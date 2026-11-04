@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Ícone alternativo "mono" (Pro, pacote 29): a estante do favicon com outras cores -->
+  <rect width="32" height="32" rx="7" fill="#111111"/>
+  <g transform="translate(3.2 3.2) scale(0.8)">
+    <rect x="16" y="2" width="11" height="23" rx="1.5" fill="#f2f2f2"/>
+    <rect x="23.5" y="2" width="3.5" height="23" rx="1" fill="#c8c8c8"/>
+    <rect x="7" y="4" width="12" height="23" rx="1.5" fill="#9a9a9a"/>
+    <rect x="7" y="4" width="3.5" height="23" rx="1" fill="#777777"/>
+    <path d="M2 12h7v10.5A2.5 2.5 0 0 0 11.5 25H30v5H4a2 2 0 0 1-2-2z" fill="#4a4a4a"/>
+    <path d="M2 12h2.2v16.2c0 .9.6 1.8 1.6 1.8H4a2 2 0 0 1-2-2z" fill="#333333"/>
+    <path d="M5.6 17.6l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z" fill="#ffffff"/>
+  </g>
+</svg>
