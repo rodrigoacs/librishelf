@@ -1,0 +1,91 @@
+# CI do Librishelf: a cada push e pull request roda os testes do backend
+# (unitários e de integração, num Postgres descartável) e lint, testes e
+# build do frontend. Nada é publicado daqui.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (testes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: librishelf
+          POSTGRES_PASSWORD: librishelf
+          POSTGRES_DB: librishelf_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U librishelf -d librishelf_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      # Os scripts leem src/.env.test (--env-file); o banco só aceita testes
+      # destrutivos com "test" no nome e ALLOW_DESTRUCTIVE_TEST_DB=true.
+      - name: Criar src/.env.test
+        run: |
+          cat > src/.env.test <<'ENV'
+          DB_USER=librishelf
+          DB_PASSWORD=librishelf
+          DB_HOST=localhost
+          DB_PORT=5432
+          DB_NAME=librishelf_test
+          SECRET_KEY=ci-secret-key-only-for-tests-with-32-chars
+          ALLOW_DESTRUCTIVE_TEST_DB=true
+          UPLOAD_DIR=./uploads-test
+          ENV
+
+      - run: npm run db:migrate:test
+      - run: npm run test:unit
+      - run: npm test
+
+  frontend:
+    name: Frontend (lint, testes, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
