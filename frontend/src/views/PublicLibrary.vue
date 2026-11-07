@@ -10,13 +10,14 @@
       :style="{ backgroundImage: `url(${profileCoverUrl})` }"
     ></div>
 
+    <!-- Topo: quem é, números em linha, seguir e compartilhar -->
     <PageHeader
       v-if="!notFound"
-      :title="t('publicLibrary.title', { ownerName: ownerName || username })"
+      :title="t('publicLibrary.title', { ownerName: displayName })"
     >
       <template #lead>
         <ReaderAvatar
-          :username="ownerName || username"
+          :username="displayName"
           :avatar="profile?.avatarVersion ?? null"
           size="lg"
         />
@@ -28,7 +29,22 @@
             v-if="profile?.badges?.includes('vanguarda')"
             class="owner-badge"
           />
-          <span v-if="total > 0"> · {{ t('publicLibrary.count', { count: total }, total) }}</span>
+        </p>
+        <p
+          v-if="profile"
+          class="owner-counts"
+        >
+          <span>{{ t('publicPage.counts.books', { n: stats.totalBooks ?? 0 }, stats.totalBooks ?? 0) }}</span>
+          <span>{{ t('publicPage.counts.read', { n: stats.readBooks ?? 0 }, stats.readBooks ?? 0) }}</span>
+          <span v-if="stats.averageRating">
+            <i
+              class="pi pi-star-fill star"
+              aria-hidden="true"
+            ></i>
+            {{ formatAverage(stats.averageRating) }}
+            <span class="sr-only">{{ t('profile.avg_rating', { n: stats.ratedBooks }, stats.ratedBooks) }}</span>
+          </span>
+          <span v-if="viewer && !viewer.isOwner && viewer.commonCount">{{ t('publicPage.counts.common', { n: viewer.commonCount }, viewer.commonCount) }}</span>
         </p>
       </template>
       <template
@@ -42,6 +58,12 @@
             :to="{ name: 'settings' }"
             class="owner-link"
           >{{ t('profile.privacy_settings') }}</router-link>
+          <AppButton
+            :label="t('publicPage.share')"
+            icon="pi pi-share-alt"
+            class="btn-outlined btn-secondary"
+            @click="share"
+          />
         </template>
 
         <template v-else-if="viewer">
@@ -79,6 +101,12 @@
             @click="follow"
           />
           <IconButton
+            icon="pi pi-share-alt"
+            :label="t('publicPage.share')"
+            class="share-btn"
+            @click="share"
+          />
+          <IconButton
             v-if="!viewer.blockedByMe"
             icon="pi pi-ellipsis-h"
             :label="t('block.moreActions')"
@@ -98,6 +126,12 @@
             kind="avatar"
             :username="ownerName || username"
           />
+          <ReportDialog
+            v-if="profile?.bio"
+            v-model:visible="reportBioOpen"
+            kind="bio"
+            :username="ownerName || username"
+          />
         </template>
 
         <!-- Sem sessão: o mesmo botão Seguir, que leva ao login e volta para cá -->
@@ -113,240 +147,46 @@
           ></i>
           <span>{{ t('profile.follow') }}</span>
         </router-link>
+        <IconButton
+          v-if="!viewer"
+          icon="pi pi-share-alt"
+          :label="t('publicPage.share')"
+          class="share-btn"
+          @click="share"
+        />
       </div>
       </template>
     </PageHeader>
 
-    <!-- Perfil ainda carregando: esqueleto no lugar dele, e a grade só entra
-         depois (antes a grade aparecia primeiro e era empurrada para baixo) -->
+    <!-- Apresentação (até 2 linhas) -->
+    <template v-if="profile?.bio">
+      <p class="owner-bio">{{ profile.bio }}</p>
+      <p
+        v-if="profile.bioHidden"
+        class="bio-hidden"
+        role="note"
+      >{{ t('publicPage.bioHidden') }}</p>
+    </template>
+
+    <!-- Perfil ainda carregando -->
     <div
       v-if="!profileSettled && !notFound"
-      class="profile-section profile-skeleton"
+      class="profile-skeleton"
       aria-busy="true"
       :aria-label="t('common.loading')"
     >
-      <div class="stat-row">
-        <AppSkeleton
-          v-for="n in 3"
-          :key="n"
-          class="stat-skeleton"
-          width="140px"
-          height="78px"
-          border-radius="var(--radius-md)"
-        />
-      </div>
-      <div class="profile-grid">
-        <AppSkeleton
-          v-for="n in 2"
-          :key="n"
-          height="220px"
-          border-radius="var(--radius-md)"
-        />
-      </div>
+      <AppSkeleton
+        width="100%"
+        height="5.5rem"
+        border-radius="var(--card-radius)"
+      />
     </div>
 
-    <section
-      v-else-if="profile && !notFound"
-      class="profile-section"
-      :aria-label="t('profile.title')"
-    >
-      <div class="stat-row">
-        <div
-          class="stat"
-        >
-          <span class="stat-value">{{ stats.totalBooks }}</span>
-          <span class="stat-label">{{ t('profile.books') }}</span>
-        </div>
-        <div
-          class="stat"
-        >
-          <span class="stat-value">{{ stats.readBooks }}</span>
-          <span class="stat-label">{{ t('profile.read') }}</span>
-        </div>
-        <div
-          v-if="stats.averageRating"
-          class="stat"
-        >
-          <span class="stat-value">
-            <i
-              class="pi pi-star-fill star"
-              aria-hidden="true"
-            ></i>
-            {{ formatAverage(stats.averageRating) }}
-          </span>
-          <span class="stat-label">{{ t('profile.avg_rating', { n: stats.ratedBooks }, stats.ratedBooks) }}</span>
-        </div>
-        <div
-          v-if="viewer && !viewer.isOwner && viewer.commonCount !== null"
-          class="stat"
-        >
-          <span class="stat-value">{{ viewer.commonCount }}</span>
-          <span class="stat-label">{{ t('profile.in_common', viewer.commonCount) }}</span>
-        </div>
-      </div>
-
-      <div class="profile-grid">
-        <div
-          v-if="yearBars.length"
-          class="panel"
-        >
-          <h2 class="section-title">{{ t('profile.by_year') }}</h2>
-          <ul class="year-bars">
-            <li
-              v-for="bar in yearBars"
-              :key="bar.year"
-            >
-              <span class="bar-year">{{ bar.year }}</span>
-              <span
-                class="bar-track"
-                aria-hidden="true"
-              ><span
-                  class="bar-fill"
-                  :style="{ width: `${bar.percent}%`, '--bar-color': colorFor(String(bar.year)) }"
-                ></span></span>
-              <span class="bar-count">{{ bar.count }}</span>
-            </li>
-          </ul>
-        </div>
-
-        <div
-          v-if="stats.topAuthors.length"
-          class="panel"
-        >
-          <h2 class="section-title">{{ t('profile.top_authors') }}</h2>
-          <ol class="rank-list">
-            <li
-              v-for="author in stats.topAuthors"
-              :key="author.name"
-            >
-              <span class="ranked-name">
-                <span
-                  class="dot"
-                  :style="{ '--dot-color': colorFor(author.name) }"
-                  aria-hidden="true"
-                ></span>
-                {{ author.name }}
-              </span>
-              <span class="muted">{{ author.count }}</span>
-            </li>
-          </ol>
-          <template v-if="stats.topTags.length">
-            <h2 class="section-title sub-heading">{{ t('profile.top_tags') }}</h2>
-            <div class="tag-row">
-              <span
-                v-for="tag in stats.topTags"
-                :key="tag.name"
-                class="tag-pill"
-                :style="{ '--tag-color': tagColor(tag.name) }"
-              >#{{ tag.name }}</span>
-            </div>
-          </template>
-        </div>
-
-        <div
-          v-if="stats.recentlyRead.length"
-          class="panel"
-        >
-          <h2 class="section-title">{{ t('profile.recently_read') }}</h2>
-          <ul class="recent-list">
-            <li
-              v-for="item in stats.recentlyRead"
-              :key="item.book_id"
-            >
-              <button
-                type="button"
-                class="link-button"
-                @click="openBook(item.book_id)"
-              >
-                <span class="recent-title">{{ item.title }}</span>
-                <span
-                  v-if="item.authors"
-                  class="muted"
-                >{{ item.authors }}</span>
-              </button>
-              <span class="recent-meta">
-                <StarRating
-                  v-if="item.rating"
-                  :model-value="item.rating"
-                  size="sm"
-                  readonly
-                />
-                <span class="muted">{{ formatDate(item.read_date) }}</span>
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        <div
-          v-if="viewer && !viewer.isOwner && viewer.commonBooks.length"
-          class="panel"
-        >
-          <h2 class="section-title">{{ t('profile.common_books') }}</h2>
-          <ul class="recent-list">
-            <li
-              v-for="item in viewer.commonBooks"
-              :key="item.book_id"
-            >
-              <button
-                type="button"
-                class="link-button"
-                @click="openBook(item.book_id)"
-              >
-                <span class="recent-title">{{ item.title }}</span>
-                <span
-                  v-if="item.authors"
-                  class="muted"
-                >{{ item.authors }}</span>
-              </button>
-            </li>
-          </ul>
-          <p
-            v-if="viewer.commonCount > viewer.commonBooks.length"
-            class="muted small"
-          >{{ t('profile.common_more', {
-            n:
-              viewer.commonCount - viewer.commonBooks.length }) }}</p>
-        </div>
-      </div>
-
-      <div
-        v-if="lists.length"
-        class="panel lists-panel"
-      >
-        <h2 class="section-title">{{ t('lists.profileTitle', { n: lists.length }, lists.length) }}</h2>
-        <ul class="list-grid">
-          <li
-            v-for="list in lists"
-            :key="list.id"
-          >
-            <ListCard
-              :list="list"
-              :to="{ name: 'public-list', params: { username, id: list.id, slug: slugify(list.title) || undefined } }"
-            />
-          </li>
-        </ul>
-      </div>
-
-      <div
-        v-if="reviews.items.length"
-        class="panel reviews-panel"
-      >
-        <h2 class="section-title">{{ t('review.profileTitle', { n: reviews.total }, reviews.total) }}</h2>
-        <div class="review-grid">
-          <ReviewCard
-            v-for="item in reviews.items"
-            :key="item.id"
-            :review="item"
-            show-book
-            @open-book="openBook"
-          />
-        </div>
-        <p
-          v-if="reviews.total > reviews.items.length"
-          class="muted small"
-        >{{ t('review.profileMore', { n: reviews.total - reviews.items.length }) }}</p>
-      </div>
-    </section>
+    <ReadingNow
+      v-if="profile?.reading?.length"
+      :items="profile.reading"
+      @open="openBook"
+    />
 
     <EmptyState
       v-if="notFound"
@@ -362,69 +202,226 @@
       </template>
     </EmptyState>
 
-    <div
-      v-else-if="(loading && books.length === 0) || !profileSettled"
-      class="books-grid"
-      aria-busy="true"
-      :aria-label="t('common.loading')"
-    >
+    <template v-else-if="profileSettled">
+      <!-- Abas: Estante · Listas · Resenhas · Números (na URL: ?tab=) -->
       <div
-        v-for="n in 10"
-        :key="n"
-        class="book-skeleton"
+        class="app-tabs public-tabs"
+        role="tablist"
+        :aria-label="t('publicLibrary.title', { ownerName: displayName })"
       >
-        <AppSkeleton
-          class="cover-skeleton"
-          height="auto"
-          border-radius="var(--radius-md)"
-        />
-        <AppSkeleton
-          width="85%"
-          height="1rem"
-        />
-        <AppSkeleton
-          width="60%"
-          height="0.8rem"
-        />
-      </div>
-    </div>
-
-    <EmptyState
-      v-else-if="error && books.length === 0"
-      variant="error"
-      :title="t('publicLibrary.error')"
-      @action="loadLibrary()"
-    />
-
-    <EmptyState
-      v-else-if="books.length === 0"
-      icon="pi pi-book"
-      :title="t('publicLibrary.empty')"
-    />
-
-    <template v-else>
-      <div class="books-grid">
-        <BookItem
-          v-for="book in books"
-          :key="book.book_id"
-          :book="book"
-          read-only
-          :owner-username="username"
-        />
+        <button
+          v-for="tab in tabs"
+          :id="`public-tab-${tab.key}`"
+          :key="tab.key"
+          type="button"
+          role="tab"
+          class="app-tab"
+          :class="{ active: activeTab === tab.key }"
+          :aria-selected="activeTab === tab.key"
+          :aria-controls="`public-panel-${tab.key}`"
+          :tabindex="activeTab === tab.key ? 0 : -1"
+          @click="setTab(tab.key)"
+          @keydown.right.prevent="moveTab(1)"
+          @keydown.left.prevent="moveTab(-1)"
+        >
+          {{ tab.label }}
+          <span
+            v-if="tab.count"
+            class="app-tab-count"
+          >{{ tab.count }}</span>
+        </button>
       </div>
 
-      <!-- Mesma paginação da biblioteca do dono: carrega ao chegar perto do fim -->
-      <div
-        v-if="books.length < total"
-        ref="sentinel"
-        class="sentinel"
+      <!-- Estante -->
+      <section
+        v-if="activeTab === 'shelf'"
+        id="public-panel-shelf"
+        role="tabpanel"
+        aria-labelledby="public-tab-shelf"
+        class="tab-panel"
       >
-        <i
-          v-if="loading"
-          class="pi pi-spin pi-spinner loading-more-icon"
+        <FavoriteBooks
+          v-if="profile?.favorites?.length && defaultShelf"
+          :items="profile.favorites"
+          @open="openBook"
+        />
+
+        <div class="shelf-toolbar">
+          <div
+            class="status-pills"
+            role="group"
+            :aria-label="t('publicPage.statusLabel')"
+          >
+            <PillButton
+              v-for="option in statusOptions"
+              :key="option.value"
+              :label="option.label"
+              :active="shelf.status === option.value"
+              @click="setShelf({ status: option.value })"
+            />
+          </div>
+          <div class="shelf-search">
+            <SearchField
+              id="public-shelf-search"
+              v-model="searchInput"
+              :placeholder="t('publicPage.searchPlaceholder')"
+              :maxlength="100"
+              size="sm"
+              @clear="setShelf({ search: '' })"
+            />
+            <AppSelect
+              :model-value="shelf.sort"
+              :options="sortOptions"
+              :aria-label="t('publicPage.sortLabel')"
+              class="shelf-sort"
+              @update:model-value="value => setShelf({ sort: value })"
+            />
+          </div>
+        </div>
+
+        <div
+          v-if="loading && books.length === 0"
+          class="books-grid"
+          aria-busy="true"
           :aria-label="t('common.loading')"
-        ></i>
-      </div>
+        >
+          <div
+            v-for="n in 10"
+            :key="n"
+            class="book-skeleton"
+          >
+            <AppSkeleton
+              class="cover-skeleton"
+              height="auto"
+              border-radius="var(--radius-md)"
+            />
+            <AppSkeleton
+              width="85%"
+              height="1rem"
+            />
+            <AppSkeleton
+              width="60%"
+              height="0.8rem"
+            />
+          </div>
+        </div>
+
+        <EmptyState
+          v-else-if="error && books.length === 0"
+          variant="error"
+          :title="t('publicLibrary.error')"
+          @action="loadLibrary()"
+        />
+
+        <EmptyState
+          v-else-if="books.length === 0 && !defaultShelf"
+          icon="pi pi-filter-slash"
+          :title="t('publicPage.noResults')"
+          compact
+        >
+          <template #action>
+            <AppButton
+              :label="t('publicPage.clearFilters')"
+              class="btn-outlined btn-secondary"
+              @click="clearShelf"
+            />
+          </template>
+        </EmptyState>
+
+        <EmptyState
+          v-else-if="books.length === 0"
+          icon="pi pi-book"
+          :title="t('publicLibrary.empty')"
+        />
+
+        <template v-else>
+          <p
+            v-if="!defaultShelf"
+            class="shelf-count"
+            role="status"
+          >{{ t('publicLibrary.count', { count: total }, total) }}</p>
+          <div class="books-grid">
+            <BookItem
+              v-for="book in books"
+              :key="book.book_id"
+              :book="book"
+              read-only
+              :owner-username="username"
+            />
+          </div>
+
+          <div
+            v-if="books.length < total"
+            ref="sentinel"
+            class="sentinel"
+          >
+            <i
+              v-if="loading"
+              class="pi pi-spin pi-spinner loading-more-icon"
+              :aria-label="t('common.loading')"
+            ></i>
+          </div>
+        </template>
+      </section>
+
+      <!-- Listas -->
+      <section
+        v-else-if="activeTab === 'lists'"
+        id="public-panel-lists"
+        role="tabpanel"
+        aria-labelledby="public-tab-lists"
+        class="tab-panel"
+      >
+        <ul class="list-grid">
+          <li
+            v-for="list in lists"
+            :key="list.id"
+          >
+            <ListCard
+              :list="list"
+              :to="{ name: 'public-list', params: { username, id: list.id, slug: slugify(list.title) || undefined } }"
+            />
+          </li>
+        </ul>
+      </section>
+
+      <!-- Resenhas -->
+      <section
+        v-else-if="activeTab === 'reviews'"
+        id="public-panel-reviews"
+        role="tabpanel"
+        aria-labelledby="public-tab-reviews"
+        class="tab-panel"
+      >
+        <div class="review-grid">
+          <ReviewCard
+            v-for="item in reviews.items"
+            :key="item.id"
+            :review="item"
+            show-book
+            @open-book="openBook"
+          />
+        </div>
+        <p
+          v-if="reviews.total > reviews.items.length"
+          class="muted small"
+        >{{ t('review.profileMore', { n: reviews.total - reviews.items.length }) }}</p>
+      </section>
+
+      <!-- Números -->
+      <section
+        v-else
+        id="public-panel-stats"
+        role="tabpanel"
+        aria-labelledby="public-tab-stats"
+        class="tab-panel"
+      >
+        <PublicStats
+          :stats="stats"
+          :viewer="viewer"
+          @open="openBook"
+        />
+      </section>
     </template>
 
     <BookDialog
@@ -434,6 +431,12 @@
       :book-id="openedBookId"
       is-read-only
       :owner-username="username"
+    />
+
+    <VisitorInvite
+      v-if="profileSettled && profile && !viewer"
+      :name="displayName"
+      :redirect="route.fullPath"
     />
 
     <footer
@@ -464,20 +467,33 @@ import { useToast } from '../services/toast.js'
 import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import BookDialog from '../components/BookDialog.vue'
-import StarRating from '../components/StarRating.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
 import ReportDialog from '../components/review/ReportDialog.vue'
 import IconButton from '../components/form/IconButton.vue'
 import PopupMenu from '../components/ui/PopupMenu.vue'
 import { useConfirm } from '../services/confirm.js'
-import { tagColor, colorFor } from '../utils/tagColors.js'
-import { fromApiDate } from '../utils/dates.js'
 import { setRobots } from '../services/pageTitle.js'
 import { profileCoverUrl as profileCoverSrc } from '../utils/profileCover.js'
+import PillButton from '../components/form/PillButton.vue'
+import SearchField from '../components/ui/SearchField.vue'
+import AppSelect from '../components/ui/AppSelect.vue'
+import PublicStats from '../components/public/PublicStats.vue'
+import ReadingNow from '../components/public/ReadingNow.vue'
+import FavoriteBooks from '../components/public/FavoriteBooks.vue'
+import VisitorInvite from '../components/public/VisitorInvite.vue'
+import { shareLink } from '../utils/share.js'
+import { setPageTheme } from '../composables/useTheme.js'
+import { SHELF_SORTS, SHELF_STATUSES, isDefaultShelf, readPublicQuery, shelfParams, writePublicQuery } from '../utils/publicShelf.js'
 
+/**
+ * Biblioteca pública (pacote 33): a página que circula por link.
+ *   Topo com quem é, números em linha, seguir e compartilhar; apresentação;
+ *   lendo agora; abas Estante · Listas · Resenhas · Números. A estante tem
+ *   favoritos, status, busca e ordem, tudo na URL. Visitante sem conta vê o
+ *   convite. Com Pro, a paleta e a cor do dono valem aqui para quem visita.
+ */
 const PAGE_SIZE = 20
-
-const MAX_YEARS = 10
+const SEARCH_DEBOUNCE = 350
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -495,26 +511,81 @@ const openedBookId = ref(null)
 const bookDialogVisible = ref(false)
 
 const stats = computed(() => profile.value?.stats ?? {})
+const displayName = computed(() => ownerName.value || profile.value?.username || username.value)
 const viewer = computed(() => profile.value?.viewer ?? null)
 const reviews = computed(() => profile.value?.reviews ?? { total: 0, items: [] })
 const lists = computed(() => profile.value?.lists ?? [])
 const followStatus = computed(() => viewer.value?.followStatus ?? null)
 
-// Barras dos últimos anos com leitura, proporcionais ao ano com mais livros.
-const yearBars = computed(() => {
-  const years = (stats.value.readingByYear || []).slice(-MAX_YEARS)
-  const max = Math.max(1, ...years.map(y => y.count))
-  return years.map(y => ({ ...y, percent: Math.max(4, Math.round((y.count / max) * 100)) }))
-})
-
 function formatAverage(value) {
   return Number(value).toLocaleString(locale.value, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 }
 
-function formatDate(value) {
-  const date = fromApiDate(value)
-  return date ? date.toLocaleDateString(locale.value) : ''
+// --- Abas e estante (estado na URL)
+const urlState = computed(() => readPublicQuery(route.query))
+const shelf = computed(() => ({ status: urlState.value.status, search: urlState.value.search, sort: urlState.value.sort }))
+const defaultShelf = computed(() => isDefaultShelf(shelf.value))
+
+const tabs = computed(() => [
+  { key: 'shelf', label: t('publicPage.tabs.shelf'), count: stats.value.totalBooks || 0 },
+  ...(lists.value.length ? [{ key: 'lists', label: t('publicPage.tabs.lists'), count: lists.value.length }] : []),
+  ...(reviews.value.total ? [{ key: 'reviews', label: t('publicPage.tabs.reviews'), count: reviews.value.total }] : []),
+  { key: 'stats', label: t('publicPage.tabs.stats') }
+])
+// Aba da URL que não existe aqui (sem listas, por exemplo) cai na estante
+const activeTab = computed(() => tabs.value.some(tab => tab.key === urlState.value.tab) ? urlState.value.tab : 'shelf')
+
+function replaceQuery(state) {
+  router.replace({ query: writePublicQuery(route.query, { ...urlState.value, ...state }) })
 }
+
+function setTab(key) {
+  replaceQuery({ tab: key })
+}
+
+function moveTab(step) {
+  const keys = tabs.value.map(tab => tab.key)
+  const next = keys[(keys.indexOf(activeTab.value) + step + keys.length) % keys.length]
+  setTab(next)
+  nextTick(() => document.getElementById(`public-tab-${next}`)?.focus())
+}
+
+const statusOptions = computed(() => SHELF_STATUSES.map(value => ({ value, label: t(`publicPage.status.${value}`) })))
+const sortOptions = computed(() => Object.keys(SHELF_SORTS).map(value => ({ value, label: t(`publicPage.sort.${value}`) })))
+
+function setShelf(change) {
+  replaceQuery(change)
+}
+
+function clearShelf() {
+  searchInput.value = ''
+  replaceQuery({ status: 'all', search: '', sort: 'recent' })
+}
+
+// Busca: digita à vontade, a URL (e a lista) muda depois de uma pausa
+const searchInput = ref(urlState.value.search)
+let searchTimer = null
+watch(searchInput, value => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    if (value.trim() !== shelf.value.search) setShelf({ search: value })
+  }, SEARCH_DEBOUNCE)
+})
+watch(() => shelf.value.search, value => {
+  if (value !== searchInput.value.trim()) searchInput.value = value
+})
+
+// --- Compartilhar
+async function share() {
+  const url = `${window.location.origin}/u/${encodeURIComponent(username.value)}`
+  const result = await shareLink({ title: t('publicPage.shareText', { name: displayName.value }), text: profile.value?.bio || undefined, url })
+  if (result === 'copied') toast.add({ severity: 'success', detail: t('publicPage.copied'), life: 3000 })
+  else if (result === 'failed') toast.add({ severity: 'error', detail: t('publicPage.shareFailed'), life: 4000 })
+}
+
+// --- Tema do dono (Pro): vale só enquanto esta página está aberta
+watch(() => profile.value?.theme ?? null, theme => setPageTheme(theme))
+onBeforeUnmount(() => setPageTheme(null))
 
 function openBook(id) {
   openedBookId.value = Number(id)
@@ -568,10 +639,12 @@ const confirm = useConfirm()
 const moreMenu = ref(null)
 const blockBusy = ref(false)
 
-// Denunciar a foto: só quando ela aparece (e não é a minha página)
+// Denunciar a foto ou a apresentação: só quando aparecem (e não é a minha página)
 const reportAvatarOpen = ref(false)
+const reportBioOpen = ref(false)
 const moreItems = computed(() => [
   ...(profile.value?.avatarVersion ? [{ label: t('avatar.report'), icon: 'pi pi-flag', command: () => { reportAvatarOpen.value = true } }] : []),
+  ...(profile.value?.bio ? [{ label: t('publicPage.reportBio'), icon: 'pi pi-flag', command: () => { reportBioOpen.value = true } }] : []),
   { label: t('block.block', { name: username.value }), icon: 'pi pi-ban', command: askBlock }
 ])
 
@@ -650,10 +723,12 @@ async function loadLibrary({ append = false } = {}) {
   if (!append) notFound.value = false
 
   try {
-    const response = await api.getPublicLibrary(requestedFor, { page: nextPage, limit: PAGE_SIZE, sort: 'title', order: 'asc' })
+    const filters = shelfParams(shelf.value, nextPage, PAGE_SIZE)
+    const requestKey = JSON.stringify(shelf.value)
+    const response = await api.getPublicLibrary(requestedFor, filters)
 
-    // Navegou para outro usuário enquanto carregava: descarta.
-    if (requestedFor !== username.value) return
+    // Navegou para outro usuário (ou mudou o filtro) enquanto carregava: descarta.
+    if (requestedFor !== username.value || requestKey !== JSON.stringify(shelf.value)) return
 
     books.value = append ? [...books.value, ...response.result] : response.result
     ownerName.value = response.owner || requestedFor
@@ -692,10 +767,23 @@ async function observeSentinel() {
   if (sentinel.value) observer.observe(sentinel.value)
 }
 
-onBeforeUnmount(() => observer?.disconnect())
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  clearTimeout(searchTimer)
+})
+
+// Filtro, busca ou ordem mudou (mesmo usuário): estante do começo
+watch(shelf, (next, previous) => {
+  if (JSON.stringify(next) === JSON.stringify(previous)) return
+  books.value = []
+  total.value = 0
+  page.value = 0
+  loadLibrary()
+})
 
 // /u/a → /u/b reaproveita o componente; recarrega quando o usuário da URL muda.
 watch(username, () => {
+  setPageTheme(null)
   books.value = []
   total.value = 0
   page.value = 0
@@ -743,6 +831,18 @@ watch(username, () => {
   /* Casca e recuo em .page (main.css) */
   display: flex;
   flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* O espaço entre os blocos vem do gap; capa e faixa do cabeçalho grudadas */
+.public-library-container > .page-header {
+  margin-bottom: 0;
+}
+
+.public-bar + .profile-cover,
+.public-bar + .page-header,
+.profile-cover + .page-header {
+  margin-top: calc(-1 * var(--space-5));
 }
 
 .follow-area {
@@ -762,55 +862,9 @@ watch(username, () => {
   font-size: var(--fs-md);
 }
 
-.profile-section {
-  margin-bottom: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.stat-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-.stat {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--card-radius);
-  padding: var(--card-pad);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
 .star {
   color: var(--rating);
   font-size: var(--fs-lg);
-}
-
-.profile-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-4);
-}
-
-.panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--card-radius);
-  padding: var(--card-pad);
-  min-width: 0;
-}
-
-.panel h2 {
-  margin: 0 0 var(--space-3);
-}
-
-.reviews-panel,
-.lists-panel {
-  margin-top: var(--space-4);
 }
 
 .list-grid {
@@ -836,147 +890,6 @@ watch(username, () => {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   align-items: start;
   gap: var(--space-3);
-}
-
-.reviews-panel .small {
-  margin: var(--space-3) 0 0;
-}
-
-.panel .sub-heading {
-  margin-top: var(--space-4);
-}
-
-.year-bars,
-.rank-list,
-.recent-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.year-bars li {
-  display: grid;
-  grid-template-columns: 3rem 1fr 2rem;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--fs-sm);
-  padding: 0.15rem 0;
-}
-
-.bar-year,
-.bar-count {
-  color: var(--text-secondary);
-}
-
-.bar-count {
-  text-align: right;
-}
-
-.bar-track {
-  height: 8px;
-  background: var(--bg-input);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-
-.bar-fill {
-  display: block;
-  height: 100%;
-  background: var(--main-color);
-  border-radius: var(--radius-pill);
-  background: var(--bar-color, var(--main-color));
-}
-
-.rank-list li {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-1) 0;
-  color: var(--text-primary);
-  font-size: var(--fs-md);
-}
-
-.ranked-name {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.dot {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: var(--dot-color);
-  flex-shrink: 0;
-}
-
-.tag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.tag-pill {
-  border-radius: var(--radius-pill);
-  padding: 0.2rem var(--space-3);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
-  background: color-mix(in srgb, var(--tag-color) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
-}
-
-.recent-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.recent-list li:last-child {
-  border-bottom: none;
-}
-
-.link-button {
-  background: none;
-  border: none;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  color: inherit;
-  font: inherit;
-}
-
-.link-button:hover .recent-title {
-  color: var(--main-color);
-}
-
-.link-button:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-  border-radius: var(--radius-sm);
-}
-
-.recent-title {
-  color: var(--text-primary);
-  font-size: var(--fs-md);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.recent-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.15rem;
-  flex-shrink: 0;
 }
 
 .muted {
@@ -1030,10 +943,6 @@ watch(username, () => {
   margin-bottom: var(--space-2);
 }
 
-.stat-skeleton {
-  flex: 0 0 auto;
-}
-
 .public-footer {
   margin-top: auto;
   padding-top: var(--space-8);
@@ -1048,18 +957,106 @@ watch(username, () => {
   color: inherit;
 }
 
-@media (max-width: 639.98px) {
-  .stat-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-3);
-  }
+/* Linha de números no topo: "320 livros · 210 lidos · ★ 4,1" */
+.owner-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
 
+.owner-counts > span + span::before {
+  content: '·';
+  margin-right: var(--space-2);
+  color: var(--text-muted);
+}
+
+.owner-counts .star {
+  font-size: var(--fs-xs);
+}
+
+.owner-bio {
+  max-width: 40rem;
+  margin: calc(-1 * var(--space-3)) 0 0;
+  color: var(--text-primary);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.bio-hidden {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(var(--red-rgb), 0.1);
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+}
+
+.profile-skeleton {
+  display: flex;
+}
+
+.public-tabs {
+  margin-top: var(--space-2);
+}
+
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-top: var(--space-2);
+}
+
+.tab-panel:focus {
+  outline: none;
+}
+
+.shelf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.shelf-search {
+  display: flex;
+  flex: 1 1 22rem;
+  gap: var(--space-2);
+  max-width: 34rem;
+}
+
+.shelf-search > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.shelf-sort {
+  flex: 0 0 11rem;
+}
+
+.shelf-count {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+@media (max-width: 639.98px) {
   .books-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: var(--space-4);
   }
 
-  /* Botão Seguir na largura toda, embaixo do nome (o ⋯ fica ao lado) */
+  /* Seguir na largura toda; compartilhar e ⋯ ao lado */
   .public-library-container > .page-header :deep(.page-header-actions),
   .follow-area {
     width: 100%;
@@ -1068,6 +1065,34 @@ watch(username, () => {
 
   .follow-area .btn {
     flex: 1;
+  }
+
+  .owner-bio {
+    margin-top: calc(-1 * var(--space-2));
+    font-size: var(--fs-sm);
+  }
+
+  /* Status rolam na horizontal; busca e ordem embaixo, na largura toda */
+  .status-pills {
+    flex-wrap: nowrap;
+    width: calc(100% + 2 * var(--page-pad-x));
+    margin: 0 calc(-1 * var(--page-pad-x));
+    padding: 0 var(--page-pad-x);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .status-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shelf-search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .shelf-sort {
+    flex-basis: 9.5rem;
   }
 }
 </style>

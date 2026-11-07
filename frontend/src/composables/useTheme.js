@@ -27,6 +27,9 @@ const ACCOUNT_KEY = 'user-personalization'
 const currentTheme = ref('dark')
 const accentColor = ref('blue')
 const account = ref({ palette: null, accent: null, appIcon: null })
+// Tema de uma página (pacote 33): na biblioteca pública de quem tem Pro, a
+// paleta e a cor do dono valem enquanto a página está aberta. Não é salvo.
+const pageTheme = ref(null)
 const themeVersion = ref(0)
 const shownTheme = computed(() => effectiveTheme())
 const shownAccent = computed(() => effectiveAccent())
@@ -48,11 +51,19 @@ function writeStorage(key, value) {
   }
 }
 
+function activePalette() {
+  const page = pageTheme.value?.palette
+  if (page && PRO_PALETTES[page]) return page
+  return PRO_PALETTES[account.value.palette] ? account.value.palette : null
+}
+
 function effectiveTheme() {
-  return PRO_PALETTES[account.value.palette] || currentTheme.value
+  return PRO_PALETTES[activePalette()] || currentTheme.value
 }
 
 function effectiveAccent() {
+  const page = pageTheme.value?.accent
+  if (PRO_ACCENTS.includes(page) || ACCENT_COLORS.includes(page)) return page
   return PRO_ACCENTS.includes(account.value.accent) ? account.value.accent : accentColor.value
 }
 
@@ -74,15 +85,24 @@ function applyTheme() {
   const root = document.documentElement
   const theme = effectiveTheme()
   const accent = effectiveAccent()
+  const palette = activePalette()
   root.setAttribute('data-theme', theme)
-  if (account.value.palette && PRO_PALETTES[account.value.palette]) root.setAttribute('data-palette', account.value.palette)
+  if (palette) root.setAttribute('data-palette', palette)
   else root.removeAttribute('data-palette')
   root.style.setProperty('--main-color-rgb', `var(--${accent}-rgb)`)
   root.style.setProperty('--main-solid-rgb', `var(--${accent}-solid-rgb)`)
-  const bar = BROWSER_BAR[account.value.palette] || BROWSER_BAR[theme]
+  const bar = BROWSER_BAR[palette] || BROWSER_BAR[theme]
   document.querySelectorAll('meta[name="theme-color"]').forEach(meta => meta.setAttribute('content', bar))
   applyIcon()
   themeVersion.value++
+}
+
+/** Tema do dono da página aberta ({ palette, accent }) ou null ao sair dela. */
+export function setPageTheme(theme) {
+  const next = theme && (theme.palette || theme.accent) ? { palette: theme.palette ?? null, accent: theme.accent ?? null } : null
+  if (JSON.stringify(next) === JSON.stringify(pageTheme.value)) return
+  pageTheme.value = next
+  applyTheme()
 }
 
 /** Personalização da conta (do /auth/me); null ao sair. */

@@ -1231,7 +1231,14 @@
     "EMAIL_NOT_VERIFIED_COVER": "Confirm your email to upload a profile cover.",
     "BACKUP_OPTION_INVALID": "Invalid backup option.",
     "BACKUP_TOO_SOON": "You already requested a backup this hour. Try again later.",
-    "BACKUP_NOT_FOUND": "Backup not found."
+    "BACKUP_NOT_FOUND": "Backup not found.",
+    "BIO_TOO_LONG": "Your bio can have up to {max} characters.",
+    "BIO_TOO_MANY_LINES": "Your bio can have up to {max} lines.",
+    "EMAIL_NOT_VERIFIED_BIO": "Confirm your email to write a bio.",
+    "FAVORITES_TOO_MANY": "Choose up to {max} favorites.",
+    "FAVORITE_INVALID": "That book isn't on your shelf.",
+    "BIO_NOT_FOUND": "Bio not found.",
+    "BIO_OWN": "You can't report your own bio."
   },
   "block": {
     "block": "Block {name}",
@@ -1299,7 +1306,6 @@
     },
     "fromReaders": "Reader reviews | 1 reader review | {n} reader reviews",
     "showAll": "See all {n} reviews",
-    "profileTitle": "Reviews | 1 review | {n} reviews",
     "profileMore": "And {n} more — open the books on the shelf to read them.",
     "editAria": "Edit review",
     "deleteAria": "Delete review",
@@ -1332,7 +1338,13 @@
     "avatarRemovedDone": "Photo removed",
     "avatarKeep": "Keep the photo",
     "avatarRestore": "Restore the photo",
-    "avatarKeptDone": "Photo kept"
+    "avatarKeptDone": "Photo kept",
+    "bioRemove": "Remove the bio",
+    "bioKeep": "Keep the bio",
+    "bioRestore": "Restore the bio",
+    "bioHint": "Keeping clears the reports for this bio. Removing deletes the text; the person can write another one.",
+    "bioRemovedDone": "Bio removed",
+    "bioKeptDone": "Bio kept"
   },
   "lists": {
     "total": "No lists | 1 list | {n} lists",
@@ -1411,7 +1423,6 @@
     "noListsYet": "You don't have any lists yet. Create one with this book.",
     "addedTo": "Added to “{title}”",
     "removedFrom": "Removed from “{title}”",
-    "profileTitle": "Lists | 1 list | {n} lists",
     "loadOneFailed": "Couldn't load this list.",
     "rowActions": "Actions for {title}",
     "removeShort": "Remove from list",
@@ -1579,6 +1590,15 @@
           "open": "No photos waiting for review.",
           "hidden": "No photos taken down.",
           "all": "No photos have been reported."
+        }
+      },
+      "bios": {
+        "kind": "Bios",
+        "queue": "Reported bios",
+        "empty": {
+          "open": "No bios waiting for review.",
+          "hidden": "No bios taken down.",
+          "all": "No bios have been reported."
         }
       }
     },
@@ -2144,7 +2164,7 @@
       },
       "personalization": {
         "name": "Personalization",
-        "desc": "Extra themes and palettes, an alternate app icon and a cover background on your public profile."
+        "desc": "Extra themes and palettes (shown on your public page too), an alternate app icon and a cover background on your public profile."
       },
       "auto_backup": {
         "name": "Automatic backup",
@@ -2546,5 +2566,75 @@
     "remove": "Delete",
     "removeTitle": "Delete this backup?",
     "removeMessage": "The file leaves your account. This cannot be undone."
+  },
+  "publicPage": {
+    "readingNow": "Reading now",
+    "progressPages": "Page {page} of {total}",
+    "progressPercent": "{n}% read",
+    "favorites": "Favorites",
+    "tabs": {
+      "shelf": "Shelf",
+      "lists": "Lists",
+      "reviews": "Reviews",
+      "stats": "Stats"
+    },
+    "statusLabel": "Reading status",
+    "status": {
+      "all": "All",
+      "read": "Read",
+      "reading": "Reading",
+      "want": "Want to read"
+    },
+    "searchPlaceholder": "Search by title or author",
+    "sortLabel": "Sort",
+    "sort": {
+      "recent": "Recent",
+      "title": "Title",
+      "authors": "Author",
+      "rating": "Rating",
+      "readDate": "Date read"
+    },
+    "noResults": "No books match these filters.",
+    "clearFilters": "Clear filters",
+    "share": "Share",
+    "shareText": "{name}'s library on Librishelf",
+    "copied": "Link copied.",
+    "shareFailed": "Couldn't copy the link.",
+    "invite": {
+      "title": "Build your own shelf on Librishelf",
+      "text": "Organize your books, track your reading and follow {name}.",
+      "cta": "Sign up",
+      "login": "Log in",
+      "close": "Close invite"
+    },
+    "bioHidden": "Your bio was taken down after reports and only you can see it. Edit it in Account to bring it back.",
+    "reportBio": "Report bio",
+    "counts": {
+      "books": "{n} book | {n} books",
+      "read": "{n} read | {n} read",
+      "common": "{n} in common | {n} in common"
+    }
+  },
+  "bio": {
+    "reportTitle": "Report bio",
+    "reportIntro": "{name}'s bio goes to moderation. They won't know who reported it."
+  },
+  "profilePage": {
+    "title": "Public page",
+    "bio": "Bio",
+    "bioNone": "None",
+    "bioLabel": "A line about you as a reader",
+    "bioHint": "{n} of {max} characters, up to 2 lines. Everyone who opens your page sees it.",
+    "bioRemove": "Remove bio",
+    "bioSaved": "Bio saved.",
+    "bioHidden": "Your bio was taken down after reports. Editing it brings it back.",
+    "favorites": "Favorite books",
+    "favoritesValue": "{n} of {max}",
+    "favoritesHelp": "Up to {max} books from your shelf, pinned to the top of your public page, in this order.",
+    "moveUp": "Move {title} up",
+    "removeFavorite": "Remove {title} from favorites",
+    "searchPlaceholder": "Search your shelf",
+    "noResults": "No books found.",
+    "view": "View my public page"
   }
 }

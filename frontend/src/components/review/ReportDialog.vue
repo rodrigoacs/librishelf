@@ -4,7 +4,7 @@
     <AppDialog
       :visible="visible"
       size="sm"
-      :header="t(isAvatar ? 'avatar.reportTitle' : 'review.reportTitle')"
+      :header="t(`${prefix}.reportTitle`)"
       @update:visible="value => emit('update:visible', value)"
     >
       <form
@@ -12,7 +12,7 @@
         novalidate
         @submit.prevent="submit"
       >
-        <p class="intro">{{ t(isAvatar ? 'avatar.reportIntro' : 'review.reportIntro', { name: username }) }}</p>
+        <p class="intro">{{ t(`${prefix}.reportIntro`, { name: username }) }}</p>
 
         <fieldset class="reasons">
           <legend class="sr-only">{{ t('review.reportReason') }}</legend>
@@ -28,7 +28,7 @@
               name="report-reason"
               :value="option"
             />
-            <span>{{ t(isAvatar ? `avatar.reasons.${option}` : `review.reasons.${option}`) }}</span>
+            <span>{{ t(`${reasonPrefix}.reasons.${option}`) }}</span>
           </label>
         </fieldset>
 
@@ -82,12 +82,13 @@ import api from '../../services/api.js'
 import { useToast } from '../../services/toast.js'
 
 /**
- * Denunciar uma resenha (reviewId) ou uma foto de perfil (kind="avatar" +
- * username): motivo + observação opcional (vai para a moderação).
+ * Denunciar uma resenha (reviewId), uma foto de perfil (kind="avatar") ou a
+ * apresentação do perfil (kind="bio"), as duas com username: motivo +
+ * observação opcional (vai para a moderação).
  */
 const props = defineProps({
   visible: { type: Boolean, default: false },
-  kind: { type: String, default: 'review' }, // review | avatar
+  kind: { type: String, default: 'review' }, // review | avatar | bio
   reviewId: { type: Number, default: null },
   username: { type: String, default: '' }
 })
@@ -96,8 +97,11 @@ const { t } = useI18n()
 const toast = useToast()
 
 const REASONS = { review: ['spoiler', 'offensive', 'spam', 'other'], avatar: ['offensive', 'impersonation', 'spam', 'other'] }
-const isAvatar = computed(() => props.kind === 'avatar')
-const reasons = computed(() => REASONS[isAvatar.value ? 'avatar' : 'review'])
+// A bio usa os mesmos motivos (e textos) da foto
+const isProfile = computed(() => props.kind === 'avatar' || props.kind === 'bio')
+const prefix = computed(() => ({ avatar: 'avatar', bio: 'bio' })[props.kind] ?? 'review')
+const reasonPrefix = computed(() => isProfile.value ? 'avatar' : 'review')
+const reasons = computed(() => REASONS[isProfile.value ? 'avatar' : 'review'])
 const MAX_NOTE = 500
 const noteId = `report-note-${Math.random().toString(36).slice(2, 8)}`
 
@@ -117,7 +121,8 @@ async function submit() {
   error.value = ''
   sending.value = true
   try {
-    if (isAvatar.value) await api.reportAvatar(props.username, reason.value, note.value.trim() || undefined)
+    if (props.kind === 'avatar') await api.reportAvatar(props.username, reason.value, note.value.trim() || undefined)
+    else if (props.kind === 'bio') await api.reportBio(props.username, reason.value, note.value.trim() || undefined)
     else await api.reportReview(props.reviewId, reason.value, note.value.trim() || undefined)
     emit('update:visible', false)
     toast.add({ severity: 'success', summary: t('review.reportSent'), detail: t('review.reportSentDetail'), life: 4000 })

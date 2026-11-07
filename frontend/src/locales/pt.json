@@ -1231,7 +1231,14 @@
     "EMAIL_NOT_VERIFIED_COVER": "Confirme seu e-mail para enviar uma capa de perfil.",
     "BACKUP_OPTION_INVALID": "Opção de backup inválida.",
     "BACKUP_TOO_SOON": "Você já pediu um backup nesta hora. Tente de novo mais tarde.",
-    "BACKUP_NOT_FOUND": "Backup não encontrado."
+    "BACKUP_NOT_FOUND": "Backup não encontrado.",
+    "BIO_TOO_LONG": "A apresentação pode ter até {max} caracteres.",
+    "BIO_TOO_MANY_LINES": "A apresentação pode ter até {max} linhas.",
+    "EMAIL_NOT_VERIFIED_BIO": "Confirme seu e-mail para escrever uma apresentação.",
+    "FAVORITES_TOO_MANY": "Escolha até {max} favoritos.",
+    "FAVORITE_INVALID": "Livro não encontrado na sua estante.",
+    "BIO_NOT_FOUND": "Apresentação não encontrada.",
+    "BIO_OWN": "Você não pode denunciar a sua própria apresentação."
   },
   "block": {
     "block": "Bloquear {name}",
@@ -1299,7 +1306,6 @@
     },
     "fromReaders": "Resenhas de leitores | 1 resenha de leitor | {n} resenhas de leitores",
     "showAll": "Ver todas as {n} resenhas",
-    "profileTitle": "Resenhas | 1 resenha | {n} resenhas",
     "profileMore": "E mais {n} — abra os livros da estante para ler.",
     "editAria": "Editar resenha",
     "deleteAria": "Excluir resenha",
@@ -1332,7 +1338,13 @@
     "avatarRemovedDone": "Foto removida",
     "avatarKeep": "Manter a foto",
     "avatarRestore": "Pôr a foto de volta",
-    "avatarKeptDone": "Foto mantida"
+    "avatarKeptDone": "Foto mantida",
+    "bioRemove": "Remover a apresentação",
+    "bioKeep": "Manter a apresentação",
+    "bioRestore": "Pôr a apresentação de volta",
+    "bioHint": "Manter zera as denúncias desta apresentação. Remover tira o texto do ar; a pessoa pode escrever outro.",
+    "bioRemovedDone": "Apresentação removida",
+    "bioKeptDone": "Apresentação mantida"
   },
   "lists": {
     "total": "Nenhuma lista | 1 lista | {n} listas",
@@ -1411,7 +1423,6 @@
     "noListsYet": "Você ainda não tem listas. Crie uma com este livro.",
     "addedTo": "Adicionado a “{title}”",
     "removedFrom": "Tirado de “{title}”",
-    "profileTitle": "Listas | 1 lista | {n} listas",
     "loadOneFailed": "Não foi possível carregar esta lista.",
     "rowActions": "Ações para {title}",
     "removeShort": "Tirar da lista",
@@ -1579,6 +1590,15 @@
           "open": "Nenhuma foto esperando revisão.",
           "hidden": "Nenhuma foto fora do ar.",
           "all": "Nenhuma foto foi denunciada."
+        }
+      },
+      "bios": {
+        "kind": "Apresentações",
+        "queue": "Apresentações denunciadas",
+        "empty": {
+          "open": "Nenhuma apresentação esperando revisão.",
+          "hidden": "Nenhuma apresentação fora do ar.",
+          "all": "Nenhuma apresentação foi denunciada."
         }
       }
     },
@@ -2144,7 +2164,7 @@
       },
       "personalization": {
         "name": "Personalização",
-        "desc": "Temas e paletas extras, ícone alternativo do app e capa de fundo no perfil público."
+        "desc": "Temas e paletas extras (que valem também na sua página pública), ícone alternativo do app e capa de fundo no perfil público."
       },
       "auto_backup": {
         "name": "Backup automático",
@@ -2546,5 +2566,75 @@
     "remove": "Excluir",
     "removeTitle": "Excluir este backup?",
     "removeMessage": "O arquivo sai da sua conta. Isso não pode ser desfeito."
+  },
+  "publicPage": {
+    "readingNow": "Lendo agora",
+    "progressPages": "Página {page} de {total}",
+    "progressPercent": "{n}% lido",
+    "favorites": "Favoritos",
+    "tabs": {
+      "shelf": "Estante",
+      "lists": "Listas",
+      "reviews": "Resenhas",
+      "stats": "Números"
+    },
+    "statusLabel": "Status de leitura",
+    "status": {
+      "all": "Todos",
+      "read": "Lidos",
+      "reading": "Lendo",
+      "want": "Quero ler"
+    },
+    "searchPlaceholder": "Buscar por título ou autor",
+    "sortLabel": "Ordenar",
+    "sort": {
+      "recent": "Recentes",
+      "title": "Título",
+      "authors": "Autor",
+      "rating": "Nota",
+      "readDate": "Data de leitura"
+    },
+    "noResults": "Nenhum livro com esses filtros.",
+    "clearFilters": "Limpar filtros",
+    "share": "Compartilhar",
+    "shareText": "Biblioteca de {name} no Librishelf",
+    "copied": "Link copiado.",
+    "shareFailed": "Não deu para copiar o link.",
+    "invite": {
+      "title": "Monte a sua estante no Librishelf",
+      "text": "Organize seus livros, acompanhe as leituras e siga {name}.",
+      "cta": "Criar conta",
+      "login": "Entrar",
+      "close": "Fechar convite"
+    },
+    "bioHidden": "Sua apresentação saiu do ar por denúncias e só você a vê. Edite na Conta para ela voltar a aparecer.",
+    "reportBio": "Denunciar apresentação",
+    "counts": {
+      "books": "{n} livro | {n} livros",
+      "read": "{n} lido | {n} lidos",
+      "common": "{n} em comum | {n} em comum"
+    }
+  },
+  "bio": {
+    "reportTitle": "Denunciar apresentação",
+    "reportIntro": "A apresentação de {name} vai para a moderação. A pessoa não fica sabendo quem denunciou."
+  },
+  "profilePage": {
+    "title": "Página pública",
+    "bio": "Apresentação",
+    "bioNone": "Nenhuma",
+    "bioLabel": "Uma frase sobre você como leitor",
+    "bioHint": "{n} de {max} caracteres, até 2 linhas. Todo mundo que abrir sua página vê.",
+    "bioRemove": "Tirar apresentação",
+    "bioSaved": "Apresentação salva.",
+    "bioHidden": "Sua apresentação saiu do ar por denúncias. Ao editar, ela volta a aparecer.",
+    "favorites": "Livros favoritos",
+    "favoritesValue": "{n} de {max}",
+    "favoritesHelp": "Até {max} livros da sua estante, fixados no topo da sua página pública, nesta ordem.",
+    "moveUp": "Subir {title}",
+    "removeFavorite": "Tirar {title} dos favoritos",
+    "searchPlaceholder": "Buscar na sua estante",
+    "noResults": "Nenhum livro encontrado.",
+    "view": "Ver minha página pública"
   }
 }

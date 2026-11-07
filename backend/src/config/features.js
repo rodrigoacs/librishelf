@@ -20,7 +20,7 @@ export const FEATURES = Object.freeze({
   // Pro
   stats_advanced: PRO,   // comparar períodos, gráficos personalizados, ritmo, editoras/autores ao longo dos anos
   collector: PRO,        // fotos do exemplar, localização física, preço pago, valor da coleção, lembrete de empréstimo
-  personalization: PRO,  // temas e paletas extras, ícone alternativo, capa de fundo no perfil público
+  personalization: PRO,  // temas e paletas extras (também na página pública), ícone alternativo, capa de fundo no perfil público
   auto_backup: PRO       // backup automático periódico
 })
 

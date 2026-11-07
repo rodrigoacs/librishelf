@@ -6,6 +6,7 @@ import { db } from '../database/connection.js'
 import { META_QUERIES as q } from '../database/queries.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
 import * as listService from './listService.js'
+import { publicBio } from './profilePageService.js'
 
 /**
  * Trecho de <head> que o nginx do frontend injeta (SSI) no index.html de
@@ -119,7 +120,7 @@ export async function libraryHead(username) {
   if (!user) return ROBOTS_NOINDEX + defaultTags()
 
   const site = siteUrl()
-  const [stats, covers] = await Promise.all([libraryStats(user.id), coverFiles(user.id, 1)])
+  const [stats, covers, bio] = await Promise.all([libraryStats(user.id), coverFiles(user.id, 1), publicBio(user.id)])
   const title = `Biblioteca de ${user.name} · Librishelf`
   const url = `${site}/u/${encodeURIComponent(user.name)}`
 
@@ -128,7 +129,8 @@ export async function libraryHead(username) {
     meta('og:type', 'profile'),
     meta('og:site_name', 'Librishelf'),
     meta('og:title', title),
-    meta('og:description', describe(user.name, stats)),
+    // Com apresentação, ela vem primeiro (uma linha só na prévia)
+    meta('og:description', bio ? `${bio.replace(/\n/g, ' ')} — ${describe(user.name, stats)}` : describe(user.name, stats)),
     meta('og:url', url),
     meta('og:locale', 'pt_BR'),
     meta('profile:username', user.name)

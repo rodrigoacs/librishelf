@@ -17,6 +17,7 @@ import socialRoutes from './routes/social.js'
 import uploadsRoutes from './routes/uploads.js'
 import avatarRoutes from './routes/avatars.js'
 import profileCoverRoutes from './routes/profileCovers.js'
+import profilePageRoutes from './routes/profilePage.js'
 import metaRoutes from './routes/meta.js'
 import emailRoutes from './routes/email.js'
 import reviewRoutes from './routes/reviews.js'
@@ -43,6 +44,7 @@ app.use(cookieParser())
 app.use('/uploads', uploadsRoutes)
 app.use('/avatars', avatarRoutes)
 app.use('/profile-covers', profileCoverRoutes)
+app.use('/profile-page', profilePageRoutes)
 
 app.use('/auth', authRoutes)
 app.use('/library', libraryRoutes)

@@ -237,6 +237,30 @@ export default {
   },
 
   /** reason: offensive | impersonation | spam | other */
+  reportBio(username, reason, note) {
+    return client.post(`/profile-page/u/${encodeURIComponent(username)}/bio/report`, { reason, note })
+  },
+
+  getProfilePage() {
+    return client.get('/profile-page')
+  },
+
+  saveBio(bio) {
+    return client.put('/profile-page/bio', { bio })
+  },
+
+  saveFavorites(bookIds) {
+    return client.put('/profile-page/favorites', { bookIds })
+  },
+
+  adminBioReports(status = 'open') {
+    return client.get(`/admin/bio-reports${toQuery({ status })}`)
+  },
+
+  adminModerateBio(userId, action) {
+    return client.post(`/admin/bios/${userId}/${action}`)
+  },
+
   reportAvatar(username, reason, note) {
     return client.post(`/avatars/${encodeURIComponent(username)}/report`, { reason, note })
   },

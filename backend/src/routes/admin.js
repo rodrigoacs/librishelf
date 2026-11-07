@@ -58,6 +58,11 @@ router.post('/reviews/:id/hide', validateNumericId(), handle('Erro ao ocultar re
   req => adminService.moderateReview(req.user.id, Number(req.params.id), true)))
 router.post('/reviews/:id/show', validateNumericId(), handle('Erro ao reexibir resenha',
   req => adminService.moderateReview(req.user.id, Number(req.params.id), false)))
+router.get('/bio-reports', handle('Erro ao carregar denúncias de apresentação', req => adminService.bioQueue(String(req.query.status ?? 'open'))))
+router.post('/bios/:id/keep', validateNumericId(), handle('Erro ao manter apresentação',
+  req => adminService.moderateBio(req.user.id, Number(req.params.id), 'keep')))
+router.post('/bios/:id/remove', validateNumericId(), handle('Erro ao remover apresentação',
+  req => adminService.moderateBio(req.user.id, Number(req.params.id), 'remove')))
 router.get('/avatar-reports', handle('Erro ao carregar denúncias de foto', req => adminService.avatarQueue(String(req.query.status ?? 'open'))))
 router.get('/avatars/:id', validateNumericId(), handle('Erro ao abrir foto', req => adminService.avatar(Number(req.params.id))))
 // A foto em si (mesmo ocultada por denúncia), para quem modera

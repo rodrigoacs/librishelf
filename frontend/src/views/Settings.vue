@@ -106,6 +106,8 @@
         </div>
       </section>
 
+      <SettingsProfilePage />
+
       <SettingsPlan />
 
       <SettingsPersonalization />
@@ -633,6 +635,7 @@ import ReaderAvatar from '../components/ReaderAvatar.vue'
 import AvatarCropSheet from '../components/AvatarCropSheet.vue'
 import SettingsRow from '../components/settings/SettingsRow.vue'
 import SettingsPlan from '../components/settings/SettingsPlan.vue'
+import SettingsProfilePage from '../components/settings/SettingsProfilePage.vue'
 import SettingsPersonalization from '../components/settings/SettingsPersonalization.vue'
 import SettingsBackup from '../components/settings/SettingsBackup.vue'
 import VanguardaBadge from '../components/VanguardaBadge.vue'

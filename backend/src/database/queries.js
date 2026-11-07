@@ -2863,3 +2863,100 @@ export const BACKUP_QUERIES = {
     WHERE b.id = $1
   `
 }
+
+// ------------------------------------------------------------------ página pública (pacote 33)
+export const PROFILE_PAGE_QUERIES = {
+  BIO: `
+    SELECT bio, bio_version, bio_hidden_at, bio_hidden_reason, email_verified_at
+    FROM librishelf.users WHERE id = $1
+  `,
+  // Bio nova (ou nenhuma): nova versão, denúncias da anterior deixam de valer
+  SET_BIO: `
+    UPDATE librishelf.users
+    SET bio = $2,
+        bio_version = CASE WHEN $2::text IS NULL THEN NULL ELSE COALESCE(bio_version, 0) + 1 END,
+        bio_hidden_at = NULL, bio_hidden_reason = NULL, bio_reviewed_at = NULL
+    WHERE id = $1
+    RETURNING bio, bio_version
+  `,
+  FAVORITES: `
+    SELECT b.id AS book_id, b.title, b.cover_version, ${AUTHORS_OF('b.id')} AS authors
+    FROM librishelf.profile_favorites f
+    JOIN librishelf.books b ON b.id = f.book_id AND b.user_id = f.user_id
+    WHERE f.user_id = $1
+    ORDER BY f.position
+  `,
+  OWNED_BOOKS: 'SELECT id FROM librishelf.books WHERE user_id = $1 AND id = ANY($2::int[])',
+  CLEAR_FAVORITES: 'DELETE FROM librishelf.profile_favorites WHERE user_id = $1',
+  ADD_FAVORITES: `
+    INSERT INTO librishelf.profile_favorites (user_id, book_id, position)
+    SELECT $1, book_id, (ord - 1)::smallint
+    FROM unnest($2::int[]) WITH ORDINALITY AS t(book_id, ord)
+  `,
+  // Lendo agora: até 3, o progresso mais recente primeiro
+  READING: `
+    SELECT b.id AS book_id, b.title, b.cover_version, b.page_count, ${AUTHORS_OF('b.id')} AS authors,
+           r.current_page, r.progress_percent
+    FROM librishelf.books b
+    LEFT JOIN librishelf.readings r ON r.book_id = b.id AND r.finished_on IS NULL
+    WHERE b.user_id = $1 AND b.reading_status = 'reading'
+    ORDER BY r.progress_updated_at DESC NULLS LAST, r.started_on DESC NULLS LAST, b.id DESC
+    LIMIT 3
+  `,
+  // Denúncias de bio: mesma régua da foto (contas confirmadas, ativas, com mais de $3 dias)
+  REPORT: `
+    INSERT INTO librishelf.bio_reports (user_id, bio_version, reporter_id, reason, note)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (user_id, bio_version, reporter_id) DO NOTHING
+    RETURNING id
+  `,
+  OPEN_REPORTS: `
+    SELECT count(DISTINCT br.reporter_id)::int AS total,
+           count(DISTINCT br.reporter_id) FILTER (
+             WHERE r.email_verified_at IS NOT NULL
+               AND r.is_active IS NOT FALSE
+               AND r.created_at < now() - make_interval(days => $3)
+           )::int AS trusted
+    FROM librishelf.bio_reports br
+    JOIN librishelf.users o ON o.id = br.user_id
+    JOIN librishelf.users r ON r.id = br.reporter_id
+    WHERE br.user_id = $1 AND br.bio_version = $2
+      AND (o.bio_reviewed_at IS NULL OR br.created_at > o.bio_reviewed_at)
+  `,
+  AUTO_HIDE: `
+    UPDATE librishelf.users SET bio_hidden_at = now(), bio_hidden_reason = 'reports'
+    WHERE id = $1 AND bio_version = $2 AND bio_hidden_at IS NULL
+    RETURNING id
+  `,
+  // Fila do admin: open (denúncia depois da última revisão) | hidden | all
+  QUEUE: `
+    SELECT u.id, u.name AS username, u.bio, u.bio_version, u.bio_hidden_at, u.bio_hidden_reason,
+           u.bio_reviewed_at, (u.is_active IS NOT FALSE) AS active,
+           count(br.id) FILTER (WHERE u.bio_reviewed_at IS NULL OR br.created_at > u.bio_reviewed_at)::int AS open_count,
+           count(br.id)::int AS total_count,
+           max(br.created_at) AS last_report_at,
+           array_agg(DISTINCT br.reason) AS reasons
+    FROM librishelf.users u
+    JOIN librishelf.bio_reports br ON br.user_id = u.id AND br.bio_version = u.bio_version
+    WHERE u.bio IS NOT NULL
+    GROUP BY u.id
+    HAVING CASE $1
+      WHEN 'open' THEN count(br.id) FILTER (WHERE u.bio_reviewed_at IS NULL OR br.created_at > u.bio_reviewed_at) > 0
+      WHEN 'hidden' THEN u.bio_hidden_at IS NOT NULL
+      ELSE true
+    END
+    ORDER BY max(br.created_at) DESC
+    LIMIT 200
+  `,
+  KEEP: `
+    UPDATE librishelf.users SET bio_hidden_at = NULL, bio_hidden_reason = NULL, bio_reviewed_at = now()
+    WHERE id = $1 AND bio IS NOT NULL
+    RETURNING id
+  `,
+  CLEAR: `
+    UPDATE librishelf.users
+    SET bio = NULL, bio_version = NULL, bio_hidden_at = NULL, bio_hidden_reason = NULL, bio_reviewed_at = now()
+    WHERE id = $1
+    RETURNING id
+  `
+}

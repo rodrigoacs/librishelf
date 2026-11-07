@@ -42,6 +42,13 @@
       @changed="emit('changed')"
     />
 
+    <AdminBioQueue
+      v-if="kind === 'bios'"
+      :status="status"
+      @open-user="id => emit('open-user', id)"
+      @changed="emit('changed')"
+    />
+
     <details
       v-if="insights && kind === 'reviews'"
       class="insights"
@@ -261,6 +268,7 @@ import AppSkeleton from '../ui/AppSkeleton.vue'
 import EmptyState from '../ui/EmptyState.vue'
 import ReviewCard from '../review/ReviewCard.vue'
 import AdminAvatarQueue from './AdminAvatarQueue.vue'
+import AdminBioQueue from './AdminBioQueue.vue'
 import api from '../../services/api.js'
 import { useToast } from '../../services/toast.js'
 import { LockedError, useAdminCall, formatDateTime } from './adminCall.js'
@@ -271,10 +279,11 @@ const toast = useToast()
 const call = useAdminCall()
 
 const status = ref('open')
-const kind = ref('reviews') // reviews | avatars
+const kind = ref('reviews') // reviews | avatars | bios
 const kinds = computed(() => [
   { value: 'reviews', label: t('admin.moderation.avatars.kindReviews') },
-  { value: 'avatars', label: t('admin.moderation.avatars.kindAvatars') }
+  { value: 'avatars', label: t('admin.moderation.avatars.kindAvatars') },
+  { value: 'bios', label: t('admin.moderation.bios.kind') }
 ])
 const items = ref([])
 const loading = ref(true)

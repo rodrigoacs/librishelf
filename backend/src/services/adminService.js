@@ -14,6 +14,7 @@ import { resolvePagination } from '../utils/pagination.js'
 import STATUS from '../utils/statusCodes.js'
 import { httpError } from '../utils/httpError.js'
 import logger from '../utils/logger.js'
+import * as profilePageService from './profilePageService.js'
 
 /**
  * Área administrativa: números gerais, fila de denúncias, contas
@@ -304,6 +305,17 @@ export async function moderateReview(adminId, id, hide) {
 }
 
 // ------------------------------------------------------------------ fotos de perfil
+
+export function bioQueue(status = 'open') {
+  return profilePageService.queue(status)
+}
+
+/** action: 'keep' | 'remove' — apresentação do perfil público (pacote 33) */
+export async function moderateBio(adminId, userId, action) {
+  const result = await profilePageService.moderate(userId, action)
+  await log(adminId, action === 'remove' ? 'bio.remove' : 'bio.keep', { userId })
+  return result
+}
 
 export function avatarQueue(status = 'open') {
   return avatarService.queue(status)

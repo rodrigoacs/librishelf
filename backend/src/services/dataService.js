@@ -5,6 +5,7 @@ import { normalizeBookInput } from './libraryService.js'
 import * as readingService from './readingService.js'
 import * as vanguardaService from './vanguardaService.js'
 import * as collectionService from './collectionService.js'
+import * as profilePageService from './profilePageService.js'
 import { csvToObjects, toCsv } from '../utils/csv.js'
 import { normalizeIsbn13 } from '../utils/isbn.js'
 import STATUS from '../utils/statusCodes.js'
@@ -74,6 +75,11 @@ async function loadSocial(userId) {
  * à version 1: account.lastLoginAt/lastSeenAt, notifications, following,
  * followers, requests, blocked, likesGiven e reportsMade.
  */
+async function profilePageExport(userId) {
+  const page = await profilePageService.get(userId)
+  return { bio: page.bio, favorites: page.favorites.map(item => item.title) }
+}
+
 export async function exportJson(userId) {
   const [{ user, goals, books, lists }, social] = await Promise.all([loadExport(userId), loadSocial(userId)])
   return {
@@ -100,6 +106,8 @@ export async function exportJson(userId) {
       locale: user.email_locale
     },
     ...social,
+    // Página pública (pacote 33): apresentação e favoritos (títulos, na ordem)
+    profilePage: await profilePageExport(userId),
     readingGoals: goals,
     collection: await collectionService.exportData(userId),
     books: books.map(book => ({

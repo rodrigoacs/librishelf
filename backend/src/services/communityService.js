@@ -9,6 +9,7 @@ import * as listService from './listService.js'
 import STATUS from '../utils/statusCodes.js'
 import { badgesOf } from './entitlementService.js'
 import { publicCover } from './personalizationService.js'
+import { forPublicProfile } from './profilePageService.js'
 import { httpError } from '../utils/httpError.js'
 import { createTtlCache } from '../utils/ttlCache.js'
 
@@ -107,6 +108,8 @@ export async function publicProfile(username, viewerId) {
     badges: await badgesOf(user.id),
     // Capa de fundo (Pro, pacote 29): continua aparecendo se o Pro acabar
     profileCover: await publicCover(user.id),
+    // Apresentação, favoritos, lendo agora e tema do dono (pacote 33)
+    ...(await forPublicProfile(user.id, viewerId ?? null)),
     stats: {
       totalBooks: stats.total_books,
       readBooks: stats.read_books,
