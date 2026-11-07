@@ -34,9 +34,14 @@
         class="link"
       >{{ t('import.skoobLink') }}</router-link>
 
+      <!-- Clique escolhe; no computador também dá para soltar o arquivo aqui -->
       <label
         class="file-drop"
-        :class="{ busy: uploading }"
+        :class="{ busy: uploading, dragging }"
+        @dragenter.prevent="dragging = !uploading"
+        @dragover.prevent="dragging = !uploading"
+        @dragleave.prevent="onDragLeave"
+        @drop.prevent="onDrop"
       >
         <input
           ref="fileInput"
@@ -51,6 +56,10 @@
           aria-hidden="true"
         ></i>
         <span>{{ uploading ? t('import.reading') : t('settings.data.chooseFile') }}</span>
+        <span
+          v-if="!uploading"
+          class="drop-hint"
+        >{{ t('import.dropHint') }}</span>
       </label>
     </section>
 
@@ -391,6 +400,25 @@ async function poll() {
   }
 }
 
+const dragging = ref(false)
+
+function onDragLeave(event) {
+  // Sair para um filho (ícone, texto) também dispara dragleave
+  if (!event.currentTarget.contains(event.relatedTarget)) dragging.value = false
+}
+
+function onDrop(event) {
+  dragging.value = false
+  if (uploading.value) return
+  const file = event.dataTransfer?.files?.[0]
+  if (!file) return
+  if (!/\.csv$/i.test(file.name) && file.type && !file.type.includes('csv')) {
+    toast.add({ severity: 'error', detail: t('import.csvOnly') })
+    return
+  }
+  upload({ target: { files: [file] } })
+}
+
 async function upload(event) {
   const file = event.target.files?.[0]
   if (!file) return
@@ -466,10 +494,14 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 <style scoped>
 .import-container {
-  --page-max: 760px;
+  /* Largura toda, como as outras telas */
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-6);
+}
+
+.import-container > .page-header {
+  margin-bottom: 0;
 }
 
 .card {
@@ -517,7 +549,10 @@ onBeforeUnmount(() => clearTimeout(timer))
 }
 
 .link {
+  display: inline-flex;
+  align-items: center;
   align-self: flex-start;
+  min-height: 2.75rem;
   color: var(--main-color);
   font-weight: 600;
   font-size: var(--fs-sm);
@@ -525,10 +560,11 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 .file-drop {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 56px;
+  gap: var(--space-1) var(--space-2);
+  min-height: 6rem;
   padding: var(--space-4);
   border: 2px dashed var(--border-color);
   border-radius: var(--radius-md);
@@ -537,10 +573,40 @@ onBeforeUnmount(() => clearTimeout(timer))
   cursor: pointer;
 }
 
-.file-drop:hover,
-.file-drop:focus-within {
+.file-drop:focus-within,
+.file-drop.dragging {
   border-color: var(--main-color);
   color: var(--text-primary);
+}
+
+.file-drop.dragging {
+  background: rgba(var(--main-color-rgb), 0.06);
+}
+
+@media (hover: hover) {
+  .file-drop:hover {
+    border-color: var(--main-color);
+    color: var(--text-primary);
+  }
+}
+
+.drop-hint {
+  flex-basis: 100%;
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  text-align: center;
+}
+
+/* Celular não arrasta arquivo: só o "Escolher arquivo" */
+@media (pointer: coarse) {
+  .drop-hint {
+    display: none;
+  }
+
+  .file-drop {
+    min-height: 3.5rem;
+  }
 }
 
 .file-drop.busy {
@@ -569,14 +635,14 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 .counts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
   margin: 0;
 }
 
-@media (min-width: 640px) {
+@media (max-width: 639.98px) {
   .counts {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -615,6 +681,18 @@ onBeforeUnmount(() => clearTimeout(timer))
   color: var(--text-primary);
 }
 
+/* Celular: rótulo em cima, seletor na largura toda */
+@media (max-width: 639.98px) {
+  .mapping {
+    gap: var(--space-3);
+  }
+
+  .mapping-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+
 .required {
   color: var(--red);
 }
@@ -632,7 +710,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 .errors li {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--space-1);
   padding: var(--space-2) 0;
   font-size: var(--fs-sm);
 }
@@ -653,7 +731,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 .switch-text {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--space-1);
   font-size: var(--fs-sm);
 }
 

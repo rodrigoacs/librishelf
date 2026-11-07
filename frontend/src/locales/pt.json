@@ -506,6 +506,7 @@
       "canceledUntil": "Cancelado. Vale até {date}.",
       "until": "Vale até {date}.",
       "ended": "Seu Pro acabou em {date}. O que você guardou nos recursos Pro continua visível; para mudar, é preciso o Pro de novo.",
+      "proNote": "Personalização e backup automático fazem parte do Pro. O que você já escolheu ou guardou continua valendo.",
       "trial": "Testar o Pro por 14 dias",
       "trialHelp": "Sem cartão e sem cobrança automática.",
       "trialStarted": "Teste grátis ativado até {date}.",
@@ -2049,6 +2050,10 @@
     "subtitle": "O Librishelf continua grátis. O Pro acrescenta recursos para quem quer ir além.",
     "login": "Entrar",
     "offersTitle": "Pro",
+    "recommended": "Recomendado",
+    "yourPlan": "Seu plano",
+    "founderTitle": "Oferta de fundador",
+    "founderIntro": "Só na janela de lançamento, com vagas limitadas.",
     "kinds": {
       "monthly": "Mensal",
       "annual": "Anual",
@@ -2280,7 +2285,9 @@
       "after": "Envie o CSV na tela de importação. Se ele vier no formato do Goodreads, é reconhecido sozinho; se não, você escolhe as colunas (título, autor, ISBN...) antes de importar.",
       "manual": "Sem ferramenta: uma planilha com título e autor, uma linha por livro, salva em CSV, também funciona.",
       "toImport": "Ir para a importação"
-    }
+    },
+    "dropHint": "ou solte o arquivo aqui",
+    "csvOnly": "Envie um arquivo CSV."
   },
   "proStats": {
     "title": "Estatísticas avançadas",
@@ -2465,6 +2472,7 @@
   },
   "personalization": {
     "title": "Personalização",
+    "proOnly": "Sem o Pro, só “Padrão” fica disponível. O que você já escolheu continua valendo.",
     "palette": {
       "title": "Paleta",
       "default": "Padrão",
@@ -2497,6 +2505,11 @@
     "cover": {
       "title": "Capa de fundo no perfil público",
       "current": "Capa escolhida",
+      "value": {
+        "image": "Imagem enviada",
+        "book": "Capa de livro",
+        "none": "Nenhuma"
+      },
       "none": "Nenhuma capa escolhida.",
       "upload": "Enviar imagem",
       "choose": "Usar capa de livro",
@@ -2508,6 +2521,7 @@
   "backup": {
     "title": "Backup automático",
     "enabled": "Fazer backup automático",
+    "short": "Uma cópia da biblioteca de tempos em tempos.",
     "help": "Uma cópia da biblioteca no mesmo formato da exportação em JSON. Guardamos as {n} mais recentes.",
     "frequency": "Frequência",
     "frequencies": {
@@ -2519,6 +2533,7 @@
     "runNow": "Fazer um backup agora",
     "queued": "Backup pedido. Ele aparece aqui em alguns minutos.",
     "list": "Backups guardados",
+    "none": "Nenhum",
     "empty": "Nenhum backup ainda.",
     "trigger": {
       "scheduled": "automático",

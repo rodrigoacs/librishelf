@@ -5,6 +5,7 @@
     <div
       v-if="profileCoverUrl && !notFound"
       class="profile-cover"
+      :class="{ 'from-book': profile?.profileCover?.kind === 'book' }"
       aria-hidden="true"
       :style="{ backgroundImage: `url(${profileCoverUrl})` }"
     ></div>
@@ -712,13 +713,16 @@ watch(username, () => {
 </script>
 
 <style scoped>
-/* Faixa com a capa escolhida, desfocada e esmaecida até o fundo da página */
+/* Capa escolhida: faixa de ponta a ponta colada na faixa do cabeçalho
+   (mesma largura, sem raio), esmaecendo até a cor dela (--bg-panel), então
+   as duas viram um bloco só. Imagem enviada aparece nítida; capa de livro
+   (pequena, esticada) é desfocada. */
 .profile-cover {
   position: relative;
-  height: clamp(6rem, 18vw, 11rem);
-  margin-bottom: var(--space-2);
+  height: clamp(7rem, 22vw, 14rem);
+  margin: 0 calc(-1 * var(--page-pad-x));
   overflow: hidden;
-  border-radius: var(--card-radius);
+  background-color: var(--bg-panel);
   background-position: center 30%;
   background-size: cover;
 }
@@ -727,8 +731,12 @@ watch(username, () => {
   content: '';
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(6px) saturate(1.1);
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), var(--bg-app));
+  background: linear-gradient(to bottom, transparent 40%, var(--bg-panel));
+}
+
+.profile-cover.from-book::after {
+  backdrop-filter: blur(8px) saturate(1.1);
+  background: linear-gradient(to bottom, transparent, var(--bg-panel));
 }
 
 .public-library-container {

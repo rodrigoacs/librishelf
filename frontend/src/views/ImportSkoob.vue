@@ -46,6 +46,12 @@ const { t } = useI18n()
   --page-max: 720px;
 }
 
+/* Exceção ao "largura toda": texto corrido, coluna de leitura centralizada
+   (o cabeçalho continua com o título no lugar de sempre). */
+.skoob-article {
+  margin-inline: auto;
+}
+
 .skoob-article {
   color: var(--text-primary);
   line-height: 1.65;

@@ -54,6 +54,12 @@
       />
     </div>
 
+    <!-- Único aviso do Pro na Conta (Personalização e Backup não repetem) -->
+    <p
+      v-if="plan && !plan.pro && !endedText"
+      class="pro-note"
+    >{{ t('settings.plan.proNote') }}</p>
+
     <AppDialog
       v-model:visible="historyOpen"
       :header="t('settings.plan.history')"
@@ -221,7 +227,8 @@ async function openHistory() {
   background: var(--bg-panel);
 }
 
-.ended-note {
+.ended-note,
+.pro-note {
   margin: 0;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
@@ -229,6 +236,13 @@ async function openHistory() {
   color: var(--text-primary);
   font-size: var(--fs-sm);
   line-height: 1.45;
+}
+
+.pro-note {
+  background: none;
+  padding-top: 0;
+  padding-bottom: 0;
+  color: var(--text-secondary);
 }
 
 .muted {
@@ -248,7 +262,7 @@ async function openHistory() {
 .payments li {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: var(--space-1);
   padding: var(--space-3) 0;
 }
 

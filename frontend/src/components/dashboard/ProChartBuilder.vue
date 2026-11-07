@@ -319,9 +319,24 @@ onMounted(() => {
   font-style: italic;
 }
 
-@media (max-width: 639.98px) {
+@media (max-width: 1023.98px) {
   .builder-controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Celular: um seletor por linha, na largura toda; gráfico mais baixo */
+@media (max-width: 639.98px) {
+  .builder-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .builder-custom > * {
+    flex: 1 1 100%;
+  }
+
+  .chart-box {
+    height: 240px;
   }
 }
 </style>

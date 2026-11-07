@@ -662,6 +662,10 @@ onMounted(loadAll)
 }
 
 @media (max-width: 639.98px) {
+  .chart-box {
+    height: 200px;
+  }
+
   .period-fields {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     width: 100%;

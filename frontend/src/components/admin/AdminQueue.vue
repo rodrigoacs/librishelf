@@ -411,7 +411,7 @@ tbody tr:last-child td {
 .failures li {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--space-1);
 }
 
 .empty-note {
@@ -426,8 +426,8 @@ tbody tr:last-child td {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-pill);
-  padding: 0.2rem;
-  gap: 0.2rem;
+  padding: var(--space-1);
+  gap: var(--space-1);
 }
 
 .filter {

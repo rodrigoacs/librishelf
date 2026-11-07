@@ -140,10 +140,14 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 <style scoped>
 .plan-return-container {
-  --page-max: 640px;
+  /* Largura toda, como as outras telas */
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-6);
+}
+
+.plan-return-container > .page-header {
+  margin-bottom: 0;
 }
 
 .status-card {
@@ -158,7 +162,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 .status-card > .pi {
   font-size: var(--fs-xl);
-  margin-top: 0.1rem;
+  margin-top: var(--space-1);
   color: var(--text-secondary);
 }
 
@@ -191,12 +195,32 @@ onBeforeUnmount(() => clearTimeout(timer))
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-2) var(--space-5);
 }
 
 .action-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   color: var(--main-color);
   font-weight: 600;
   font-size: var(--fs-sm);
+}
+
+.action-link:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 639.98px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-link {
+    justify-content: center;
+  }
 }
 </style>

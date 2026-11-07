@@ -38,47 +38,72 @@
         :title="t('common.loadErrorTitle')"
         @action="load"
       />
-      <div
-        v-else
-        class="offer-grid"
-      >
-        <article
-          v-for="offer in visibleOffers"
-          :key="offer.code"
-          class="offer"
-          :class="{ highlighted: route.query.offer === offer.code, current: isCurrent(offer) }"
-          :aria-labelledby="`offer-${offer.code}`"
+      <template v-else>
+        <!-- Mensal e anual primeiro; ofertas de fundador num bloco abaixo -->
+        <div
+          v-for="group in offerGroups"
+          :key="group.key"
+          class="offer-group"
         >
           <h3
-            :id="`offer-${offer.code}`"
-            class="offer-name"
-          >{{ t(`plan.offers.${offer.code}.name`) }}</h3>
-          <p class="offer-price">
-            <span class="amount">{{ money(offer.priceCents) }}</span>
-            <span class="period">{{ t(`plan.offers.${offer.code}.period`) }}</span>
-          </p>
-          <ul class="offer-points">
-            <li>{{ t(`plan.offers.${offer.code}.point1`) }}</li>
-            <li>{{ t(`plan.offers.${offer.code}.point2`) }}</li>
-            <li
-              v-if="offer.slotsTotal !== null"
-              class="slots"
-            >{{ offer.slotsLeft > 0 ? t('plan.slotsLeft', { n: offer.slotsLeft, total: offer.slotsTotal }) : t('plan.soldOut') }}</li>
-            <li
-              v-if="offer.endsAt && offer.available"
-              class="slots"
-            >{{ t('plan.until', { date: longDate(offer.endsAt) }) }}</li>
-          </ul>
-          <AppButton
-            :label="buttonLabel(offer)"
-            class="offer-button"
-            :class="{ 'btn-outlined': offer.code !== recommended }"
-            :disabled="!canBuy(offer)"
-            :loading="busy === offer.code"
-            @click="subscribe(offer)"
-          />
-        </article>
-      </div>
+            v-if="group.title"
+            class="section-title group-title"
+          >{{ group.title }}</h3>
+          <p
+            v-if="group.intro"
+            class="group-intro"
+          >{{ group.intro }}</p>
+          <div class="offer-grid">
+          <article
+            v-for="offer in group.offers"
+            :key="offer.code"
+            class="offer"
+            :class="{ highlighted: route.query.offer === offer.code, current: isCurrent(offer), recommended: offer.code === recommended && !isCurrent(offer) }"
+            :aria-labelledby="`offer-${offer.code}`"
+          >
+            <div class="offer-head">
+              <component
+                :is="group.title ? 'h4' : 'h3'"
+                :id="`offer-${offer.code}`"
+                class="offer-name"
+              >{{ t(`plan.offers.${offer.code}.name`) }}</component>
+              <span
+                v-if="isCurrent(offer)"
+                class="offer-tag current-tag"
+              >{{ t('plan.yourPlan') }}</span>
+              <span
+                v-else-if="offer.code === recommended"
+                class="offer-tag"
+              >{{ t('plan.recommended') }}</span>
+            </div>
+            <p class="offer-price">
+              <span class="amount">{{ money(offer.priceCents) }}</span>
+              <span class="period">{{ t(`plan.offers.${offer.code}.period`) }}</span>
+            </p>
+            <ul class="offer-points">
+              <li>{{ t(`plan.offers.${offer.code}.point1`) }}</li>
+              <li>{{ t(`plan.offers.${offer.code}.point2`) }}</li>
+              <li
+                v-if="offer.slotsTotal !== null"
+                class="slots"
+              >{{ offer.slotsLeft > 0 ? t('plan.slotsLeft', { n: offer.slotsLeft, total: offer.slotsTotal }) : t('plan.soldOut') }}</li>
+              <li
+                v-if="offer.endsAt && offer.available"
+                class="slots"
+              >{{ t('plan.until', { date: longDate(offer.endsAt) }) }}</li>
+            </ul>
+            <AppButton
+              :label="buttonLabel(offer)"
+              class="offer-button"
+              :class="{ 'btn-outlined': offer.code !== recommended }"
+              :disabled="!canBuy(offer)"
+              :loading="busy === offer.code"
+              @click="subscribe(offer)"
+            />
+          </article>
+          </div>
+        </div>
+      </template>
 
       <div
         v-if="trialAvailable"
@@ -190,9 +215,16 @@ const trialAvailable = computed(() => isAuthenticated.value && Boolean(plan.valu
 // Fundador anual pode ser renovado com a janela fechada por quem já tem um ativo
 const founderRenewal = computed(() => current.value?.kind === 'founder_annual')
 
+const FOUNDER = ['founder_annual', 'founder_lifetime']
+
 const visibleOffers = computed(() => OFFER_ORDER
   .map(code => offers.value.find(offer => offer.code === code))
   .filter(offer => offer && (offer.available || (offer.code === 'founder_annual' && founderRenewal.value) || isSoldOutInWindow(offer))))
+
+const offerGroups = computed(() => [
+  { key: 'regular', offers: visibleOffers.value.filter(offer => !FOUNDER.includes(offer.code)) },
+  { key: 'founder', title: t('plan.founderTitle'), intro: t('plan.founderIntro'), offers: visibleOffers.value.filter(offer => FOUNDER.includes(offer.code)) }
+].filter(group => group.offers.length))
 
 function isSoldOutInWindow(offer) {
   const now = Date.now()
@@ -269,17 +301,25 @@ onMounted(load)
 .pricing-container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-7);
+  gap: var(--space-6);
+}
+
+/* O espaço até o conteúdo vem do gap (igual em todas as telas do Pro) */
+.pricing-container > .page-header {
+  margin-bottom: 0;
 }
 
 .bar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   color: var(--main-color);
   font-weight: 600;
   font-size: var(--fs-sm);
 }
 
 .current-note {
-  margin: calc(-1 * var(--space-4)) 0 0;
+  margin: 0;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: rgba(var(--main-color-rgb), 0.08);
@@ -291,15 +331,37 @@ onMounted(load)
   margin: 0 0 var(--space-3);
 }
 
-.offer-grid {
-  display: grid;
-  grid-template-columns: 1fr;
+.offer-group {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
 }
 
-@media (min-width: 640px) {
+.offer-group + .offer-group {
+  margin-top: var(--space-6);
+}
+
+.group-title {
+  margin: 0;
+}
+
+.group-intro {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+/* Sempre aos pares (mensal/anual, fundador anual/vitalício): nada fica sozinho */
+.offer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 639.98px) {
   .offer-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -313,15 +375,45 @@ onMounted(load)
   background: var(--bg-panel);
 }
 
-.offer.highlighted,
-.offer.current {
+.offer.recommended,
+.offer.highlighted {
   border-color: var(--main-color);
+}
+
+.offer.current {
+  background: rgba(var(--main-color-rgb), 0.06);
+}
+
+.offer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
 
 .offer-name {
   margin: 0;
   font-size: var(--fs-md);
   color: var(--text-primary);
+}
+
+.offer-tag {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--main-solid);
+  color: var(--on-main);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.offer-tag.current-tag {
+  background: transparent;
+  color: var(--main-color);
+  box-shadow: inset 0 0 0 1px var(--main-color);
 }
 
 .offer-price {
@@ -374,7 +466,7 @@ onMounted(load)
   gap: var(--space-3);
   margin-top: var(--space-4);
   padding: var(--space-3) var(--space-4);
-  border: 1px dashed var(--border-color);
+  border: 1px solid var(--border-color);
   border-radius: var(--card-radius);
 }
 
@@ -409,7 +501,7 @@ onMounted(load)
 .feature-list li {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: var(--space-1);
   padding: var(--space-3) var(--space-4);
 }
 

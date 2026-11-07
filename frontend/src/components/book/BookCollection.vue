@@ -21,7 +21,7 @@
     <template v-else-if="data">
       <!-- Empréstimo -->
       <div class="block">
-        <h4 class="block-title">{{ t('collection.loan.title') }}</h4>
+        <h4 class="section-title block-title">{{ t('collection.loan.title') }}</h4>
 
         <div
           v-if="data.loan && !editingLoan"
@@ -163,7 +163,7 @@
 
       <!-- Exemplar (Pro) -->
       <div class="block">
-        <h4 class="block-title">{{ t('collection.copy.title') }}</h4>
+        <h4 class="section-title block-title">{{ t('collection.copy.title') }}</h4>
 
         <ProNotice
           v-if="!canUse('collector')"
@@ -515,17 +515,15 @@ watch(() => props.bookId, () => {
   margin: 0;
 }
 
+/* Subtítulos: mesmo estilo de título de seção, um nível abaixo */
+.block-title {
+  margin: 0;
+}
+
 .block {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-}
-
-.block-title {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: var(--fs-sm);
-  font-weight: 600;
 }
 
 .loan-card {
@@ -534,13 +532,12 @@ watch(() => props.bookId, () => {
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-color);
-  border-left: 3px solid var(--main-color);
   border-radius: var(--card-radius);
   background: var(--bg-panel);
 }
 
 .loan-card.overdue {
-  border-left-color: var(--red);
+  border-color: rgba(var(--red-rgb), 0.45);
 }
 
 .loan-card p {
@@ -719,8 +716,9 @@ watch(() => props.bookId, () => {
   height: 1.75rem;
   border: none;
   border-radius: var(--radius-pill);
-  background: rgb(0 0 0 / 60%);
-  color: #fff;
+  /* Sobre a foto: fundo escuro fixo, em qualquer tema */
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--on-main);
   cursor: pointer;
 }
 

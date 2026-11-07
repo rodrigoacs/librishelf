@@ -506,6 +506,7 @@
       "canceledUntil": "Cancelled. Valid until {date}.",
       "until": "Valid until {date}.",
       "ended": "Your Pro ended on {date}. What you saved in the Pro features stays visible; changing it needs Pro again.",
+      "proNote": "Personalization and automatic backup are part of Pro. What you already chose or saved stays in place.",
       "trial": "Try Pro for 14 days",
       "trialHelp": "No card and no automatic charge.",
       "trialStarted": "Free trial on until {date}.",
@@ -2049,6 +2050,10 @@
     "subtitle": "Librishelf stays free. Pro adds features for those who want more.",
     "login": "Sign in",
     "offersTitle": "Pro",
+    "recommended": "Recommended",
+    "yourPlan": "Your plan",
+    "founderTitle": "Founder offer",
+    "founderIntro": "Launch window only, with limited spots.",
     "kinds": {
       "monthly": "Monthly",
       "annual": "Annual",
@@ -2280,7 +2285,9 @@
       "after": "Send the CSV on the import screen. If it is in the Goodreads format, it is recognized on its own; if not, you pick the columns (title, author, ISBN...) before importing.",
       "manual": "No tool: a spreadsheet with title and author, one row per book, saved as CSV, also works.",
       "toImport": "Go to the import"
-    }
+    },
+    "dropHint": "or drop the file here",
+    "csvOnly": "Upload a CSV file."
   },
   "proStats": {
     "title": "Advanced stats",
@@ -2465,6 +2472,7 @@
   },
   "personalization": {
     "title": "Personalization",
+    "proOnly": "Without Pro, only “Default” is available. What you already chose stays in place.",
     "palette": {
       "title": "Palette",
       "default": "Default",
@@ -2497,6 +2505,11 @@
     "cover": {
       "title": "Background cover on your public profile",
       "current": "Chosen cover",
+      "value": {
+        "image": "Uploaded image",
+        "book": "Book cover",
+        "none": "None"
+      },
       "none": "No cover chosen.",
       "upload": "Upload image",
       "choose": "Use a book cover",
@@ -2508,6 +2521,7 @@
   "backup": {
     "title": "Automatic backup",
     "enabled": "Back up automatically",
+    "short": "A copy of your library from time to time.",
     "help": "A copy of your library in the same format as the JSON export. We keep the {n} most recent.",
     "frequency": "Frequency",
     "frequencies": {
@@ -2519,6 +2533,7 @@
     "runNow": "Back up now",
     "queued": "Backup requested. It shows up here in a few minutes.",
     "list": "Saved backups",
+    "none": "None",
     "empty": "No backups yet.",
     "trigger": {
       "scheduled": "automatic",

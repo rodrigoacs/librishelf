@@ -1,5 +1,6 @@
 <template>
   <div class="page loans-page">
+    <PullRefresh :state="pull" />
     <PageHeader
       :title="t('loans.title')"
       :subtitle="t('loans.subtitle')"
@@ -76,8 +77,9 @@
       class="loan-list"
     >
       <li
-        v-for="loan in loans"
+        v-for="(loan, index) in loans"
         :key="loan.id"
+        :style="{ '--i': index }"
       >
         <button
           type="button"
@@ -94,6 +96,10 @@
           />
           <span class="loan-text">
             <span class="loan-title">{{ loan.title }}</span>
+            <span
+              v-if="loan.overdue && !loan.returnedOn"
+              class="late-tag"
+            >{{ t('loans.overdue') }}</span>
             <span class="loan-who">{{ loan.borrower }}</span>
             <span class="loan-when">{{ when(loan) }}</span>
           </span>
@@ -129,6 +135,8 @@ import EmptyState from '../components/ui/EmptyState.vue'
 import BookCover from '../components/BookCover.vue'
 import BookDialog from '../components/BookDialog.vue'
 import ProNotice from '../components/ProNotice.vue'
+import PullRefresh from '../components/ui/PullRefresh.vue'
+import { usePullToRefresh } from '../composables/usePullToRefresh.js'
 import { fromIso } from '../utils/statPeriods.js'
 import { formatMoney } from '../utils/money.js'
 
@@ -182,6 +190,9 @@ function openBook(id) {
 }
 watch(bookDialogOpen, open => { if (!open) load() })
 
+// Puxar para atualizar (celular), como Biblioteca e Comunidade
+const pull = usePullToRefresh(load)
+
 onMounted(load)
 </script>
 
@@ -225,21 +236,26 @@ onMounted(load)
 
 .loan-list {
   display: grid;
-  gap: var(--space-2);
+  /* Desktop: cartões lado a lado em vez de linhas esticadas */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+.loan-list li {
+  display: flex;
+}
+
 .loan-row {
   display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-3);
   width: 100%;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
   border: 1px solid var(--border-color);
-  border-left: 3px solid transparent;
   border-radius: var(--card-radius);
   background: var(--bg-panel);
   color: inherit;
@@ -249,7 +265,27 @@ onMounted(load)
 }
 
 .loan-row.overdue {
-  border-left-color: var(--red);
+  border-color: rgba(var(--red-rgb), 0.45);
+}
+
+.late-tag {
+  align-self: flex-start;
+  margin: var(--space-1) 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: rgba(var(--red-rgb), 0.12);
+  color: var(--red);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+@media (hover: hover) {
+  .loan-row:hover {
+    border-color: rgba(var(--main-color-rgb), 0.5);
+  }
 }
 
 .loan-row:focus-visible {
@@ -258,7 +294,7 @@ onMounted(load)
 }
 
 .loan-cover {
-  width: 2.75rem;
+  width: 3rem;
 }
 
 .loan-text {
@@ -297,6 +333,31 @@ onMounted(load)
   .status-select {
     min-width: 0;
     width: 100%;
+  }
+
+  .loans-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  /* Cascata ao entrar, como o feed da Comunidade */
+  .loan-list li {
+    animation: loan-in var(--dur-medium) var(--ease-enter) both;
+    animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));
+  }
+}
+
+@keyframes loan-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loan-list li {
+    animation: none !important;
   }
 }
 </style>

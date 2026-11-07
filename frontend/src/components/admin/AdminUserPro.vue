@@ -296,7 +296,7 @@ h3 {
 .list li {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--space-1);
 }
 
 .line {
@@ -317,7 +317,7 @@ h3 {
   font-size: var(--fs-xs);
   font-weight: 600;
   border-radius: var(--radius-pill);
-  padding: 0.1rem var(--space-2);
+  padding: var(--space-1) var(--space-2);
   color: var(--text-primary);
 }
 

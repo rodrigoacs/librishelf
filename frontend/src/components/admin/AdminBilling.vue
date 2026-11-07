@@ -630,7 +630,7 @@ tbody tr:last-child td {
   font-size: var(--fs-xs);
   font-weight: 600;
   border-radius: var(--radius-pill);
-  padding: 0.1rem var(--space-2);
+  padding: var(--space-1) var(--space-2);
   background: var(--bg-input);
   color: var(--text-secondary);
   white-space: nowrap;
@@ -690,8 +690,8 @@ tbody tr:last-child td {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-pill);
-  padding: 0.2rem;
-  gap: 0.2rem;
+  padding: var(--space-1);
+  gap: var(--space-1);
 }
 
 .filter {

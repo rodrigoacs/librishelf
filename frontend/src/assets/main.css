@@ -786,7 +786,8 @@ body {
   .title-btn,
   .tag-bar-row,
   .author-row,
-  .skip-link {
+  .skip-link,
+  .link-button {
     min-height: 2.75rem !important;
   }
 
@@ -794,7 +795,8 @@ body {
   .view-btn,
   .rename-btn,
   .reveal-btn,
-  .star-btn {
+  .star-btn,
+  .photo-remove {
     min-width: 2.75rem !important;
     min-height: 2.75rem !important;
   }

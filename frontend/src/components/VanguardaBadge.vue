@@ -23,14 +23,15 @@ const { t } = useI18n()
 .vanguarda-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.1rem var(--space-2);
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
   border: 1px solid rgba(var(--main-color-rgb), 0.45);
   border-radius: var(--radius-pill);
   color: var(--text-primary);
   font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.02em;
+  line-height: 1.6;
   white-space: nowrap;
   vertical-align: middle;
   /* Dentro de coluna flex (Conta): não estica */
@@ -39,7 +40,7 @@ const { t } = useI18n()
 }
 
 .vanguarda-badge .pi {
-  font-size: 0.7em;
+  font-size: var(--fs-2xs);
   color: var(--main-color);
 }
 </style>

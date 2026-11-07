@@ -7,10 +7,11 @@
     :aria-labelledby="titleId"
   >
     <div class="pro-notice-text">
-      <h2
+      <!-- Não é título de seção: fica dentro de seções que já têm o seu -->
+      <p
         :id="titleId"
-        class="section-title"
-      >{{ t('pro.notice.title') }}</h2>
+        class="pro-notice-title"
+      >{{ t('pro.notice.title') }}</p>
       <p class="pro-notice-body">{{ readonly ? t('pro.notice.readonly') : t(`pro.features.${feature}.desc`) }}</p>
       <p
         v-if="endedAt"
@@ -86,10 +87,9 @@ async function startTrial() {
   justify-content: space-between;
   gap: var(--space-3) var(--space-5);
   padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--main-color);
+  border: 1px solid rgba(var(--main-color-rgb), 0.3);
   border-radius: var(--card-radius);
-  background: var(--bg-panel);
+  background: rgba(var(--main-color-rgb), 0.06);
 }
 
 .pro-notice.compact {
@@ -101,8 +101,11 @@ async function startTrial() {
   min-width: 0;
 }
 
-.section-title {
+.pro-notice-title {
   margin: 0 0 var(--space-1);
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  font-weight: 700;
 }
 
 .pro-notice-body,
@@ -125,6 +128,9 @@ async function startTrial() {
 }
 
 .pro-notice-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   color: var(--main-color);
   font-size: var(--fs-sm);
   font-weight: 600;
