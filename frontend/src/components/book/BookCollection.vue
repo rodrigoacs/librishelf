@@ -268,7 +268,6 @@
                 >
               </a>
               <button
-                v-if="canUse('collector')"
                 type="button"
                 class="photo-remove"
                 :aria-label="t('collection.photos.remove')"

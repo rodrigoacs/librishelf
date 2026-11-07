@@ -472,7 +472,7 @@ import { useConfirm } from '../services/confirm.js'
 import { tagColor, colorFor } from '../utils/tagColors.js'
 import { fromApiDate } from '../utils/dates.js'
 import { setRobots } from '../services/pageTitle.js'
-import { coverUrl as profileCoverSrc } from '../utils/covers.js'
+import { profileCoverUrl as profileCoverSrc } from '../utils/profileCover.js'
 
 const PAGE_SIZE = 20
 
@@ -487,7 +487,7 @@ const profile = ref(null)
 // Capa de fundo escolhida no Pro (continua aparecendo se o Pro acabar)
 const profileCoverUrl = computed(() => {
   const cover = profile.value?.profileCover
-  return cover ? profileCoverSrc(cover.bookId, cover.version) : null
+  return profileCoverSrc(profile.value?.username, cover)
 })
 const followBusy = ref(false)
 const openedBookId = ref(null)

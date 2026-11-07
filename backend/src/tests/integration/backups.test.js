@@ -137,11 +137,25 @@ describe('backup automático', () => {
       const { body } = await request(app).get('/backups').set(auth('pro'))
       expect(body.backups).toHaveLength(2)
       expect((await request(app).get(`/backups/${body.backups[0].id}/download`).set(auth('pro'))).status).toBe(200)
-      expect((await request(app).delete(`/backups/${body.backups[0].id}`).set(auth('pro'))).body.code).toBe('PRO_REQUIRED')
       expect((await request(app).put('/backups/settings').set(auth('pro')).send({ enabled: false })).body.code).toBe('PRO_REQUIRED')
     } finally {
       await setPro('pro', true)
     }
+  })
+
+  test('sem Pro: excluir um backup continua permitido', async () => {
+    const before = (await request(app).get('/backups').set(auth('pro'))).body.backups
+    const last = before[before.length - 1]
+    await setPro('pro', false)
+    try {
+      expect((await request(app).delete(`/backups/${last.id}`).set(auth('pro'))).status).toBe(204)
+      await expect(fs.access(backupPath(ids.pro, last.id))).rejects.toThrow()
+    } finally {
+      await setPro('pro', true)
+    }
+    // Repõe um para o teste seguinte
+    const { create } = await import('../../services/backupService.js')
+    await create({ userId: ids.pro, trigger: 'manual' })
   })
 
   test('com Pro: excluir um backup tira o arquivo; opção inválida é recusada', async () => {

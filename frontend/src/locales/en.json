@@ -1227,6 +1227,7 @@
     "PHOTO_NOT_FOUND": "Photo not found.",
     "PERSONALIZATION_INVALID": "Invalid personalization option.",
     "PROFILE_COVER_INVALID": "Choose one of your books that has a cover.",
+    "EMAIL_NOT_VERIFIED_COVER": "Confirm your email to upload a profile cover.",
     "BACKUP_OPTION_INVALID": "Invalid backup option.",
     "BACKUP_TOO_SOON": "You already requested a backup this hour. Try again later.",
     "BACKUP_NOT_FOUND": "Backup not found."
@@ -2497,10 +2498,10 @@
       "title": "Background cover on your public profile",
       "current": "Chosen cover",
       "none": "No cover chosen.",
-      "choose": "Choose cover",
-      "change": "Change cover",
+      "upload": "Upload image",
+      "choose": "Use a book cover",
       "remove": "Remove cover",
-      "help": "Shows at the top of your public library. Only your books that have a cover.",
+      "help": "Shows at the top of your public library. Upload an image of your own (up to 10 MB) or use the cover of a book on your shelf.",
       "empty": "No books with a cover yet."
     }
   },

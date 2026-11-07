@@ -123,23 +123,42 @@
         <span class="option-label">{{ t('personalization.cover.title') }}</span>
         <div class="cover-row">
           <img
-            v-if="chosen.profileCover"
-            :src="coverUrl(chosen.profileCover.bookId, chosen.profileCover.version)"
+            v-if="currentCoverUrl"
+            :src="currentCoverUrl"
             :alt="t('personalization.cover.current')"
             class="cover-current"
+            :class="{ wide: chosen.profileCover?.kind === 'image' }"
           >
           <p
             v-else
             class="option-help"
           >{{ t('personalization.cover.none') }}</p>
           <div class="cover-actions">
-            <AppButton
-              v-if="pro"
-              :label="chosen.profileCover ? t('personalization.cover.change') : t('personalization.cover.choose')"
-              class="btn-sm btn-secondary"
-              :loading="coversLoading"
-              @click="openCovers"
-            />
+            <template v-if="pro">
+              <input
+                ref="imageInput"
+                type="file"
+                accept="image/*"
+                class="sr-only"
+                :aria-label="t('personalization.cover.upload')"
+                @change="uploadImage"
+              >
+              <AppButton
+                :label="t('personalization.cover.upload')"
+                icon="pi pi-image"
+                class="btn-sm btn-secondary"
+                :loading="uploading"
+                :disabled="busy"
+                @click="imageInput?.click()"
+              />
+              <AppButton
+                :label="t('personalization.cover.choose')"
+                class="btn-sm btn-secondary"
+                :loading="coversLoading"
+                :disabled="busy"
+                @click="openCovers"
+              />
+            </template>
             <button
               v-if="chosen.profileCover"
               type="button"
@@ -196,6 +215,7 @@ import { currentUser } from '../../services/session.js'
 import { usePlan } from '../../services/plan.js'
 import { useToast } from '../../services/toast.js'
 import { coverUrl } from '../../utils/covers.js'
+import { profileCoverUrl } from '../../utils/profileCover.js'
 import { PRO_PALETTES, PRO_ACCENTS, APP_ICONS } from '../../composables/useTheme.js'
 import AppButton from '../ui/AppButton.vue'
 import ProNotice from '../ProNotice.vue'
@@ -218,17 +238,22 @@ const iconOptions = computed(() => withDefault(APP_ICONS, 'icon'))
 
 const busy = ref(false)
 
+const currentCoverUrl = computed(() => profileCoverUrl(currentUser.value?.name, chosen.value.profileCover))
+
 const FIELD = { palette: 'palette', accent: 'accent', appIcon: 'appIcon', profileCover: 'profileCoverBookId' }
 
 // O /auth/me guarda a personalização; trocar aqui troca o tema na hora (useTheme observa)
+function keep(fresh) {
+  if (currentUser.value) currentUser.value.personalization = { palette: fresh.palette, accent: fresh.accent, appIcon: fresh.appIcon, profileCover: fresh.profileCover }
+}
+
 async function choose(item, value) {
   if (chosen.value[item] === value && item !== 'profileCover') return
   busy.value = true
   try {
-    const fresh = value === null
+    keep(value === null
       ? await api.resetPersonalization(item)
-      : await api.savePersonalization({ [FIELD[item]]: value })
-    if (currentUser.value) currentUser.value.personalization = { palette: fresh.palette, accent: fresh.accent, appIcon: fresh.appIcon, profileCover: fresh.profileCover }
+      : await api.savePersonalization({ [FIELD[item]]: value }))
   } catch (error) {
     toast.add({ severity: 'error', detail: error.message })
   } finally {
@@ -259,6 +284,32 @@ async function openCovers() {
 async function pickCover(cover) {
   await choose('profileCover', cover.bookId)
   coversOpen.value = false
+}
+
+// Imagem qualquer do aparelho: o servidor reduz, gira pela câmera e tira o EXIF
+const MAX_IMAGE_MB = 10
+const imageInput = ref(null)
+const uploading = ref(false)
+
+async function uploadImage(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+    toast.add({ severity: 'error', detail: t('errors.IMAGE_TOO_LARGE', { max: MAX_IMAGE_MB }) })
+    return
+  }
+  uploading.value = true
+  busy.value = true
+  try {
+    keep(await api.uploadProfileCoverImage(file))
+    coversOpen.value = false
+  } catch (error) {
+    toast.add({ severity: 'error', detail: error.message })
+  } finally {
+    uploading.value = false
+    busy.value = false
+  }
 }
 </script>
 
@@ -416,8 +467,14 @@ async function pickCover(cover) {
   border-radius: var(--radius-sm);
 }
 
+.cover-current.wide {
+  width: 9rem;
+  aspect-ratio: 16 / 9;
+}
+
 .cover-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
 }

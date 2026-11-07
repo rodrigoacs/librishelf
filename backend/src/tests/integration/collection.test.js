@@ -236,6 +236,19 @@ describe('fotos do exemplar (Pro, com cota)', () => {
     const duna = (await db.query('SELECT id FROM librishelf.copy_photos WHERE book_id = $1', [books.duna])).rows
     await expect(fs.access(photoPath(ids.dona, books.duna, duna[0].id, 'lg'))).resolves.toBeUndefined()
   })
+
+  test('sem Pro: enviar é recusado, mas excluir a própria foto continua permitido', async () => {
+    const [own] = (await db.query('SELECT id FROM librishelf.copy_photos WHERE book_id = $1 ORDER BY id', [books.duna])).rows
+    await endPro('dona')
+    try {
+      expect((await upload('dona', books.duna)).body.code).toBe('PRO_REQUIRED')
+      expect((await request(app).delete(`/collection/books/${books.duna}/photos/${own.id}`).set(auth('outra'))).status).toBe(404)
+      expect((await request(app).delete(`/collection/books/${books.duna}/photos/${own.id}`).set(auth('dona'))).status).toBe(204)
+      await expect(fs.access(photoPath(ids.dona, books.duna, own.id, 'lg'))).rejects.toThrow()
+    } finally {
+      await restorePro('dona')
+    }
+  })
 })
 
 describe('lembrete de empréstimo por e-mail (Pro)', () => {

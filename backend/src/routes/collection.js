@@ -12,8 +12,9 @@ import sendError from '../utils/sendError.js'
 /**
  * Coleção (pacote 28).
  *   Grátis: /collection/loans…, /collection/books/:id/loan (empréstimo básico)
- *   Pro (collector), só a escrita: exemplar, fotos e lembrete por e-mail.
- *   Sem Pro, tudo continua visível (GET) e nada é excluído.
+ *   Pro (collector), só a escrita: exemplar, enviar foto e lembrete por e-mail.
+ *   Sem Pro, tudo continua visível (GET), nada é apagado sozinho e a pessoa
+ *   ainda pode excluir as próprias fotos.
  */
 const router = express.Router()
 router.use(authenticateToken)
@@ -75,14 +76,15 @@ router.post('/loans/:loanId/return', loanId, handle('Erro ao registrar a devolu�
 router.delete('/loans/:loanId', loanId, handle('Erro ao excluir o empréstimo',
   req => collectionService.deleteLoan(req.user.id, num(req.params.loanId)), STATUS.NO_CONTENT))
 
-// Pro: lembrete por e-mail, exemplar e fotos
+// Pro: lembrete por e-mail, exemplar e enviar foto
 router.put('/loans/:loanId/reminder', loanId, collector, handle('Erro ao mudar o lembrete',
   req => collectionService.setReminder(req.user.id, num(req.params.loanId), req.body?.remind)))
 router.put('/books/:id/copy', id, collector, handle('Erro ao salvar o exemplar',
   req => collectionService.saveCopy(req.user.id, num(req.params.id), req.body)))
 router.post('/books/:id/photos', id, collector, uploadLimiter, photoField, handle('Erro ao enviar a foto',
   req => collectionService.addPhoto(req.user.id, num(req.params.id), req.file), STATUS.CREATED))
-router.delete('/books/:id/photos/:photoId', id, photoId, collector, handle('Erro ao excluir a foto',
+// Excluir foto: grátis (o que é da pessoa nunca fica preso)
+router.delete('/books/:id/photos/:photoId', id, photoId, handle('Erro ao excluir a foto',
   req => collectionService.deletePhoto(req.user.id, num(req.params.id), num(req.params.photoId)), STATUS.NO_CONTENT))
 
 // Foto: só para a dona do livro (?size=sm|lg)

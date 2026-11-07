@@ -2152,6 +2152,17 @@ BEGIN
 END $$;
 
 CREATE INDEX IF NOT EXISTS idx_users_profile_cover ON librishelf.users (profile_cover_book_id) WHERE profile_cover_book_id IS NOT NULL;
+
+-- Migration 025: capa de fundo por imagem enviada (ou livro, ou imagem)
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS profile_cover_image_version integer;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_profile_cover_one_source' AND conrelid = 'librishelf.users'::regclass) THEN
+    ALTER TABLE librishelf.users ADD CONSTRAINT users_profile_cover_one_source
+      CHECK (profile_cover_book_id IS NULL OR profile_cover_image_version IS NULL);
+  END IF;
+END $$;
 INSERT INTO librishelf.schema_migrations (version) VALUES ('023_personalization') ON CONFLICT (version) DO NOTHING;
 
 -- 024_backups

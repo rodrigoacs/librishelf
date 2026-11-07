@@ -16,6 +16,7 @@ import communityRoutes from './routes/community.js'
 import socialRoutes from './routes/social.js'
 import uploadsRoutes from './routes/uploads.js'
 import avatarRoutes from './routes/avatars.js'
+import profileCoverRoutes from './routes/profileCovers.js'
 import metaRoutes from './routes/meta.js'
 import emailRoutes from './routes/email.js'
 import reviewRoutes from './routes/reviews.js'
@@ -41,6 +42,7 @@ app.use(cookieParser())
 // Capas: só o dono, ou qualquer um quando a biblioteca é pública.
 app.use('/uploads', uploadsRoutes)
 app.use('/avatars', avatarRoutes)
+app.use('/profile-covers', profileCoverRoutes)
 
 app.use('/auth', authRoutes)
 app.use('/library', libraryRoutes)

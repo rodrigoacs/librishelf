@@ -441,6 +441,12 @@ export default {
     return client.delete(`/personalization/${item}`)
   },
 
+  uploadProfileCoverImage(file) {
+    const formData = new FormData()
+    formData.append('image', file, file.name || 'capa.jpg')
+    return client.put('/personalization/cover-image', formData)
+  },
+
   getPersonalizationCovers() {
     return client.get('/personalization/covers')
   },

@@ -114,7 +114,6 @@
                 download
               >{{ t('backup.download') }}</a>
               <button
-                v-if="pro"
                 type="button"
                 class="link-button danger"
                 :disabled="busy"

@@ -6,6 +6,7 @@ import { validatePassword } from '../utils/passwordPolicy.js'
 import { deleteBookCover } from '../utils/imageProcessor.js'
 import { removeUserPhotoFiles } from './collectionService.js'
 import { removeUserFiles as removeBackupFiles } from './backupService.js'
+import { removeUserFiles as removeProfileCoverFiles } from './personalizationService.js'
 import logger from '../utils/logger.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -479,6 +480,7 @@ async function deleteAccount(userId, password) {
   await removeAvatarFiles(userId).catch(err => logger.warn('Foto de perfil não removida na exclusão de conta', { userId, message: err.message }))
   await removeUserPhotoFiles(userId).catch(err => logger.warn('Fotos de exemplar não removidas na exclusão de conta', { userId, message: err.message }))
   await removeBackupFiles(userId).catch(err => logger.warn('Backups não removidos na exclusão de conta', { userId, message: err.message }))
+  await removeProfileCoverFiles(userId).catch(err => logger.warn('Capa de perfil não removida na exclusão de conta', { userId, message: err.message }))
 
   logger.info('Conta excluída', { userId, books: bookIds.length })
 }

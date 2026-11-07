@@ -1227,6 +1227,7 @@
     "PHOTO_NOT_FOUND": "Foto não encontrada.",
     "PERSONALIZATION_INVALID": "Opção de personalização inválida.",
     "PROFILE_COVER_INVALID": "Escolha um livro seu que tenha capa.",
+    "EMAIL_NOT_VERIFIED_COVER": "Confirme seu e-mail para enviar uma capa de perfil.",
     "BACKUP_OPTION_INVALID": "Opção de backup inválida.",
     "BACKUP_TOO_SOON": "Você já pediu um backup nesta hora. Tente de novo mais tarde.",
     "BACKUP_NOT_FOUND": "Backup não encontrado."
@@ -2497,10 +2498,10 @@
       "title": "Capa de fundo no perfil público",
       "current": "Capa escolhida",
       "none": "Nenhuma capa escolhida.",
-      "choose": "Escolher capa",
-      "change": "Trocar capa",
+      "upload": "Enviar imagem",
+      "choose": "Usar capa de livro",
       "remove": "Tirar capa",
-      "help": "Aparece no alto da sua biblioteca pública. Só livros seus que têm capa.",
+      "help": "Aparece no alto da sua biblioteca pública. Envie uma imagem sua (até 10 MB) ou use a capa de um livro da estante.",
       "empty": "Nenhum livro com capa ainda."
     }
   },

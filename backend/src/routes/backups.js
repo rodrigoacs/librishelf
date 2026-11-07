@@ -8,12 +8,14 @@ import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 
 /**
- * Backup automático (pacote 30). Ler e baixar: sempre (sem Pro também,
- * nada é excluído). Mudar, pedir agora e excluir: Pro (auto_backup).
+ * Backup automático (pacote 30). Ler, baixar e excluir: sempre (sem Pro
+ * também; o que é da pessoa nunca fica preso). Mudar e pedir agora: Pro
+ * (auto_backup).
  */
 const router = express.Router()
 router.use(authenticateToken)
-router.use(requireProForWrites('auto_backup'))
+
+const pro = requireProForWrites('auto_backup')
 
 const id = validateNumericId()
 
@@ -25,7 +27,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.put('/settings', async (req, res) => {
+router.put('/settings', pro, async (req, res) => {
   try {
     res.status(STATUS.OK).json(await backupService.saveSettings(req.user.id, req.body))
   } catch (error) {
@@ -33,7 +35,7 @@ router.put('/settings', async (req, res) => {
   }
 })
 
-router.post('/run', async (req, res) => {
+router.post('/run', pro, async (req, res) => {
   try {
     res.status(202).json(await backupService.requestNow(req.user.id))
   } catch (error) {

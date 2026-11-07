@@ -95,4 +95,40 @@ async function deleteAvatar(userId) {
     fs.unlink(avatarPath(userId, size, ext)).catch(() => { }))))
 }
 
-export { saveBookCover, deleteBookCover, isValidImage, saveAvatar, deleteAvatar, AVATAR_DIR }
+// ------------------------------------------------- capa de fundo do perfil
+
+// Faixa larga no alto da biblioteca pública (aparece desfocada): 1600 px
+// bastam até em tela retina. Gira pela câmera e sai sem EXIF/GPS.
+const PROFILE_COVER_DIR = path.join(UPLOAD_DIR, 'profile-covers')
+const PROFILE_COVER_MAX = { width: 1600, height: 1000 }
+
+function profileCoverPath(userId, ext) {
+  return path.join(PROFILE_COVER_DIR, `${userId}.${ext}`)
+}
+
+async function saveProfileCover(buffer, userId) {
+  let meta
+  try {
+    meta = await sharp(buffer, { limitInputPixels: MAX_AVATAR_PIXELS }).metadata()
+  } catch {
+    throw httpError('Arquivo enviado não é uma imagem válida.', 400, 'IMAGE_INVALID')
+  }
+  if (!meta.width || !meta.height || !meta.format) throw httpError('Arquivo enviado não é uma imagem válida.', 400, 'IMAGE_INVALID')
+
+  await fs.mkdir(PROFILE_COVER_DIR, { recursive: true })
+  const base = sharp(buffer, { limitInputPixels: MAX_AVATAR_PIXELS }).rotate()
+    .resize({ ...PROFILE_COVER_MAX, fit: 'inside', withoutEnlargement: true })
+  await Promise.all([
+    base.clone().jpeg({ quality: JPEG_QUALITY, mozjpeg: true }).toFile(profileCoverPath(userId, 'jpg')),
+    base.clone().avif({ quality: AVIF_QUALITY, effort: 4 }).toFile(profileCoverPath(userId, 'avif'))
+  ])
+}
+
+async function deleteProfileCover(userId) {
+  await Promise.all(['jpg', 'avif'].map(ext => fs.unlink(profileCoverPath(userId, ext)).catch(() => { })))
+}
+
+export {
+  saveBookCover, deleteBookCover, isValidImage, saveAvatar, deleteAvatar, AVATAR_DIR,
+  saveProfileCover, deleteProfileCover, profileCoverPath, PROFILE_COVER_DIR
+}

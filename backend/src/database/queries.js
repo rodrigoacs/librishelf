@@ -2761,19 +2761,38 @@ export const COLLECTION_QUERIES = {
 // ---------------------------------------------------------------------------
 export const PERSONALIZATION_QUERIES = {
   GET: `
-    SELECT u.ui_palette, u.ui_accent, u.app_icon, u.profile_cover_book_id, b.cover_version AS profile_cover_version
+    SELECT u.ui_palette, u.ui_accent, u.app_icon, u.profile_cover_book_id, b.cover_version AS profile_cover_version,
+           u.profile_cover_image_version
     FROM librishelf.users u
     LEFT JOIN librishelf.books b ON b.id = u.profile_cover_book_id AND b.user_id = u.id
     WHERE u.id = $1
   `,
-  // $2..$5: valor novo; $6..$9: mudar aquele campo?
+  // $2..$5: valor novo; $6..$9: mudar aquele campo? Mudar a capa (livro ou
+  // nenhuma) sempre tira a imagem enviada. Devolve se havia imagem (para
+  // apagar o arquivo).
   UPDATE: `
-    UPDATE librishelf.users SET
-      ui_palette = CASE WHEN $6 THEN $2 ELSE ui_palette END,
-      ui_accent = CASE WHEN $7 THEN $3 ELSE ui_accent END,
-      app_icon = CASE WHEN $8 THEN $4 ELSE app_icon END,
-      profile_cover_book_id = CASE WHEN $9 THEN $5::int ELSE profile_cover_book_id END
+    UPDATE librishelf.users u SET
+      ui_palette = CASE WHEN $6 THEN $2 ELSE u.ui_palette END,
+      ui_accent = CASE WHEN $7 THEN $3 ELSE u.ui_accent END,
+      app_icon = CASE WHEN $8 THEN $4 ELSE u.app_icon END,
+      profile_cover_book_id = CASE WHEN $9 THEN $5::int ELSE u.profile_cover_book_id END,
+      profile_cover_image_version = CASE WHEN $9 THEN NULL ELSE u.profile_cover_image_version END
+    FROM librishelf.users old
+    WHERE u.id = $1 AND old.id = u.id
+    RETURNING old.profile_cover_image_version AS had_image
+  `,
+  // Imagem enviada: nova versão (fura o cache) e o livro sai
+  SET_IMAGE: `
+    UPDATE librishelf.users
+    SET profile_cover_image_version = COALESCE(profile_cover_image_version, 0) + 1,
+        profile_cover_book_id = NULL
     WHERE id = $1
+  `,
+  // Arquivo da imagem: quem pode ver (biblioteca pública ou a própria pessoa)
+  IMAGE_ACCESS: `
+    SELECT u.id, u.is_public, u.profile_cover_image_version
+    FROM librishelf.users u
+    WHERE lower(u.name) = lower($1) AND u.is_active IS NOT FALSE AND u.profile_cover_image_version IS NOT NULL
   `,
   BOOK_WITH_COVER: 'SELECT id FROM librishelf.books WHERE id = $1 AND user_id = $2 AND cover_version IS NOT NULL',
   COVERS: `
@@ -2782,12 +2801,13 @@ export const PERSONALIZATION_QUERIES = {
     ORDER BY lower(title), id
     LIMIT 300
   `,
-  // Capa de fundo no perfil público: só livro da própria pessoa e com capa
+  // Capa de fundo no perfil público: imagem enviada, ou livro da própria
+  // pessoa e com capa
   PUBLIC_COVER: `
-    SELECT b.id, b.cover_version
+    SELECT u.profile_cover_image_version, b.id, b.cover_version
     FROM librishelf.users u
-    JOIN librishelf.books b ON b.id = u.profile_cover_book_id AND b.user_id = u.id
-    WHERE u.id = $1 AND b.cover_version IS NOT NULL
+    LEFT JOIN librishelf.books b ON b.id = u.profile_cover_book_id AND b.user_id = u.id AND b.cover_version IS NOT NULL
+    WHERE u.id = $1
   `
 }
 
