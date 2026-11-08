@@ -238,7 +238,11 @@ describe('fotos do exemplar (Pro, com cota)', () => {
   })
 
   test('sem Pro: enviar é recusado, mas excluir a própria foto continua permitido', async () => {
-    const [own] = (await db.query('SELECT id FROM librishelf.copy_photos WHERE book_id = $1 ORDER BY id', [books.duna])).rows
+    // Foto extra só para este teste: sai no fim e o Duna volta a ter as 2
+    // que a exportação, mais abaixo, conta
+    const added = await upload('dona', books.duna)
+    expect(added.status).toBe(201)
+    const own = { id: added.body.id }
     await endPro('dona')
     try {
       expect((await upload('dona', books.duna)).body.code).toBe('PRO_REQUIRED')
