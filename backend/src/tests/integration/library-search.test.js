@@ -19,7 +19,7 @@ async function search(text) {
 
 beforeAll(async () => {
   await clearDatabase()
-  await request(app).post('/auth/register').send({ username: 'busca', password: 'senha12345', email: 'busca@example.com' })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: 'busca', password: 'senha12345', email: 'busca@example.com' })
   auth = { Authorization: `Bearer ${tokenFrom(await request(app).post('/auth/login').send({ username: 'busca', password: 'senha12345' }))}` }
 
   await addBook({ title: 'Fundação', authors: 'Isaac Asimov', isbn: '9788576570653' })

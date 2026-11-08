@@ -8,7 +8,7 @@ import { clearDatabase, closeDatabase } from '../../utils/db.js'
 const PASSWORD = 'senha12345'
 
 async function publicUser(name) {
-  await request(app).post('/auth/register').send({ username: name, password: PASSWORD, email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: PASSWORD, email: `${name}@example.com` })
   await confirmEmail(name)
   const token = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: PASSWORD }))
   await request(app).patch('/auth/me/visibility').set({ Authorization: `Bearer ${token}` }).send({ isPublic: true })

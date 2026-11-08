@@ -15,7 +15,7 @@ function lastLink(to, path) {
 }
 
 async function register(name, locale) {
-  const res = await request(app).post('/auth/register').send({ username: name, password: PASSWORD, email: `${name}@example.com`, locale })
+  const res = await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: PASSWORD, email: `${name}@example.com`, locale })
   expect(res.statusCode).toBe(201)
   return res.body.user
 }

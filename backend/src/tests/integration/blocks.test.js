@@ -8,7 +8,7 @@ const tokens = {}
 const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
 
 async function signUp(name) {
-  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `${name}@example.com` })
   await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))
   // Biblioteca pública + comunidade + aceita seguidores
@@ -32,7 +32,7 @@ afterAll(async () => {
 
 describe('Códigos de erro', () => {
   it('erro controlado leva code e params', async () => {
-    const res = await request(app).post('/auth/register').send({ username: 'x'.repeat(60), password: 'senha12345', email: 'x@example.com' })
+    const res = await request(app).post('/auth/register').send({ acceptTerms: true, username: 'x'.repeat(60), password: 'senha12345', email: 'x@example.com' })
     expect(res.statusCode).toBe(400)
     expect(res.body).toMatchObject({ code: 'USERNAME_TOO_LONG', params: { max: expect.any(Number) } })
     expect(typeof res.body.error).toBe('string')
@@ -54,7 +54,7 @@ describe('Códigos de erro', () => {
 
 describe('Nomes reservados', () => {
   it.each(['admin', 'Suporte', 's.u.p.o.r.t.e', 'librishelf_oficial', 'Ádmin'])('"%s" não pode ser cadastrado', async (name) => {
-    const res = await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `r${Date.now()}@example.com` })
+    const res = await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `r${Date.now()}@example.com` })
     expect(res.statusCode).toBe(400)
     expect(res.body.code).toBe('USERNAME_RESERVED')
   })

@@ -163,7 +163,7 @@ describe('lembrete de renovação', () => {
 
 describe('teste grátis', () => {
   async function signUp(name) {
-    await request(app).post('/auth/register').send({ username: name, password: PASSWORD, email: `${name}@example.com` })
+    await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: PASSWORD, email: `${name}@example.com` })
     await confirmEmail(name)
     const token = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: PASSWORD }))
     const id = (await db.query('SELECT id FROM librishelf.users WHERE name = $1', [name])).rows[0].id

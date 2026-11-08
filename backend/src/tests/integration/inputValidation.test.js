@@ -10,7 +10,7 @@ const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
 const thisYear = new Date().getUTCFullYear()
 
 async function signUp(name) {
-  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `${name}@example.com` })
   await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))
 }
@@ -139,7 +139,7 @@ describe('B2 · todo erro com código', () => {
   })
 
   it('cadastro sem campos → REGISTER_FIELDS_REQUIRED', async () => {
-    const res = await request(app).post('/auth/register').send({})
+    const res = await request(app).post('/auth/register').send({ acceptTerms: true, })
     expect(res.body.code).toBe('REGISTER_FIELDS_REQUIRED')
   })
 

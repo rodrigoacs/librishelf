@@ -12,7 +12,7 @@ const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
 const ISBN = '9780140328721'
 
 async function signUp(name, visibility) {
-  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `${name}@example.com` })
   await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))
   await request(app).patch('/auth/me/visibility').set(auth(name)).send(visibility)

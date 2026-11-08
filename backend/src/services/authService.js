@@ -1,5 +1,6 @@
 import * as authRepository from '../repositories/authRepository.js'
 import * as vanguardaService from './vanguardaService.js'
+import * as subscriptionService from './subscriptionService.js'
 import { removeFiles as removeAvatarFiles } from './avatarService.js'
 import STATUS from '../utils/statusCodes.js'
 import { validatePassword } from '../utils/passwordPolicy.js'
@@ -19,6 +20,7 @@ import { httpError } from '../utils/httpError.js'
 import { isReservedUsername } from '../utils/reservedNames.js'
 import { isValidEmail, normalizeEmail } from '../utils/email.js'
 import { sessionKey } from '../utils/keys.js'
+import { TERMS_VERSION } from '../config/terms.js'
 
 const TOKEN_TTL = '7d'
 const BCRYPT_ROUNDS = 10
@@ -136,9 +138,14 @@ async function getUserProfile(id) {
   return user ? toProfile(user) : null
 }
 
-async function registerUser(username, password, email, locale) {
+async function registerUser(username, password, email, locale, acceptTerms) {
   if (!isNonEmptyString(username) || !isNonEmptyString(email)) {
     throw httpError('Informe usuário, senha e e-mail.', STATUS.BAD_REQUEST, 'REGISTER_FIELDS_REQUIRED')
+  }
+
+  // A caixa do cadastro: idade mínima, Termos de Uso e Política de Privacidade
+  if (acceptTerms !== true) {
+    throw httpError('Aceite os Termos de Uso e a Política de Privacidade para criar a conta.', STATUS.BAD_REQUEST, 'TERMS_REQUIRED')
   }
 
   const cleanUsername = username.trim()
@@ -176,7 +183,7 @@ async function registerUser(username, password, email, locale) {
 
   let created
   try {
-    created = await authRepository.createUser(cleanUsername, hashedPassword, cleanEmail)
+    created = await authRepository.createUser(cleanUsername, hashedPassword, cleanEmail, TERMS_VERSION)
   } catch (err) {
     // Duas requisições simultâneas passam pela checagem acima; os índices
     // únicos do banco (lower(name), lower(email)) decidem, e a violação vira
@@ -466,6 +473,9 @@ async function changeUsername(userId, password, newName) {
 
 async function deleteAccount(userId, password) {
   await verifyCurrentPassword(userId, password)
+
+  // Antes de tudo: sem isso, o cartão seguiria sendo cobrado todo mês
+  await subscriptionService.stopForAccountDeletion(userId)
 
   const bookIds = await authRepository.deleteUser(userId)
 

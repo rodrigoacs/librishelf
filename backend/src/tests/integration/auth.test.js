@@ -16,7 +16,8 @@ describe('Auth Endpoints', () => {
   const mockUser = {
     username: 'testuser',
     password: 'password123',
-    email: 'test@example.com'
+    email: 'test@example.com',
+    acceptTerms: true
   }
 
   it('should register a new user', async () => {
@@ -79,7 +80,7 @@ describe('Auth Endpoints', () => {
   it('should reject registration with a password shorter than 8 characters', async () => {
     const res = await request(app)
       .post('/auth/register')
-      .send({ username: 'weakpassuser', password: '1234567', email: 'weakpass@example.com' })
+      .send({ acceptTerms: true, username: 'weakpassuser', password: '1234567', email: 'weakpass@example.com' })
 
     expect(res.statusCode).toEqual(400)
   })
@@ -87,7 +88,7 @@ describe('Auth Endpoints', () => {
   it('should reject registration with a password that has no letters', async () => {
     const res = await request(app)
       .post('/auth/register')
-      .send({ username: 'onlynumbersuser', password: '12345678', email: 'onlynumbers@example.com' })
+      .send({ acceptTerms: true, username: 'onlynumbersuser', password: '12345678', email: 'onlynumbers@example.com' })
 
     expect(res.statusCode).toEqual(400)
   })
@@ -95,7 +96,7 @@ describe('Auth Endpoints', () => {
   it('should reject registration with a password that has no numbers', async () => {
     const res = await request(app)
       .post('/auth/register')
-      .send({ username: 'onlylettersuser', password: 'abcdefgh', email: 'onlyletters@example.com' })
+      .send({ acceptTerms: true, username: 'onlylettersuser', password: 'abcdefgh', email: 'onlyletters@example.com' })
 
     expect(res.statusCode).toEqual(400)
   })
@@ -103,7 +104,7 @@ describe('Auth Endpoints', () => {
   it('should accept registration with a password meeting the minimum policy', async () => {
     const res = await request(app)
       .post('/auth/register')
-      .send({ username: 'goodpassuser', password: 'abcdefg1', email: 'goodpass@example.com' })
+      .send({ acceptTerms: true, username: 'goodpassuser', password: 'abcdefg1', email: 'goodpass@example.com' })
 
     expect(res.statusCode).toEqual(201)
   })

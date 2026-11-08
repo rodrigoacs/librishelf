@@ -17,7 +17,7 @@ let cover
 let bookId
 
 async function signUp(name) {
-  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `${name}@example.com` })
   await confirmEmail(name)
   const res = await request(app).post('/auth/login').send({ username: name, password: 'senha12345' })
   tokens[name] = tokenFrom(res)

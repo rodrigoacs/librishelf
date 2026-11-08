@@ -8,7 +8,7 @@ let token
 beforeAll(async () => {
   await clearDatabase()
 
-  await request(app).post('/auth/register').send({ username: 'libuser', password: 'testpass123', email: 'libuser@example.com' })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: 'libuser', password: 'testpass123', email: 'libuser@example.com' })
   const res = await request(app).post('/auth/login').send({ username: 'libuser', password: 'testpass123' })
   token = tokenFrom(res)
 })

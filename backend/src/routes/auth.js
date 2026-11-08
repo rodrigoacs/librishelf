@@ -3,6 +3,7 @@ import * as authService from '../services/authService.js'
 import * as dataService from '../services/dataService.js'
 import * as entitlementService from '../services/entitlementService.js'
 import * as personalizationService from '../services/personalizationService.js'
+import * as termsService from '../services/termsService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimiter } from '../middlewares/rateLimiter.js'
@@ -77,13 +78,14 @@ router.get('/me', authenticateToken, async (req, res) => {
     if (!user) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
 
     // Plano, recursos liberados e selos: o servidor decide, o app só mostra
-    const [plan, badges, personalization] = await Promise.all([
+    const [plan, badges, personalization, terms] = await Promise.all([
       entitlementService.planOf(req.user.id),
       entitlementService.badgesOf(req.user.id),
-      personalizationService.get(req.user.id)
+      personalizationService.get(req.user.id),
+      termsService.statusOf(req.user.id)
     ])
 
-    res.status(STATUS.OK).json({ user: { ...user, plan, badges, personalization } })
+    res.status(STATUS.OK).json({ user: { ...user, plan, badges, personalization, terms } })
   } catch (error) {
     sendError(res, error, 'Erro ao buscar usuário')
   }
@@ -91,13 +93,13 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 router.post('/register', registerLimiter, async (req, res) => {
   try {
-    const { username, password, email, locale } = req.body ?? {}
+    const { username, password, email, locale, acceptTerms } = req.body ?? {}
 
     if (!username || !password || !email) {
       throw httpError('Informe usuário, senha e e-mail.', STATUS.BAD_REQUEST, 'REGISTER_FIELDS_REQUIRED')
     }
 
-    const user = await authService.registerUser(username, password, email, locale)
+    const user = await authService.registerUser(username, password, email, locale, acceptTerms)
 
     res.status(STATUS.CREATED).json({ message: 'User registered successfully', user })
   } catch (error) {
@@ -202,6 +204,15 @@ router.get('/me/export', authenticateToken, sensitiveLimiter, track(req => (req.
     res.status(STATUS.OK).json(data)
   } catch (error) {
     sendError(res, error, 'Erro ao exportar dados')
+  }
+})
+
+// Aceite de uma versão nova dos termos: { version } (a que o app mostrou)
+router.post('/me/terms', authenticateToken, async (req, res) => {
+  try {
+    res.status(STATUS.OK).json(await termsService.accept(req.user.id, req.body?.version))
+  } catch (error) {
+    sendError(res, error, 'Erro ao registrar o aceite dos termos')
   }
 })
 

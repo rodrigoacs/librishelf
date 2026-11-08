@@ -327,16 +327,7 @@
         </div>
       </section>
 
-      <router-link
-        to="/privacy"
-        class="privacy-link"
-      >
-        <i
-          class="pi pi-shield"
-          aria-hidden="true"
-        ></i>
-        {{ t('settings.privacyLink') }}
-      </router-link>
+      <LegalLinks class="legal-links-row" />
     </div>
 
     <!-- Foto de perfil -->
@@ -634,6 +625,7 @@ import TextField from '../components/form/TextField.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
 import AvatarCropSheet from '../components/AvatarCropSheet.vue'
 import SettingsRow from '../components/settings/SettingsRow.vue'
+import LegalLinks from '../components/legal/LegalLinks.vue'
 import SettingsPlan from '../components/settings/SettingsPlan.vue'
 import SettingsProfilePage from '../components/settings/SettingsProfilePage.vue'
 import SettingsPersonalization from '../components/settings/SettingsPersonalization.vue'
@@ -1184,20 +1176,12 @@ async function deleteAccount() {
   background: var(--bg-panel);
 }
 
-.privacy-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
+/* Termos de uso · Privacidade, no fim da Conta */
+.legal-links-row {
   min-height: 44px;
   padding: 0 var(--space-4);
   color: var(--text-secondary);
-  text-decoration: none;
   font-size: var(--fs-md);
-  width: fit-content;
-}
-
-.privacy-link:hover {
-  color: var(--main-color);
 }
 
 /* Folhas */

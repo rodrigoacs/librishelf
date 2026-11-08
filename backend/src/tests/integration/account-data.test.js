@@ -12,7 +12,7 @@ const PASSWORD = 'senha12345'
 let auth
 
 async function signUp(name) {
-  await request(app).post('/auth/register').send({ username: name, password: PASSWORD, email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: PASSWORD, email: `${name}@example.com` })
   const res = await request(app).post('/auth/login').send({ username: name, password: PASSWORD })
   return { Authorization: `Bearer ${tokenFrom(res)}` }
 }

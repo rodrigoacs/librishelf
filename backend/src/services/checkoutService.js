@@ -4,6 +4,7 @@ import { CHECKOUT_QUERIES as q } from '../database/queries.js'
 import { transaction } from '../repositories/proGrantRepository.js'
 import * as mercadoPago from './mercadoPago.js'
 import * as subscriptionService from './subscriptionService.js'
+import * as termsService from './termsService.js'
 import { httpError } from '../utils/httpError.js'
 import STATUS from '../utils/statusCodes.js'
 import logger from '../utils/logger.js'
@@ -67,6 +68,8 @@ export async function start(userId, offerCode) {
     if (!buyer.email_verified_at) {
       throw httpError('Confirme seu e-mail para assinar o Pro.', STATUS.FORBIDDEN, 'EMAIL_NOT_VERIFIED_CHECKOUT')
     }
+    // Compra só com os termos vigentes aceitos (preço, renovação e reembolso)
+    await termsService.assertAccepted(userId, client)
 
     const paid = (await client.query(q.ACTIVE_PAID, [userId])).rows[0]
     if (paid.lifetime) throw httpError('Você já tem o Pro vitalício.', STATUS.CONFLICT, 'ALREADY_LIFETIME')

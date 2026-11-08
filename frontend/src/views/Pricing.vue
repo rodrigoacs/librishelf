@@ -117,7 +117,11 @@
           @click="startTrial"
         />
       </div>
-      <p class="fine-print">{{ t('plan.finePrint') }}</p>
+      <LegalText
+        tag="p"
+        class="fine-print"
+        :text="t('plan.finePrint', legalParams())"
+      />
     </section>
 
     <section
@@ -183,6 +187,8 @@ import PublicBar from '../components/PublicBar.vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppSkeleton from '../components/ui/AppSkeleton.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
+import LegalText from '../components/legal/LegalText.vue'
+import { legalParams } from '../utils/legalText.js'
 import api from '../services/api.js'
 import { useToast } from '../services/toast.js'
 import { isAuthenticated } from '../services/session.js'
@@ -481,6 +487,10 @@ onMounted(load)
   color: var(--text-secondary);
   font-size: var(--fs-xs);
   line-height: 1.5;
+}
+
+.fine-print :deep(a) {
+  color: var(--main-color);
 }
 
 .free-intro {

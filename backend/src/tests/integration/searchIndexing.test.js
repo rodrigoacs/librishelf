@@ -13,7 +13,7 @@ const head = name => request(app).get(`/meta/u/${encodeURIComponent(name)}`)
 const robotsOf = res => res.text.match(/^<meta name="robots"[^>]*>/)?.[0]
 
 async function signUp(name, confirm = true) {
-  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `${name}@example.com` })
   if (confirm) await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))
 }

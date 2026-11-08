@@ -4,8 +4,8 @@ import app from '../../app.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 
-const owner = { username: 'owner', password: 'senha12345', email: 'owner@example.com' }
-const other = { username: 'other', password: 'senha12345', email: 'other@example.com' }
+const owner = { username: 'owner', password: 'senha12345', email: 'owner@example.com', acceptTerms: true }
+const other = { username: 'other', password: 'senha12345', email: 'other@example.com', acceptTerms: true }
 
 async function registerAndLogin(user) {
   await request(app).post('/auth/register').send(user)

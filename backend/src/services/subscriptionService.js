@@ -153,6 +153,38 @@ export async function cancel(userId) {
   return { endsAt: row?.ends_at ? new Date(row.ends_at).toISOString() : null }
 }
 
+/**
+ * Exclusão da conta: a assinatura mensal para no Mercado Pago antes, senão as
+ * cobranças seguiriam sem conta para receber o Pro. Um checkout do mensal
+ * ainda aberto também é cancelado (esse, sem segurar a exclusão).
+ * O Mercado Pago não respondeu para a assinatura ativa: a conta não é excluída.
+ */
+export async function stopForAccountDeletion(userId) {
+  const active = (await db.query(s.ACTIVE_MONTHLY, [userId])).rows[0]
+  const open = (await db.query(q.OPEN_RESERVATION, [userId, 'monthly'])).rows[0]
+  const preapprovals = new Set([active?.external_id, open?.preference_id].filter(Boolean))
+  if (!preapprovals.size) return
+  if (!mercadoPago.isConfigured()) {
+    logger.warn('Conta excluída sem cancelar o mensal no Mercado Pago: MP_ACCESS_TOKEN não definido', { userId })
+    return
+  }
+
+  for (const preapprovalId of preapprovals) {
+    try {
+      await mercadoPago.cancelPreapproval(preapprovalId)
+    } catch (err) {
+      if (err.status === 404) continue
+      if (preapprovalId !== active?.external_id) {
+        logger.warn('Checkout aberto do mensal não cancelado na exclusão da conta', { userId, preapprovalId, message: err.message })
+        continue
+      }
+      logger.error('Falha ao cancelar o mensal na exclusão da conta', { userId, preapprovalId, message: err.message })
+      throw httpError('Não foi possível cancelar sua assinatura mensal agora, então a conta não foi excluída. Tente de novo em instantes.', 502, 'SUBSCRIPTION_CANCEL_FAILED')
+    }
+  }
+  logger.info('Mensal cancelado no Mercado Pago antes da exclusão da conta', { userId, preapprovals: preapprovals.size })
+}
+
 export async function hasActive(userId, client = db) {
   return Boolean((await client.query(s.ACTIVE_MONTHLY, [userId])).rows[0])
 }

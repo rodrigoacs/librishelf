@@ -8,7 +8,7 @@ const tokens = {}
 const auth = name => ({ Authorization: `Bearer ${tokens[name]}` })
 
 async function signUp(name, { publicLibrary = false, community = false, followers = false } = {}) {
-  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `${name}@example.com` })
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))
   await confirmEmail(name)
   const privacy = {}

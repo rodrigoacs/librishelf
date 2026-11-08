@@ -9,7 +9,7 @@ const tokens = {}
 const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
 
 async function signUp(name) {
-  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `${name}@example.com` })
   await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))
 }

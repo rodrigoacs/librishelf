@@ -17,7 +17,7 @@ const prefs = (user, body) => request(app).patch('/auth/me/notifications').set(a
 const follow = (who, whom) => request(app).post(`/social/follow/${whom}`).set(auth(who))
 
 async function signUp(name, { verified = true } = {}) {
-  await request(app).post('/auth/register').send({ username: name, password: 'senha12345', email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: 'senha12345', email: `${name}@example.com` })
   if (verified) await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: 'senha12345' }))
   const { rows } = await db.query('SELECT id FROM librishelf.users WHERE name = $1', [name])

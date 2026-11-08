@@ -14,7 +14,7 @@ const auth = user => ({ Authorization: `Bearer ${tokens[user]}` })
 const asAdmin = () => ({ ...auth('chefe'), Cookie: unlock })
 
 async function signUp(name, visibility) {
-  await request(app).post('/auth/register').send({ username: name, password: PASSWORD, email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: PASSWORD, email: `${name}@example.com` })
   await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: PASSWORD }))
   if (visibility) await request(app).patch('/auth/me/visibility').set(auth(name)).send(visibility)

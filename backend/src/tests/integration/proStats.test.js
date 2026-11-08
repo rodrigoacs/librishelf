@@ -12,7 +12,7 @@ const ids = {}
 const auth = name => ({ Authorization: `Bearer ${tokens[name]}` })
 
 async function signUp(name) {
-  await request(app).post('/auth/register').send({ username: name, password: PASSWORD, email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: PASSWORD, email: `${name}@example.com` })
   await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: PASSWORD }))
   ids[name] = (await db.query('SELECT id FROM librishelf.users WHERE name = $1', [name])).rows[0].id

@@ -51,8 +51,9 @@ async function markEmailVerified(id) {
   return result.rows[0] || null
 }
 
-async function createUser(username, hashedPassword, email) {
-  const result = await db.query(q.CREATE_USER, [username, hashedPassword, email])
+/** Cria a conta já com o aceite dos termos na versão `termsVersion`. */
+async function createUser(username, hashedPassword, email, termsVersion) {
+  const result = await db.query(q.CREATE_USER, [username, hashedPassword, email, termsVersion])
   return result.rows[0]
 }
 

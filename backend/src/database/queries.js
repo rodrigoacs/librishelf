@@ -233,10 +233,18 @@ export const AUTH_QUERIES = {
     FROM librishelf.users
     WHERE id = $1
   `,
+  // A conta e o aceite dos termos ($4 = versão) nascem no mesmo comando:
+  // não existe conta sem aceite registrado
   CREATE_USER: `
-    INSERT INTO librishelf.users (name, password_hash, email)
-    VALUES ($1, $2, $3)
-    RETURNING id, name, email, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at
+    WITH created AS (
+      INSERT INTO librishelf.users (name, password_hash, email)
+      VALUES ($1, $2, $3)
+      RETURNING id, name, email, is_public, show_in_community, show_activity, allow_indexing, follow_emails, email_verified_at
+    ), accepted AS (
+      INSERT INTO librishelf.terms_acceptance (user_id, terms_version)
+      SELECT id, $4 FROM created
+    )
+    SELECT * FROM created
   `,
   UPDATE_PASSWORD: `
     UPDATE librishelf.users
@@ -2958,5 +2966,23 @@ export const PROFILE_PAGE_QUERIES = {
     SET bio = NULL, bio_version = NULL, bio_hidden_at = NULL, bio_hidden_reason = NULL, bio_reviewed_at = now()
     WHERE id = $1
     RETURNING id
+  `
+}
+
+// ---------------------------------------------------------------------------
+// Termos de Uso e Política de Privacidade (pacote 35). O aceite no cadastro
+// vai junto com a conta (AUTH_QUERIES.CREATE_USER).
+// ---------------------------------------------------------------------------
+export const TERMS_QUERIES = {
+  // Aceitar de novo a mesma versão não muda a data do primeiro aceite
+  ACCEPT: `
+    INSERT INTO librishelf.terms_acceptance (user_id, terms_version)
+    VALUES ($1, $2)
+    ON CONFLICT (user_id, terms_version) DO NOTHING
+  `,
+  ACCEPTED_AT: `
+    SELECT accepted_at
+    FROM librishelf.terms_acceptance
+    WHERE user_id = $1 AND terms_version = $2
   `
 }

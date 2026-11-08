@@ -51,7 +51,8 @@ const router = createRouter({
 
     { path: '/u/:username', name: 'public-library', component: () => import('../views/PublicLibrary.vue'), meta: { standalone: true, public: true, title: 'publicLibrary', noindex: 'server' } },
     { path: '/u/:username/lists/:id(\\d+)/:slug?', name: 'public-list', component: () => import('../views/PublicList.vue'), meta: { standalone: true, public: true, title: 'publicList', noindex: 'server' } },
-    { path: '/privacy', name: 'privacy', component: () => import('../views/Privacy.vue'), meta: { public: true, title: 'privacy' } },
+    { path: '/terms', name: 'terms', component: () => import('../views/Legal.vue'), props: { doc: 'terms' }, meta: { public: true, title: 'terms' } },
+    { path: '/privacy', name: 'privacy', component: () => import('../views/Legal.vue'), props: { doc: 'privacy' }, meta: { public: true, title: 'privacy' } },
     { path: '/import', name: 'import', component: () => import('../views/Import.vue'), meta: { requiresAuth: true, title: 'import', depth: 2 } },
     { path: '/import/skoob', name: 'import-skoob', component: () => import('../views/ImportSkoob.vue'), meta: { public: true, title: 'importSkoob', depth: 2 } },
     { path: '/pricing', name: 'pricing', component: () => import('../views/Pricing.vue'), meta: { public: true, title: 'pricing' } },

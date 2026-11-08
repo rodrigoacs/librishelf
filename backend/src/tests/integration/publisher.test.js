@@ -8,7 +8,7 @@ let token
 beforeAll(async () => {
   await clearDatabase()
 
-  await request(app).post('/auth/register').send({ username: 'pubtester', password: 'testpass123', email: 'pubtester@example.com' })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: 'pubtester', password: 'testpass123', email: 'pubtester@example.com' })
   const loginRes = await request(app).post('/auth/login').send({ username: 'pubtester', password: 'testpass123' })
   token = tokenFrom(loginRes)
 
@@ -59,7 +59,7 @@ describe('Publisher Endpoints', () => {
   })
 
   it('should not leak publishers from other users sharing the same author', async () => {
-    await request(app).post('/auth/register').send({ username: 'pubtester2', password: 'testpass123', email: 'pubtester2@example.com' })
+    await request(app).post('/auth/register').send({ acceptTerms: true, username: 'pubtester2', password: 'testpass123', email: 'pubtester2@example.com' })
     const loginRes2 = await request(app).post('/auth/login').send({ username: 'pubtester2', password: 'testpass123' })
     const token2 = tokenFrom(loginRes2)
 

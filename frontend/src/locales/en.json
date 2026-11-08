@@ -326,7 +326,6 @@
     "login": "Login",
     "fillFields": "Fill in all fields.",
     "invalidCreds": "Wrong username or password. Try again.",
-    "privacy": "Privacy",
     "forgot": "Forgot your password?"
   },
   "register": {
@@ -353,10 +352,10 @@
     "accountCreated": "Your account has been created. You can now login.",
     "errorCreating": "Error creating account. Try again.",
     "success": "Success",
-    "privacyNotice": "By creating an account, you agree to the",
-    "privacyLink": "privacy policy",
     "invalidUsername": "Use only letters, numbers, dot, hyphen and underscore.",
-    "accountCreatedVerify": "Account created. We sent you a link to confirm your email."
+    "accountCreatedVerify": "Account created. We sent you a link to confirm your email.",
+    "acceptTerms": "I am 13 or older and accept the {terms} and the {privacy}.",
+    "acceptTermsRequired": "Accept the terms of use and the privacy policy to create your account."
   },
   "publicLibrary": {
     "title": "{ ownerName }'s Library",
@@ -432,7 +431,6 @@
       "confirmButton": "Delete everything",
       "success": "Your account has been deleted."
     },
-    "privacyLink": "Read the privacy policy",
     "community": {
       "title": "Community",
       "toggle": "Join the community",
@@ -552,15 +550,23 @@
   },
   "privacy": {
     "title": "Privacy policy",
-    "updated": "Last updated: {date}",
-    "intro": "This policy explains what data Librishelf processes, why, and how you control it.",
+    "intro": "This policy explains what data Librishelf processes, why, and how you control it. It applies together with the {terms}.",
     "sections": [
+      {
+        "title": "Who looks after your data",
+        "paragraphs": [
+          "The person responsible for your data (the controller, under the LGPD) is {owner}, who runs Librishelf. For any privacy matter: {email}."
+        ]
+      },
       {
         "title": "What we collect",
         "paragraphs": [
           "Account data: username, email and password. Your password is stored securely and nobody can read it, not even us.",
           "Content you add: your books and their details (title, authors, publisher, ISBN, series, categories, dates, ratings, reading status, reading history and progress, and goals), personal notes and the covers you upload. Personal notes are yours only: they never appear in your public library.",
-          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts. We also keep the date and time of your last sign-in and last visit, to know how many accounts are in use. When you sign out, we keep an identifier of that session until it expires (at most 7 days), only so it can no longer be used. Server logs do not keep your email address: for emails we send, only the domain (such as gmail.com)."
+          "Access data: the IP address of your visits is used briefly, only to protect the service from abuse such as repeated login attempts. We also keep the date and time of your last sign-in and last visit, to know how many accounts are in use. When you sign out, we keep an identifier of that session until it expires (at most 7 days), only so it can no longer be used. Server logs do not keep your email address: for emails we send, only the domain (such as gmail.com).",
+          "Profile, if you choose to fill it in: photo, a short bio (up to 160 characters), up to 5 favorite books and, with Pro, a background cover (one of your books or an image you upload).",
+          "Collection: for loans, the borrower's name, the dates and the due date. With Pro, also the copy's location, the price paid, its value and photos of the copy. For borrowers, a first name or nickname is enough.",
+          "Plan: which plan you have, since when and until when, and the history of your purchases (see Payments)."
         ]
       },
       {
@@ -572,13 +578,22 @@
         ]
       },
       {
+        "title": "Payments",
+        "paragraphs": [
+          "Pro plan payments are made through Mercado Pago, which handles payment data as an independent controller, under its own privacy policy. To open the payment, we send Mercado Pago your email, the plan, the amount and a purchase code.",
+          "We never receive the card number, the CPF, the full name or the address of the payer. From Mercado Pago we keep only what is needed to grant Pro and keep records: the payment code, status, amount, method (card or Pix), installments and dates.",
+          "Payment records are kept after the account is deleted, no longer linked to it, for the period required by tax law and to handle refund requests and disputes."
+        ]
+      },
+      {
         "title": "Public library",
         "paragraphs": [
           "Your library is private by default. If you turn on sharing in Account, anyone with your link can see your books and covers, and some covers may appear on the site's entry screens.",
           "When someone shares your library link (WhatsApp, social networks), the preview shows your username, how many books you have and have read, and a mosaic of some of your covers.",
           "Lists are private by default. The ones you mark as public show on your profile and get their own link, with a preview (list name, books and covers) when shared — only while your library is public too.",
           "You can turn it off at any time, and the change takes effect immediately.",
-          "By default, public libraries don't show up in search engines like Google: the site asks not to be indexed. They only show up if you turn on \"Show in search engines\" in Account."
+          "By default, public libraries don't show up in search engines like Google: the site asks not to be indexed. They only show up if you turn on \"Show in search engines\" in Account.",
+          "Your profile photo has its own setting for who can see it: everyone, only approved followers or no one. Your bio, favorites and background cover show on your public page, together with your library."
         ]
       },
       {
@@ -594,7 +609,8 @@
         "paragraphs": [
           "Unlike notes, which are only yours, a review is meant to be read by others. You choose who can read it: everyone who sees your public library (and, if you take part in the community, other readers of the same book) or only your approved followers. With a private library, nobody sees it.",
           "Signed-in readers with a confirmed email can like and report reviews. The author doesn't find out who reported. A report (reason, details and who sent it) goes to Librishelf moderation, which may hide the review; the link moderation gets by email is valid for 30 days and doesn't show who reported. After reports from several confirmed accounts that are more than a week old, the review is hidden automatically until it's reviewed.",
-          "You can edit or delete your review at any time. It is included when you download your data and is deleted along with the book or the account."
+          "You can edit or delete your review at any time. It is included when you download your data and is deleted along with the book or the account.",
+          "Profile photos and bios can also be reported and follow the same rules."
         ]
       },
       {
@@ -602,7 +618,8 @@
         "paragraphs": [
           "The Librishelf team can hide reviews and suspend accounts that misuse the site, such as spam or offensive content. To do that, it sees each account’s username, email, sign-up and last visit dates and its totals of books, reviews and reports, never the password or personal notes.",
           "A suspended account can’t sign in, and what was public (library, profile, reviews and lists) stops showing to others. Nothing is deleted: if the suspension is lifted, everything comes back as it was.",
-          "Every admin action is logged (what, when and the reason). If the account is deleted, the log no longer points to it."
+          "Every admin action is logged (what, when and the reason). If the account is deleted, the log no longer points to it.",
+          "To solve payment problems and refund requests, the administration can also see each account's plan and payments (status, amount and dates)."
         ]
       },
       {
@@ -617,7 +634,15 @@
         "paragraphs": [
           "We only use your email for account matters: confirming the address when you sign up and sending the password recovery link when you ask for it. We don't send marketing.",
           "If you turn on email notifications in Account, we also let you know when someone asks to follow you or accepts your request — at most one email every few hours. Every notification has a one-click unsubscribe link.",
-          "Password and confirmation links are short-lived (1 hour for the password, 3 days for confirmation), work only once, and we only store an encrypted version of them."
+          "Password and confirmation links are short-lived (1 hour for the password, 3 days for confirmation), work only once, and we only store an encrypted version of them.",
+          "With Pro or the free trial, we also send emails about the plan: payment confirmed or declined, a reminder before a non-renewing plan ends and the end of the trial. If you turn these options on, we let you know when a backup is ready and remind you of loan due dates."
+        ]
+      },
+      {
+        "title": "Automatic backup",
+        "paragraphs": [
+          "With Pro, you can turn on automatic backup: every week or every month, we create a copy of your data (the same content as the JSON export) and keep it for you to download. The most recent copies are kept; older ones are removed.",
+          "Backups are yours: only you can download them, and they are removed together with your account."
         ]
       },
       {
@@ -631,23 +656,173 @@
       {
         "title": "How long we keep it",
         "paragraphs": [
-          "For as long as your account exists. When you delete your account, all your data is removed immediately.",
-          "Backups may keep this data for a limited period until they are replaced."
+          "For as long as your account exists. When you delete your account, your data, photos, covers and backups are removed immediately, and the monthly subscription, if any, is canceled on Mercado Pago.",
+          "Only payment records remain, no longer linked to the account, as explained in Payments.",
+          "Server backups may keep this data for a limited period until they are replaced."
+        ]
+      },
+      {
+        "title": "Children and teenagers",
+        "paragraphs": [
+          "Librishelf is not for anyone under 13. Between 13 and 17, use depends on the permission of a parent or legal guardian, as stated in the {terms}. If you are the guardian of someone under 13 who created an account, write to {email} and the account will be deleted."
         ]
       },
       {
         "title": "Your rights (LGPD)",
         "paragraphs": [
-          "You can view, correct, download a copy of or delete your data at any time, all from the app: in Account → Your data you download everything as JSON (account, books, readings, reviews, lists, goals, who you follow and who follows you, follow requests, blocks, likes and reports you made, and your email notification settings) or just your books as CSV, and deleting your account erases everything right away. For any other request, contact us below."
+          "You can view, correct, download a copy of or delete your data at any time, all from the app: in Account → Your data you download everything as JSON (account, profile, books, readings, reviews, lists, goals, collection and loans, who you follow and who follows you, follow requests, blocks, likes and reports you made, and your email notification settings) or just your books as CSV, and deleting your account removes everything right away, except payment records. For any other request, contact us below."
         ]
       },
       {
         "title": "Contact",
         "paragraphs": [
-          "Data controller: {email}"
+          "Data controller: {owner}. Contact: {email}"
         ]
       }
     ]
+  },
+  "terms": {
+    "title": "Terms of use",
+    "intro": "These terms explain the rules for using Librishelf, what you can expect from the service and how purchases of the Pro plan work. By creating an account, you accept these terms and the {privacy}, which explains how we handle your data.",
+    "sections": [
+      {
+        "title": "Who provides the service",
+        "paragraphs": [
+          "Librishelf is run by {owner}, an individual based in Congonhas, Minas Gerais, Brazil. To reach us: {email}.",
+          "If Librishelf comes to be run by a company, these terms and the purchases already made move to it under the same conditions. We will let you know beforehand, in the app."
+        ]
+      },
+      {
+        "title": "Who can use it",
+        "paragraphs": [
+          "You must be at least 13 to create an account. Between 13 and 17, only with the permission and supervision of a parent or legal guardian, who is also responsible for the use of the account.",
+          "You must be 18 or older to buy the Pro plan. For anyone under 18, the purchase must be made by their parent or legal guardian.",
+          "If we learn that an account belongs to someone under 13, it will be deleted."
+        ]
+      },
+      {
+        "title": "Your account",
+        "paragraphs": [
+          "Use an email address that is yours and keep your password secret. You are responsible for what is done in your account; if you think someone else got into it, change the password and write to {email}.",
+          "Each account belongs to one person. Usernames that imitate another person, a brand or the Librishelf team may be refused or changed."
+        ]
+      },
+      {
+        "title": "Your content",
+        "paragraphs": [
+          "The books, notes, private notes, reviews, lists, photos and everything else you add remain yours. You allow us to store, process and show this content only to make Librishelf work, and only to the people you choose in the visibility options. This permission ends when you remove the content or delete the account, except for backup copies kept for a limited time.",
+          "Only upload images and text you have the right to use, such as your own photos and covers of your books. Do not add other people's data beyond what is needed: for loans, the first name or a nickname of the borrower is enough.",
+          "Catalog data from Open Library (titles, authors, covers) may contain mistakes. Check it before saving."
+        ]
+      },
+      {
+        "title": "What is not allowed",
+        "paragraphs": [
+          "Posting illegal, offensive, discriminatory, violent or sexual content, or content that exposes other people; spam or advertising; pretending to be someone else; using third-party content without permission.",
+          "Trying to get into other people's accounts or see their data, getting around limits and protections, overloading the service, copying the site in bulk with bots or reselling access to Librishelf."
+        ]
+      },
+      {
+        "title": "Moderation",
+        "paragraphs": [
+          "Reviews, bios and profile photos can be reported. The administration may hide content and suspend accounts that break these terms. A suspended account cannot sign in and its public content stops showing, but nothing is deleted while the suspension lasts.",
+          "If you think there was a mistake, write to {email}. In serious or repeated cases the account may be closed; if so, we send you a copy of your data if you ask, unless the law prevents it."
+        ]
+      },
+      {
+        "title": "Free plan and Pro plan",
+        "paragraphs": [
+          "The free plan has no end date. Pro adds extra features, described on the pricing page. Features may change over time; if we remove a relevant Pro feature, we let you know beforehand, in the app.",
+          "When Pro ends, nothing is lost: what you created with it stays visible and can be downloaded. Only editing the Pro features is blocked until you have the plan again.",
+          "Free trial: 14 days of Pro, once per account, with no card and no charge at the end.",
+          "Vanguard: the first 100 accounts with a confirmed email and at least 10 books added get the Vanguard badge and lifetime Pro at no cost, while spots last. The offer may end at any time. Deleting books later does not remove the benefit."
+        ]
+      },
+      {
+        "title": "Prices and payment",
+        "paragraphs": [
+          "Prices are on the pricing page, in Brazilian reais, and are the final amount. Payment is made through Mercado Pago, by card or Pix, and is also subject to its rules. Librishelf does not receive your card details.",
+          "Monthly: a card subscription, charged automatically every month until you cancel.",
+          "Yearly: a one-time payment, by card or Pix, valid for one year, that does not renew on its own. Renewing before it ends adds the new year to the time still left.",
+          "Founder offers: yearly and lifetime at a special price, for a limited time and number of spots. Founder yearly keeps the special price on every renewal made before it expires.",
+          "If the price changes, those who already paid are not affected. For the monthly subscription, we announce the new price at least 30 days before the first charge with it, and you can cancel before that."
+        ]
+      },
+      {
+        "title": "Withdrawal and refunds",
+        "paragraphs": [
+          "You can withdraw from any purchase within 7 days of payment, without giving a reason, and get the full amount back (right of withdrawal, article 49 of the Brazilian Consumer Protection Code). For the monthly subscription, the period counts from the first charge.",
+          "To withdraw, write to {email} from your account's email address. We confirm we received it, ask Mercado Pago for the refund and remove the Pro from that purchase. On cards, the refund shows on your statement within the issuer's time frame; with Pix, the money goes back to the account it came from.",
+          "After the 7 days: the monthly plan can be canceled whenever you want, in Account, with no fee, and Pro continues until the end of the month already paid, with no partial refund. Yearly and lifetime purchases are not refundable after that period.",
+          "Double charges, wrong charges or a failure on our side that prevents you from using Pro are fixed and, when appropriate, refunded at any time."
+        ]
+      },
+      {
+        "title": "Lifetime Pro",
+        "paragraphs": [
+          "Lifetime means for as long as Librishelf exists, not for the life of the buyer. It applies to the account it was bought or granted for and cannot be moved to another account.",
+          "Shutting down the service, described below, does not give the right to a refund of lifetime Pro, unless it is still within the withdrawal period."
+        ]
+      },
+      {
+        "title": "Availability and shutting down the service",
+        "paragraphs": [
+          "We do our best to keep Librishelf online and backed up, but we do not guarantee it will work without interruptions or errors. There may be downtime for maintenance.",
+          "If Librishelf shuts down, we notify every account at least 90 days in advance, in the app and by email. Until the end, you can download all of your data. From the notice on, no new charges are made, and anyone with a yearly plan with time left after the shutdown date gets the amount proportional to that time."
+        ]
+      },
+      {
+        "title": "Deleting your account",
+        "paragraphs": [
+          "You can delete your account whenever you want, in Account. Your data is deleted right away, as explained in the {privacy}. Deleting the account cancels the monthly subscription on Mercado Pago, but does not lead to a refund outside the withdrawal period."
+        ]
+      },
+      {
+        "title": "Liability",
+        "paragraphs": [
+          "We are liable for the damage we cause, as provided by law. We are not liable for content posted by other readers, for third-party catalog data, or for losses caused by misuse of your password or by reasons beyond our control.",
+          "Nothing in these terms limits the rights guaranteed by the Brazilian Consumer Protection Code and the Brazilian General Data Protection Law (LGPD)."
+        ]
+      },
+      {
+        "title": "Changes to these terms",
+        "paragraphs": [
+          "We may update these terms and the privacy policy. When a change is relevant, you will be notified in the app and will need to accept the new version to keep using Librishelf and to make purchases. Changes do not alter the conditions of purchases already paid.",
+          "If you do not agree with the new version, you can download your data and delete your account."
+        ]
+      },
+      {
+        "title": "Law and jurisdiction",
+        "paragraphs": [
+          "These terms are governed by Brazilian law. The courts of Congonhas, Minas Gerais, Brazil, are chosen as the venue, without prejudice to the consumer's right to file a claim in the courts of their own domicile."
+        ]
+      },
+      {
+        "title": "Contact",
+        "paragraphs": [
+          "Questions, withdrawal requests and complaints: {email}."
+        ]
+      }
+    ]
+  },
+  "legal": {
+    "updated": "Last updated: {date}",
+    "draft": "Draft under legal review. The text may still change before the final version.",
+    "links": {
+      "label": "Legal documents",
+      "terms": "Terms of use",
+      "privacy": "Privacy",
+      "termsInline": "terms of use",
+      "privacyInline": "privacy policy"
+    },
+    "update": {
+      "title": "Updated terms",
+      "text": "We updated the {terms} and the {privacy}. To keep using Librishelf, read and accept the new version.",
+      "hint": "The links open in a new tab. If you do not agree, in Account you can download your data and delete your account.",
+      "accept": "Accept and continue",
+      "account": "Go to Account",
+      "logout": "Log out"
+    }
   },
   "notFound": {
     "title": "Page not found",
@@ -1016,7 +1191,8 @@
     "planReturn": "Payment",
     "import": "Import books",
     "importSkoob": "Coming from Skoob",
-    "loans": "Loans"
+    "loans": "Loans",
+    "terms": "Terms of use"
   },
   "password": {
     "show": "Show password",
@@ -1238,7 +1414,12 @@
     "FAVORITES_TOO_MANY": "Choose up to {max} favorites.",
     "FAVORITE_INVALID": "That book isn't on your shelf.",
     "BIO_NOT_FOUND": "Bio not found.",
-    "BIO_OWN": "You can't report your own bio."
+    "BIO_OWN": "You can't report your own bio.",
+    "TERMS_REQUIRED": "Accept the terms of use and the privacy policy to create your account.",
+    "TERMS_NOT_ACCEPTED": "Accept the updated terms of use to continue.",
+    "TERMS_OUTDATED": "The terms changed since this page was opened. Read the new version and accept again.",
+    "TERMS_VERSION_REQUIRED": "Could not record your acceptance. Reload the page and try again.",
+    "SUBSCRIPTION_CANCEL_FAILED": "Could not cancel your monthly subscription right now, so the account was not deleted. Try again in a moment."
   },
   "block": {
     "block": "Block {name}",
@@ -2120,7 +2301,7 @@
     "currentUntil": "Your plan: {name}, until {date}.",
     "trialText": "Want to try it first? The free trial lasts 14 days, with no card and no automatic charge.",
     "trialButton": "Try 14 days free",
-    "finePrint": "Payments by Mercado Pago. Librishelf never receives your card details. You can cancel the purchase within 7 days and get your money back.",
+    "finePrint": "Payments by Mercado Pago. Librishelf never receives your card details. By buying, you accept the {terms}, including the renewal and refund rules: you can withdraw within 7 days and get your money back.",
     "proTitle": "What Pro brings",
     "soon": "Soon",
     "freeTitle": "Free forever",

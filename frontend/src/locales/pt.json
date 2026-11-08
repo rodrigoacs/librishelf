@@ -326,7 +326,6 @@
     "login": "Entrar",
     "fillFields": "Preencha todos os campos.",
     "invalidCreds": "Usuário ou senha incorretos. Tente de novo.",
-    "privacy": "Privacidade",
     "forgot": "Esqueci minha senha"
   },
   "register": {
@@ -353,10 +352,10 @@
     "accountCreated": "Sua conta foi criada. Você já pode fazer login.",
     "errorCreating": "Erro ao criar a conta. Tente de novo.",
     "success": "Sucesso",
-    "privacyNotice": "Ao criar a conta, você concorda com a",
-    "privacyLink": "política de privacidade",
     "invalidUsername": "Use só letras, números, ponto, hífen e sublinhado.",
-    "accountCreatedVerify": "Conta criada. Enviamos um link para confirmar seu e-mail."
+    "accountCreatedVerify": "Conta criada. Enviamos um link para confirmar seu e-mail.",
+    "acceptTerms": "Tenho 13 anos ou mais e aceito os {terms} e a {privacy}.",
+    "acceptTermsRequired": "Aceite os termos de uso e a política de privacidade para criar a conta."
   },
   "publicLibrary": {
     "title": "Biblioteca de { ownerName }",
@@ -432,7 +431,6 @@
       "confirmButton": "Excluir tudo",
       "success": "Sua conta foi excluída."
     },
-    "privacyLink": "Ler a política de privacidade",
     "community": {
       "title": "Comunidade",
       "toggle": "Participar da comunidade",
@@ -552,15 +550,23 @@
   },
   "privacy": {
     "title": "Política de privacidade",
-    "updated": "Última atualização: {date}",
-    "intro": "Esta política explica quais dados o Librishelf trata, por quê e como você controla isso.",
+    "intro": "Esta política explica quais dados o Librishelf trata, por quê e como você controla isso. Ela vale junto com os {terms}.",
     "sections": [
+      {
+        "title": "Quem cuida dos seus dados",
+        "paragraphs": [
+          "O responsável pelos seus dados (controlador, na LGPD) é {owner}, que mantém o Librishelf. Para qualquer assunto de privacidade: {email}."
+        ]
+      },
       {
         "title": "Quais dados coletamos",
         "paragraphs": [
           "Dados da conta: nome de usuário, e-mail e senha. A senha é guardada de forma protegida e ninguém consegue lê-la, nem nós.",
           "Conteúdo que você cadastra: seus livros e as informações deles (título, autores, editora, ISBN, série, categorias, datas, notas, status de leitura, histórico de leituras e progresso, e metas), anotações pessoais e as capas que você enviar. As anotações pessoais são só suas: nunca aparecem na biblioteca pública.",
-          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login. Também guardamos a data e a hora do seu último login e do seu último acesso, para sabermos quantas contas estão em uso. Quando você sai da conta, guardamos um identificador daquela sessão até ela vencer (no máximo 7 dias), só para que ela não possa mais ser usada. Os registros do servidor não guardam o seu e-mail: dos e-mails enviados, só o domínio (como gmail.com)."
+          "Dados de acesso: o endereço IP das suas visitas é usado por pouco tempo, só para proteger o serviço contra abuso, como tentativas repetidas de login. Também guardamos a data e a hora do seu último login e do seu último acesso, para sabermos quantas contas estão em uso. Quando você sai da conta, guardamos um identificador daquela sessão até ela vencer (no máximo 7 dias), só para que ela não possa mais ser usada. Os registros do servidor não guardam o seu e-mail: dos e-mails enviados, só o domínio (como gmail.com).",
+          "Perfil, se você quiser preencher: foto, uma apresentação curta (até 160 caracteres), até 5 livros favoritos e, no Pro, uma capa de fundo (um livro seu ou uma imagem que você enviar).",
+          "Coleção: nos empréstimos, o nome de quem pegou o livro, as datas e o prazo. No Pro, também a localização do exemplar, o preço pago, o valor e fotos do exemplar. Para quem pegou, o primeiro nome ou um apelido basta.",
+          "Plano: qual plano você tem, desde quando e até quando, e o histórico das suas compras (veja Pagamentos)."
         ]
       },
       {
@@ -572,13 +578,22 @@
         ]
       },
       {
+        "title": "Pagamentos",
+        "paragraphs": [
+          "Os pagamentos do plano Pro são feitos no Mercado Pago, que trata os dados de pagamento como controlador independente, pela política de privacidade dele. Para abrir o pagamento, enviamos ao Mercado Pago o seu e-mail, o plano, o valor e um código da compra.",
+          "Nunca recebemos o número do cartão, o CPF, o nome completo ou o endereço de quem paga. Do Mercado Pago guardamos só o necessário para liberar o Pro e prestar contas: o código do pagamento, a situação, o valor, a forma (cartão ou Pix), as parcelas e as datas.",
+          "Os registros de pagamento continuam guardados depois da exclusão da conta, sem ligação com ela, pelo prazo exigido pela legislação fiscal e para atender a pedidos de reembolso e contestações."
+        ]
+      },
+      {
         "title": "Biblioteca pública",
         "paragraphs": [
           "Sua biblioteca é privada por padrão. Se você ativar o compartilhamento em Conta, qualquer pessoa com o seu link pode ver seus livros e capas, e algumas capas podem aparecer nas telas de entrada do site.",
           "Quando alguém compartilha o link da sua biblioteca (WhatsApp, redes sociais), a prévia mostra seu nome de usuário, quantos livros você tem e já leu e um mosaico de algumas das suas capas.",
           "Listas são privadas por padrão. As que você marcar como públicas aparecem no seu perfil e ganham um link próprio, com prévia (nome da lista, livros e capas) quando compartilhado — só enquanto a biblioteca também for pública.",
           "Você pode desativar quando quiser, e a mudança vale na hora.",
-          "Por padrão, bibliotecas públicas não aparecem em buscadores como o Google: o site pede para não serem indexadas. Só aparecem se você ligar \"Aparecer em buscadores\" em Conta."
+          "Por padrão, bibliotecas públicas não aparecem em buscadores como o Google: o site pede para não serem indexadas. Só aparecem se você ligar \"Aparecer em buscadores\" em Conta.",
+          "A foto de perfil tem uma opção própria de quem vê: todos, só seguidores aprovados ou ninguém. A apresentação, os favoritos e a capa de fundo aparecem na sua página pública, junto com a biblioteca."
         ]
       },
       {
@@ -594,7 +609,8 @@
         "paragraphs": [
           "Diferente das anotações, que são só suas, a resenha é feita para outros lerem. Você escolhe quem pode ler: todos que veem sua biblioteca pública (e, se você participa da comunidade, outros leitores do mesmo livro) ou só seus seguidores aprovados. Com a biblioteca privada, ninguém vê.",
           "Leitores logados, com o e-mail confirmado, podem curtir e denunciar resenhas. Quem escreveu não fica sabendo quem denunciou. A denúncia (motivo, detalhes e quem enviou) vai para a moderação do Librishelf, que pode ocultar a resenha; o link que a moderação recebe por e-mail vale por 30 dias e não mostra quem denunciou. Com denúncias de várias contas confirmadas há mais de uma semana, a resenha é ocultada automaticamente até a revisão.",
-          "Você pode editar ou apagar sua resenha a qualquer momento. Ela também vai junto quando você baixa seus dados e é apagada com o livro ou com a conta."
+          "Você pode editar ou apagar sua resenha a qualquer momento. Ela também vai junto quando você baixa seus dados e é apagada com o livro ou com a conta.",
+          "Fotos de perfil e apresentações também podem ser denunciadas e seguem as mesmas regras."
         ]
       },
       {
@@ -602,7 +618,8 @@
         "paragraphs": [
           "A administração do Librishelf pode ocultar resenhas e suspender contas que desrespeitem o uso esperado do site, como spam ou conteúdo ofensivo. Para isso, ela vê o nome de usuário, o e-mail, as datas de cadastro e de último acesso e os totais de livros, resenhas e denúncias de cada conta, nunca a senha nem as anotações pessoais.",
           "Uma conta suspensa não consegue entrar, e o que era público (biblioteca, perfil, resenhas e listas) deixa de aparecer para os outros. Nada é apagado: se a suspensão for desfeita, tudo volta como estava.",
-          "Cada ação da administração fica registrada (o quê, quando e o motivo). Se a conta for excluída, o registro deixa de apontar para ela."
+          "Cada ação da administração fica registrada (o quê, quando e o motivo). Se a conta for excluída, o registro deixa de apontar para ela.",
+          "Para resolver problemas de pagamento e pedidos de reembolso, a administração também vê o plano e os pagamentos de cada conta (situação, valor e datas)."
         ]
       },
       {
@@ -617,7 +634,15 @@
         "paragraphs": [
           "Usamos seu e-mail só para assuntos da sua conta: confirmar o endereço no cadastro e enviar o link de recuperação de senha quando você pedir. Não mandamos propaganda.",
           "Se você ligar os avisos por e-mail em Conta, também avisamos quando alguém pede para seguir você ou aceita o seu pedido — no máximo um e-mail a cada algumas horas. Todo aviso tem um link para descadastrar com um clique.",
-          "Os links de senha e confirmação valem por pouco tempo (1 hora para a senha, 3 dias para a confirmação), funcionam uma vez só e guardamos apenas uma versão cifrada deles."
+          "Os links de senha e confirmação valem por pouco tempo (1 hora para a senha, 3 dias para a confirmação), funcionam uma vez só e guardamos apenas uma versão cifrada deles.",
+          "Com o Pro ou o teste grátis, também mandamos e-mails sobre o plano: pagamento confirmado ou recusado, aviso antes do fim de um plano sem renovação automática e o fim do teste. Se você ligar essas opções, avisamos quando um backup fica pronto e lembramos dos prazos de empréstimo."
+        ]
+      },
+      {
+        "title": "Backup automático",
+        "paragraphs": [
+          "No Pro, você pode ligar o backup automático: toda semana ou todo mês, geramos uma cópia dos seus dados (o mesmo conteúdo da exportação em JSON) e guardamos para você baixar. Ficam as cópias mais recentes; as mais antigas são removidas.",
+          "Os backups são seus: só você pode baixá-los, e eles são removidos junto com a conta."
         ]
       },
       {
@@ -631,23 +656,173 @@
       {
         "title": "Por quanto tempo guardamos",
         "paragraphs": [
-          "Enquanto sua conta existir. Quando você exclui a conta, todos os seus dados são apagados na hora.",
-          "Cópias de segurança podem manter esses dados por um período limitado, até serem substituídas."
+          "Enquanto sua conta existir. Quando você exclui a conta, seus dados, fotos, capas e backups são removidos na hora, e a assinatura mensal, se houver, é cancelada no Mercado Pago.",
+          "Ficam só os registros de pagamento, sem ligação com a conta, como explicado em Pagamentos.",
+          "Cópias de segurança do servidor podem manter esses dados por um período limitado, até serem substituídas."
+        ]
+      },
+      {
+        "title": "Crianças e adolescentes",
+        "paragraphs": [
+          "O Librishelf não é para menores de 13 anos. Entre 13 e 17 anos, o uso depende da autorização de um responsável legal, como dizem os {terms}. Se você é responsável por alguém com menos de 13 anos que criou uma conta, escreva para {email} e a conta será excluída."
         ]
       },
       {
         "title": "Seus direitos (LGPD)",
         "paragraphs": [
-          "Você pode consultar, corrigir, baixar uma cópia ou excluir seus dados a qualquer momento, tudo pelo próprio app: em Conta → Seus dados você baixa tudo em JSON (conta, livros, leituras, resenhas, listas, metas, quem você segue e quem segue você, pedidos para seguir, bloqueios, curtidas e denúncias que você fez e as preferências de aviso por e-mail) ou só os livros em CSV, e a exclusão da conta apaga tudo na hora. Para qualquer outro pedido, fale com a gente pelo contato abaixo."
+          "Você pode consultar, corrigir, baixar uma cópia ou excluir seus dados a qualquer momento, tudo pelo próprio app: em Conta → Seus dados você baixa tudo em JSON (conta, perfil, livros, leituras, resenhas, listas, metas, coleção e empréstimos, quem você segue e quem segue você, pedidos para seguir, bloqueios, curtidas e denúncias que você fez e as preferências de aviso por e-mail) ou só os livros em CSV, e a exclusão da conta remove tudo na hora, menos os registros de pagamento. Para qualquer outro pedido, fale com a gente pelo contato abaixo."
         ]
       },
       {
         "title": "Contato",
         "paragraphs": [
-          "Responsável pelos dados: {email}"
+          "Responsável pelos dados: {owner}. Contato: {email}"
         ]
       }
     ]
+  },
+  "terms": {
+    "title": "Termos de uso",
+    "intro": "Estes termos explicam as regras para usar o Librishelf, o que você pode esperar do serviço e como funcionam as compras do plano Pro. Ao criar a conta, você aceita estes termos e a {privacy}, que explica como tratamos seus dados.",
+    "sections": [
+      {
+        "title": "Quem oferece o serviço",
+        "paragraphs": [
+          "O Librishelf é mantido por {owner}, pessoa física, de Congonhas (MG). Para falar com a gente: {email}.",
+          "Se o Librishelf passar a ser operado por uma empresa, estes termos e as compras já feitas passam para ela nas mesmas condições. Avisaremos antes, no app."
+        ]
+      },
+      {
+        "title": "Quem pode usar",
+        "paragraphs": [
+          "É preciso ter pelo menos 13 anos para criar uma conta. Entre 13 e 17 anos, só com a autorização e o acompanhamento de um responsável legal, que também responde pelo uso da conta.",
+          "Para comprar o plano Pro é preciso ter 18 anos ou mais. Para quem tem menos de 18, a compra deve ser feita pelo responsável legal.",
+          "Se soubermos que uma conta é de alguém com menos de 13 anos, ela será excluída."
+        ]
+      },
+      {
+        "title": "Sua conta",
+        "paragraphs": [
+          "Use um e-mail que seja seu e mantenha a senha em segredo. Você responde pelo que é feito na sua conta; se achar que outra pessoa entrou nela, troque a senha e escreva para {email}.",
+          "Cada conta é de uma pessoa só. Nomes de usuário que imitam outra pessoa, uma marca ou a equipe do Librishelf podem ser recusados ou trocados."
+        ]
+      },
+      {
+        "title": "Seu conteúdo",
+        "paragraphs": [
+          "Os livros, notas, anotações, resenhas, listas, fotos e tudo mais que você cadastra continuam seus. Você nos autoriza a guardar, processar e mostrar esse conteúdo só para o Librishelf funcionar, e só para quem você escolher nas opções de visibilidade. A autorização acaba quando você remove o conteúdo ou exclui a conta, salvo as cópias de segurança por um período limitado.",
+          "Envie só imagens e textos que você tem o direito de usar, como fotos suas e capas dos seus livros. Não cadastre dados de outras pessoas além do necessário: nos empréstimos, o primeiro nome ou um apelido de quem pegou o livro basta.",
+          "Os dados de catálogo que vêm do Open Library (títulos, autores, capas) podem ter erros. Confira antes de salvar."
+        ]
+      },
+      {
+        "title": "O que não é permitido",
+        "paragraphs": [
+          "Publicar conteúdo ilegal, ofensivo, discriminatório, violento ou sexual, ou que exponha outras pessoas; fazer spam ou propaganda; se passar por outra pessoa; usar conteúdo de terceiros sem autorização.",
+          "Tentar entrar em contas ou ver dados de outras pessoas, burlar limites e proteções, sobrecarregar o serviço, copiar o site em massa com robôs ou revender o acesso ao Librishelf."
+        ]
+      },
+      {
+        "title": "Moderação",
+        "paragraphs": [
+          "Resenhas, apresentações e fotos de perfil podem ser denunciadas. A administração pode ocultar conteúdo e suspender contas que desrespeitem estes termos. Uma conta suspensa não consegue entrar e o que ela tinha de público deixa de aparecer, mas nada é excluído enquanto a suspensão durar.",
+          "Se achar que houve um engano, escreva para {email}. Em casos graves ou repetidos, a conta pode ser encerrada; nesse caso, enviamos uma cópia dos seus dados se você pedir, a não ser que a lei impeça."
+        ]
+      },
+      {
+        "title": "Plano grátis e plano Pro",
+        "paragraphs": [
+          "O plano grátis não tem prazo. O Pro traz recursos a mais, descritos na página de preços. Os recursos podem mudar com o tempo; se retirarmos um recurso relevante do Pro, avisamos antes, no app.",
+          "Quando o Pro termina, nada se perde: o que você criou com ele continua visível e pode ser baixado. Só a edição dos recursos do Pro fica bloqueada até você voltar a ter o plano.",
+          "Teste grátis: 14 dias de Pro, uma vez por conta, sem cartão e sem cobrança no final.",
+          "Vanguarda: as 100 primeiras contas com o e-mail confirmado e pelo menos 10 livros cadastrados ganham o selo Vanguarda e o Pro vitalício, sem custo, enquanto houver vagas. A oferta pode ser encerrada a qualquer momento. Excluir livros depois não tira o benefício."
+        ]
+      },
+      {
+        "title": "Preços e pagamento",
+        "paragraphs": [
+          "Os preços estão na página de preços, em reais, e são o valor final. O pagamento é feito no Mercado Pago, por cartão ou Pix, e segue também as regras dele. O Librishelf não recebe os dados do seu cartão.",
+          "Mensal: assinatura no cartão, cobrada automaticamente todo mês até você cancelar.",
+          "Anual: pagamento único, por cartão ou Pix, que vale por um ano e não renova sozinho. Renovar antes do fim soma o novo ano ao tempo que ainda falta.",
+          "Ofertas de fundador: anual e vitalício com preço especial, por tempo e vagas limitados. O fundador anual mantém o preço especial a cada renovação feita antes de vencer.",
+          "Se o preço mudar, quem já pagou não é afetado. Na assinatura mensal, avisamos o novo preço pelo menos 30 dias antes da primeira cobrança com ele, e você pode cancelar antes disso."
+        ]
+      },
+      {
+        "title": "Desistência e reembolso",
+        "paragraphs": [
+          "Você pode desistir de qualquer compra em até 7 dias a contar do pagamento, sem dizer o motivo, e recebe o valor integral de volta (direito de arrependimento, art. 49 do Código de Defesa do Consumidor). Na assinatura mensal, o prazo conta da primeira cobrança.",
+          "Para desistir, escreva para {email} com o e-mail da sua conta. Confirmamos o recebimento, pedimos o estorno ao Mercado Pago e o Pro daquela compra é retirado. No cartão, o estorno aparece na fatura conforme o prazo do emissor; no Pix, o valor volta para a conta de onde saiu.",
+          "Depois dos 7 dias: o mensal pode ser cancelado quando você quiser, em Conta, sem multa, e o Pro continua até o fim do mês já pago, sem devolução proporcional. Compras anuais e vitalícias não têm reembolso depois desse prazo.",
+          "Cobrança em duplicidade, cobrança indevida ou falha nossa que impeça o uso do Pro são corrigidas e, quando for o caso, reembolsadas a qualquer tempo."
+        ]
+      },
+      {
+        "title": "Pro vitalício",
+        "paragraphs": [
+          "Vitalício quer dizer enquanto o Librishelf existir, e não durante a vida de quem comprou. Vale para a conta em que foi comprado ou concedido e não pode ser passado para outra conta.",
+          "O encerramento do serviço, descrito abaixo, não dá direito a reembolso do vitalício, a não ser que ainda esteja dentro do prazo de desistência."
+        ]
+      },
+      {
+        "title": "Disponibilidade e encerramento do serviço",
+        "paragraphs": [
+          "Fazemos o possível para manter o Librishelf no ar e com cópias de segurança, mas não garantimos funcionamento sem interrupções ou erros. Pode haver paradas para manutenção.",
+          "Se o Librishelf for encerrado, avisamos todas as contas com pelo menos 90 dias de antecedência, no app e por e-mail. Até o fim, você pode baixar todos os seus dados. A partir do aviso, nenhuma cobrança nova é feita, e quem tem um plano anual com tempo restante depois da data de encerramento recebe o valor proporcional a esse tempo."
+        ]
+      },
+      {
+        "title": "Excluir a conta",
+        "paragraphs": [
+          "Você pode excluir a conta quando quiser, em Conta. Seus dados são excluídos na hora, como explica a {privacy}. Excluir a conta cancela a assinatura mensal no Mercado Pago, mas não gera reembolso fora do prazo de desistência."
+        ]
+      },
+      {
+        "title": "Responsabilidade",
+        "paragraphs": [
+          "Respondemos pelos danos que causarmos, nos termos da lei. Não respondemos por conteúdo publicado por outros leitores, por dados de catálogo de terceiros, nem por perdas causadas pelo uso indevido da sua senha ou por motivos fora do nosso controle.",
+          "Nada nestes termos limita os direitos garantidos pelo Código de Defesa do Consumidor e pela Lei Geral de Proteção de Dados."
+        ]
+      },
+      {
+        "title": "Mudanças nestes termos",
+        "paragraphs": [
+          "Podemos atualizar estes termos e a política de privacidade. Quando a mudança for relevante, você será avisado no app e precisará aceitar a nova versão para continuar usando o Librishelf e para fazer compras. Mudanças não alteram as condições de compras já pagas.",
+          "Se não concordar com a nova versão, você pode baixar seus dados e excluir a conta."
+        ]
+      },
+      {
+        "title": "Lei e foro",
+        "paragraphs": [
+          "Estes termos seguem as leis brasileiras. Fica eleito o foro da comarca de Congonhas (MG), sem prejuízo do direito do consumidor de entrar com ação no foro do seu domicílio."
+        ]
+      },
+      {
+        "title": "Contato",
+        "paragraphs": [
+          "Dúvidas, pedidos de desistência e reclamações: {email}."
+        ]
+      }
+    ]
+  },
+  "legal": {
+    "updated": "Última atualização: {date}",
+    "draft": "Rascunho em revisão jurídica. O texto ainda pode mudar antes da versão final.",
+    "links": {
+      "label": "Documentos legais",
+      "terms": "Termos de uso",
+      "privacy": "Privacidade",
+      "termsInline": "termos de uso",
+      "privacyInline": "política de privacidade"
+    },
+    "update": {
+      "title": "Termos atualizados",
+      "text": "Atualizamos os {terms} e a {privacy}. Para continuar usando o Librishelf, leia e aceite a versão nova.",
+      "hint": "Os links abrem em outra aba. Se não concordar, em Conta você pode baixar seus dados e excluir a conta.",
+      "accept": "Aceitar e continuar",
+      "account": "Ir para Conta",
+      "logout": "Sair"
+    }
   },
   "notFound": {
     "title": "Página não encontrada",
@@ -1016,7 +1191,8 @@
     "planReturn": "Pagamento",
     "import": "Importar livros",
     "importSkoob": "Vindo do Skoob",
-    "loans": "Empréstimos"
+    "loans": "Empréstimos",
+    "terms": "Termos de uso"
   },
   "password": {
     "show": "Mostrar senha",
@@ -1238,7 +1414,12 @@
     "FAVORITES_TOO_MANY": "Escolha até {max} favoritos.",
     "FAVORITE_INVALID": "Livro não encontrado na sua estante.",
     "BIO_NOT_FOUND": "Apresentação não encontrada.",
-    "BIO_OWN": "Você não pode denunciar a sua própria apresentação."
+    "BIO_OWN": "Você não pode denunciar a sua própria apresentação.",
+    "TERMS_REQUIRED": "Aceite os termos de uso e a política de privacidade para criar a conta.",
+    "TERMS_NOT_ACCEPTED": "Aceite os termos de uso atualizados para continuar.",
+    "TERMS_OUTDATED": "Os termos mudaram desde que a página foi aberta. Leia a versão nova e aceite de novo.",
+    "TERMS_VERSION_REQUIRED": "Não foi possível registrar o aceite. Recarregue a página e tente de novo.",
+    "SUBSCRIPTION_CANCEL_FAILED": "Não foi possível cancelar sua assinatura mensal agora, então a conta não foi excluída. Tente de novo em instantes."
   },
   "block": {
     "block": "Bloquear {name}",
@@ -2120,7 +2301,7 @@
     "currentUntil": "Seu plano: {name}, até {date}.",
     "trialText": "Quer experimentar antes? O teste grátis dura 14 dias, sem cartão e sem cobrança automática.",
     "trialButton": "Testar 14 dias grátis",
-    "finePrint": "Pagamento pelo Mercado Pago. O Librishelf não recebe os dados do cartão. Você pode desistir da compra em até 7 dias e receber o valor de volta.",
+    "finePrint": "Pagamento pelo Mercado Pago. O Librishelf não recebe os dados do cartão. Ao comprar, você aceita os {terms}, com as regras de renovação e reembolso: você pode desistir em até 7 dias e receber o valor de volta.",
     "proTitle": "O que o Pro traz",
     "soon": "Em breve",
     "freeTitle": "Grátis para sempre",

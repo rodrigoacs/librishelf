@@ -42,6 +42,11 @@ export default {
     return client.post('/auth/register', userData)
   },
 
+  /** Aceite de uma versão nova dos termos (a que o app mostrou). → { version, accepted, acceptedAt } */
+  acceptTerms(version) {
+    return client.post('/auth/me/terms', { version })
+  },
+
   forgotPassword(email, locale) {
     return client.post('/auth/password/forgot', { email, locale })
   },

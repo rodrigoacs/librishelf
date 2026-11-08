@@ -16,7 +16,7 @@ const versionOf = async id => (await db.query('SELECT cover_version FROM librish
 
 beforeAll(async () => {
   await clearDatabase()
-  await request(app).post('/auth/register').send({ username: 'capas', password: 'senha12345', email: 'capas@example.com' })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: 'capas', password: 'senha12345', email: 'capas@example.com' })
   token = tokenFrom(await request(app).post('/auth/login').send({ username: 'capas', password: 'senha12345' }))
   for (const title of ['Um', 'Dois', 'Três']) {
     const res = await request(app).post('/library').set({ Authorization: `Bearer ${token}` }).field({ title, authors: 'Autor' })

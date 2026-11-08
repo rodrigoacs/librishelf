@@ -62,6 +62,20 @@
         />
       </div>
 
+      <div class="field">
+        <CheckField
+          id="register-terms"
+          ref="termsField"
+          v-model="acceptTerms"
+          :error="errors.terms"
+        >
+          <LegalText
+            :text="t('register.acceptTerms', legalParams())"
+            new-tab
+          />
+        </CheckField>
+      </div>
+
       <AppButton
         type="submit"
         :label="t('register.register')"
@@ -72,13 +86,6 @@
 
     <div class="footer">
       <p>{{ t('register.haveAccount') }} <router-link :to="{ name: 'login', query: route.query }">{{ t('register.login') }}</router-link></p>
-      <p class="muted-link">
-        {{ t('register.privacyNotice') }}
-        <router-link
-          to="/privacy"
-          class="muted-link"
-        >{{ t('register.privacyLink') }}</router-link>.
-      </p>
     </div>
   </AuthLayout>
 </template>
@@ -86,6 +93,9 @@
 <script setup>
 import PasswordField from '../components/form/PasswordField.vue'
 import TextField from '../components/form/TextField.vue'
+import CheckField from '../components/form/CheckField.vue'
+import LegalText from '../components/legal/LegalText.vue'
+import { legalParams } from '../utils/legalText.js'
 import { isWeakPassword } from '../utils/password.js'
 import { ref, reactive, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -108,20 +118,23 @@ const name = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const acceptTerms = ref(false)
 const loading = ref(false)
 
 // Erros embaixo de cada campo (como na Conta); toast só para o que não é de campo.
-const errors = reactive({ name: '', email: '', password: '', confirm: '' })
+const errors = reactive({ name: '', email: '', password: '', confirm: '', terms: '' })
 const nameField = ref(null)
 const emailField = ref(null)
 const passwordField = ref(null)
 const confirmField = ref(null)
-const FIELDS = { name: nameField, email: emailField, password: passwordField, confirm: confirmField }
+const termsField = ref(null)
+const FIELDS = { name: nameField, email: emailField, password: passwordField, confirm: confirmField, terms: termsField }
 
 watch(name, () => { errors.name = '' })
 watch(email, () => { errors.email = '' })
 watch(password, () => { errors.password = '' })
 watch(confirmPassword, () => { errors.confirm = '' })
+watch(acceptTerms, () => { errors.terms = '' })
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -137,7 +150,8 @@ const CODE_FIELDS = {
   PASSWORD_TOO_SHORT: 'password',
   PASSWORD_TOO_LONG: 'password',
   PASSWORD_NEEDS_LETTER: 'password',
-  PASSWORD_NEEDS_NUMBER: 'password'
+  PASSWORD_NEEDS_NUMBER: 'password',
+  TERMS_REQUIRED: 'terms'
 }
 
 function focusFirstError() {
@@ -152,6 +166,7 @@ function validate() {
   errors.email = !email.value.trim() ? required : (EMAIL_PATTERN.test(email.value.trim()) ? '' : t('settings.errors.email'))
   errors.password = !password.value ? required : (isWeakPassword(password.value) ? t('register.passwordTooWeak') : '')
   errors.confirm = !confirmPassword.value ? required : (password.value !== confirmPassword.value ? t('register.passwordMismatch') : '')
+  errors.terms = acceptTerms.value ? '' : t('register.acceptTermsRequired')
   return !Object.values(errors).some(Boolean)
 }
 
@@ -167,7 +182,8 @@ async function handleRegister() {
       username: name.value.trim(),
       email: email.value.trim(),
       password: password.value,
-      locale: locale.value
+      locale: locale.value,
+      acceptTerms: acceptTerms.value
     })
 
     toast.add({ severity: 'success', detail: t('register.accountCreatedVerify'), life: 7000 })

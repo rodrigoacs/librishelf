@@ -46,10 +46,7 @@
 
     <div class="footer">
       <p>{{ t('login.newUser') }} <router-link :to="{ name: 'register', query: route.query }">{{ t('login.createAccount') }}</router-link></p>
-      <p><router-link
-          to="/privacy"
-          class="muted-link"
-        >{{ t('login.privacy') }}</router-link></p>
+      <LegalLinks class="muted-link" />
     </div>
   </AuthLayout>
 </template>
@@ -65,6 +62,7 @@ import { useI18n } from 'vue-i18n'
 import AuthLayout from '../components/AuthLayout.vue'
 import { login } from '../services/session.js'
 import { safeRedirect } from '../router/index.js'
+import LegalLinks from '../components/legal/LegalLinks.vue'
 
 const { t } = useI18n()
 const router = useRouter()

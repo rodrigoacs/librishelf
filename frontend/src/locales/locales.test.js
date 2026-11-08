@@ -54,6 +54,11 @@ const PROPER = new Set([
 ])
 
 /** Rótulo curto (botão, título, campo): até 5 palavras e sem ponto final. */
+// Termos e Privacidade são texto corrido de documento: ficam fora das regras
+// de rótulo e do glossário de ações da tela
+const LEGAL_DOCS = ['privacy.', 'terms.']
+const isLegalDoc = key => LEGAL_DOCS.some(prefix => key.startsWith(prefix))
+
 function isShortLabel(text) {
   const words = text.replace(/\{[^}]*\}/g, '').match(/[\p{L}][\p{L}\p{N}'’-]*/gu) || []
   return words.length >= 2 && words.length <= 5 && !/[.!?…:]\s*$/.test(text.trim())
@@ -68,7 +73,7 @@ describe('vocabulário', () => {
   for (const [name, all] of [['pt', PT], ['en', EN]]) {
     it(`rótulos curtos só com a primeira maiúscula (${name})`, () => {
       const bad = Object.entries(all)
-        .filter(([key]) => !key.startsWith('errors.') && !key.startsWith('privacy.'))
+        .filter(([key]) => !key.startsWith('errors.') && !isLegalDoc(key))
         .flatMap(([key, value]) => value.split(/(?<!\\)\|/).map(part => [key, part.trim()]))
         .filter(([, part]) => isShortLabel(part) && titleCaseWords(part).length > 0)
         .map(([key, part]) => `${key}: "${part}"`)
@@ -77,9 +82,9 @@ describe('vocabulário', () => {
   }
 
   it('glossário: "Excluir" (não "Deletar"/"Apagar") e "categoria" (não "tag"/"gênero")', () => {
-    // A política de privacidade fala de dados "apagados" (texto corrido, não ação da tela)
+    // Os documentos legais falam de dados "apagados" (texto corrido, não ação da tela)
     const bad = Object.entries(PT)
-      .filter(([key]) => !key.startsWith('privacy.'))
+      .filter(([key]) => !isLegalDoc(key))
       .filter(([, value]) => /\b(delet\w*|apag\w*|tags?)\b|gêner/i.test(value))
       .map(([key, value]) => `${key}: "${value}"`)
     expect(bad).toEqual([])

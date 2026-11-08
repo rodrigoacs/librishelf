@@ -443,7 +443,7 @@
       v-if="profileSettled"
       class="public-footer"
     >
-      <router-link to="/privacy">{{ t('login.privacy') }}</router-link>
+      <LegalLinks />
       <span aria-hidden="true">·</span>
       <span>{{ t('publicLibrary.poweredBy') }}</span>
     </footer>
@@ -484,6 +484,7 @@ import VisitorInvite from '../components/public/VisitorInvite.vue'
 import { shareLink } from '../utils/share.js'
 import { setPageTheme } from '../composables/useTheme.js'
 import { SHELF_SORTS, SHELF_STATUSES, isDefaultShelf, readPublicQuery, shelfParams, writePublicQuery } from '../utils/publicShelf.js'
+import LegalLinks from '../components/legal/LegalLinks.vue'
 
 /**
  * Biblioteca pública (pacote 33): a página que circula por link.
@@ -947,6 +948,7 @@ watch(username, () => {
   margin-top: auto;
   padding-top: var(--space-8);
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   justify-content: center;
   color: var(--text-muted);

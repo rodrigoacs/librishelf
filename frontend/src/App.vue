@@ -25,6 +25,8 @@
       <router-view />
     </main>
 
+    <TermsUpdateDialog v-if="needsTerms" />
+
     <TabBar v-if="showNavigation && phone" />
   </div>
 </template>
@@ -40,6 +42,7 @@ import { isAuthenticated, currentUser } from './services/session.js'
 import EmailBanner from './components/EmailBanner.vue'
 import OfflineBanner from './components/OfflineBanner.vue'
 import TabBar from './components/TabBar.vue'
+import TermsUpdateDialog from './components/legal/TermsUpdateDialog.vue'
 import { useIsPhone } from './composables/useIsPhone.js'
 
 const route = useRoute()
@@ -53,6 +56,14 @@ const showNavigation = computed(() => {
   if (route.meta.public) return isAuthenticated.value
   return Boolean(route.meta.requiresAuth)
 })
+
+// Versão nova dos termos: pede o aceite em qualquer tela com o menu, menos
+// nas páginas dos termos (para ler antes) e em Conta (para quem não concorda
+// baixar os dados e excluir a conta)
+const LEGAL_PAGES = ['terms', 'privacy', 'settings']
+const needsTerms = computed(() => showNavigation.value &&
+  currentUser.value?.terms?.accepted === false &&
+  !LEGAL_PAGES.includes(route.name))
 </script>
 
 <style>

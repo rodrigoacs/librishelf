@@ -8,7 +8,7 @@ import { clearDatabase, closeDatabase } from '../../utils/db.js'
 import { purposeKey } from '../../utils/keys.js'
 
 const PASSWORD = 'senha12345'
-const register = (username, email) => request(app).post('/auth/register').send({ username, email, password: PASSWORD })
+const register = (username, email) => request(app).post('/auth/register').send({ acceptTerms: true, username, email, password: PASSWORD })
 const login = username => request(app).post('/auth/login').send({ username, password: PASSWORD })
 const me = token => request(app).get('/auth/me').set('Authorization', `Bearer ${token}`)
 

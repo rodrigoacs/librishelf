@@ -18,7 +18,7 @@ const ids = {}
 const auth = name => ({ Authorization: `Bearer ${tokens[name]}` })
 
 // ---------------------------------------------------------- Mercado Pago falso
-const mp = { preapprovals: new Map(), invoices: new Map(), payments: new Map(), bodies: [], canceled: [], seq: 5000 }
+const mp = { preapprovals: new Map(), invoices: new Map(), payments: new Map(), bodies: [], canceled: [], failCancel: false, seq: 5000 }
 const next = () => String(++mp.seq)
 
 setFetch(async (url, options = {}) => {
@@ -41,6 +41,7 @@ setFetch(async (url, options = {}) => {
     const pre = mp.preapprovals.get(match[1])
     if (!pre) return json(404, { message: 'not found' })
     if (method === 'PUT') {
+      if (mp.failCancel) return json(500, { message: 'internal_error' })
       Object.assign(pre, JSON.parse(options.body))
       mp.canceled.push(pre.id)
     }
@@ -95,7 +96,7 @@ function webhook(topic, resourceId, eventId = `evt-${topic}-${resourceId}-${Math
 const runJobs = () => drain('teste', { types: ['webhook.process', 'mercadopago.reconcile'] })
 
 async function signUp(name) {
-  await request(app).post('/auth/register').send({ username: name, password: PASSWORD, email: `${name}@example.com` })
+  await request(app).post('/auth/register').send({ acceptTerms: true, username: name, password: PASSWORD, email: `${name}@example.com` })
   await confirmEmail(name)
   tokens[name] = tokenFrom(await request(app).post('/auth/login').send({ username: name, password: PASSWORD }))
   ids[name] = (await db.query('SELECT id FROM librishelf.users WHERE name = $1', [name])).rows[0].id
@@ -283,5 +284,54 @@ describe('reconciliação', () => {
     const { rows } = await db.query('SELECT processed_at, error FROM librishelf.webhook_events WHERE id = $1', [event.id])
     expect(rows[0].processed_at).not.toBeNull()
     expect(rows[0].error).toMatch(/ignorado/)
+  })
+})
+
+describe('excluir a conta', () => {
+  const deleteAccount = name => request(app).delete('/auth/me').set(auth(name)).send({ password: PASSWORD })
+  const exists = async name => (await db.query('SELECT 1 FROM librishelf.users WHERE id = $1', [ids[name]])).rowCount === 1
+
+  test('com o mensal ativo: cancela no Mercado Pago antes de excluir', async () => {
+    await signUp('gabi')
+    const { preapprovalId } = await subscribe('gabi')
+    const { invoiceId } = charge(preapprovalId)
+    await webhook('subscription_authorized_payment', invoiceId)
+    await runJobs()
+
+    const res = await deleteAccount('gabi')
+    expect(res.status).toBe(204)
+    expect(mp.canceled).toContain(preapprovalId)
+    expect(mp.preapprovals.get(preapprovalId).status).toBe('cancelled')
+    expect(await exists('gabi')).toBe(false)
+  })
+
+  test('Mercado Pago fora do ar: a conta não é excluída', async () => {
+    await signUp('hugo')
+    const { preapprovalId } = await subscribe('hugo')
+    const { invoiceId } = charge(preapprovalId)
+    await webhook('subscription_authorized_payment', invoiceId)
+    await runJobs()
+
+    mp.failCancel = true
+    try {
+      const res = await deleteAccount('hugo')
+      expect(res.status).toBe(502)
+      expect(res.body.code).toBe('SUBSCRIPTION_CANCEL_FAILED')
+      expect(await exists('hugo')).toBe(true)
+    } finally {
+      mp.failCancel = false
+    }
+
+    expect((await deleteAccount('hugo')).status).toBe(204)
+    expect(mp.canceled).toContain(preapprovalId)
+  })
+
+  test('checkout do mensal aberto e não pago também é cancelado', async () => {
+    await signUp('ivo')
+    const res = await request(app).post('/plan/checkout').set(auth('ivo')).send({ offer: 'monthly' })
+    const preapprovalId = new URL(res.body.url).searchParams.get('preapproval_id')
+
+    expect((await deleteAccount('ivo')).status).toBe(204)
+    expect(mp.canceled).toContain(preapprovalId)
   })
 })
