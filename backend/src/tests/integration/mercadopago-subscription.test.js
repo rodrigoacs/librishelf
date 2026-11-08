@@ -18,7 +18,7 @@ const ids = {}
 const auth = name => ({ Authorization: `Bearer ${tokens[name]}` })
 
 // ---------------------------------------------------------- Mercado Pago falso
-const mp = { preapprovals: new Map(), invoices: new Map(), payments: new Map(), bodies: [], canceled: [], failCancel: false, seq: 5000 }
+const mp = { preapprovals: new Map(), invoices: new Map(), payments: new Map(), bodies: [], canceled: [], refunds: [], failCancel: false, failRefund: false, seq: 5000 }
 const next = () => String(++mp.seq)
 
 setFetch(async (url, options = {}) => {
@@ -59,6 +59,15 @@ setFetch(async (url, options = {}) => {
   if (path.startsWith('/v1/payments/search')) {
     const reference = new URL(url).searchParams.get('external_reference')
     return json(200, { results: [...mp.payments.values()].filter(p => p.external_reference === reference) })
+  }
+  const refund = path.match(/^\/v1\/payments\/(\d+)\/refunds$/)
+  if (refund && method === 'POST') {
+    const payment = mp.payments.get(refund[1])
+    if (!payment) return json(404, { message: 'Payment not found' })
+    if (mp.failRefund) return json(500, { message: 'internal_error' })
+    mp.refunds.push({ id: refund[1], key: options.headers['X-Idempotency-Key'], body: JSON.parse(options.body) })
+    payment.status = 'refunded'
+    return json(201, { id: 9000 + mp.refunds.length, payment_id: Number(refund[1]), status: 'approved' })
   }
   match = path.match(/^\/v1\/payments\/(\d+)$/)
   if (match) {
@@ -333,5 +342,39 @@ describe('excluir a conta', () => {
 
     expect((await deleteAccount('ivo')).status).toBe(204)
     expect(mp.canceled).toContain(preapprovalId)
+  })
+})
+
+describe('desistência do mensal', () => {
+  const payments = async name => (await request(app).get('/plan/payments').set(auth(name))).body.payments
+
+  test('primeira cobrança: cancela a assinatura e estorna; renovação não dá direito', async () => {
+    await signUp('jade')
+    const { preapprovalId } = await subscribe('jade')
+    const first = charge(preapprovalId)
+    await webhook('subscription_authorized_payment', first.invoiceId)
+    await runJobs()
+
+    // Segunda cobrança logo depois (renovação): sem botão
+    const second = charge(preapprovalId)
+    await webhook('subscription_authorized_payment', second.invoiceId)
+    await runJobs()
+    const list = await payments('jade')
+    expect(list).toHaveLength(2)
+    const byMp = async id => (await db.query('SELECT id FROM librishelf.payments WHERE external_id = $1', [id])).rows[0].id
+    const firstId = Number(await byMp(first.paymentId))
+    const secondId = Number(await byMp(second.paymentId))
+    expect(list.find(p => p.id === secondId).withdrawableUntil).toBeNull()
+    expect(list.find(p => p.id === firstId).withdrawableUntil).not.toBeNull()
+
+    const renewal = await request(app).post(`/plan/payments/${secondId}/withdraw`).set(auth('jade'))
+    expect(renewal.status).toBe(409)
+
+    const res = await request(app).post(`/plan/payments/${firstId}/withdraw`).set(auth('jade'))
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ subscriptionCanceled: true, entitlementRevoked: true })
+    expect(res.body.plan.pro).toBe(false)
+    expect(mp.canceled).toContain(preapprovalId)
+    expect(mp.refunds.map(r => r.id)).toEqual([first.paymentId])
   })
 })

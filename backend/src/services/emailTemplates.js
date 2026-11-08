@@ -178,6 +178,17 @@ const TEXTS = {
       note: 'O plano e o histórico de cobranças ficam em Conta.',
       ignore: 'Você recebeu este e-mail porque fez um pagamento no Librishelf. Os dados do cartão ficam só com o Mercado Pago.'
     },
+    withdrawn: {
+      subject: 'Desistência confirmada no Librishelf',
+      preheader: ({ amount }) => `Estorno de ${amount} pedido ao Mercado Pago`,
+      title: 'Desistência confirmada',
+      greeting: name => `Olá, ${name}.`,
+      body: 'Recebemos sua desistência e já pedimos ao Mercado Pago o estorno do valor integral. O Pro desta compra foi encerrado e seus dados continuam na conta.',
+      line: line => line,
+      button: 'Ver minha conta',
+      note: 'No cartão, o estorno aparece na fatura conforme o prazo do emissor. No Pix, o valor volta para a conta de onde saiu.',
+      ignore: 'Você recebeu este e-mail porque desistiu de uma compra no Librishelf. Se não foi você, troque a senha e escreva para contato@librishelf.com.'
+    },
     declined: {
       subject: 'Pagamento recusado no Librishelf',
       preheader: ({ renewal }) => (renewal
@@ -342,6 +353,17 @@ const TEXTS = {
       button: 'Open my account',
       note: 'Your plan and billing history are in Account.',
       ignore: 'You got this email because you made a payment on Librishelf. Card details stay with Mercado Pago only.'
+    },
+    withdrawn: {
+      subject: 'Withdrawal confirmed on Librishelf',
+      preheader: ({ amount }) => `Refund of ${amount} requested from Mercado Pago`,
+      title: 'Withdrawal confirmed',
+      greeting: name => `Hi, ${name}.`,
+      body: 'We received your withdrawal and already asked Mercado Pago to refund the full amount. The Pro from this purchase has ended and your data stays in your account.',
+      line: line => line,
+      button: 'Open my account',
+      note: 'On cards, the refund shows on your statement within the issuer’s time frame. With Pix, the money goes back to the account it came from.',
+      ignore: 'You got this email because you withdrew from a purchase on Librishelf. If it was not you, change your password and write to contato@librishelf.com.'
     },
     declined: {
       subject: 'Payment declined on Librishelf',
@@ -662,6 +684,19 @@ export function paymentConfirmedEmail({ plan, amountCents, currency = 'BRL', met
     lifetime ? `${L.duration}: ${L.lifetime}` : `${L.validUntil}: ${formatDate(endsAt, code)}`
   ]
   return build('paid', { ...rest, locale: code, items, amount, planLabel: planLabel(code, plan), lifetime, monthly: plan === 'monthly' })
+}
+
+/** Desistência da compra (pacote 36b): { name, link, locale, plan, amountCents, currency, method } */
+export function withdrawalConfirmedEmail({ plan, amountCents, currency = 'BRL', method, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  const L = BILLING_LABELS[code]
+  const amount = formatMoney(amountCents, code, currency)
+  const items = [
+    `${L.plan}: ${planLabel(code, plan)}`,
+    `${L.amount}: ${amount}`,
+    ...(method ? [`${L.method}: ${L[method] || method}`] : [])
+  ]
+  return build('withdrawn', { ...rest, locale: code, items, amount })
 }
 
 /**

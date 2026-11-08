@@ -4,7 +4,7 @@ import { enqueue } from '../jobs/queue.js'
 import { PermanentJobError, RetryLaterError } from '../jobs/errors.js'
 import { sendMail } from './mailService.js'
 import * as quota from './emailQuota.js'
-import { renewalReminderEmail, trialEndingEmail, trialEndedEmail, paymentConfirmedEmail, paymentDeclinedEmail } from './emailTemplates.js'
+import { renewalReminderEmail, trialEndingEmail, trialEndedEmail, paymentConfirmedEmail, paymentDeclinedEmail, withdrawalConfirmedEmail } from './emailTemplates.js'
 import logger from '../utils/logger.js'
 import { loanReminderEmail } from './emailTemplates.js'
 import { loanReminderMessage } from './collectionService.js'
@@ -48,6 +48,11 @@ const options = (dedupeKey, runAt = null) => ({ dedupeKey, runAt, maxAttempts: M
 /** Pagamento que liberou ou estendeu o Pro. `client`: a mesma transação. */
 export function queuePaymentConfirmed(paymentId, client) {
   return enqueue(EMAIL_JOB, { kind: 'payment_confirmed', paymentId }, options(`email:payment-confirmed:${paymentId}`), client)
+}
+
+/** Desistência da compra (pacote 36b): confirmação por e-mail, além da tela. */
+export function queueWithdrawalConfirmed(paymentId, client) {
+  return enqueue(EMAIL_JOB, { kind: 'withdrawal_confirmed', paymentId }, options(`email:withdrawal:${paymentId}`), client)
 }
 
 /**
@@ -158,6 +163,16 @@ const BUILDERS = {
     return { ...base(row), build: paymentConfirmedEmail, params: {
       link: `${siteUrl()}/settings`, plan: row.offer_code, amountCents: row.amount_cents, currency: row.currency,
       method: row.method, endsAt: row.ends_at
+    } }
+  },
+
+  async withdrawal_confirmed({ paymentId }) {
+    const row = await paymentRow(paymentId)
+    if (!row) return skip('pagamento não existe mais')
+    if (!reachable(row)) return skip('e-mail não confirmado')
+    if (!row.refunded_at) return skip('sem reembolso registrado')
+    return { ...base(row), build: withdrawalConfirmedEmail, params: {
+      link: `${siteUrl()}/settings`, plan: row.offer_code, amountCents: row.amount_cents, currency: row.currency, method: row.method
     } }
   },
 

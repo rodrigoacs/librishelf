@@ -2094,8 +2094,16 @@ export const SUBSCRIPTION_QUERIES = {
     RETURNING id, user_id, ends_at
   `,
 
+  // first_charge: no mensal, só a primeira cobrança da assinatura dá direito
+  // à desistência (o prazo conta dela)
   HISTORY: `
-    SELECT p.id, p.offer_code, p.method, p.amount_cents, p.currency, p.status, p.paid_at, p.refunded_at, p.created_at
+    SELECT p.id, p.offer_code, p.method, p.amount_cents, p.currency, p.status, p.paid_at, p.refunded_at, p.created_at,
+           p.provider, p.external_id,
+           (p.offer_code <> 'monthly' OR NOT EXISTS (
+             SELECT 1 FROM librishelf.payments f
+             WHERE f.entitlement_id = p.entitlement_id AND f.id <> p.id AND f.status = 'approved'
+               AND COALESCE(f.paid_at, f.created_at) < COALESCE(p.paid_at, p.created_at)
+           )) AS first_charge
     FROM librishelf.payments p
     WHERE p.user_id = $1
     ORDER BY COALESCE(p.paid_at, p.created_at) DESC, p.id DESC
@@ -2205,7 +2213,7 @@ export const BILLING_EMAIL_QUERIES = {
   `,
 
   PAYMENT: `
-    SELECT p.id, p.user_id, p.offer_code, p.method, p.amount_cents, p.currency, p.status,
+    SELECT p.id, p.user_id, p.offer_code, p.method, p.amount_cents, p.currency, p.status, p.refunded_at,
            r.status AS reservation_status,
            e.ends_at, e.status AS entitlement_status,
            EXISTS (
@@ -2984,5 +2992,23 @@ export const TERMS_QUERIES = {
     SELECT accepted_at
     FROM librishelf.terms_acceptance
     WHERE user_id = $1 AND terms_version = $2
+  `
+}
+
+// ---------------------------------------------------------------------------
+// Desistência da compra pelo próprio comprador (pacote 36b)
+// ---------------------------------------------------------------------------
+export const WITHDRAWAL_QUERIES = {
+  PAYMENT_LOCK: `
+    SELECT p.id, p.user_id, p.offer_code, p.method, p.amount_cents, p.status, p.paid_at, p.refunded_at,
+           p.provider, p.external_id, p.entitlement_id,
+           (p.offer_code <> 'monthly' OR NOT EXISTS (
+             SELECT 1 FROM librishelf.payments f
+             WHERE f.entitlement_id = p.entitlement_id AND f.id <> p.id AND f.status = 'approved'
+               AND COALESCE(f.paid_at, f.created_at) < COALESCE(p.paid_at, p.created_at)
+           )) AS first_charge
+    FROM librishelf.payments p
+    WHERE p.id = $1 AND p.user_id = $2
+    FOR UPDATE OF p
   `
 }

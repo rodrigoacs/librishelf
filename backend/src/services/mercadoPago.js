@@ -84,6 +84,15 @@ export function getPayment(id) {
   return request(`/v1/payments/${encodeURIComponent(id)}`)
 }
 
+/**
+ * Estorno do valor inteiro (sem amount). A chave de idempotência evita dois
+ * estornos se o pedido for repetido. O pagamento passa a refunded e o
+ * webhook avisa.
+ */
+export function refundPayment(id, idempotencyKey) {
+  return request(`/v1/payments/${encodeURIComponent(id)}/refunds`, { method: 'POST', body: {}, idempotencyKey })
+}
+
 export function searchPayments(externalReference) {
   const query = new URLSearchParams({ external_reference: externalReference, sort: 'date_created', criteria: 'desc' })
   return request(`/v1/payments/search?${query}`)

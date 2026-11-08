@@ -5,6 +5,7 @@ import * as trialService from '../services/trialService.js'
 import * as entitlementService from '../services/entitlementService.js'
 import * as checkoutService from '../services/checkoutService.js'
 import * as subscriptionService from '../services/subscriptionService.js'
+import * as withdrawalService from '../services/withdrawalService.js'
 import { processPayment } from '../services/paymentService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
@@ -92,6 +93,19 @@ router.post('/subscription/cancel', sensitiveLimiter, track('pro.cancel'), async
     res.status(STATUS.OK).json({ endsAt, plan: await entitlementService.planOf(req.user.id) })
   } catch (error) {
     sendError(res, error, 'Erro ao cancelar a assinatura')
+  }
+})
+
+// Desistência da compra em até 7 dias (pacote 36b) → { refundedAt, plan, ... }
+router.post('/payments/:id/withdraw', sensitiveLimiter, track('pro.withdraw'), async (req, res) => {
+  try {
+    const paymentId = Number(req.params.id)
+    if (!Number.isInteger(paymentId) || paymentId < 1) {
+      throw httpError('Compra não encontrada.', STATUS.NOT_FOUND, 'PAYMENT_NOT_FOUND')
+    }
+    res.status(STATUS.OK).json(await withdrawalService.withdraw(req.user.id, paymentId))
+  } catch (error) {
+    sendError(res, error, 'Erro ao registrar a desistência')
   }
 })
 

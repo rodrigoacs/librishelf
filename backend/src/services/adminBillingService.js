@@ -2,6 +2,7 @@ import { db } from '../database/connection.js'
 import { ADMIN_BILLING_QUERIES as q, ADMIN_QUERIES as aq } from '../database/queries.js'
 import { transaction } from '../repositories/proGrantRepository.js'
 import * as mercadoPago from './mercadoPago.js'
+import * as subscriptionService from './subscriptionService.js'
 import * as queue from '../jobs/queue.js'
 import * as quota from './emailQuota.js'
 import * as webhookService from './webhookService.js'
@@ -44,26 +45,6 @@ function readNote(note) {
     throw httpError('Nota inválida (até 500 caracteres).', STATUS.BAD_REQUEST, 'FIELD_INVALID', { field: 'note', max: MAX_NOTE })
   }
   return note.trim() || null
-}
-
-/**
- * Assinatura mensal ativa no Mercado Pago: cancela lá antes de tirar o Pro
- * aqui, senão a cobrança do mês seguinte continuaria.
- */
-async function stopSubscription(entitlement) {
-  if (entitlement.kind !== 'monthly' || entitlement.source !== 'mercadopago' || !entitlement.auto_renew || !entitlement.external_id) return false
-  if (!mercadoPago.isConfigured()) {
-    logger.warn('Mensal revogado sem cancelar no Mercado Pago: MP_ACCESS_TOKEN não definido', { entitlementId: entitlement.id })
-    return false
-  }
-  try {
-    await mercadoPago.cancelPreapproval(entitlement.external_id)
-    return true
-  } catch (err) {
-    if (err.status === 404) return false
-    logger.error('Falha ao cancelar a assinatura no Mercado Pago', { entitlementId: entitlement.id, message: err.message })
-    throw httpError('O Mercado Pago não respondeu. Tente de novo em instantes.', 502, 'PAYMENT_PROVIDER_ERROR')
-  }
 }
 
 // ------------------------------------------------------------------ conta
@@ -139,7 +120,7 @@ export async function revoke(adminId, entitlementId, { note } = {}) {
     if (!entitlement) throw httpError('Pro não encontrado.', STATUS.NOT_FOUND, 'ENTITLEMENT_NOT_FOUND')
     if (entitlement.status !== 'active') throw httpError('Este Pro não está ativo.', STATUS.CONFLICT, 'ENTITLEMENT_NOT_ACTIVE')
 
-    const subscriptionCanceled = await stopSubscription(entitlement)
+    const subscriptionCanceled = await subscriptionService.stopRenewal(entitlement)
     await client.query(q.REVOKE, [entitlementId])
     await log(client, adminId, 'pro.revoke', entitlement.user_id, {
       entitlementId: Number(entitlementId), kind: entitlement.kind, source: entitlement.source, subscriptionCanceled, note: text
@@ -201,7 +182,7 @@ export async function refund(adminId, paymentId, { note } = {}) {
     if (payment.entitlement_id) {
       const entitlement = (await client.query(q.ENTITLEMENT_LOCK, [payment.entitlement_id])).rows[0]
       if (entitlement) {
-        subscriptionCanceled = await stopSubscription(entitlement)
+        subscriptionCanceled = await subscriptionService.stopRenewal(entitlement)
         entitlementRevoked = Boolean((await client.query(q.REFUND_ENTITLEMENT, [entitlement.id])).rows[0])
       }
     }

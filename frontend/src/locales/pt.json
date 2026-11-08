@@ -528,7 +528,14 @@
       "cancelConfirm": "Cancelar assinatura",
       "keep": "Manter",
       "canceled": "Assinatura cancelada. O Pro vale até {date}.",
-      "canceledNow": "Assinatura cancelada."
+      "canceledNow": "Assinatura cancelada.",
+      "withdraw": "Desistir da compra",
+      "withdrawHelp": "Você pode desistir até {date} e receber o valor de volta.",
+      "withdrawTitle": "Desistir da compra?",
+      "withdrawMessage": "Pedimos agora ao Mercado Pago o estorno de {amount} e o Pro desta compra termina na hora. Seus livros e dados continuam na conta.",
+      "withdrawMessageMonthly": "Pedimos agora ao Mercado Pago o estorno de {amount}, a assinatura é cancelada e o Pro termina na hora. Seus livros e dados continuam na conta.",
+      "withdrawConfirm": "Desistir e pedir estorno",
+      "withdrawn": "Desistência confirmada. O estorno de {amount} foi pedido ao Mercado Pago, e a confirmação também vai por e-mail."
     }
   },
   "discover": {
@@ -752,7 +759,7 @@
         "title": "Desistência e reembolso",
         "paragraphs": [
           "Você pode desistir de qualquer compra em até 7 dias a contar do pagamento, sem dizer o motivo, e recebe o valor integral de volta (direito de arrependimento, art. 49 do Código de Defesa do Consumidor). Na assinatura mensal, o prazo conta da primeira cobrança.",
-          "Para desistir, escreva para {email} com o e-mail da sua conta. Confirmamos o recebimento, pedimos o estorno ao Mercado Pago e o Pro daquela compra é retirado. No cartão, o estorno aparece na fatura conforme o prazo do emissor; no Pix, o valor volta para a conta de onde saiu.",
+          "Para desistir, use Desistir da compra em Conta, no plano, ou escreva para {email} com o e-mail da sua conta. A confirmação aparece na hora e também chega por e-mail; o estorno é pedido ao Mercado Pago no mesmo momento e o Pro daquela compra é retirado. No cartão, o estorno aparece na fatura conforme o prazo do emissor; no Pix, o valor volta para a conta de onde saiu.",
           "Depois dos 7 dias: o mensal pode ser cancelado quando você quiser, em Conta, sem multa, e o Pro continua até o fim do mês já pago, sem devolução proporcional. Compras anuais e vitalícias não têm reembolso depois desse prazo.",
           "Cobrança em duplicidade, cobrança indevida ou falha nossa que impeça o uso do Pro são corrigidas e, quando for o caso, reembolsadas a qualquer tempo."
         ]
@@ -1419,7 +1426,8 @@
     "TERMS_NOT_ACCEPTED": "Aceite os termos de uso atualizados para continuar.",
     "TERMS_OUTDATED": "Os termos mudaram desde que a página foi aberta. Leia a versão nova e aceite de novo.",
     "TERMS_VERSION_REQUIRED": "Não foi possível registrar o aceite. Recarregue a página e tente de novo.",
-    "SUBSCRIPTION_CANCEL_FAILED": "Não foi possível cancelar sua assinatura mensal agora, então a conta não foi excluída. Tente de novo em instantes."
+    "SUBSCRIPTION_CANCEL_FAILED": "Não foi possível cancelar sua assinatura mensal agora, então a conta não foi excluída. Tente de novo em instantes.",
+    "WITHDRAWAL_NOT_AVAILABLE": "O prazo de 7 dias para desistir desta compra acabou ou ela já foi reembolsada."
   },
   "block": {
     "block": "Bloquear {name}",

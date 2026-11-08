@@ -528,7 +528,14 @@
       "cancelConfirm": "Cancel subscription",
       "keep": "Keep",
       "canceled": "Subscription cancelled. Pro lasts until {date}.",
-      "canceledNow": "Subscription cancelled."
+      "canceledNow": "Subscription cancelled.",
+      "withdraw": "Withdraw from purchase",
+      "withdrawHelp": "You can withdraw until {date} and get your money back.",
+      "withdrawTitle": "Withdraw from this purchase?",
+      "withdrawMessage": "We ask Mercado Pago right now to refund {amount}, and the Pro from this purchase ends immediately. Your books and data stay in your account.",
+      "withdrawMessageMonthly": "We ask Mercado Pago right now to refund {amount}, the subscription is canceled and Pro ends immediately. Your books and data stay in your account.",
+      "withdrawConfirm": "Withdraw and request refund",
+      "withdrawn": "Withdrawal confirmed. The refund of {amount} was requested from Mercado Pago, and the confirmation is also on its way by email."
     }
   },
   "discover": {
@@ -752,7 +759,7 @@
         "title": "Withdrawal and refunds",
         "paragraphs": [
           "You can withdraw from any purchase within 7 days of payment, without giving a reason, and get the full amount back (right of withdrawal, article 49 of the Brazilian Consumer Protection Code). For the monthly subscription, the period counts from the first charge.",
-          "To withdraw, write to {email} from your account's email address. We confirm we received it, ask Mercado Pago for the refund and remove the Pro from that purchase. On cards, the refund shows on your statement within the issuer's time frame; with Pix, the money goes back to the account it came from.",
+          "To withdraw, use Withdraw from purchase in Account, under your plan, or write to {email} from your account's email address. The confirmation shows right away and also arrives by email; the refund is requested from Mercado Pago at the same moment and the Pro from that purchase is removed. On cards, the refund shows on your statement within the issuer's time frame; with Pix, the money goes back to the account it came from.",
           "After the 7 days: the monthly plan can be canceled whenever you want, in Account, with no fee, and Pro continues until the end of the month already paid, with no partial refund. Yearly and lifetime purchases are not refundable after that period.",
           "Double charges, wrong charges or a failure on our side that prevents you from using Pro are fixed and, when appropriate, refunded at any time."
         ]
@@ -1419,7 +1426,8 @@
     "TERMS_NOT_ACCEPTED": "Accept the updated terms of use to continue.",
     "TERMS_OUTDATED": "The terms changed since this page was opened. Read the new version and accept again.",
     "TERMS_VERSION_REQUIRED": "Could not record your acceptance. Reload the page and try again.",
-    "SUBSCRIPTION_CANCEL_FAILED": "Could not cancel your monthly subscription right now, so the account was not deleted. Try again in a moment."
+    "SUBSCRIPTION_CANCEL_FAILED": "Could not cancel your monthly subscription right now, so the account was not deleted. Try again in a moment.",
+    "WITHDRAWAL_NOT_AVAILABLE": "The 7-day period to withdraw from this purchase is over, or it was already refunded."
   },
   "block": {
     "block": "Block {name}",

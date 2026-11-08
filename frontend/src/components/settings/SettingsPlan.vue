@@ -41,6 +41,18 @@
         interactive
         @click="openHistory"
       />
+      <!-- Direito de arrependimento: a compra mais recente ainda no prazo -->
+      <SettingsRow
+        v-if="withdrawable"
+        :label="t('settings.plan.withdraw')"
+        :help="t('settings.plan.withdrawHelp', { date: longDate(withdrawable.withdrawableUntil) })"
+        icon="pi pi-replay"
+        interactive
+        danger
+        trail-icon=""
+        :loading="busy === 'withdraw'"
+        @click="askWithdraw(withdrawable)"
+      />
       <SettingsRow
         v-if="canCancel"
         :label="t('settings.plan.cancel')"
@@ -94,6 +106,18 @@
             {{ shortDate(payment.paidAt || payment.createdAt) }}<template v-if="payment.method"> · {{ t(`settings.plan.methods.${payment.method}`) }}</template>
             · {{ payment.refundedAt ? t('settings.plan.refunded', { date: shortDate(payment.refundedAt) }) : t(`settings.plan.statuses.${statusGroup(payment.status)}`) }}
           </span>
+          <span
+            v-if="payment.withdrawableUntil"
+            class="payment-withdraw"
+          >
+            <span>{{ t('settings.plan.withdrawHelp', { date: shortDate(payment.withdrawableUntil) }) }}</span>
+            <AppButton
+              :label="t('settings.plan.withdraw')"
+              class="btn-text btn-sm"
+              :loading="busy === 'withdraw'"
+              @click="askWithdraw(payment)"
+            />
+          </span>
         </li>
       </ul>
     </AppDialog>
@@ -101,11 +125,12 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import SettingsRow from './SettingsRow.vue'
 import AppDialog from '../ui/AppDialog.vue'
+import AppButton from '../ui/AppButton.vue'
 import api from '../../services/api.js'
 import { useToast } from '../../services/toast.js'
 import { useConfirm } from '../../services/confirm.js'
@@ -147,6 +172,9 @@ const endedText = computed(() => {
 
 const trialAvailable = computed(() => Boolean(plan.value?.trial?.available) && !plan.value?.pro)
 const canCancel = computed(() => current.value?.kind === 'monthly' && current.value.autoRenew && current.value.source === 'mercadopago')
+
+// Compra ainda no prazo de desistência (a mais recente primeiro, como vem da API)
+const withdrawable = computed(() => payments.value.find(payment => payment.withdrawableUntil) ?? null)
 
 const statusGroup = status => (status === 'approved' ? 'paid'
   : ['rejected', 'cancelled'].includes(status) ? 'declined'
@@ -190,8 +218,7 @@ async function cancel() {
   }
 }
 
-async function openHistory() {
-  historyOpen.value = true
+async function loadPayments() {
   historyLoading.value = true
   historyFailed.value = false
   try {
@@ -200,6 +227,42 @@ async function openHistory() {
     historyFailed.value = true
   } finally {
     historyLoading.value = false
+  }
+}
+
+function openHistory() {
+  historyOpen.value = true
+  loadPayments()
+}
+
+// Quem pagou pelo Mercado Pago vê o botão de desistir sem abrir o histórico
+onMounted(() => {
+  if (current.value?.source === 'mercadopago') loadPayments()
+})
+
+function askWithdraw(payment) {
+  confirm.require({
+    header: t('settings.plan.withdrawTitle'),
+    message: t(payment.offer === 'monthly' ? 'settings.plan.withdrawMessageMonthly' : 'settings.plan.withdrawMessage', {
+      amount: money(payment.amountCents, payment.currency)
+    }),
+    acceptLabel: t('settings.plan.withdrawConfirm'),
+    rejectLabel: t('settings.plan.keep'),
+    acceptClass: 'btn-danger',
+    accept: () => withdraw(payment)
+  })
+}
+
+async function withdraw(payment) {
+  busy.value = 'withdraw'
+  try {
+    await api.withdrawPayment(payment.id)
+    await Promise.all([refresh(), loadPayments()])
+    toast.add({ severity: 'success', detail: t('settings.plan.withdrawn', { amount: money(payment.amountCents, payment.currency) }) })
+  } catch (error) {
+    toast.add({ severity: 'error', detail: error.message })
+  } finally {
+    busy.value = ''
   }
 }
 </script>
@@ -281,5 +344,15 @@ async function openHistory() {
 
 .amount {
   font-variant-numeric: tabular-nums;
+}
+
+.payment-withdraw {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
 }
 </style>

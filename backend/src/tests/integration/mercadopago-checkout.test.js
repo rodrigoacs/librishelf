@@ -16,7 +16,7 @@ const auth = name => ({ Authorization: `Bearer ${tokens[name]}` })
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000
 
 // ---------------------------------------------------------- Mercado Pago falso
-const mp = { preferences: [], payments: new Map(), failPreference: false, seq: 1000 }
+const mp = { preferences: [], payments: new Map(), refunds: [], failPreference: false, failRefund: false, seq: 1000 }
 
 setFetch(async (url, options = {}) => {
   const path = url.replace(API_URL, '')
@@ -29,6 +29,15 @@ setFetch(async (url, options = {}) => {
     const id = `pref-${mp.preferences.length + 1}`
     mp.preferences.push(body)
     return json(201, { id, init_point: `https://mp.test/checkout?pref=${id}`, sandbox_init_point: `https://sandbox.mp.test/checkout?pref=${id}` })
+  }
+  const refund = path.match(/^\/v1\/payments\/(\d+)\/refunds$/)
+  if (refund && options.method === 'POST') {
+    const payment = mp.payments.get(refund[1])
+    if (!payment) return json(404, { message: 'Payment not found' })
+    if (mp.failRefund) return json(500, { message: 'internal_error' })
+    mp.refunds.push({ id: refund[1], key: options.headers['X-Idempotency-Key'], body: JSON.parse(options.body) })
+    payment.status = 'refunded'
+    return json(201, { id: 9000 + mp.refunds.length, payment_id: Number(refund[1]), status: 'approved' })
   }
   const match = path.match(/^\/v1\/payments\/(\d+)$/)
   if (match) {
@@ -87,7 +96,7 @@ beforeAll(async () => {
   process.env.MP_ACCESS_TOKEN = 'TEST-token'
   process.env.MP_WEBHOOK_SECRET = SECRET
   await clearDatabase()
-  for (const name of ['ana', 'bia', 'caio', 'davi', 'eva', 'fred', 'gabi', 'hugo', 'joao', 'kati', 'leo', 'mia']) await signUp(name)
+  for (const name of ['ana', 'bia', 'caio', 'davi', 'eva', 'fred', 'gabi', 'hugo', 'joao', 'kati', 'leo', 'mia', 'nina', 'otto']) await signUp(name)
   await signUp('ivo', { verified: false })
 })
 
@@ -330,5 +339,81 @@ describe('fundador anual', () => {
     expect(renewal.status).toBe(201)
     expect((await checkout('hugo', 'founder_annual')).body.code).toBe('OFFER_UNAVAILABLE')
     expect((await db.query("SELECT slots_used FROM librishelf.offers WHERE code = 'founder_annual'")).rows[0].slots_used).toBe(used)
+  })
+})
+
+describe('desistência da compra (7 dias)', () => {
+  const payments = async name => (await request(app).get('/plan/payments').set(auth(name))).body.payments
+  const withdraw = (name, id) => request(app).post(`/plan/payments/${id}/withdraw`).set(auth(name))
+
+  async function buyAnnual(name) {
+    const res = await checkout(name, 'annual')
+    expect(res.status).toBe(201)
+    const paymentId = mpPayment(res.body.reference, { amount: 49.9, method: 'pix' })
+    await webhook(paymentId)
+    await runJobs()
+    const [payment] = await payments(name)
+    return { mpId: paymentId, payment }
+  }
+
+  test('o histórico diz até quando dá para desistir', async () => {
+    const { payment } = await buyAnnual('nina')
+    const until = new Date(payment.withdrawableUntil).getTime()
+    const expected = new Date(payment.paidAt).getTime() + 7 * 24 * 60 * 60 * 1000
+    expect(until).toBe(expected)
+    expect((await me('nina')).plan.pro).toBe(true)
+  })
+
+  test('desistir: estorno integral pedido, Pro encerrado, e-mail agendado', async () => {
+    const [payment] = await payments('nina')
+    const mpId = (await db.query('SELECT external_id FROM librishelf.payments WHERE id = $1', [payment.id])).rows[0].external_id
+    const res = await withdraw('nina', payment.id)
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ entitlementRevoked: true, subscriptionCanceled: false })
+    expect(res.body.plan.pro).toBe(false)
+
+    expect(mp.refunds).toEqual([{ id: mpId, key: `withdrawal-${payment.id}`, body: {} }])
+    const [after] = await payments('nina')
+    expect(after.refundedAt).not.toBeNull()
+    expect(after.withdrawableUntil).toBeNull()
+    const { rows: [row] } = await db.query('SELECT refunded_by FROM librishelf.payments WHERE id = $1', [payment.id])
+    expect(row.refunded_by).toBe(ids.nina)
+    expect(await count('jobs', "type = 'email.send' AND payload->>'kind' = 'withdrawal_confirmed'")).toBe(1)
+
+    // Uma vez só
+    expect((await withdraw('nina', payment.id)).body.code).toBe('WITHDRAWAL_NOT_AVAILABLE')
+    expect(mp.refunds).toHaveLength(1)
+  })
+
+  test('o webhook do estorno não devolve o Pro', async () => {
+    const mpId = mp.refunds[0].id
+    await webhook(mpId)
+    await runJobs()
+    expect((await me('nina')).plan.pro).toBe(false)
+  })
+
+  test('depois de 7 dias, de outra conta ou com o Mercado Pago fora: recusado sem mudar nada', async () => {
+    const { payment } = await buyAnnual('otto')
+
+    expect((await withdraw('nina', payment.id)).status).toBe(404)
+    expect((await withdraw('otto', 'abc')).status).toBe(404)
+
+    mp.failRefund = true
+    try {
+      const res = await withdraw('otto', payment.id)
+      expect(res.status).toBe(502)
+      expect(res.body.code).toBe('PAYMENT_PROVIDER_ERROR')
+    } finally {
+      mp.failRefund = false
+    }
+    expect((await me('otto')).plan.pro).toBe(true)
+    expect((await payments('otto'))[0].refundedAt).toBeNull()
+
+    await db.query("UPDATE librishelf.payments SET paid_at = now() - interval '7 days 1 minute' WHERE id = $1", [payment.id])
+    expect((await payments('otto'))[0].withdrawableUntil).toBeNull()
+    const res = await withdraw('otto', payment.id)
+    expect(res.status).toBe(409)
+    expect(res.body.code).toBe('WITHDRAWAL_NOT_AVAILABLE')
+    expect((await me('otto')).plan.pro).toBe(true)
   })
 })

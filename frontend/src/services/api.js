@@ -586,6 +586,11 @@ export default {
     return client.get('/plan/payments')
   },
 
+  /** Desistência da compra em até 7 dias → { refundedAt, plan, entitlementRevoked, subscriptionCanceled } */
+  withdrawPayment(id) {
+    return client.post(`/plan/payments/${id}/withdraw`, {})
+  },
+
   // --- Importação em etapas ---
   importCreate(file) {
     const formData = new FormData()

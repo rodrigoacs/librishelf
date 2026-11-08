@@ -4,6 +4,7 @@ import { transaction } from '../repositories/proGrantRepository.js'
 import * as mercadoPago from './mercadoPago.js'
 import { PermanentJobError } from '../jobs/errors.js'
 import { queuePaymentConfirmed } from './billingEmailService.js'
+import { withdrawableUntil } from './withdrawalRules.js'
 import { httpError } from '../utils/httpError.js'
 import STATUS from '../utils/statusCodes.js'
 import logger from '../utils/logger.js'
@@ -185,6 +186,27 @@ export async function stopForAccountDeletion(userId) {
   logger.info('Mensal cancelado no Mercado Pago antes da exclusão da conta', { userId, preapprovals: preapprovals.size })
 }
 
+/**
+ * Assinatura mensal ativa no Mercado Pago: cancela lá antes de tirar o Pro
+ * aqui, senão a cobrança do mês seguinte continuaria. Usado pelo Admin
+ * (revogar, reembolsar) e pela desistência. → true se cancelou agora.
+ */
+export async function stopRenewal(entitlement) {
+  if (entitlement.kind !== 'monthly' || entitlement.source !== 'mercadopago' || !entitlement.auto_renew || !entitlement.external_id) return false
+  if (!mercadoPago.isConfigured()) {
+    logger.warn('Mensal revogado sem cancelar no Mercado Pago: MP_ACCESS_TOKEN não definido', { entitlementId: entitlement.id })
+    return false
+  }
+  try {
+    await mercadoPago.cancelPreapproval(entitlement.external_id)
+    return true
+  } catch (err) {
+    if (err.status === 404) return false
+    logger.error('Falha ao cancelar a assinatura no Mercado Pago', { entitlementId: entitlement.id, message: err.message })
+    throw httpError('O Mercado Pago não respondeu. Tente de novo em instantes.', 502, 'PAYMENT_PROVIDER_ERROR')
+  }
+}
+
 export async function hasActive(userId, client = db) {
   return Boolean((await client.query(s.ACTIVE_MONTHLY, [userId])).rows[0])
 }
@@ -202,6 +224,8 @@ export async function history(userId) {
     status: row.status,
     paidAt: iso(row.paid_at),
     refundedAt: iso(row.refunded_at),
-    createdAt: iso(row.created_at)
+    createdAt: iso(row.created_at),
+    // Até quando dá para desistir desta compra (pacote 36b), ou null
+    withdrawableUntil: iso(withdrawableUntil(row))
   }))
 }
