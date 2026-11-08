@@ -25,6 +25,7 @@ const EXCLUDE = [
 ]
 
 const PUBLIC_FILES = [
+  '/theme-boot.js',
   '/manifest.webmanifest',
   '/favicon.svg',
   '/favicon.ico',

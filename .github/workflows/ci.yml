@@ -89,3 +89,10 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # Mesma imagem do Dockerfile: erro de sintaxe no nginx aparece aqui, não no deploy
+      - name: Validar a configuração do nginx
+        run: |
+          docker run --rm \
+            -v "$PWD/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+            -v "$PWD/nginx-security.conf:/etc/nginx/snippets/librishelf-security.conf:ro" \
+            nginx:stable-alpine nginx -t

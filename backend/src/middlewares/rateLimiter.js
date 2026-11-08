@@ -134,4 +134,13 @@ const tokenLimiter = buildLimiter({
   code: 'RATE_LIMIT_ATTEMPTS'
 })
 
-export { mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, metaLimiter, isbnLimiter, bookSearchLimiter, coverProxyLimiter, reportLimiter, socialLimiter }
+// Relatórios de CSP mandados pelo navegador: uma página com problema pode
+// gerar dezenas de uma vez. Acima do limite, o resto é descartado.
+const cspReportLimiter = buildLimiter({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: 'Muitos relatórios.',
+  code: 'RATE_LIMIT'
+})
+
+export { cspReportLimiter, mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, metaLimiter, isbnLimiter, bookSearchLimiter, coverProxyLimiter, reportLimiter, socialLimiter }

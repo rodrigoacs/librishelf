@@ -43,6 +43,12 @@ export default [
     // __BUILD_ID__ e __PRECACHE__ são trocados no build (vite/serviceWorker.js)
     languageOptions: { globals: { ...globals.serviceworker, __PRECACHE__: 'readonly' } }
   },
+  // Script clássico do <head> (sem módulo, roda antes do Vue): public/theme-boot.js
+  {
+    files: ['public/**/*.js'],
+    languageOptions: { ecmaVersion: 2015, sourceType: 'script', globals: { ...globals.browser } },
+    rules: { 'no-unused-vars': ['error', { caughtErrors: 'none' }] }
+  },
   {
     files: ['vite/**/*.js', 'vite.config.js', 'eslint.config.js', 'vitest.config.js'],
     languageOptions: { globals: { ...globals.node } }

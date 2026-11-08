@@ -39,6 +39,7 @@ backend/
 frontend/
   src/                     Vue app
   nginx.conf               production server + /api proxy
+  nginx-security.conf      security headers and Content-Security-Policy (every location)
 docker-compose.yml
 ```
 
