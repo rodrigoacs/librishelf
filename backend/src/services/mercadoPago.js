@@ -20,7 +20,20 @@ import logger from '../utils/logger.js'
  *     https://www.mercadopago.com.br/developers/en/docs/subscriptions/integration-configuration/subscription-no-associated-plan/authorized-payments
  *   GET  /authorized_payments/search?preapproval_id=…   reconciliação
  */
-export const API_URL = 'https://api.mercadopago.com'
+export const PRODUCTION_API_URL = 'https://api.mercadopago.com'
+
+/**
+ * Endereço da API. Só nos testes de ponta a ponta (NODE_ENV=e2e, pasta e2e/)
+ * MP_API_URL troca o Mercado Pago pelo falso. Em qualquer outro ambiente a
+ * variável é ignorada: o token nunca vai para outro endereço por engano.
+ */
+export function resolveApiUrl(env = process.env) {
+  const custom = env.MP_API_URL?.trim()
+  return env.NODE_ENV === 'e2e' && custom ? custom.replace(/\/+$/, '') : PRODUCTION_API_URL
+}
+
+export const API_URL = resolveApiUrl()
+
 const TIMEOUT_MS = 10_000
 
 // Testes trocam o fetch por um Mercado Pago falso

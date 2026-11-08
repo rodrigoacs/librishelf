@@ -3,6 +3,7 @@ import logger from './utils/logger.js'
 import { db } from './database/connection.js'
 import { pendingMigrations } from './database/migrate.js'
 import { verifySmtp } from './services/mailService.js'
+import { API_URL as mercadoPagoApiUrl } from './services/mercadoPago.js'
 // Avisos de seguidores e limpeza de links de e-mail rodam no worker
 // (follow-emails.sweep e tokens.cleanup em jobs/registry.js).
 
@@ -32,6 +33,9 @@ function validateEnv() {
   }
   if (process.env.NODE_ENV === 'production' && (!process.env.MP_ACCESS_TOKEN?.trim() || !process.env.MP_WEBHOOK_SECRET?.trim())) {
     logger.warn('MP_ACCESS_TOKEN ou MP_WEBHOOK_SECRET não definido: checkout e webhooks do Mercado Pago ficam desligados')
+  }
+  if (process.env.NODE_ENV === 'e2e') {
+    logger.warn(`Ambiente de testes de ponta a ponta: sem limite de requisições e com o Mercado Pago em ${mercadoPagoApiUrl}`)
   }
   if (!process.env.SMTP_HOST?.trim()) {
     logger.warn(process.env.NODE_ENV === 'production'

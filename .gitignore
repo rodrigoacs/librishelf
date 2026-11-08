@@ -37,11 +37,10 @@ uploads/
 backend/uploads/
 uploads-test/
 
+# Testes de ponta a ponta: resultados, rastros, relatório e uploads
+e2e/.tmp/
+
 # Scripts de entrega dos pacotes: rodam a partir de fora do repositório
 /pacote*.sh
 /fix*.sh
 /admin*.sh
-
-# Instruções locais do Claude Code (estado e fila do projeto)
-/CLAUDE.md
-.claude/

@@ -1,0 +1,100 @@
+# Stack dos testes de ponta a ponta, com as imagens de produção (nginx com
+# CSP e SSI na frente, backend e worker). Banco em memória: some no down.
+#   npm run stack:up      sobe e espera ficar saudável
+#   npm run test:stack    roda o Playwright contra http://localhost:8090
+#   npm run stack:down
+# Portas só em 127.0.0.1 e fora das da produção (8080) e do dev (5173, 5433).
+name: librishelf-e2e
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: librishelf
+      POSTGRES_PASSWORD: librishelf
+      POSTGRES_DB: librishelf_e2e
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U librishelf -d librishelf_e2e"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # Mercado Pago e caixa de e-mail falsos (Node puro, sem npm install)
+  fakes:
+    image: node:24-alpine
+    working_dir: /e2e
+    command: ["node", "fakes/server.js"]
+    volumes:
+      - ./fakes:/e2e/fakes:ro
+      - ./package.json:/e2e/package.json:ro
+    environment:
+      PORT: 4010
+      SMTP_PORT: 1025
+      # O navegador abre o checkout falso pela porta publicada
+      PUBLIC_URL: http://localhost:4010
+      MP_WEBHOOK_SECRET: e2e-webhook-secret
+    ports:
+      - "127.0.0.1:4010:4010"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4010/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ../backend
+    image: librishelf-backend-e2e
+    command: ["sh", "-c", "node src/database/migrate.js && exec node src/server.js"]
+    env_file:
+      - ./backend.env
+    environment:
+      # Só o nginx do frontend na frente
+      TRUST_PROXY: 1
+    # O teste é o do Dockerfile (/ping); só o intervalo encurta (30 s lá)
+    healthcheck:
+      interval: 3s
+      start_period: 5s
+      retries: 20
+    depends_on:
+      db:
+        condition: service_healthy
+      fakes:
+        condition: service_healthy
+    networks:
+      default:
+        # Nome que o nginx.conf do frontend usa para a API
+        aliases:
+          - librishelf-backend
+
+  worker:
+    image: librishelf-backend-e2e
+    pull_policy: never
+    command: ["node", "src/worker.js"]
+    env_file:
+      - ./backend.env
+    # Mesmo teste do docker-compose.yml: o laço grava a hora a cada volta
+    healthcheck:
+      test: ["CMD", "node", "-e", "const t = Number(require('fs').readFileSync('/tmp/librishelf-worker-heartbeat', 'utf8')); process.exit(Date.now() - t < 120000 ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    depends_on:
+      # Só depois das migrations, que o backend roda ao subir
+      backend:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../frontend
+    ports:
+      - "127.0.0.1:8090:80"
+    healthcheck:
+      interval: 3s
+      retries: 20
+    depends_on:
+      backend:
+        condition: service_healthy

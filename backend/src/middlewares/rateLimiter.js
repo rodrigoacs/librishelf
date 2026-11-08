@@ -9,7 +9,9 @@ function buildLimiter({ windowMs, max, message, code, perUser = false }) {
     max,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: () => process.env.NODE_ENV === 'test',
+    // Testes (integração e ponta a ponta) fazem dezenas de cadastros e logins
+    // do mesmo IP em poucos minutos
+    skip: () => ['test', 'e2e'].includes(process.env.NODE_ENV),
     // Rotas autenticadas contam por usuário (vários usuários atrás do mesmo IP
     // não se bloqueiam); as abertas, por IP.
     keyGenerator: perUser
