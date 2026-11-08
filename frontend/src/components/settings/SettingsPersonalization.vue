@@ -2,206 +2,200 @@
   <!-- Personalização (Pro: personalization). Linhas que abrem folhas, como o
        resto da Conta. Sem Pro o que foi escolhido continua valendo; só
        "Padrão" fica disponível. O aviso do Pro fica no grupo do Plano. -->
-  <section
-    id="settings-personalization"
-    class="settings-group"
-    aria-labelledby="settings-group-personalization"
-    tabindex="-1"
+  <SettingsGroup
+    :title="t('personalization.title')"
+    title-id="settings-group-personalization"
+    anchor="settings-personalization"
   >
-    <h2
-      id="settings-group-personalization"
-      class="section-title group-title"
-    >{{ t('personalization.title') }}</h2>
+    <SettingsRow
+      :label="t('personalization.palette.title')"
+      :value="labelOf(paletteOptions, chosen.palette)"
+      icon="pi pi-palette"
+      interactive
+      @click="sheet = 'palette'"
+    />
+    <SettingsRow
+      :label="t('personalization.accent.title')"
+      :value="labelOf(accentOptions, chosen.accent)"
+      icon="pi pi-circle"
+      interactive
+      @click="sheet = 'accent'"
+    />
+    <SettingsRow
+      :label="t('personalization.icon.title')"
+      :value="labelOf(iconOptions, chosen.appIcon)"
+      icon="pi pi-mobile"
+      interactive
+      @click="sheet = 'appIcon'"
+    />
+    <SettingsRow
+      :label="t('personalization.cover.title')"
+      :value="coverValue"
+      icon="pi pi-image"
+      interactive
+      @click="sheet = 'profileCover'"
+    />
 
-    <div class="group-list">
-      <SettingsRow
-        :label="t('personalization.palette.title')"
-        :value="labelOf(paletteOptions, chosen.palette)"
-        icon="pi pi-palette"
-        interactive
-        @click="sheet = 'palette'"
-      />
-      <SettingsRow
-        :label="t('personalization.accent.title')"
-        :value="labelOf(accentOptions, chosen.accent)"
-        icon="pi pi-circle"
-        interactive
-        @click="sheet = 'accent'"
-      />
-      <SettingsRow
-        :label="t('personalization.icon.title')"
-        :value="labelOf(iconOptions, chosen.appIcon)"
-        icon="pi pi-mobile"
-        interactive
-        @click="sheet = 'appIcon'"
-      />
-      <SettingsRow
-        :label="t('personalization.cover.title')"
-        :value="coverValue"
-        icon="pi pi-image"
-        interactive
-        @click="sheet = 'profileCover'"
-      />
-    </div>
-
-    <!-- Paleta, cor e ícone: mesma folha, escolha vale na hora -->
-    <AppDialog
-      :visible="Boolean(current)"
-      size="sm"
-      dialog-class="settings-sheet"
-      :header="current?.title || ''"
-      @update:visible="value => { if (!value) sheet = '' }"
-    >
-      <div
-        v-if="current"
-        class="sheet-stack"
+    <template #after>
+      <!-- Paleta, cor e ícone: mesma folha, escolha vale na hora -->
+      <AppDialog
+        :visible="Boolean(current)"
+        size="sm"
+        dialog-class="settings-sheet"
+        :header="current?.title || ''"
+        @update:visible="value => { if (!value) sheet = '' }"
       >
-        <p
-          v-if="!pro"
-          class="sheet-note"
-        >{{ t('personalization.proOnly') }}</p>
         <div
-          class="swatches"
-          role="radiogroup"
-          :aria-label="current.title"
+          v-if="current"
+          class="sheet-stack"
         >
-          <button
-            v-for="option in current.options"
-            :key="option.value || 'default'"
-            type="button"
-            role="radio"
-            class="swatch"
-            :class="[`${current.kind}-swatch`, current.kind === 'palette' ? `palette-${option.value || 'default'}` : '', { active: chosen[sheet] === option.value }]"
-            :aria-checked="chosen[sheet] === option.value"
-            :disabled="busy || (option.value !== null && !pro)"
-            @click="choose(sheet, option.value)"
-          >
-            <span
-              v-if="current.kind === 'palette'"
-              class="palette-sample"
-              aria-hidden="true"
-            ><span class="palette-panel"></span><span class="palette-line"></span></span>
-            <span
-              v-else-if="current.kind === 'accent'"
-              class="accent-dot"
-              :style="option.value ? { background: `var(--${option.value})` } : null"
-              :class="{ free: !option.value }"
-              aria-hidden="true"
-            ></span>
-            <img
-              v-else
-              :src="option.value ? `/icons/alt/${option.value}-192.png` : '/icons/icon-192.png'"
-              alt=""
-              width="48"
-              height="48"
-            >
-            <span class="swatch-name">{{ option.label }}</span>
-          </button>
-        </div>
-        <p
-          v-if="current.help"
-          class="sheet-help"
-        >{{ current.help }}</p>
-      </div>
-    </AppDialog>
-
-    <!-- Capa de fundo no perfil público -->
-    <AppDialog
-      :visible="sheet === 'profileCover'"
-      size="sm"
-      dialog-class="settings-sheet"
-      :header="t('personalization.cover.title')"
-      @update:visible="value => { if (!value) closeCoverSheet() }"
-    >
-      <div class="sheet-stack">
-        <p class="sheet-help">{{ t('personalization.cover.help') }}</p>
-        <p
-          v-if="!pro"
-          class="sheet-note"
-        >{{ t('personalization.proOnly') }}</p>
-
-        <img
-          v-if="currentCoverUrl"
-          :src="currentCoverUrl"
-          :alt="t('personalization.cover.current')"
-          class="cover-current"
-          :class="{ wide: chosen.profileCover?.kind === 'image' }"
-        >
-        <p
-          v-else
-          class="sheet-help"
-        >{{ t('personalization.cover.none') }}</p>
-
-        <div class="cover-actions">
-          <template v-if="pro">
-            <input
-              ref="imageInput"
-              type="file"
-              accept="image/*"
-              class="sr-only"
-              :aria-label="t('personalization.cover.upload')"
-              @change="uploadImage"
-            >
-            <AppButton
-              :label="t('personalization.cover.upload')"
-              icon="pi pi-upload"
-              class="btn-secondary"
-              :loading="uploading"
-              :disabled="busy"
-              @click="imageInput?.click()"
-            />
-            <AppButton
-              :label="t('personalization.cover.choose')"
-              icon="pi pi-book"
-              class="btn-secondary"
-              :loading="coversLoading"
-              :disabled="busy"
-              :aria-expanded="coversOpen"
-              @click="openCovers"
-            />
-          </template>
-          <AppButton
-            v-if="chosen.profileCover"
-            :label="t('personalization.cover.remove')"
-            class="btn-text btn-danger"
-            :disabled="busy"
-            @click="choose('profileCover', null)"
-          />
-        </div>
-
-        <template v-if="coversOpen">
           <p
-            v-if="!covers.length"
-            class="sheet-help"
-          >{{ t('personalization.cover.empty') }}</p>
-          <ul
-            v-else
-            class="cover-grid"
+            v-if="!pro"
+            class="sheet-note"
+          >{{ t('personalization.proOnly') }}</p>
+          <div
+            class="swatches"
+            role="radiogroup"
+            :aria-label="current.title"
           >
-            <li
-              v-for="cover in covers"
-              :key="cover.bookId"
+            <button
+              v-for="option in current.options"
+              :key="option.value || 'default'"
+              type="button"
+              role="radio"
+              class="swatch"
+              :class="[`${current.kind}-swatch`, current.kind === 'palette' ? `palette-${option.value || 'default'}` : '', { active: chosen[sheet] === option.value }]"
+              :aria-checked="chosen[sheet] === option.value"
+              :disabled="busy || (option.value !== null && !pro)"
+              @click="choose(sheet, option.value)"
             >
-              <button
-                type="button"
-                class="cover-pick"
-                :class="{ active: chosen.profileCover?.kind === 'book' && chosen.profileCover.bookId === cover.bookId }"
-                :aria-label="cover.title"
-                :disabled="busy"
-                @click="pickCover(cover)"
+              <span
+                v-if="current.kind === 'palette'"
+                class="palette-sample"
+                aria-hidden="true"
+              ><span class="palette-panel"></span><span class="palette-line"></span></span>
+              <span
+                v-else-if="current.kind === 'accent'"
+                class="accent-dot"
+                :style="option.value ? { background: `var(--${option.value})` } : null"
+                :class="{ free: !option.value }"
+                aria-hidden="true"
+              ></span>
+              <img
+                v-else
+                :src="option.value ? `/icons/alt/${option.value}-192.png` : '/icons/icon-192.png'"
+                alt=""
+                width="48"
+                height="48"
               >
-                <img
-                  :src="coverUrl(cover.bookId, cover.version)"
-                  alt=""
-                  loading="lazy"
+              <span class="swatch-name">{{ option.label }}</span>
+            </button>
+          </div>
+          <p
+            v-if="current.help"
+            class="sheet-help"
+          >{{ current.help }}</p>
+        </div>
+      </AppDialog>
+
+      <!-- Capa de fundo no perfil público -->
+      <AppDialog
+        :visible="sheet === 'profileCover'"
+        size="sm"
+        dialog-class="settings-sheet"
+        :header="t('personalization.cover.title')"
+        @update:visible="value => { if (!value) closeCoverSheet() }"
+      >
+        <div class="sheet-stack">
+          <p class="sheet-help">{{ t('personalization.cover.help') }}</p>
+          <p
+            v-if="!pro"
+            class="sheet-note"
+          >{{ t('personalization.proOnly') }}</p>
+
+          <img
+            v-if="currentCoverUrl"
+            :src="currentCoverUrl"
+            :alt="t('personalization.cover.current')"
+            class="cover-current"
+            :class="{ wide: chosen.profileCover?.kind === 'image' }"
+          >
+          <p
+            v-else
+            class="sheet-help"
+          >{{ t('personalization.cover.none') }}</p>
+
+          <div class="cover-actions">
+            <template v-if="pro">
+              <input
+                ref="imageInput"
+                type="file"
+                accept="image/*"
+                class="sr-only"
+                :aria-label="t('personalization.cover.upload')"
+                @change="uploadImage"
+              >
+              <AppButton
+                :label="t('personalization.cover.upload')"
+                icon="pi pi-upload"
+                class="btn-secondary"
+                :loading="uploading"
+                :disabled="busy"
+                @click="imageInput?.click()"
+              />
+              <AppButton
+                :label="t('personalization.cover.choose')"
+                icon="pi pi-book"
+                class="btn-secondary"
+                :loading="coversLoading"
+                :disabled="busy"
+                :aria-expanded="coversOpen"
+                @click="openCovers"
+              />
+            </template>
+            <AppButton
+              v-if="chosen.profileCover"
+              :label="t('personalization.cover.remove')"
+              class="btn-text btn-danger"
+              :disabled="busy"
+              @click="choose('profileCover', null)"
+            />
+          </div>
+
+          <template v-if="coversOpen">
+            <p
+              v-if="!covers.length"
+              class="sheet-help"
+            >{{ t('personalization.cover.empty') }}</p>
+            <ul
+              v-else
+              class="cover-grid"
+            >
+              <li
+                v-for="cover in covers"
+                :key="cover.bookId"
+              >
+                <button
+                  type="button"
+                  class="cover-pick"
+                  :class="{ active: chosen.profileCover?.kind === 'book' && chosen.profileCover.bookId === cover.bookId }"
+                  :aria-label="cover.title"
+                  :disabled="busy"
+                  @click="pickCover(cover)"
                 >
-              </button>
-            </li>
-          </ul>
-        </template>
-      </div>
-    </AppDialog>
-  </section>
+                  <img
+                    :src="coverUrl(cover.bookId, cover.version)"
+                    alt=""
+                    loading="lazy"
+                  >
+                </button>
+              </li>
+            </ul>
+          </template>
+        </div>
+      </AppDialog>
+    </template>
+  </SettingsGroup>
 </template>
 
 <script setup>
@@ -217,6 +211,7 @@ import { PRO_PALETTES, PRO_ACCENTS, APP_ICONS } from '../../composables/useTheme
 import AppButton from '../ui/AppButton.vue'
 import AppDialog from '../ui/AppDialog.vue'
 import SettingsRow from './SettingsRow.vue'
+import SettingsGroup from './SettingsGroup.vue'
 
 const { t } = useI18n()
 const { canUse } = usePlan()
@@ -331,52 +326,7 @@ async function uploadImage(event) {
 </script>
 
 <style scoped>
-.settings-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.settings-group:focus {
-  outline: none;
-}
-
-.group-title {
-  margin: 0;
-  padding: 0 var(--space-4);
-}
-
-.group-list {
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  border-radius: var(--card-radius);
-  background: var(--bg-panel);
-}
-
 /* Folhas */
-.sheet-stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.sheet-help {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  line-height: 1.5;
-}
-
-.sheet-note {
-  margin: 0;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  background: rgba(var(--main-color-rgb), 0.08);
-  color: var(--text-primary);
-  font-size: var(--fs-sm);
-  line-height: 1.45;
-}
-
 .swatches {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));

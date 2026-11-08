@@ -87,6 +87,10 @@ Prefixos: `feat`, `fix`, `refactor`, `test`, `ci`, `docs`, `chore`, `style`.
   mesmos números em `utils/motion.js` (teste confere). Só `transform` e
   `opacity`; interrompível; movimento reduzido = sem animação; gestos e
   transições de tela só no celular.
+- Conta: cada grupo usa `components/settings/SettingsGroup.vue` (título,
+  slots `before`/padrão/`after`) com `SettingsRow`; folhas usam as classes
+  globais `.sheet-stack`, `.sheet-help`, `.sheet-text`, `.sheet-note`
+  (`.danger`), `.sheet-actions`, `.sheet-submit`, `.sheet-start` (main.css).
 - Componentes base em `frontend/src/components/ui/` (`AppButton`, `AppDialog`,
   `AppSelect`, `AppSwitch`, `AppChip`, `EmptyState`, `PageHeader`,
   `SearchField`, `PopupMenu`…). Não há biblioteca de UI externa: estenda estes.
@@ -304,10 +308,11 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 39 (2026-11-08). Último commit: `4044d3e`
-(pacote 38c); o 39 (divisão do queries.js) foi entregue para commitar.
+Atualizado ao fim do pacote 39b (2026-11-08). Último commit: `8bf770a`
+(pacote 39, queries.js); o 39b (Settings.vue dividida, SettingsGroup e
+classes globais de folha) foi entregue para commitar.
 
-Linha de base depois do 38c: backend 755/755, frontend 120/120 e lint limpo,
+Linha de base depois do 39b: backend 755/755, frontend 123/123 e lint limpo,
 E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium` nesta máquina WSL,
 que não tem as dependências do WebKit).
 
@@ -331,18 +336,20 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 
 ### Fila (um pacote por item, nesta ordem)
 
-**39b em diante — Divisão das telas grandes** (o 39, `queries.js`, está feito)
+**39c em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
+`Settings.vue`)
+- Como foi no 39b: subcomponentes por seção em `components/<área>/`, cada um
+  com as próprias folhas; nenhum texto, rótulo ou papel muda (os E2E
+  selecionam por eles). Conferir com capturas antes/depois pixel a pixel
+  (spec temporário em `e2e/tests/`, `git stash` só de `frontend/` para gerar
+  o "antes", `docker compose up -d --build --wait frontend` no `e2e/`).
 - Telas com mais de 1.100 linhas, subcomponentes por seção sem mudar
-  comportamento: `Settings.vue`, `Community.vue`, `LibraryHeader.vue`,
+  comportamento: `Community.vue`, `LibraryHeader.vue`,
   `Dashboard.vue`, `NavigationMenu.vue`, `BookEditForm.vue`,
   `PublicLibrary.vue`, `YearInBooks.vue`, `BookDialog.vue`. Um pacote por tela
   se ficar pesado. Rodar o E2E depois de cada uma.
 
 **40 — Padrões compartilhados**
-- `SettingsGroup.vue` (título e lista) e classes globais de folha
-  (`.sheet-stack`, `.sheet-help`, `.sheet-note`, `.sheet-actions`), hoje
-  copiadas em SettingsPlan, SettingsBackup, SettingsPersonalization e
-  SettingsProfilePage.
 - Selo (`.offer-tag`, `.late-tag`, admin pills, `.source` da aba Erros) →
   componente `AppTag`.
 - Cascata do celular (Community, Loans, ReadingNow) → classe global com `--i`.
@@ -381,6 +388,11 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
   (`nginx-security.conf`, `/csp-report`, como trocar para bloqueio),
   `/client-errors`, Termos (`TERMS_VERSION`, `LEGAL_DRAFT`, `OWNER`); CI, E2E
   (dois modos, `NODE_ENV=e2e`, `MP_API_URL`) e o fluxo de trabalho.
+
+### Bugs anotados (fora de pacote)
+- `Unsubscribe.vue` manda para `/settings#settings-notifications`, mas o
+  `scrollBehavior` do router ignora o hash e a seção de avisos não tem esse
+  `id` (o `SettingsGroup` aceita `anchor`). Hoje cai no topo da Conta.
 
 ### Lembrete guardado (não fazer agora)
 Apps iOS e Android: avaliar empacotar o PWA (Capacitor ou TWA) em vez de um

@@ -238,6 +238,65 @@
   }
 }
 
+/* Folhas da Conta (AppDialog aberto por uma linha de SettingsGroup):
+   pilha de campos, ajuda, texto, nota de destaque (.danger em vermelho),
+   ações lado a lado e o botão de enviar, que no celular ocupa a largura. */
+.sheet-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sheet-help,
+.sheet-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.sheet-text {
+  font-size: var(--fs-md);
+}
+
+.sheet-note {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(var(--main-color-rgb), 0.08);
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.sheet-note.danger {
+  background: rgba(var(--red-rgb), 0.1);
+}
+
+.sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* .sheet-stack na frente: o .btn (mais abaixo) também define min-height */
+.sheet-stack > .sheet-submit {
+  min-height: 48px;
+}
+
+/* Botão do tamanho do texto, à esquerda (janelas de nome, e-mail, exclusão) */
+.sheet-stack > .sheet-start {
+  align-self: flex-start;
+}
+
+@media (max-width: 639.98px) {
+  .sheet-stack > .sheet-submit,
+  .sheet-stack > .sheet-start {
+    align-self: stretch;
+    width: 100%;
+  }
+}
+
 /* Aviso: um componente visual só (Início, Painel, Comunidade, listas,
    resenhas, mesclar). Tom informativo na cor de destaque; .is-warn no
    amarelo de alerta (--warning). Como link/botão ganha seta e hover. */

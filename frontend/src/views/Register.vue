@@ -104,10 +104,8 @@ import AppButton from '../components/ui/AppButton.vue'
 import { useI18n } from 'vue-i18n'
 import AuthLayout from '../components/AuthLayout.vue'
 import api from '../services/api.js'
-
-// Espelha a regra do backend (services/authService.js → USERNAME_PATTERN e
-// utils/passwordPolicy.js); o backend continua sendo quem decide.
-const USERNAME_PATTERN = /^[\p{L}\p{N}._-]+$/u
+import { USERNAME_PATTERN, EMAIL_PATTERN } from '../utils/accountRules.js'
+import { focusFirstError as focusFirstWith } from '../utils/formState.js'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -136,8 +134,6 @@ watch(password, () => { errors.password = '' })
 watch(confirmPassword, () => { errors.confirm = '' })
 watch(acceptTerms, () => { errors.terms = '' })
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
 // Código da API → campo
 const CODE_FIELDS = {
   USERNAME_TAKEN: 'name',
@@ -154,10 +150,7 @@ const CODE_FIELDS = {
   TERMS_REQUIRED: 'terms'
 }
 
-function focusFirstError() {
-  const key = Object.keys(FIELDS).find(k => errors[k])
-  if (key) FIELDS[key].value?.focus()
-}
+const focusFirstError = () => focusFirstWith(errors, FIELDS)
 
 function validate() {
   const required = t('settings.errors.required')

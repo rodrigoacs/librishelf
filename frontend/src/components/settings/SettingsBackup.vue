@@ -2,165 +2,159 @@
   <!-- Backup automático (Pro: auto_backup). Linhas como o resto da Conta:
        interruptor na linha, frequência e lista em folhas. Sem Pro, os backups
        que existem continuam para baixar e excluir; ligar e pedir são do Pro. -->
-  <section
-    id="settings-backup"
-    class="settings-group"
-    aria-labelledby="settings-group-backup"
-    tabindex="-1"
+  <SettingsGroup
+    :title="t('backup.title')"
+    title-id="settings-group-backup"
+    anchor="settings-backup"
   >
-    <h2
-      id="settings-group-backup"
-      class="section-title group-title"
-    >{{ t('backup.title') }}</h2>
+    <p
+      v-if="loading && !data"
+      class="row-status"
+      role="status"
+    >{{ t('common.loading') }}</p>
+    <p
+      v-else-if="loadError"
+      class="row-status"
+    >{{ loadError }}</p>
 
-    <div class="group-list">
-      <p
-        v-if="loading && !data"
-        class="row-status"
-        role="status"
-      >{{ t('common.loading') }}</p>
-      <p
-        v-else-if="loadError"
-        class="row-status"
-      >{{ loadError }}</p>
-
-      <template v-else-if="data">
-        <SettingsRow
-          :label="t('backup.enabled')"
-          :help="enabledHelp"
-          label-for="backup-enabled"
-          help-id="backup-enabled-help"
-        >
-          <template #trailing>
-            <AppSwitch
-              inputId="backup-enabled"
-              :modelValue="data.settings.enabled"
-              :disabled="!pro || busy"
-              aria-describedby="backup-enabled-help"
-              @update:modelValue="value => save({ enabled: value })"
-            />
-          </template>
-        </SettingsRow>
-        <SettingsRow
-          v-if="data.settings.enabled"
-          :label="t('backup.frequency')"
-          :value="t(`backup.frequencies.${data.settings.frequency}`)"
-          interactive
-          :disabled="!pro"
-          @click="sheet = 'frequency'"
-        />
-        <SettingsRow
-          v-if="data.settings.enabled"
-          :label="t('backup.notify')"
-          label-for="backup-notify"
-        >
-          <template #trailing>
-            <AppSwitch
-              inputId="backup-notify"
-              :modelValue="data.settings.notify"
-              :disabled="!pro || busy"
-              @update:modelValue="value => save({ notify: value })"
-            />
-          </template>
-        </SettingsRow>
-        <SettingsRow
-          :label="t('backup.list')"
-          :value="data.backups.length ? String(data.backups.length) : t('backup.none')"
-          interactive
-          @click="sheet = 'list'"
-        />
-      </template>
-    </div>
-
-    <!-- Frequência -->
-    <AppDialog
-      :visible="sheet === 'frequency'"
-      size="sm"
-      dialog-class="settings-sheet"
-      :header="t('backup.frequency')"
-      @update:visible="value => { if (!value) sheet = '' }"
-    >
-      <div
-        v-if="data"
-        class="choice-list"
-        role="radiogroup"
-        :aria-label="t('backup.frequency')"
+    <template v-else-if="data">
+      <SettingsRow
+        :label="t('backup.enabled')"
+        :help="enabledHelp"
+        label-for="backup-enabled"
+        help-id="backup-enabled-help"
       >
-        <button
-          v-for="option in frequencyOptions"
-          :key="option.value"
-          type="button"
-          role="radio"
-          class="choice"
-          :aria-checked="data.settings.frequency === option.value"
-          :disabled="!pro || busy"
-          @click="pickFrequency(option.value)"
-        >
-          <span>{{ option.label }}</span>
-          <i
-            v-if="data.settings.frequency === option.value"
-            class="pi pi-check"
-            aria-hidden="true"
-          ></i>
-        </button>
-      </div>
-    </AppDialog>
-
-    <!-- Backups guardados -->
-    <AppDialog
-      :visible="sheet === 'list'"
-      size="sm"
-      dialog-class="settings-sheet"
-      :header="t('backup.list')"
-      @update:visible="value => { if (!value) sheet = '' }"
-    >
-      <div
-        v-if="data"
-        class="sheet-stack"
+        <template #trailing>
+          <AppSwitch
+            inputId="backup-enabled"
+            :modelValue="data.settings.enabled"
+            :disabled="!pro || busy"
+            aria-describedby="backup-enabled-help"
+            @update:modelValue="value => save({ enabled: value })"
+          />
+        </template>
+      </SettingsRow>
+      <SettingsRow
+        v-if="data.settings.enabled"
+        :label="t('backup.frequency')"
+        :value="t(`backup.frequencies.${data.settings.frequency}`)"
+        interactive
+        :disabled="!pro"
+        @click="sheet = 'frequency'"
+      />
+      <SettingsRow
+        v-if="data.settings.enabled"
+        :label="t('backup.notify')"
+        label-for="backup-notify"
       >
-        <p class="sheet-help">{{ t('backup.help', { n: data.keep }) }}</p>
-        <AppButton
-          v-if="pro"
-          :label="t('backup.runNow')"
-          icon="pi pi-download"
-          class="btn-secondary"
-          :loading="busy"
-          @click="runNow"
-        />
-        <p
-          v-if="!data.backups.length"
-          class="sheet-help"
-        >{{ t('backup.empty') }}</p>
-        <ul
-          v-else
-          class="backup-list"
+        <template #trailing>
+          <AppSwitch
+            inputId="backup-notify"
+            :modelValue="data.settings.notify"
+            :disabled="!pro || busy"
+            @update:modelValue="value => save({ notify: value })"
+          />
+        </template>
+      </SettingsRow>
+      <SettingsRow
+        :label="t('backup.list')"
+        :value="data.backups.length ? String(data.backups.length) : t('backup.none')"
+        interactive
+        @click="sheet = 'list'"
+      />
+    </template>
+
+    <template #after>
+      <!-- Frequência -->
+      <AppDialog
+        :visible="sheet === 'frequency'"
+        size="sm"
+        dialog-class="settings-sheet"
+        :header="t('backup.frequency')"
+        @update:visible="value => { if (!value) sheet = '' }"
+      >
+        <div
+          v-if="data"
+          class="choice-list"
+          role="radiogroup"
+          :aria-label="t('backup.frequency')"
         >
-          <li
-            v-for="backup in data.backups"
-            :key="backup.id"
+          <button
+            v-for="option in frequencyOptions"
+            :key="option.value"
+            type="button"
+            role="radio"
+            class="choice"
+            :aria-checked="data.settings.frequency === option.value"
+            :disabled="!pro || busy"
+            @click="pickFrequency(option.value)"
           >
-            <span class="backup-when">
-              {{ when(backup.createdAt) }}
-              <span class="backup-meta">{{ t(`backup.trigger.${backup.trigger}`) }} · {{ t('backup.books', { n: backup.books }, backup.books) }} · {{ size(backup.bytes) }}</span>
-            </span>
-            <span class="backup-actions">
-              <a
-                :href="`${API_URL}/backups/${backup.id}/download`"
-                class="btn btn-sm btn-text"
-                download
-              >{{ t('backup.download') }}</a>
-              <AppButton
-                :label="t('backup.remove')"
-                class="btn-sm btn-text btn-danger"
-                :disabled="busy"
-                @click="remove(backup)"
-              />
-            </span>
-          </li>
-        </ul>
-      </div>
-    </AppDialog>
-  </section>
+            <span>{{ option.label }}</span>
+            <i
+              v-if="data.settings.frequency === option.value"
+              class="pi pi-check"
+              aria-hidden="true"
+            ></i>
+          </button>
+        </div>
+      </AppDialog>
+
+      <!-- Backups guardados -->
+      <AppDialog
+        :visible="sheet === 'list'"
+        size="sm"
+        dialog-class="settings-sheet"
+        :header="t('backup.list')"
+        @update:visible="value => { if (!value) sheet = '' }"
+      >
+        <div
+          v-if="data"
+          class="sheet-stack"
+        >
+          <p class="sheet-help">{{ t('backup.help', { n: data.keep }) }}</p>
+          <AppButton
+            v-if="pro"
+            :label="t('backup.runNow')"
+            icon="pi pi-download"
+            class="btn-secondary"
+            :loading="busy"
+            @click="runNow"
+          />
+          <p
+            v-if="!data.backups.length"
+            class="sheet-help"
+          >{{ t('backup.empty') }}</p>
+          <ul
+            v-else
+            class="backup-list"
+          >
+            <li
+              v-for="backup in data.backups"
+              :key="backup.id"
+            >
+              <span class="backup-when">
+                {{ when(backup.createdAt) }}
+                <span class="backup-meta">{{ t(`backup.trigger.${backup.trigger}`) }} · {{ t('backup.books', { n: backup.books }, backup.books) }} · {{ size(backup.bytes) }}</span>
+              </span>
+              <span class="backup-actions">
+                <a
+                  :href="`${API_URL}/backups/${backup.id}/download`"
+                  class="btn btn-sm btn-text"
+                  download
+                >{{ t('backup.download') }}</a>
+                <AppButton
+                  :label="t('backup.remove')"
+                  class="btn-sm btn-text btn-danger"
+                  :disabled="busy"
+                  @click="remove(backup)"
+                />
+              </span>
+            </li>
+          </ul>
+        </div>
+      </AppDialog>
+    </template>
+  </SettingsGroup>
 </template>
 
 <script setup>
@@ -175,6 +169,7 @@ import AppButton from '../ui/AppButton.vue'
 import AppDialog from '../ui/AppDialog.vue'
 import AppSwitch from '../ui/AppSwitch.vue'
 import SettingsRow from './SettingsRow.vue'
+import SettingsGroup from './SettingsGroup.vue'
 
 const { t, locale } = useI18n()
 const { canUse } = usePlan()
@@ -255,28 +250,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.settings-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.settings-group:focus {
-  outline: none;
-}
-
-.group-title {
-  margin: 0;
-  padding: 0 var(--space-4);
-}
-
-.group-list {
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  border-radius: var(--card-radius);
-  background: var(--bg-panel);
-}
-
 .row-status {
   margin: 0;
   padding: var(--space-4);
@@ -285,19 +258,6 @@ onMounted(load)
 }
 
 /* Folhas */
-.sheet-stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.sheet-help {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  line-height: 1.5;
-}
-
 .choice-list {
   display: flex;
   flex-direction: column;

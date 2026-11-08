@@ -90,6 +90,8 @@ function lastUser() {
 
 export const currentUser = computed(() => user.value)
 export const isAuthenticated = computed(() => Boolean(user.value))
+// Só false conta como "não confirmado" (perfil antigo sem o campo vale como confirmado)
+export const isEmailVerified = computed(() => user.value?.emailVerified !== false)
 
 export function setUser(profile) {
   // Outra conta neste navegador: o que estava guardado offline era da anterior

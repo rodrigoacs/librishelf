@@ -1,127 +1,123 @@
 <template>
   <!-- Plano: atual e validade, teste grátis, cancelar o mensal, cobranças -->
-  <section
-    id="settings-plan"
-    class="settings-group"
-    aria-labelledby="settings-group-plan"
-    tabindex="-1"
+  <SettingsGroup
+    :title="t('settings.plan.title')"
+    title-id="settings-group-plan"
+    anchor="settings-plan"
   >
-    <h2
-      id="settings-group-plan"
-      class="section-title group-title"
-    >{{ t('settings.plan.title') }}</h2>
-
-    <p
-      v-if="endedText"
-      class="ended-note"
-    >{{ endedText }}</p>
-
-    <div class="group-list">
-      <SettingsRow
-        :label="t('settings.plan.current')"
-        :value="currentName"
-        :help="validity"
-        icon="pi pi-star"
-        interactive
-        @click="router.push({ name: 'pricing' })"
-      />
-      <SettingsRow
-        v-if="trialAvailable"
-        :label="t('settings.plan.trial')"
-        :help="t('settings.plan.trialHelp')"
-        icon="pi pi-clock"
-        interactive
-        trail-icon=""
-        :loading="busy === 'trial'"
-        @click="startTrial"
-      />
-      <SettingsRow
-        :label="t('settings.plan.history')"
-        icon="pi pi-receipt"
-        interactive
-        @click="openHistory"
-      />
-      <!-- Direito de arrependimento: a compra mais recente ainda no prazo -->
-      <SettingsRow
-        v-if="withdrawable"
-        :label="t('settings.plan.withdraw')"
-        :help="t('settings.plan.withdrawHelp', { date: longDate(withdrawable.withdrawableUntil) })"
-        icon="pi pi-replay"
-        interactive
-        danger
-        trail-icon=""
-        :loading="busy === 'withdraw'"
-        @click="askWithdraw(withdrawable)"
-      />
-      <SettingsRow
-        v-if="canCancel"
-        :label="t('settings.plan.cancel')"
-        :help="t('settings.plan.cancelHelp')"
-        icon="pi pi-times-circle"
-        interactive
-        danger
-        trail-icon=""
-        :loading="busy === 'cancel'"
-        @click="askCancel"
-      />
-    </div>
-
-    <!-- Único aviso do Pro na Conta (Personalização e Backup não repetem) -->
-    <p
-      v-if="plan && !plan.pro && !endedText"
-      class="pro-note"
-    >{{ t('settings.plan.proNote') }}</p>
-
-    <AppDialog
-      v-model:visible="historyOpen"
-      :header="t('settings.plan.history')"
-      size="sm"
-    >
+    <template #before>
       <p
-        v-if="historyLoading"
-        class="muted"
-        role="status"
-      >{{ t('common.loading') }}</p>
+        v-if="endedText"
+        class="ended-note"
+      >{{ endedText }}</p>
+    </template>
+
+    <SettingsRow
+      :label="t('settings.plan.current')"
+      :value="currentName"
+      :help="validity"
+      icon="pi pi-star"
+      interactive
+      @click="router.push({ name: 'pricing' })"
+    />
+    <SettingsRow
+      v-if="trialAvailable"
+      :label="t('settings.plan.trial')"
+      :help="t('settings.plan.trialHelp')"
+      icon="pi pi-clock"
+      interactive
+      trail-icon=""
+      :loading="busy === 'trial'"
+      @click="startTrial"
+    />
+    <SettingsRow
+      :label="t('settings.plan.history')"
+      icon="pi pi-receipt"
+      interactive
+      @click="openHistory"
+    />
+    <!-- Direito de arrependimento: a compra mais recente ainda no prazo -->
+    <SettingsRow
+      v-if="withdrawable"
+      :label="t('settings.plan.withdraw')"
+      :help="t('settings.plan.withdrawHelp', { date: longDate(withdrawable.withdrawableUntil) })"
+      icon="pi pi-replay"
+      interactive
+      danger
+      trail-icon=""
+      :loading="busy === 'withdraw'"
+      @click="askWithdraw(withdrawable)"
+    />
+    <SettingsRow
+      v-if="canCancel"
+      :label="t('settings.plan.cancel')"
+      :help="t('settings.plan.cancelHelp')"
+      icon="pi pi-times-circle"
+      interactive
+      danger
+      trail-icon=""
+      :loading="busy === 'cancel'"
+      @click="askCancel"
+    />
+
+    <template #after>
+      <!-- Único aviso do Pro na Conta (Personalização e Backup não repetem) -->
       <p
-        v-else-if="historyFailed"
-        class="muted"
-      >{{ t('common.loadError') }}</p>
-      <p
-        v-else-if="payments.length === 0"
-        class="muted"
-      >{{ t('settings.plan.noPayments') }}</p>
-      <ul
-        v-else
-        class="payments"
+        v-if="plan && !plan.pro && !endedText"
+        class="pro-note"
+      >{{ t('settings.plan.proNote') }}</p>
+
+      <AppDialog
+        v-model:visible="historyOpen"
+        :header="t('settings.plan.history')"
+        size="sm"
       >
-        <li
-          v-for="payment in payments"
-          :key="payment.id"
+        <p
+          v-if="historyLoading"
+          class="muted"
+          role="status"
+        >{{ t('common.loading') }}</p>
+        <p
+          v-else-if="historyFailed"
+          class="muted"
+        >{{ t('common.loadError') }}</p>
+        <p
+          v-else-if="payments.length === 0"
+          class="muted"
+        >{{ t('settings.plan.noPayments') }}</p>
+        <ul
+          v-else
+          class="payments"
         >
-          <span class="payment-main">
-            <span>{{ t(`plan.kinds.${payment.offer}`) }}</span>
-            <span class="amount">{{ money(payment.amountCents, payment.currency) }}</span>
-          </span>
-          <span class="muted">
-            {{ shortDate(payment.paidAt || payment.createdAt) }}<template v-if="payment.method"> · {{ t(`settings.plan.methods.${payment.method}`) }}</template>
-            · {{ payment.refundedAt ? t('settings.plan.refunded', { date: shortDate(payment.refundedAt) }) : t(`settings.plan.statuses.${statusGroup(payment.status)}`) }}
-          </span>
-          <span
-            v-if="payment.withdrawableUntil"
-            class="payment-withdraw"
+          <li
+            v-for="payment in payments"
+            :key="payment.id"
           >
-            <span>{{ t('settings.plan.withdrawHelp', { date: shortDate(payment.withdrawableUntil) }) }}</span>
-            <AppButton
-              :label="t('settings.plan.withdraw')"
-              class="btn-text btn-sm"
-              :loading="busy === 'withdraw'"
-              @click="askWithdraw(payment)"
-            />
-          </span>
-        </li>
-      </ul>
-    </AppDialog>
-  </section>
+            <span class="payment-main">
+              <span>{{ t(`plan.kinds.${payment.offer}`) }}</span>
+              <span class="amount">{{ money(payment.amountCents, payment.currency) }}</span>
+            </span>
+            <span class="muted">
+              {{ shortDate(payment.paidAt || payment.createdAt) }}<template v-if="payment.method"> · {{ t(`settings.plan.methods.${payment.method}`) }}</template>
+              · {{ payment.refundedAt ? t('settings.plan.refunded', { date: shortDate(payment.refundedAt) }) : t(`settings.plan.statuses.${statusGroup(payment.status)}`) }}
+            </span>
+            <span
+              v-if="payment.withdrawableUntil"
+              class="payment-withdraw"
+            >
+              <span>{{ t('settings.plan.withdrawHelp', { date: shortDate(payment.withdrawableUntil) }) }}</span>
+              <AppButton
+                :label="t('settings.plan.withdraw')"
+                class="btn-text btn-sm"
+                :loading="busy === 'withdraw'"
+                @click="askWithdraw(payment)"
+              />
+            </span>
+          </li>
+        </ul>
+      </AppDialog>
+    </template>
+  </SettingsGroup>
 </template>
 
 <script setup>
@@ -129,6 +125,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import SettingsRow from './SettingsRow.vue'
+import SettingsGroup from './SettingsGroup.vue'
 import AppDialog from '../ui/AppDialog.vue'
 import AppButton from '../ui/AppButton.vue'
 import api from '../../services/api.js'
@@ -268,28 +265,6 @@ async function withdraw(payment) {
 </script>
 
 <style scoped>
-.settings-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.settings-group:focus {
-  outline: none;
-}
-
-.group-title {
-  margin: 0;
-  padding: 0 var(--space-4);
-}
-
-.group-list {
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  border-radius: var(--card-radius);
-  background: var(--bg-panel);
-}
-
 .ended-note,
 .pro-note {
   margin: 0;

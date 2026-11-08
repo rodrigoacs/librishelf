@@ -41,3 +41,14 @@ export function hasChanges(snapshot, value) {
   if (snapshot === null || snapshot === undefined) return false
   return formSnapshot(value) !== snapshot
 }
+
+/**
+ * Foco no primeiro campo com erro, na ordem de `fields`.
+ *   focusFirstError(errors, { current: currentRef, next: nextRef })
+ * `errors` tem as mesmas chaves; cada campo é um ref de componente com focus().
+ */
+export function focusFirstError(errors, fields) {
+  const key = Object.keys(fields).find(k => errors[k])
+  if (key) fields[key].value?.focus()
+  return key || null
+}
