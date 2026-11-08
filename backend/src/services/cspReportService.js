@@ -1,4 +1,5 @@
 import logger from '../utils/logger.js'
+import { record as recordError, cleanPath } from './errorReportService.js'
 
 /**
  * Relatórios de violação da Content-Security-Policy (frontend/nginx).
@@ -11,8 +12,8 @@ import logger from '../utils/logger.js'
  * fragmento, onde vivem tokens de confirmação e de senha), e o trecho do
  * código bloqueado (sample) é descartado.
  *
- * Pacote 37: estes relatórios passam a ser guardados com os outros erros do
- * cliente (client_errors). Por enquanto vão para o log.
+ * Ficam junto com os outros erros (errorReportService, origem csp), um por
+ * diretiva + recurso bloqueado + página, e também vão para o log.
  */
 
 const MAX_REPORTS = 20
@@ -70,8 +71,16 @@ export function normalize(payload) {
   return []
 }
 
-export function record(payload) {
+export async function record(payload) {
   const reports = normalize(payload)
-  for (const report of reports) logger.warn('CSP: violação', report)
+  for (const report of reports) {
+    logger.warn('CSP: violação', report)
+    await recordError({
+      source: 'csp',
+      message: `${report.directive} bloqueou ${report.blocked || '?'}`,
+      location: cleanPath(report.page),
+      detail: { source: report.source, line: report.line, disposition: report.disposition }
+    })
+  }
   return reports.length
 }

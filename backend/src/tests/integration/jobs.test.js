@@ -131,9 +131,10 @@ describe('periódicos', () => {
 
   test('agendar duas vezes no mesmo intervalo não duplica', async () => {
     const at = Date.parse('2026-11-02T14:47:12Z')
-    // Pacote 30: o 9º periódico (backups.sweep) já agendado neste intervalo
+    // Pacote 30: o 9º periódico (backups.sweep) já agendado neste intervalo;
+    // pacote 37 acrescentou o 10º (errors.digest, a cada 15 minutos)
     await queue.enqueue('backups.sweep', {}, { dedupeKey: `backups.sweep:${bucketOf(60, at)}` })
-    expect(await scheduleRecurring(at)).toBe(8)
+    expect(await scheduleRecurring(at)).toBe(9)
     expect(await scheduleRecurring(at)).toBe(0)
     expect(await scheduleRecurring(at + 5 * 60_000)).toBe(2) // só os de 5 minutos viraram
   })

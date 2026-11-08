@@ -2,6 +2,7 @@ import STATUS from './statusCodes.js'
 import logger from './logger.js'
 import { errorBody } from './httpError.js'
 import { serverError } from './metrics.js'
+import { recordServerError } from '../services/errorReportService.js'
 
 const GENERIC_MESSAGE = 'Erro interno do servidor.'
 
@@ -13,6 +14,7 @@ function sendError(res, error, context) {
   if (!isControlled) {
     logger.error(context || 'Erro não tratado', { message: error.message, stack: error.stack })
     serverError({ method: res.req?.method, path: res.req?.originalUrl?.split('?')[0], context, message: error.message })
+    void recordServerError({ method: res.req?.method, path: res.req?.originalUrl, context, error })
   }
 
   return res.status(status).json(isControlled

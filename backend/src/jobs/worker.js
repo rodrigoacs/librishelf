@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import { setTimeout as sleep } from 'node:timers/promises'
 import * as queue from './queue.js'
 import { HANDLERS, RECURRING, PermanentJobError, RetryLaterError } from './registry.js'
+import { recordJobFailure } from '../services/errorReportService.js'
 import logger from '../utils/logger.js'
 
 export const POLL_MS = Number(process.env.JOB_POLL_MS) || 5000
@@ -50,6 +51,7 @@ export async function runOnce(worker = queue.workerId(), options = {}) {
       return { id: job.id, type: job.type, status: 'deferred' }
     }
     const gaveUp = await queue.fail(job, worker, err, { permanent: err instanceof PermanentJobError })
+    if (gaveUp) await recordJobFailure(job, err)
     logger[gaveUp ? 'error' : 'warn'](gaveUp ? 'Job falhou de vez' : 'Job falhou; vai tentar de novo', {
       id: job.id, type: job.type, attempt: job.attempts, message: err.message
     })

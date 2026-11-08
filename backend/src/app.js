@@ -27,6 +27,7 @@ import adminRoutes from './routes/admin.js'
 import planRoutes from './routes/plan.js'
 import webhookRoutes from './routes/webhooks.js'
 import cspReportRoutes from './routes/cspReport.js'
+import clientErrorRoutes from './routes/clientErrors.js'
 import errorHandler from './middlewares/errorHandler.js'
 import { errorBody } from './utils/httpError.js'
 import corsOptions from './config/corsOptions.js'
@@ -68,6 +69,7 @@ app.use('/admin', adminRoutes)
 app.use('/plan', planRoutes)
 app.use('/webhooks', webhookRoutes)
 app.use('/csp-report', cspReportRoutes)
+app.use('/client-errors', clientErrorRoutes)
 app.get('/ping', (req, res) => { res.json({ message: 'pong' }) })
 
 // Rota inexistente: JSON com código, como todo erro da API (antes, HTML do Express)

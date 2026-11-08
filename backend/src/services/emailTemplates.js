@@ -94,6 +94,19 @@ const TEXTS = {
       note: 'No link você vê a resenha inteira e as denúncias, e escolhe ocultar ou manter.',
       ignore: 'Você recebeu este e-mail porque o endereço está em ADMIN_EMAIL no servidor do Librishelf.'
     },
+    errorDigest: {
+      subject: ({ total }) => `${total} ${total === 1 ? 'erro novo ou repetido' : 'erros novos ou repetidos'} no Librishelf`,
+      preheader: ({ fresh }) => (fresh ? `${fresh} nunca visto antes` : 'Só erros que já tinham aparecido'),
+      title: 'Resumo de erros',
+      greeting: () => 'Olá!',
+      body: ({ total, shown }) => (total > shown
+        ? `Desde o último resumo, ${total} erros abertos aconteceram. Os ${shown} mais recentes:`
+        : 'Desde o último resumo, estes erros abertos aconteceram:'),
+      line: line => line,
+      button: 'Abrir a lista de erros',
+      note: ({ minutes }) => `Um resumo a cada ${minutes} minutos no máximo, só quando há algo novo. Marque como resolvido no Admin para parar de receber um erro até ele voltar.`,
+      ignore: 'Você recebeu este e-mail porque o endereço está em ADMIN_EMAIL no servidor do Librishelf.'
+    },
     avatarReport: {
       subject: ({ username, hidden }) => `${hidden ? '[Oculta] ' : ''}Foto de perfil denunciada: ${username}`,
       preheader: ({ username, reasonLabel }) => `${username} · ${reasonLabel}`,
@@ -268,6 +281,19 @@ const TEXTS = {
       line: line => line,
       button: 'Review it',
       note: 'The link shows the full review and the reports, and lets you hide or keep it.',
+      ignore: "You're receiving this email because this address is set as ADMIN_EMAIL on the Librishelf server."
+    },
+    errorDigest: {
+      subject: ({ total }) => `${total} new or repeated ${total === 1 ? 'error' : 'errors'} on Librishelf`,
+      preheader: ({ fresh }) => (fresh ? `${fresh} never seen before` : 'Only errors seen before'),
+      title: 'Error summary',
+      greeting: () => 'Hi!',
+      body: ({ total, shown }) => (total > shown
+        ? `Since the last summary, ${total} open errors happened. The ${shown} most recent:`
+        : 'Since the last summary, these open errors happened:'),
+      line: line => line,
+      button: 'Open the error list',
+      note: ({ minutes }) => `At most one summary every ${minutes} minutes, only when there is something new. Mark an error as resolved in Admin to stop getting it until it comes back.`,
       ignore: "You're receiving this email because this address is set as ADMIN_EMAIL on the Librishelf server."
     },
     avatarReport: {
@@ -590,6 +616,27 @@ export function reviewReportEmail({ author, title, excerpt, reason, note, total,
 const AVATAR_REPORT_REASONS = {
   pt: { offensive: 'Ofensiva ou imprópria', impersonation: 'Se passando por outra pessoa', spam: 'Spam ou propaganda', other: 'Outro motivo' },
   en: { offensive: 'Offensive or inappropriate', impersonation: 'Impersonating someone', spam: 'Spam or advertising', other: 'Other' }
+}
+
+const ERROR_SOURCES = {
+  pt: { client: 'navegador', server: 'API', worker: 'job', webhook: 'webhook', csp: 'CSP' },
+  en: { client: 'browser', server: 'API', worker: 'job', webhook: 'webhook', csp: 'CSP' }
+}
+
+/**
+ * Resumo de erros para ADMIN_EMAIL (pacote 37):
+ * { link, locale, items: [{ source, message, location, occurrences, isNew }], total, minutes }
+ */
+export function errorDigestEmail({ items, total, minutes, locale, ...rest }) {
+  const code = normalizeLocale(locale)
+  const fresh = items.filter(item => item.isNew).length
+  const lines = items.map(item => {
+    const where = item.location ? ` · ${item.location}` : ''
+    const times = item.occurrences > 1 ? ` (${item.occurrences}×)` : ''
+    const mark = item.isNew ? (code === 'en' ? '[new] ' : '[novo] ') : ''
+    return `${mark}${ERROR_SOURCES[code][item.source] || item.source}: ${item.message}${where}${times}`
+  })
+  return build('errorDigest', { ...rest, name: '', locale: code, items: lines, total, shown: items.length, fresh, minutes })
 }
 
 /**

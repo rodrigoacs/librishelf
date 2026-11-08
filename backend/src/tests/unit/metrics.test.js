@@ -9,19 +9,6 @@ test('tempo médio e p95', () => {
   expect(metrics.timingStats('nada')).toEqual({ samples: 0, avgMs: null, p95Ms: null })
 })
 
-test('erro 500 guarda rota sem ids e corta a mensagem', () => {
-  metrics.serverError({ method: 'GET', path: '/library/123/review', context: 'c', message: 'x'.repeat(500) })
-  const [error] = metrics.recentErrors()
-  expect(error.path).toBe('/library/:id/review')
-  expect(error.message).toHaveLength(300)
-})
-
-test('só os 50 erros mais recentes', () => {
-  for (let i = 0; i < 60; i++) metrics.serverError({ message: `e${i}` })
-  expect(metrics.recentErrors()).toHaveLength(50)
-  expect(metrics.recentErrors()[0].message).toBe('e59')
-})
-
 test('IPs que bateram no limite, somados por código', () => {
   metrics.rateLimited('RATE_LIMIT_LOGIN', '1.1.1.1')
   metrics.rateLimited('RATE_LIMIT_LOGIN', '1.1.1.1')

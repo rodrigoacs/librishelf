@@ -36,6 +36,7 @@
  * ===================================================================== */
 :root {
   --font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   /* Títulos, logo e capas desenhadas: serifa empacotada, igual em todo sistema */
   --font-display: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
 

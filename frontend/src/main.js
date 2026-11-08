@@ -19,6 +19,7 @@ import { initTheme } from './composables/useTheme.js'
 import { registerServiceWorker, reloadOnStaleChunks } from './services/pwa.js'
 import { addToast } from './services/toast.js'
 import { installPress } from './services/press.js'
+import { installErrorReporter } from './services/errorReporter.js'
 
 initTheme()
 installPress()
@@ -29,6 +30,8 @@ registerServiceWorker({
 })
 
 const app = createApp(App)
+// Erros do navegador vão para o Admin (pacote 37)
+installErrorReporter(app)
 
 app.use(router)
 app.use(i18n)

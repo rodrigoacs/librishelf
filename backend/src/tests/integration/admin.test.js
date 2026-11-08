@@ -261,7 +261,6 @@ describe('uso, sistema e sinais de moderação', () => {
     expect(res.body.database).toMatchObject({ ok: true, pendingMigrations: [] })
     expect(res.body.database.lastMigration.version).toMatch(/^\d{3}_/)
     expect(res.body.email).toMatchObject({ configured: false })
-    expect(res.body.errors.recent[0]).toMatchObject({ path: '/library/:id', message: 'falha simulada' })
     expect(res.body.errors.today).toBeGreaterThanOrEqual(1)
     expect(res.body.rateLimits.topIps[0]).toMatchObject({ ip: '203.0.113.9', total: 1 })
     expect(res.body.rateLimits.today).toEqual([{ code: 'RATE_LIMIT_LOGIN', total: 1 }])

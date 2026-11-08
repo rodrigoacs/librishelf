@@ -330,36 +330,12 @@
             aria-hidden="true"
           ></i> {{ t('admin.system.errors.title') }}</h2>
         <p class="muted">{{ t('admin.system.errors.counts', { today: data.errors.today, week: data.errors.last7 }) }}</p>
-        <p
-          v-if="!data.errors.recent.length"
-          class="muted"
-        >{{ t('admin.system.errors.none') }}</p>
-        <div
-          v-else
-          class="table-scroll"
-        >
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">{{ t('admin.system.errors.when') }}</th>
-                <th scope="col">{{ t('admin.system.errors.route') }}</th>
-                <th scope="col">{{ t('admin.system.errors.context') }}</th>
-                <th scope="col">{{ t('admin.system.errors.message') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(row, index) in data.errors.recent"
-                :key="index"
-              >
-                <td class="nowrap">{{ formatDateTime(row.at, locale) }}</td>
-                <td class="mono nowrap">{{ row.method }} {{ row.path }}</td>
-                <td>{{ row.context }}</td>
-                <td class="message">{{ row.message }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <AppButton
+          :label="t('admin.system.errors.open')"
+          icon="pi pi-arrow-right"
+          class="btn-text btn-sm errors-link"
+          @click="emit('open-tab', 'errors')"
+        />
         <p class="hint">{{ t('admin.system.errors.hint') }}</p>
       </section>
     </div>
@@ -380,6 +356,7 @@ import { LockedError, useAdminCall, formatBytes, formatDateTime, formatDayMonth,
 
 const buildTime = typeof __APP_BUILD_TIME__ === 'string' ? __APP_BUILD_TIME__ : null
 
+const emit = defineEmits(['open-tab'])
 const { t, te, locale } = useI18n()
 const call = useAdminCall()
 const toast = useToast()
@@ -554,7 +531,7 @@ dd {
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.92em;
 }
 
@@ -651,23 +628,13 @@ tbody tr:last-child td {
   border-bottom: none;
 }
 
+.errors-link {
+  align-self: flex-start;
+}
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
-
-.nowrap {
-  white-space: nowrap;
-}
-
-.message {
-  color: var(--text-secondary);
-  overflow-wrap: anywhere;
-}
-
-.table-scroll {
-  position: relative;
-  overflow-x: auto;
 }
 
 .ips {

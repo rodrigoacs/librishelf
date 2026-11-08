@@ -143,4 +143,12 @@ const cspReportLimiter = buildLimiter({
   code: 'RATE_LIMIT'
 })
 
-export { cspReportLimiter, mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, metaLimiter, isbnLimiter, bookSearchLimiter, coverProxyLimiter, reportLimiter, socialLimiter }
+// Erros mandados pelo navegador: uma tela quebrada pode disparar vários
+const clientErrorLimiter = buildLimiter({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: 'Muitos relatórios.',
+  code: 'RATE_LIMIT'
+})
+
+export { clientErrorLimiter, cspReportLimiter, mailLimiter, tokenLimiter, loginLimiter, registerLimiter, sensitiveLimiter, uploadLimiter, publicLimiter, metaLimiter, isbnLimiter, bookSearchLimiter, coverProxyLimiter, reportLimiter, socialLimiter }

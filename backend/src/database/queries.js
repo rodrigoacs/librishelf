@@ -2012,7 +2012,7 @@ export const WEBHOOK_QUERIES = {
   START: `
     UPDATE librishelf.webhook_events SET attempts = attempts + 1
     WHERE id = $1
-    RETURNING id, provider, topic, resource_id, processed_at
+    RETURNING id, provider, topic, resource_id, processed_at, attempts
   `,
 
   FINISH: `
@@ -3011,4 +3011,52 @@ export const WITHDRAWAL_QUERIES = {
     WHERE p.id = $1 AND p.user_id = $2
     FOR UPDATE OF p
   `
+}
+
+// ---------------------------------------------------------------------------
+// Erros (pacote 37): uma linha por assinatura, ocorrências somadas
+// ---------------------------------------------------------------------------
+export const ERROR_REPORT_QUERIES = {
+  // Voltar a acontecer depois de resolvido reabre
+  UPSERT: `
+    INSERT INTO librishelf.error_reports (source, signature, message, location, detail)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (signature) DO UPDATE
+    SET occurrences = librishelf.error_reports.occurrences + 1,
+        last_seen_at = now(),
+        message = EXCLUDED.message,
+        detail = EXCLUDED.detail,
+        resolved_at = NULL
+  `,
+
+  // $1: open | resolved | all; $2: origem ou null
+  LIST: `
+    SELECT id, source, message, location, detail, occurrences, first_seen_at, last_seen_at, resolved_at,
+           count(*) OVER ()::int AS total
+    FROM librishelf.error_reports
+    WHERE ($1::text = 'all' OR ($1::text = 'open' AND resolved_at IS NULL) OR ($1::text = 'resolved' AND resolved_at IS NOT NULL))
+      AND ($2::text IS NULL OR source = $2::text)
+    ORDER BY last_seen_at DESC, id DESC
+    LIMIT $3 OFFSET $4
+  `,
+
+  OPEN_COUNT: `SELECT count(*)::int AS open FROM librishelf.error_reports WHERE resolved_at IS NULL`,
+
+  RESOLVE: `
+    UPDATE librishelf.error_reports SET resolved_at = now()
+    WHERE id = $1 AND resolved_at IS NULL
+    RETURNING id, source, message, location
+  `,
+
+  // Resumo por e-mail: abertos que aconteceram depois do último resumo
+  LAST_DIGEST: `SELECT max(notified_at) AS at FROM librishelf.error_reports`,
+  PENDING_DIGEST: `
+    SELECT id, source, message, location, occurrences, first_seen_at, last_seen_at, (notified_at IS NULL) AS is_new
+    FROM librishelf.error_reports
+    WHERE resolved_at IS NULL AND (notified_at IS NULL OR last_seen_at > notified_at)
+    ORDER BY (notified_at IS NULL) DESC, last_seen_at DESC
+  `,
+  MARK_NOTIFIED: `UPDATE librishelf.error_reports SET notified_at = now() WHERE id = ANY($1::bigint[])`,
+
+  CLEANUP: `DELETE FROM librishelf.error_reports WHERE last_seen_at < now() - make_interval(days => $1)`
 }

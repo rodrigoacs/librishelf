@@ -2,6 +2,7 @@ import logger from '../utils/logger.js'
 import STATUS from '../utils/statusCodes.js'
 import { errorBody } from '../utils/httpError.js'
 import { serverError } from '../utils/metrics.js'
+import { recordServerError } from '../services/errorReportService.js'
 
 const GENERIC_MESSAGE = 'Erro interno do servidor.'
 
@@ -39,6 +40,7 @@ export default (err, req, res, next) => {
   } else {
     logger.error(err.message || 'Erro não tratado', { statusCode, method: req.method, path: req.path, stack: err.stack })
     serverError({ method: req.method, path: req.originalUrl?.split('?')[0], context: 'errorHandler', message: err.message })
+    void recordServerError({ method: req.method, path: req.originalUrl, context: 'errorHandler', error: err })
   }
 
   res.status(statusCode).json(isControlled

@@ -142,27 +142,12 @@
       >{{ t('common.noResults') }}</p>
     </div>
 
-    <nav
-      v-if="pages > 1"
-      class="pager"
-      :aria-label="t('admin.pager')"
-    >
-      <AppButton
-        icon="pi pi-chevron-left"
-        :aria-label="t('admin.prev')"
-        class="btn-text btn-sm btn-secondary"
-        :disabled="page <= 1 || loading"
-        @click="goTo(page - 1)"
-      />
-      <span>{{ t('admin.pageOf', { page, pages }) }}</span>
-      <AppButton
-        icon="pi pi-chevron-right"
-        :aria-label="t('admin.next')"
-        class="btn-text btn-sm btn-secondary"
-        :disabled="page >= pages || loading"
-        @click="goTo(page + 1)"
-      />
-    </nav>
+    <AdminPager
+      :page="page"
+      :pages="pages"
+      :busy="loading"
+      @go="goTo"
+    />
 
   </div>
 </template>
@@ -172,6 +157,7 @@ import { useScrollEdges } from '../../composables/useScrollEdges.js'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
+import AdminPager from './AdminPager.vue'
 import EmptyState from '../ui/EmptyState.vue'
 import api from '../../services/api.js'
 import { LockedError, useAdminCall, formatShortDate, formatDateTime, formatNumber, formatDate } from './adminCall.js'
@@ -452,13 +438,5 @@ tbody tr {
   white-space: nowrap;
 }
 
-.pager {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-}
 
 </style>

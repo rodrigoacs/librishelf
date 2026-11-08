@@ -17,7 +17,7 @@ const parseReport = express.json({
  * Sem login: os relatórios chegam também de páginas públicas.
  */
 router.post('/', cspReportLimiter, parseReport, (req, res) => {
-  cspReportService.record(req.body)
+  void cspReportService.record(req.body)
   res.status(STATUS.NO_CONTENT).end()
 })
 

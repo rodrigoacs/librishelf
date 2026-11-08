@@ -3,7 +3,7 @@ import * as avatarService from './avatarService.js'
 import os from 'node:os'
 import path from 'node:path'
 import { db } from '../database/connection.js'
-import { ADMIN_QUERIES as q } from '../database/queries.js'
+import { ADMIN_QUERIES as q, ERROR_REPORT_QUERIES } from '../database/queries.js'
 import { pendingMigrations } from '../database/migrate.js'
 import UPLOAD_DIR from '../config/uploadDir.js'
 import * as reviewService from './reviewService.js'
@@ -42,8 +42,8 @@ export async function logUnlock(adminId) {
 // ------------------------------------------------------------------ números
 
 export async function stats() {
-  const [{ rows: [totals] }, { rows: weeks }, { rows: [eng] }] = await Promise.all([
-    db.query(q.STATS), db.query(q.SIGNUPS_BY_WEEK), db.query(q.ENGAGEMENT)
+  const [{ rows: [totals] }, { rows: weeks }, { rows: [eng] }, { rows: [errors] }] = await Promise.all([
+    db.query(q.STATS), db.query(q.SIGNUPS_BY_WEEK), db.query(q.ENGAGEMENT), db.query(ERROR_REPORT_QUERIES.OPEN_COUNT)
   ])
   return {
     users: {
@@ -59,6 +59,8 @@ export async function stats() {
     community: { publicLibraries: totals.public_libraries, members: totals.community },
     content: { books: totals.books, reviews: totals.reviews, hiddenReviews: totals.hidden_reviews, lists: totals.lists },
     moderation: { openReports: totals.open_reports },
+    // Erros abertos (pacote 37): contador da aba Erros
+    errors: { open: errors.open },
     signupsByWeek: weeks.map(row => ({ week: row.week, total: row.total })),
     engagement: {
       funnel: { signedUp: eng.users, verified: eng.verified, withBook: eng.with_book, with10Books: eng.with_10_books },
@@ -224,8 +226,7 @@ export async function system() {
     },
     errors: {
       today: today['error.500'] || 0,
-      last7: last7['error.500'] || 0,
-      recent: metrics.recentErrors()
+      last7: last7['error.500'] || 0
     }
   }
 }

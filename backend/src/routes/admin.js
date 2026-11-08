@@ -9,6 +9,7 @@ import * as adminService from '../services/adminService.js'
 import * as billing from '../services/adminBillingService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
+import * as errorReports from '../services/errorReportService.js'
 
 /**
  * Área administrativa (só role = 'admin'). Fluxo:
@@ -114,5 +115,12 @@ router.get('/webhooks', handle('Erro ao listar webhooks', req => billing.webhook
 router.post('/webhooks/:id/reprocess', validateNumericId(), handle('Erro ao reprocessar webhook',
   req => billing.reprocessWebhook(req.user.id, Number(req.params.id))))
 router.get('/jobs', handle('Erro ao carregar a fila', () => billing.jobs()))
+
+// Erros (pacote 37)
+router.get('/errors', handle('Erro ao listar erros', req => errorReports.list({
+  status: String(req.query.status ?? 'open'), source: req.query.source ? String(req.query.source) : null, page: req.query.page, limit: req.query.limit
+})))
+router.post('/errors/:id/resolve', validateNumericId(), handle('Erro ao marcar erro como resolvido',
+  req => errorReports.resolve(req.user.id, Number(req.params.id))))
 
 export default router

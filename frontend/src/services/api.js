@@ -703,6 +703,15 @@ export default {
     return client.get(`/admin/actions${toQuery(params)}`)
   },
 
+  // Erros (pacote 37): { status: open|resolved|all, source, page, limit }
+  adminErrors(params = {}) {
+    return client.get(`/admin/errors${toQuery(params)}`)
+  },
+
+  adminResolveError(id) {
+    return client.post(`/admin/errors/${id}/resolve`, {})
+  },
+
   // Monetização: Pro de uma conta, pagamentos, ofertas, webhooks e fila
   adminUserBilling(id) {
     return client.get(`/admin/users/${id}/billing`)

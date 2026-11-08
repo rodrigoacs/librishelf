@@ -1698,7 +1698,8 @@
       "usage": "Uso",
       "system": "Sistema",
       "billing": "Pro",
-      "queue": "Fila"
+      "queue": "Fila",
+      "errors": "Erros"
     },
     "overview": {
       "users": "Contas",
@@ -1855,7 +1856,8 @@
         "pro_revoke": "Revogou Pro",
         "payment_refund": "Marcou reembolso",
         "offer_update": "Alterou oferta",
-        "webhook_reprocess": "Reprocessou webhook"
+        "webhook_reprocess": "Reprocessou webhook",
+        "error_resolve": "Erro marcado como resolvido"
       },
       "review": "resenha #{id}",
       "deleted": "conta excluída",
@@ -2001,14 +2003,10 @@
         }
       },
       "errors": {
-        "title": "Erros 500 recentes",
+        "title": "Erros 500",
         "counts": "{today} hoje · {week} nos últimos 7 dias",
-        "none": "Nenhum erro desde que o servidor iniciou.",
-        "when": "Quando",
-        "route": "Rota",
-        "context": "Contexto",
-        "message": "Mensagem",
-        "hint": "A lista fica na memória (os 50 mais recentes) e zera quando o servidor reinicia; os detalhes completos estão no log."
+        "open": "Ver a lista de erros",
+        "hint": "Os erros da API, do navegador, dos jobs, dos webhooks e da CSP ficam na aba Erros, com quantas vezes aconteceram."
       }
     },
     "user": {
@@ -2201,6 +2199,47 @@
       "revokeMessage": "A conta perde o Pro na hora. Os dados continuam guardados.",
       "revokeSubscription": "A assinatura mensal também é cancelada no Mercado Pago. A conta perde o Pro na hora; os dados continuam guardados.",
       "revoked": "Pro revogado."
+    },
+    "errors": {
+      "intro": "Erros do navegador, da API, dos jobs, dos webhooks do Mercado Pago e da CSP. Cada erro aparece uma vez, com quantas vezes aconteceu. Resolver tira o erro dos abertos e dos resumos por e-mail até ele voltar.",
+      "statusLabel": "Situação",
+      "sourceLabel": "Origem",
+      "status": {
+        "open": "Abertos",
+        "resolved": "Resolvidos",
+        "all": "Todos"
+      },
+      "sources": {
+        "all": "Todas",
+        "client": "Navegador",
+        "server": "API",
+        "worker": "Jobs",
+        "webhook": "Webhooks",
+        "csp": "CSP"
+      },
+      "empty": {
+        "open": "Nenhum erro aberto.",
+        "resolved": "Nenhum erro resolvido.",
+        "all": "Nenhum erro registrado."
+      },
+      "occurrences": "1 vez | {n} vezes",
+      "lastSeen": "Última: {date}",
+      "firstSeen": "primeira: {date}",
+      "resolvedAt": "resolvido em {date}",
+      "details": "Detalhes",
+      "resolve": "Resolver",
+      "resolved": "Erro marcado como resolvido.",
+      "fields": {
+        "kind": "Tipo",
+        "info": "Etapa",
+        "release": "Versão do app",
+        "stack": "Pilha",
+        "context": "Contexto",
+        "attempts": "Tentativas",
+        "source": "Arquivo",
+        "line": "Linha",
+        "disposition": "Modo"
+      }
     }
   },
   "readCard": {

@@ -14,12 +14,10 @@ import logger from './logger.js'
  */
 const FLUSH_MS = 60_000
 const MAX_TIMINGS = 200
-const MAX_ERRORS = 50
 const HOUR_MS = 60 * 60 * 1000
 
 const pending = new Map() // "AAAA-MM-DD|evento" → n
 const timings = new Map() // nome → [ms...]
-const errors = []
 const lastErrors = new Map() // nome → { at, message }
 let ipWindows = [] // [{ hour, ips: Map }]
 const startedAt = new Date()
@@ -85,21 +83,12 @@ export function lastSuccess(name) {
   return lastOks.get(name) || null
 }
 
-/** Erro 500: rota, contexto e mensagem (cortada). Sem corpo, usuário ou IP. */
-export function serverError({ method, path, context, message }) {
-  errors.unshift({
-    at: new Date().toISOString(),
-    method: method || '',
-    path: String(path || '').replace(/\d{2,}/g, ':id').slice(0, 120),
-    context: context ? String(context).slice(0, 120) : '',
-    message: String(message || '').slice(0, 300)
-  })
-  if (errors.length > MAX_ERRORS) errors.length = MAX_ERRORS
+/**
+ * Erro 500: só a contagem por dia (Admin → Sistema). O erro em si, com rota e
+ * mensagem, fica em error_reports (errorReportService, pacote 37).
+ */
+export function serverError() {
   count('error.500')
-}
-
-export function recentErrors() {
-  return errors.slice()
 }
 
 export function rateLimited(code, ip) {
@@ -145,7 +134,6 @@ export function pendingCounts() {
 export function resetMetrics() {
   pending.clear()
   timings.clear()
-  errors.length = 0
   lastErrors.clear()
   lastOks.clear()
   ipWindows = []

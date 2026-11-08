@@ -111,22 +111,12 @@
             id="admin-billing-payments"
             class="section-title"
           >{{ t('admin.billing.payments') }}</h2>
-          <div
-            class="filters"
-            role="radiogroup"
-            :aria-label="t('admin.billing.paymentsFilter')"
-          >
-            <button
-              v-for="option in PAYMENT_FILTERS"
-              :key="option"
-              type="button"
-              role="radio"
-              class="filter"
-              :class="{ active: filter === option }"
-              :aria-checked="filter === option"
-              @click="setFilter(option)"
-            >{{ t(`admin.billing.filters.${option}`) }}</button>
-          </div>
+          <AdminFilters
+            :model-value="filter"
+            :options="PAYMENT_FILTERS.map(value => ({ value, label: t(`admin.billing.filters.${value}`) }))"
+            :label="t('admin.billing.paymentsFilter')"
+            @update:model-value="setFilter"
+          />
         </div>
         <p class="hint">{{ t('admin.billing.paymentsHint') }}</p>
         <div class="table-wrap">
@@ -202,27 +192,13 @@
             class="empty-note"
           >{{ t(`admin.billing.empty.${filter}`) }}</p>
         </div>
-        <nav
-          v-if="pages > 1"
-          class="pager"
-          :aria-label="t('admin.pager')"
-        >
-          <AppButton
-            icon="pi pi-chevron-left"
-            :aria-label="t('admin.prev')"
-            class="btn-text btn-sm btn-secondary"
-            :disabled="page <= 1 || paymentsLoading"
-            @click="goTo(page - 1)"
-          />
-          <span>{{ t('admin.pageOf', { page, pages }) }}</span>
-          <AppButton
-            icon="pi pi-chevron-right"
-            :aria-label="t('admin.next')"
-            class="btn-text btn-sm btn-secondary"
-            :disabled="page >= pages || paymentsLoading"
-            @click="goTo(page + 1)"
-          />
-        </nav>
+        <AdminPager
+          class="billing-pager"
+          :page="page"
+          :pages="pages"
+          :busy="paymentsLoading"
+          @go="goTo"
+        />
       </section>
     </template>
 
@@ -336,6 +312,8 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
+import AdminPager from './AdminPager.vue'
+import AdminFilters from './AdminFilters.vue'
 import AppDialog from '../ui/AppDialog.vue'
 import AppSkeleton from '../ui/AppSkeleton.vue'
 import AppSwitch from '../ui/AppSwitch.vue'
@@ -685,45 +663,8 @@ tbody tr:last-child td {
   font-size: var(--fs-sm);
 }
 
-.filters {
-  display: inline-flex;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  padding: var(--space-1);
-  gap: var(--space-1);
-}
-
-.filter {
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-}
-
-.filter.active {
-  background: rgba(var(--main-color-rgb), 0.16);
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.filter:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 1px;
-}
-
-.pager {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-3);
+.billing-pager {
   margin-top: var(--space-3);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
 }
 
 .stack {

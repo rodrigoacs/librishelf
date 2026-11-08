@@ -59,34 +59,19 @@
       >{{ t('admin.log.empty') }}</p>
     </div>
 
-    <nav
-      v-if="pages > 1"
-      class="pager"
-      :aria-label="t('admin.pager')"
-    >
-      <AppButton
-        icon="pi pi-chevron-left"
-        :aria-label="t('admin.prev')"
-        class="btn-text btn-sm btn-secondary"
-        :disabled="page <= 1 || loading"
-        @click="goTo(page - 1)"
-      />
-      <span>{{ t('admin.pageOf', { page, pages }) }}</span>
-      <AppButton
-        icon="pi pi-chevron-right"
-        :aria-label="t('admin.next')"
-        class="btn-text btn-sm btn-secondary"
-        :disabled="page >= pages || loading"
-        @click="goTo(page + 1)"
-      />
-    </nav>
+    <AdminPager
+      :page="page"
+      :pages="pages"
+      :busy="loading"
+      @go="goTo"
+    />
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AppButton from '../ui/AppButton.vue'
+import AdminPager from './AdminPager.vue'
 import EmptyState from '../ui/EmptyState.vue'
 import api from '../../services/api.js'
 import { LockedError, useAdminCall, formatDateTime } from './adminCall.js'
@@ -108,7 +93,8 @@ const ICONS = {
   'pro.revoke': 'pi pi-star-fill',
   'payment.refund': 'pi pi-undo',
   'offer.update': 'pi pi-tag',
-  'webhook.reprocess': 'pi pi-refresh'
+  'webhook.reprocess': 'pi pi-refresh',
+  'error.resolve': 'pi pi-check'
 }
 
 const actions = ref([])
@@ -230,12 +216,4 @@ tbody tr:last-child td {
   max-width: 40ch;
 }
 
-.pager {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-}
 </style>

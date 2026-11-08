@@ -3,6 +3,7 @@ import { WEBHOOK_QUERIES as q } from '../../database/queries.js'
 import { processPayment } from '../../services/paymentService.js'
 import { processPreapproval, processAuthorizedPayment } from '../../services/subscriptionService.js'
 import logger from '../../utils/logger.js'
+import { recordWebhookFailure } from '../../services/errorReportService.js'
 
 /**
  * Processa um webhook gravado, sempre consultando a API do Mercado Pago.
@@ -38,6 +39,7 @@ export async function processWebhookEvent(eventId) {
   } catch (err) {
     await db.query(q.SET_ERROR, [eventId, String(err.message).slice(0, 2000)])
     logger.warn('Falha ao processar webhook', { eventId, topic: event.topic, message: err.message })
+    await recordWebhookFailure(event, err)
     throw err
   }
 }
