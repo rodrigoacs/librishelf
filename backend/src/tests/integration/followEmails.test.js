@@ -7,6 +7,7 @@ import { signId } from '../../utils/signedToken.js'
 import { confirmEmail } from '../helpers/confirmEmail.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
+import { waitFor } from '../helpers/waitFor.js'
 
 const createUnsubscribeToken = id => signId(UNSUBSCRIBE_PURPOSE, id)
 
@@ -27,16 +28,6 @@ async function signUp(name, { verified = true } = {}) {
 }
 
 const mailsTo = name => testOutbox().filter(mail => mail.to === `${name}@example.com`)
-
-// O envio não segura a resposta da API: espera um pouco
-async function waitFor(check, ms = 1500) {
-  const until = Date.now() + ms
-  while (Date.now() < until) {
-    if (check()) return true
-    await new Promise(resolve => setTimeout(resolve, 20))
-  }
-  return check()
-}
 
 const queueOf = async name => (await db.query('SELECT kind, actor_id FROM librishelf.follow_email_queue WHERE user_id = $1', [ids[name]])).rows
 // Simula que o último e-mail foi há mais tempo que o intervalo
@@ -80,7 +71,8 @@ describe('Pedido para seguir', () => {
     expect(mail.headers).toEqual({ 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' })
     expect(mail.list.unsubscribe).toMatch(/\/api\/email\/unsubscribe\?token=\d+\.[A-Za-z0-9_-]{32}$/)
     expect(mail.text).toMatch(/\/unsubscribe\?token=/)
-    expect(await queueOf('ana')).toEqual([])
+    // A fila é limpa logo depois do envio, também fora da resposta
+    expect(await waitFor(async () => (await queueOf('ana')).length === 0)).toBe(true)
   })
 
   it('dentro do intervalo os avisos esperam e vão juntos', async () => {

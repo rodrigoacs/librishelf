@@ -1,6 +1,7 @@
 import { confirmEmail } from '../helpers/confirmEmail.js'
 import request from 'supertest'
 import app from '../../app.js'
+import { db } from '../../database/connection.js'
 import { tokenFrom } from '../helpers/authToken.js'
 import { clearDatabase, closeDatabase } from '../../utils/db.js'
 
@@ -109,11 +110,20 @@ describe('Troca de senha', () => {
     // Garante que o token antigo tenha iat num segundo anterior à troca.
     await new Promise(resolve => setTimeout(resolve, 1100))
 
+    const before = Date.now()
     const res = await request(app)
       .put('/auth/password')
       .set('Authorization', `Bearer ${otherToken}`)
       .send({ currentPassword: other.password, newPassword: 'novaSenha123' })
     expect(res.statusCode).toBe(200)
+    const after = Date.now()
+
+    // A troca é gravada pelo relógio da API, o mesmo do iat: com o now() do
+    // banco adiantado, o token novo nascia "antes" da troca e caía junto
+    const { rows: [changed] } = await db.query('SELECT password_changed_at FROM librishelf.users WHERE name = $1', [other.username])
+    const changedAt = changed.password_changed_at.getTime()
+    expect(changedAt).toBeGreaterThanOrEqual(before)
+    expect(changedAt).toBeLessThanOrEqual(after)
 
     const newToken = tokenFrom(res)
 

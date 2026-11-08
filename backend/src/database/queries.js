@@ -246,9 +246,11 @@ export const AUTH_QUERIES = {
     )
     SELECT * FROM created
   `,
+  // $3 = instante da troca pelo relógio da API, o mesmo que assina o iat do
+  // token (now() do banco pode estar adiantado e derrubar o token novo)
   UPDATE_PASSWORD: `
     UPDATE librishelf.users
-    SET password_hash = $2, password_changed_at = now(), updated_at = now()
+    SET password_hash = $2, password_changed_at = $3, updated_at = now()
     WHERE id = $1
     RETURNING password_changed_at
   `,

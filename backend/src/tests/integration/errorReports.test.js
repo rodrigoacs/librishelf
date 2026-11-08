@@ -7,13 +7,15 @@ import { clearDatabase, closeDatabase } from '../../utils/db.js'
 import { enqueue } from '../../jobs/queue.js'
 import { drain } from '../../jobs/worker.js'
 import * as errorReports from '../../services/errorReportService.js'
+import { waitFor } from '../helpers/waitFor.js'
 
 const PASSWORD = 'senha12345'
 let token = ''
 let unlock = ''
 const asAdmin = () => ({ Authorization: `Bearer ${token}`, Cookie: unlock })
 const rows = async (where = 'true') => (await db.query(`SELECT * FROM librishelf.error_reports WHERE ${where} ORDER BY id`)).rows
-const settle = () => new Promise(resolve => setTimeout(resolve, 50))
+// A gravação não segura a resposta (204 na hora): espera a linha chegar
+const rowsWhen = (where, done) => waitFor(async () => { const found = await rows(where); return done(found) && found })
 
 beforeAll(async () => {
   await clearDatabase()
@@ -36,8 +38,7 @@ describe('POST /client-errors', () => {
       const res = await request(app).post('/client-errors').send(report())
       expect(res.status).toBe(204)
     }
-    await settle()
-    const [row, ...rest] = await rows("source = 'client'")
+    const [row, ...rest] = await rowsWhen("source = 'client'", found => found[0]?.occurrences === 3)
     expect(rest).toHaveLength(0)
     expect(row).toMatchObject({ location: '/books/:id', occurrences: 3 })
     expect(JSON.stringify(row)).not.toContain('example.com')
@@ -51,8 +52,7 @@ describe('POST /client-errors', () => {
     expect(res.status).toBe(204)
     res = await request(app).post('/client-errors').send({ kind: 'x' })
     expect(res.status).toBe(204)
-    await settle()
-    expect(await rows("source = 'client'")).toHaveLength(2)
+    expect(await rowsWhen("source = 'client'", found => found.length === 2)).toHaveLength(2)
   })
 })
 
@@ -60,8 +60,7 @@ describe('outras origens', () => {
   test('violação de CSP entra como csp', async () => {
     const body = { 'csp-report': { 'document-uri': 'https://librishelf.com/settings?tab=1', 'effective-directive': 'img-src', 'blocked-uri': 'https://evil.example/a.png' } }
     await request(app).post('/csp-report').set('Content-Type', 'application/csp-report').send(JSON.stringify(body))
-    await settle()
-    const [row] = await rows("source = 'csp'")
+    const [row] = await rowsWhen("source = 'csp'", found => found.length > 0)
     expect(row).toMatchObject({ message: 'img-src bloqueou https://evil.example/a.png', location: '/settings' })
   })
 
@@ -133,8 +132,8 @@ describe('Admin', () => {
 
     const body = { 'csp-report': { 'document-uri': 'https://librishelf.com/settings', 'effective-directive': 'img-src', 'blocked-uri': 'https://evil.example/a.png' } }
     await request(app).post('/csp-report').set('Content-Type', 'application/csp-report').send(JSON.stringify(body))
-    await settle()
-    expect((await request(app).get('/admin/errors').set(asAdmin())).body.open).toBe(5)
+    const open = () => request(app).get('/admin/errors').set(asAdmin()).then(res => res.body.open)
+    expect(await waitFor(async () => (await open()) === 5 && 5)).toBe(5)
   })
 
   test('sem liberar o Admin: bloqueado', async () => {

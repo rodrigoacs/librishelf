@@ -57,8 +57,9 @@ async function createUser(username, hashedPassword, email, termsVersion) {
   return result.rows[0]
 }
 
-async function updatePassword(id, hashedPassword) {
-  const result = await db.query(q.UPDATE_PASSWORD, [id, hashedPassword])
+/** changedAt: relógio da API, comparado com o iat dos tokens (middlewares/auth.js). */
+async function updatePassword(id, hashedPassword, changedAt = new Date()) {
+  const result = await db.query(q.UPDATE_PASSWORD, [id, hashedPassword, changedAt])
   return result.rows[0] || null
 }
 

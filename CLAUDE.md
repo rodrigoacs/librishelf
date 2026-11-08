@@ -194,6 +194,9 @@ Sem as dependências do WebKit: `E2E_IPHONE_BROWSER=chromium` (ou
   `waitForMail`/`linkIn`, `buyAnnual`, `startCheckout`, `payWithoutReturning`,
   `fakePayment`. Cada teste cria o próprio usuário (`newIdentity`): o banco do
   E2E não é limpo entre execuções e os testes rodam em paralelo.
+- Efeito que a API dispara sem segurar a resposta (e-mail, registro de
+  erro, limpeza de fila): espere com `tests/helpers/waitFor.js`, nunca com
+  pausa fixa.
 - Contagem no fim do pacote 38: 755 no backend, 120 no frontend, 30 no E2E
   (6 cenários × Pixel, iPhone e desktop).
 
@@ -298,8 +301,19 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 38 (2026-11-08). Último commit no GitHub:
-`fcd5693` (pacote 37); o 38 (E2E) foi entregue para commitar.
+Atualizado ao fim do pacote 38c (2026-11-08). Último commit: `f90c4b2`
+(pacote 38, E2E); o 38c (testes instáveis e relógio da troca de senha) foi
+entregue para commitar.
+
+Linha de base depois do 38c: backend 755/755, frontend 120/120 e lint limpo,
+E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium` nesta máquina WSL,
+que não tem as dependências do WebKit).
+
+Atenção nesta máquina: o relógio do Postgres no Docker fica ~570 ms à frente
+do Node no WSL. Comparação entre hora do banco e hora da API quebra aqui.
+Instável já visto uma vez: `community.test.js` estourou os 5 s do
+`beforeAll` (três cadastros com bcrypt) numa rodada da suíte inteira; não
+repetiu. Se voltar, dar um timeout maior a esse hook.
 
 ### Pendências antes de abrir as vendas
 - Preencher `OWNER.document` (CPF ou CNPJ) em `frontend/src/config/site.js`.
