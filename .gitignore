@@ -41,3 +41,6 @@ uploads-test/
 /pacote*.sh
 /fix*.sh
 /admin*.sh
+
+# Instruções locais do Claude Code (estado e fila do projeto)
+/CLAUDE.md
