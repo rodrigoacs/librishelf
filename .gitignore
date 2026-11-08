@@ -44,3 +44,4 @@ uploads-test/
 
 # Instruções locais do Claude Code (estado e fila do projeto)
 /CLAUDE.md
+.claude/
