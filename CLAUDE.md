@@ -108,7 +108,8 @@ backend/            API Express 5 + worker (mesma imagem Docker)
   src/server.js     sobe a API (confere env e migrations pendentes)
   src/worker.js     sobe a fila de jobs
   src/config/       cookies, CORS, features (free/pro), termos, trust proxy, uploads
-  src/database/     connection.js, migrate.js, queries.js (SQL em grupos *_QUERIES)
+  src/database/     connection.js, migrate.js, queries.js (reexporta queries/)
+  src/database/queries/  SQL por domínio em grupos *_QUERIES; fragments.js = trechos comuns
   src/repositories/ acesso a dados reaproveitado entre serviços
   src/services/     regras de negócio (checkout, pagamentos, e-mail, comunidade…)
   src/routes/       rotas finas: validam, chamam o serviço, respondem
@@ -218,8 +219,10 @@ Sem as dependências do WebKit: `E2E_IPHONE_BROWSER=chromium` (ou
   `/auth/me` → `plan.features`.
 - **Rate limit:** os limitadores prontos em `middlewares/rateLimiter.js`
   (rota aberta por IP, autenticada por usuário).
-- **SQL:** em `database/queries.js`, agrupado em constantes `*_QUERIES`
-  (pacote 39 divide em `database/queries/` com `index.js` reexportando). Sempre
+- **SQL:** em `database/queries/<domínio>.js`, agrupado em constantes
+  `*_QUERIES`; trecho usado por mais de um domínio vai em `fragments.js`.
+  Importe sempre de `database/queries.js`, que reexporta tudo (o ESM do Node
+  não resolve pasta para `index.js`); arquivo novo entra na lista dele. Sempre
   parametrizado (`$1`), schema `librishelf.` explícito. Transação com
   `transaction(async client => …)` de `repositories/proGrantRepository.js`.
 - **Migration nova:** `backend/db/migrations/NNN_nome.sql` (próximo número) **e**
@@ -301,9 +304,8 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 38c (2026-11-08). Último commit: `f90c4b2`
-(pacote 38, E2E); o 38c (testes instáveis e relógio da troca de senha) foi
-entregue para commitar.
+Atualizado ao fim do pacote 39 (2026-11-08). Último commit: `4044d3e`
+(pacote 38c); o 39 (divisão do queries.js) foi entregue para commitar.
 
 Linha de base depois do 38c: backend 755/755, frontend 120/120 e lint limpo,
 E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium` nesta máquina WSL,
@@ -329,10 +331,7 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 
 ### Fila (um pacote por item, nesta ordem)
 
-**39 — Divisão de arquivos grandes**
-- `backend/src/database/queries.js` (~3 mil linhas) → `database/queries/` com um
-  arquivo por domínio e `index.js` reexportando tudo (nenhum import muda).
-  Grupos recentes: `TERMS_QUERIES`, `WITHDRAWAL_QUERIES`, `ERROR_REPORT_QUERIES`.
+**39b em diante — Divisão das telas grandes** (o 39, `queries.js`, está feito)
 - Telas com mais de 1.100 linhas, subcomponentes por seção sem mudar
   comportamento: `Settings.vue`, `Community.vue`, `LibraryHeader.vue`,
   `Dashboard.vue`, `NavigationMenu.vue`, `BookEditForm.vue`,
