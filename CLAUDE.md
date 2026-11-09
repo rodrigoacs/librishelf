@@ -308,14 +308,13 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 39d (2026-11-08). Último commit: `b3cacfc`
-(39c; o 39d ainda não commitado). Próximo: 39e, `Dashboard.vue` (1.220
-linhas), seguindo o roteiro do 39b descrito na fila.
+Atualizado ao fim do pacote 39e (2026-11-08). Último commit: `19fd611`
+(39d; o 39e ainda não commitado). Próximo: 39f, `NavigationMenu.vue`,
+seguindo o roteiro do 39b descrito na fila.
 
-Linha de base depois do 39d (igual à do 39b): backend 755/755, frontend
-123/123 e lint limpo,
-E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium` nesta máquina WSL,
-que não tem as dependências do WebKit).
+Linha de base depois do 39e: backend 755/755 (não mexido), frontend
+131/131 e lint limpo, E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium`
+nesta máquina WSL, que não tem as dependências do WebKit).
 
 Atenção nesta máquina: o relógio do Postgres no Docker fica ~570 ms à frente
 do Node no WSL. Comparação entre hora do banco e hora da API quebra aqui.
@@ -337,8 +336,9 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 
 ### Fila (um pacote por item, nesta ordem)
 
-**39e em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
-`Settings.vue`, 39c `Community.vue`, 39d `LibraryHeader.vue`)
+**39f em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
+`Settings.vue`, 39c `Community.vue`, 39d `LibraryHeader.vue`, 39e
+`Dashboard.vue`)
 - Como foi no 39b: subcomponentes por seção em `components/<área>/`, cada um
   com as próprias folhas; nenhum texto, rótulo ou papel muda (os E2E
   selecionam por eles). Conferir com capturas antes/depois pixel a pixel
@@ -356,9 +356,13 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
   anterior já commitado, o `git stash push -u --` pode levar só os arquivos
   do pacote (como no 39d). Depois de `Escape` num diálogo/gaveta, esperar
   antes do próximo `goto` (no celular o fechar mexe no histórico e aborta a
-  navegação).
+  navegação). Tela com gráfico: o `fullPage` no celular muda o tamanho da
+  janela e o chart.js redesenha; aumente a janela até a altura da página
+  (`setViewportSize`) e capture até duas seguidas saírem iguais. Classe
+  renomeada: procure em `main.css` (a lista de alvos de toque de 44 px cita
+  classes de componentes).
 - Telas com mais de 1.100 linhas, subcomponentes por seção sem mudar
-  comportamento: `Dashboard.vue`, `NavigationMenu.vue`, `BookEditForm.vue`,
+  comportamento: `NavigationMenu.vue`, `BookEditForm.vue`,
   `PublicLibrary.vue`, `YearInBooks.vue`, `BookDialog.vue`. Um pacote por tela
   se ficar pesado. Rodar o E2E depois de cada uma.
 

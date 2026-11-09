@@ -234,7 +234,7 @@ import { computed, reactive, ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../../services/api.js'
 import { usePlan } from '../../services/plan.js'
-import { useTheme, cssVar } from '../../composables/useTheme.js'
+import { useChartPalette } from '../../composables/useChartPalette.js'
 import ProNotice from '../ProNotice.vue'
 import AppSelect from '../ui/AppSelect.vue'
 import AppButton from '../ui/AppButton.vue'
@@ -251,7 +251,6 @@ const props = defineProps({
 
 const { t, locale } = useI18n()
 const { plan, canUse } = usePlan()
-const { themeVersion } = useTheme()
 
 const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
 const enabled = computed(() => canUse('stats_advanced'))
@@ -261,15 +260,7 @@ const num = (value, decimals = 0) =>
 const shortDate = text => fromIso(text).toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short' })
 const rangeLabel = side => formatRange(side.from, side.to, dateLocale.value)
 
-const palette = computed(() => {
-  themeVersion.value
-  return {
-    main: cssVar('--main-color') || '#3a86ff',
-    text: cssVar('--text-secondary') || '#a1a1aa',
-    grid: cssVar('--border-color') || 'rgba(255,255,255,0.1)',
-    series: ['--blue', '--orange', '--green', '--purple', '--red', '--yellow'].map(name => cssVar(name) || '#888')
-  }
-})
+const palette = useChartPalette()
 
 const scales = computed(() => ({
   y: { beginAtZero: true, grid: { color: palette.value.grid }, ticks: { color: palette.value.text, precision: 0 } },

@@ -110,13 +110,12 @@ import AppSkeleton from '../ui/AppSkeleton.vue'
 import EmptyState from '../ui/EmptyState.vue'
 import ChartCanvas from '../ui/ChartCanvas.vue'
 import api from '../../services/api.js'
-import { useTheme, cssVar } from '../../composables/useTheme.js'
+import { useChartPalette } from '../../composables/useChartPalette.js'
 import { LockedError, useAdminCall, formatNumber, formatDayMonth } from './adminCall.js'
 
 const emit = defineEmits(['open-tab', 'loaded'])
 const { t, locale } = useI18n()
 const call = useAdminCall()
-const { themeVersion } = useTheme()
 
 const stats = ref(null)
 const loading = ref(true)
@@ -156,14 +155,7 @@ const funnel = computed(() => {
   ].map(step => ({ ...step, percent: percent(step.value, f.signedUp) }))
 })
 
-const palette = computed(() => {
-  themeVersion.value // redesenha quando o tema muda
-  return {
-    main: cssVar('--main-color') || '#3a86ff',
-    text: cssVar('--text-secondary') || '#a1a1aa',
-    grid: cssVar('--border-color') || 'rgba(255,255,255,0.1)'
-  }
-})
+const palette = useChartPalette()
 
 const weekLabels = computed(() => (stats.value?.signupsByWeek || []).map(item =>
   formatDayMonth(`${item.week}T12:00:00`, locale.value)))

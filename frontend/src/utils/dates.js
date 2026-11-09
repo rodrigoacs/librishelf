@@ -25,3 +25,14 @@ export function toApiDate(date) {
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+/** Idioma do app ('pt' | 'en') → tag de data do Intl. */
+export function dateTag(locale) {
+  return locale === 'en' ? 'en-US' : 'pt-BR'
+}
+
+/** Os 12 meses no idioma: style 'long' | 'short' | 'narrow' (sem o ponto de "jan."). */
+export function monthNames(tag, style = 'long') {
+  return Array.from({ length: 12 }, (_, i) =>
+    new Date(2000, i, 1).toLocaleDateString(tag, { month: style }).replace('.', ''))
+}

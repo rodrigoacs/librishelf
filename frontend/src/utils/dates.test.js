@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fromApiDate, toApiDate } from './dates.js'
+import { dateTag, fromApiDate, monthNames, toApiDate } from './dates.js'
 
 describe('fromApiDate', () => {
   it('lê o dia que veio da API, sem cair na véspera no fuso de Brasília', () => {
@@ -29,5 +29,23 @@ describe('toApiDate', () => {
   it('vazio ou inválido → null', () => {
     expect(toApiDate(null)).toBeNull()
     expect(toApiDate('nada')).toBeNull()
+  })
+})
+
+describe('dateTag', () => {
+  it('inglês → en-US; o resto → pt-BR', () => {
+    expect(dateTag('en')).toBe('en-US')
+    expect(dateTag('pt')).toBe('pt-BR')
+    expect(dateTag(undefined)).toBe('pt-BR')
+  })
+})
+
+describe('monthNames', () => {
+  it('doze meses, curtos sem o ponto', () => {
+    expect(monthNames('pt-BR')).toHaveLength(12)
+    expect(monthNames('pt-BR')[0]).toBe('janeiro')
+    expect(monthNames('pt-BR', 'short')[1]).toBe('fev')
+    expect(monthNames('en-US', 'short')[11]).toBe('Dec')
+    expect(monthNames('pt-BR', 'narrow')[0]).toBe('J')
   })
 })

@@ -86,7 +86,7 @@
 import { computed, reactive, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../../services/api.js'
-import { useTheme, cssVar } from '../../composables/useTheme.js'
+import { useChartPalette } from '../../composables/useChartPalette.js'
 import AppSelect from '../ui/AppSelect.vue'
 import AppButton from '../ui/AppButton.vue'
 import AppSkeleton from '../ui/AppSkeleton.vue'
@@ -102,7 +102,6 @@ const TIME_GROUPS = new Set(['month', 'year', 'weekday'])
 const STORAGE_KEY = 'librishelf:pro-chart'
 
 const { t, locale } = useI18n()
-const { themeVersion } = useTheme()
 const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
 
 const DEFAULTS = { metric: 'readings', group: 'month', type: 'bar', period: 'last12' }
@@ -213,15 +212,7 @@ function label(key) {
 
 const valueText = value => (value === null ? '—' : new Intl.NumberFormat(dateLocale.value, { maximumFractionDigits: 2 }).format(value))
 
-const palette = computed(() => {
-  themeVersion.value
-  return {
-    main: cssVar('--main-color') || '#3a86ff',
-    text: cssVar('--text-secondary') || '#a1a1aa',
-    grid: cssVar('--border-color') || 'rgba(255,255,255,0.1)',
-    series: ['--blue', '--orange', '--green', '--purple', '--red', '--yellow'].map(name => cssVar(name) || '#888')
-  }
-})
+const palette = useChartPalette()
 
 const chartData = computed(() => {
   const points = result.value.points
