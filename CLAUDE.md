@@ -308,9 +308,9 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 39b (2026-11-08). Último commit: `8bf770a`
-(pacote 39, queries.js); o 39b (Settings.vue dividida, SettingsGroup e
-classes globais de folha) foi entregue para commitar.
+Atualizado ao fim do pacote 39b (2026-11-08). Último commit: `1f60054`
+(pacote 39b, Settings.vue dividida). Próximo: 39c, `Community.vue`
+(1.348 linhas), seguindo o roteiro do 39b descrito na fila.
 
 Linha de base depois do 39b: backend 755/755, frontend 123/123 e lint limpo,
 E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium` nesta máquina WSL,
