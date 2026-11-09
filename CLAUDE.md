@@ -308,11 +308,11 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 39b (2026-11-08). Último commit: `1f60054`
-(pacote 39b, Settings.vue dividida). Próximo: 39c, `Community.vue`
-(1.348 linhas), seguindo o roteiro do 39b descrito na fila.
+Atualizado ao fim do pacote 39c (2026-11-08). Último commit: `cb46ba2`
+(o 39c ainda não commitado). Próximo: 39d, `LibraryHeader.vue`, seguindo o
+roteiro do 39b descrito na fila.
 
-Linha de base depois do 39b: backend 755/755, frontend 123/123 e lint limpo,
+Linha de base depois do 39c (igual à do 39b): backend 755/755, frontend 123/123 e lint limpo,
 E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium` nesta máquina WSL,
 que não tem as dependências do WebKit).
 
@@ -336,20 +336,34 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 
 ### Fila (um pacote por item, nesta ordem)
 
-**39c em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
-`Settings.vue`)
+**39d em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
+`Settings.vue`, 39c `Community.vue`)
 - Como foi no 39b: subcomponentes por seção em `components/<área>/`, cada um
   com as próprias folhas; nenhum texto, rótulo ou papel muda (os E2E
   selecionam por eles). Conferir com capturas antes/depois pixel a pixel
   (spec temporário em `e2e/tests/`, `git stash` só de `frontend/` para gerar
   o "antes", `docker compose up -d --build --wait frontend` no `e2e/`).
+  Detalhes que já morderam: guardar um `tar` de `frontend/` antes do
+  `git stash push -u -- frontend`; comparar os PNG com `cmp` (sem PIL aqui);
+  o spec de captura não pode clicar em nada que mude o estado da conta (ex.:
+  a linha do teste grátis); classe global nova perde para o `.btn` declarado
+  depois, então use seletor mais específico (`.sheet-stack > .sheet-submit`).
+  Apagar o spec temporário no fim. Dados de tela que dependem de outras
+  contas (como no 39c): o spec cria as contas uma vez e guarda em
+  `e2e/.tmp/<pacote>/accounts.json`, e "antes" e "depois" usam as mesmas
+  (`--workers=1`, `CAPTURE=before|after` no nome da pasta).
 - Telas com mais de 1.100 linhas, subcomponentes por seção sem mudar
-  comportamento: `Community.vue`, `LibraryHeader.vue`,
+  comportamento: `LibraryHeader.vue`,
   `Dashboard.vue`, `NavigationMenu.vue`, `BookEditForm.vue`,
   `PublicLibrary.vue`, `YearInBooks.vue`, `BookDialog.vue`. Um pacote por tela
   se ficar pesado. Rodar o E2E depois de cada uma.
 
 **40 — Padrões compartilhados**
+- Abas: `components/ui/AppTabs.vue` (do 39c: degradê nas bordas com
+  `useScrollEdges`, aba ativa centralizada, setas do teclado) só está na
+  Comunidade. Passar Admin (máscara própria, ícone nas abas: pede slot ou
+  `icon` no item) e PublicLibrary (`.public-tabs`) para ele; o visual das
+  bordas muda no Admin, conferir com captura.
 - Selo (`.offer-tag`, `.late-tag`, admin pills, `.source` da aba Erros) →
   componente `AppTag`.
 - Cascata do celular (Community, Loans, ReadingNow) → classe global com `--i`.
@@ -393,6 +407,9 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 - `Unsubscribe.vue` manda para `/settings#settings-notifications`, mas o
   `scrollBehavior` do router ignora o hash e a seção de avisos não tem esse
   `id` (o `SettingsGroup` aceita `anchor`). Hoje cai no topo da Conta.
+- Feed da Comunidade, evento com mais de 3 livros: falta o espaço antes de
+  "e mais N" ("Vidas Secase mais 2"), em `CommunityFeedItem.vue` (o espaço
+  inicial do `<span>` some no template). Já era assim antes do 39c.
 
 ### Lembrete guardado (não fazer agora)
 Apps iOS e Android: avaliar empacotar o PWA (Capacitor ou TWA) em vez de um

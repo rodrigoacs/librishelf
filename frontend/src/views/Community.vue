@@ -28,42 +28,12 @@
         </i18n-t>
       </div>
 
-      <div
-        class="tabs-wrap"
-        :class="{ 'fade-start': tabsFade.start, 'fade-end': tabsFade.end }"
-      >
-        <div
-          ref="tabsEl"
-          class="app-tabs"
-          role="tablist"
-          :aria-label="t('communityView.title')"
-          @scroll.passive="updateTabsFade"
-        >
-          <button
-            v-for="tab in tabs"
-            :id="`tab-${tab.key}`"
-            :key="tab.key"
-            type="button"
-            role="tab"
-            class="app-tab"
-            :class="{ active: activeTab === tab.key }"
-            :aria-selected="activeTab === tab.key"
-            :aria-controls="`panel-${tab.key}`"
-            :tabindex="activeTab === tab.key ? 0 : -1"
-            @click="activeTab = tab.key"
-            @keydown.right.prevent="moveTab(1)"
-            @keydown.left.prevent="moveTab(-1)"
-          >
-            {{ tab.label }}
-            <span
-              v-if="tab.count"
-              class="app-tab-count"
-            >{{ tab.count }}</span>
-          </button>
-        </div>
-      </div>
+      <AppTabs
+        v-model="activeTab"
+        :tabs="tabs"
+        :label="t('communityView.title')"
+      />
 
-      <!-- Feed -->
       <section
         v-show="activeTab === 'feed'"
         id="panel-feed"
@@ -71,257 +41,9 @@
         aria-labelledby="tab-feed"
         class="panel"
       >
-        <ul
-          v-if="feedLoading && events.length === 0"
-          class="feed-list skeleton-list"
-          aria-busy="true"
-          :aria-label="t('common.loading')"
-        >
-          <li
-            v-for="n in 4"
-            :key="n"
-            class="feed-item"
-          >
-            <AppSkeleton
-              width="40px"
-              height="40px"
-              border-radius="50%"
-            />
-            <div class="feed-body">
-              <AppSkeleton
-                width="80%"
-                height="1rem"
-              />
-              <AppSkeleton
-                width="45%"
-                height="0.8rem"
-                class="skeleton-gap"
-              />
-            </div>
-            <AppSkeleton
-              width="40px"
-              height="60px"
-              border-radius="var(--radius-sm)"
-            />
-          </li>
-        </ul>
-        <EmptyState
-          v-else-if="feedError"
-          variant="error"
-          compact
-          :level="3"
-          :title="t('communityView.load_error')"
-          :loading="feedLoading"
-          @action="loadFeed()"
-        />
-        <EmptyState
-          v-else-if="events.length === 0"
-          compact
-          :level="3"
-          icon="pi pi-globe"
-          :title="t('communityView.feed_empty_title')"
-          :text="t('communityView.feed_empty')"
-        />
-
-        <div
-          v-else
-          class="feed-days"
-        >
-          <section
-            v-for="day in feedDays"
-            :key="day.key"
-            class="feed-day"
-            :aria-label="dayLabel(day.date, { t, locale })"
-          >
-            <h2 class="day-title">{{ dayLabel(day.date, { t, locale }) }}</h2>
-            <ul class="feed-list">
-              <li
-                v-for="item in day.items"
-                :key="item.key"
-                class="feed-item"
-                :class="`kind-${item.type}`"
-                :style="{ '--i': staggerIndex(item) }"
-              >
-                <!-- Resenha (só no celular, que pede kinds=all): texto borrado
-                     se tiver spoiler, até tocar em "Contém spoiler — mostrar" -->
-                <template v-if="item.type === 'review'">
-                  <ReaderAvatar
-                    :username="item.username"
-                    :avatar="item.avatarVersion"
-                  />
-                  <div class="feed-body">
-                    <p class="feed-text">
-                      <ReaderName
-                        :username="item.username"
-                        :is-public="item.isPublic"
-                      />
-                      {{ ' ' + t('communityView.event_review') + ' ' }}
-                      <router-link
-                        v-if="item.isPublic"
-                        :to="bookLink(item, item.books[0])"
-                        class="book-link"
-                      >{{ item.books[0].title }}</router-link>
-                      <strong v-else>{{ item.books[0].title }}</strong>
-                    </p>
-                    <div
-                      class="feed-review"
-                      :class="{ concealed: spoilerHidden(item.books[0]) }"
-                    >
-                      <p
-                        class="feed-review-text"
-                        :aria-hidden="spoilerHidden(item.books[0]) ? 'true' : undefined"
-                        :inert="spoilerHidden(item.books[0]) || undefined"
-                      >{{ item.books[0].review.body }}{{ item.books[0].review.truncated ? '…' : '' }}</p>
-                      <button
-                        v-if="spoilerHidden(item.books[0])"
-                        type="button"
-                        class="spoiler-btn"
-                        @click="revealSpoiler(item.books[0])"
-                      >
-                        <i
-                          class="pi pi-exclamation-triangle"
-                          aria-hidden="true"
-                        ></i>
-                        {{ t('review.showSpoiler') }}
-                      </button>
-                    </div>
-                  </div>
-                </template>
-
-                <!-- Lista pública: capas em fila, numeradas se for ranking -->
-                <template v-else-if="item.type === 'list'">
-                  <div class="feed-body">
-                    <p class="list-title">
-                      <router-link
-                        v-if="item.isPublic"
-                        :to="{ name: 'public-list', params: { username: item.username, id: item.books[0].list.id } }"
-                        class="book-link"
-                      >{{ item.books[0].title }}</router-link>
-                      <strong v-else>{{ item.books[0].title }}</strong>
-                    </p>
-                    <p class="feed-meta">
-                      {{ t('communityView.list_by', { name: `@${item.username}`, n: item.books[0].list.count }, item.books[0].list.count) }}
-                    </p>
-                    <ol
-                      class="list-covers"
-                      :class="{ ranked: item.books[0].list.ranked }"
-                    >
-                      <li
-                        v-for="book in item.books[0].list.books"
-                        :key="book.bookId"
-                      >
-                        <BookCover
-                          :book-id="book.bookId"
-                          :version="book.coverVersion"
-                          :title="book.title"
-                          class="feed-cover"
-                        />
-                        <span
-                          v-if="item.books[0].list.ranked"
-                          class="rank"
-                          aria-hidden="true"
-                        >{{ book.position }}</span>
-                        <span class="sr-only">{{ book.title }}</span>
-                      </li>
-                    </ol>
-                  </div>
-                  <ReaderAvatar
-                    :username="item.username"
-                    :avatar="item.avatarVersion"
-                    class="list-avatar"
-                  />
-                </template>
-
-                <template v-else>
-                <ReaderAvatar
-                  :username="item.username"
-                  :avatar="item.avatarVersion"
-                  :badge="item.type === 'read' ? 'pi pi-check' : 'pi pi-plus'"
-                />
-                <div class="feed-body">
-                  <p class="feed-text">
-                    <ReaderName
-                      :username="item.username"
-                      :is-public="item.isPublic"
-                    />
-                    <template v-if="item.books.length === 1">
-                      {{ ' ' + (item.type === 'read' ? t(item.books[0].reread ? 'communityView.event_reread' : 'communityView.event_read') : t('communityView.event_added')) + ' ' }}
-                      <router-link
-                        v-if="item.isPublic"
-                        :to="bookLink(item, item.books[0])"
-                        class="book-link"
-                      >{{ item.books[0].title }}</router-link>
-                      <strong v-else>{{ item.books[0].title }}</strong>
-                    </template>
-                    <template v-else>
-                      {{ ' ' + t(item.type === 'read' ? 'communityView.event_read_many' : 'communityView.event_added_many', { n: item.books.length }) }}
-                    </template>
-                  </p>
-                  <p
-                    v-if="item.books.length === 1"
-                    class="feed-meta"
-                  >
-                    <span v-if="item.books[0].authors">{{ item.books[0].authors }}</span>
-                    <StarRating
-                      v-if="item.type === 'read' && item.books[0].rating"
-                      :model-value="item.books[0].rating"
-                      size="sm"
-                      readonly
-                      class="feed-rating"
-                    />
-                  </p>
-                  <p
-                    v-else
-                    class="feed-meta many"
-                  >
-                    <span
-                      v-for="(book, index) in item.books.slice(0, MANY_SHOWN)"
-                      :key="book.bookId"
-                      class="many-item"
-                    ><router-link
-                        v-if="item.isPublic"
-                        :to="bookLink(item, book)"
-                        class="book-link small"
-                      >{{ book.title }}</router-link><template v-else>{{ book.title }}</template>{{ index < Math.min(item.books.length, MANY_SHOWN) - 1 ? ', ' : '' }}</span>
-                    <span v-if="item.books.length > MANY_SHOWN"> {{ t('communityView.and_more', { n: item.books.length - MANY_SHOWN }) }}</span>
-                  </p>
-                </div>
-                <div
-                  class="feed-covers"
-                  :class="{ stack: item.books.length > 1 }"
-                  aria-hidden="true"
-                >
-                  <BookCover
-                    v-for="book in item.books.slice(0, COVERS_SHOWN)"
-                    :key="book.bookId"
-                    :book-id="book.bookId"
-                    :version="book.coverVersion"
-                    :title="book.title"
-                    :author="book.authors"
-                    class="feed-cover"
-                  />
-                </div>
-                </template>
-              </li>
-            </ul>
-          </section>
-        </div>
-
-        <div
-          v-if="hasMore"
-          class="load-more"
-        >
-          <AppButton
-            :label="t('publicLibrary.loadMore')"
-            icon="pi pi-angle-down"
-            class="btn-outlined btn-secondary"
-            :loading="feedLoading"
-            @click="loadFeed({ append: true })"
-          />
-        </div>
+        <CommunityFeed ref="feed" />
       </section>
 
-      <!-- Pedidos -->
       <section
         v-show="activeTab === 'requests'"
         id="panel-requests"
@@ -329,86 +51,31 @@
         aria-labelledby="tab-requests"
         class="panel"
       >
-        <ul
-          v-if="connectionsLoading && !connectionsLoaded"
-          class="people-list skeleton-list"
-          aria-busy="true"
-          :aria-label="t('common.loading')"
+        <PeopleList
+          v-bind="connectionsState"
+          :people="connections.requests"
+          empty-icon="pi pi-user-plus"
+          :empty-title="t('communityView.no_requests')"
+          @retry="loadConnections"
         >
-          <li
-            v-for="n in 3"
-            :key="n"
-          >
-            <span class="person">
-              <AppSkeleton
-                width="40px"
-                height="40px"
-                border-radius="50%"
-              />
-              <AppSkeleton
-                width="9rem"
-                height="1rem"
-              />
-            </span>
-          </li>
-        </ul>
-        <EmptyState
-          v-else-if="connectionsError"
-          variant="error"
-          compact
-          :level="3"
-          :title="t('communityView.load_error')"
-          :loading="connectionsLoading"
-          @action="loadConnections"
-        />
-        <EmptyState
-          v-else-if="connections.requests.length === 0"
-          compact
-          :level="3"
-          icon="pi pi-user-plus"
-          :title="t('communityView.no_requests')"
-        />
-        <ul
-          v-else
-          class="people-list"
-        >
-          <li
-            v-for="person in connections.requests"
-            :key="person.username"
-          >
-            <span class="person">
-              <ReaderAvatar
-                :username="person.username"
-                :avatar="person.avatarVersion ?? null"
-              />
-              <ReaderName
-                :username="person.username"
-                :is-public="person.isPublic"
-              />
-            </span>
-            <div class="actions">
-              <AppButton
-                :label="t('communityView.accept')"
-                icon="pi pi-check"
-                class="btn-sm btn-primary"
-                :loading="busy === person.username"
-                @click="act(person.username, () => api.acceptRequest(person.username), 'communityView.accepted')"
-              />
-              <AppButton
-                :label="t('communityView.reject')"
-                class="btn-sm btn-outlined btn-secondary"
-                :disabled="busy === person.username"
-                @click="act(person.username, () => api.rejectRequest(person.username), 'communityView.rejected')"
-              />
-            </div>
-          </li>
-        </ul>
+          <template #actions="{ person }">
+            <AppButton
+              :label="t('communityView.accept')"
+              icon="pi pi-check"
+              class="btn-sm btn-primary"
+              :loading="busy === person.username"
+              @click="act(person.username, () => api.acceptRequest(person.username), 'communityView.accepted')"
+            />
+            <AppButton
+              :label="t('communityView.reject')"
+              class="btn-sm btn-outlined btn-secondary"
+              :disabled="busy === person.username"
+              @click="act(person.username, () => api.rejectRequest(person.username), 'communityView.rejected')"
+            />
+          </template>
+        </PeopleList>
       </section>
 
-      <!-- Ações das linhas (D9): botão pequeno contornado para agir (seguir,
-           recusar, deixar de seguir, remover); link só para navegar
-           ("Ver estante") -->
-      <!-- Encontrar leitores -->
       <section
         v-show="activeTab === 'discover'"
         id="panel-discover"
@@ -416,115 +83,12 @@
         aria-labelledby="tab-discover"
         class="panel"
       >
-        <SearchField
-          id="discover-search"
-          v-model="readerQuery"
-          :label="t('discover.search_label')"
-          :placeholder="t('discover.search_ph')"
-          maxlength="50"
-          @input="searchReaders"
+        <CommunityDiscover
+          :active="activeTab === 'discover'"
+          @followed="loadConnections"
         />
-        <p class="muted small">
-          {{ readerQuery.trim() ? t('discover.results_hint') : t('discover.suggest_hint') }}
-          <template v-if="!user?.showInCommunity">
-            <router-link :to="{ name: 'settings' }">{{ t('discover.join') }}</router-link>
-          </template>
-        </p>
-
-        <ul
-          v-if="readersLoading && readers.length === 0"
-          class="people-list skeleton-list"
-          aria-busy="true"
-          :aria-label="t('common.loading')"
-        >
-          <li
-            v-for="n in 3"
-            :key="n"
-          >
-            <span class="person">
-              <AppSkeleton
-                width="40px"
-                height="40px"
-                border-radius="50%"
-              />
-              <AppSkeleton
-                width="9rem"
-                height="1rem"
-              />
-            </span>
-          </li>
-        </ul>
-        <EmptyState
-          v-else-if="readersError"
-          variant="error"
-          compact
-          :level="3"
-          :title="t('communityView.load_error')"
-          @action="loadReaders"
-        />
-        <EmptyState
-          v-else-if="readers.length === 0"
-          compact
-          :level="3"
-          :icon="readerQuery.trim() ? 'pi pi-search' : 'pi pi-users'"
-          :title="readerQuery.trim() ? t('discover.none_found') : t('discover.none_yet')"
-        />
-        <ul
-          v-else
-          class="people-list"
-        >
-          <li
-            v-for="reader in readers"
-            :key="reader.username"
-          >
-            <span class="person">
-              <ReaderAvatar
-                :username="reader.username"
-                :avatar="reader.avatarVersion ?? null"
-              />
-              <span class="reader-info">
-                <ReaderName
-                  :username="reader.username"
-                  :is-public="true"
-                />
-                <small class="reader-meta">
-                  {{ t('discover.books', { n: reader.totalBooks }, reader.totalBooks) }}
-                  <template v-if="reader.commonBooks"> · <strong>{{ t('discover.common', { n: reader.commonBooks }, reader.commonBooks) }}</strong></template>
-                </small>
-              </span>
-            </span>
-            <div class="actions">
-              <span
-                v-if="reader.followStatus === 'accepted'"
-                class="status-pill ok"
-              >{{ t('discover.following') }}</span>
-              <span
-                v-else-if="reader.followStatus === 'pending'"
-                class="status-pill"
-              >{{ t('communityView.pending') }}</span>
-              <AppButton
-                v-else-if="reader.acceptsFollowers"
-                :label="t('discover.follow')"
-                icon="pi pi-user-plus"
-                class="btn-sm btn-outlined"
-                :loading="busy === reader.username"
-                @click="followReader(reader)"
-              />
-              <!-- Antes não aparecia nada: parecia que o botão Seguir tinha sumido -->
-              <span
-                v-else
-                class="status-pill"
-              >{{ t('discover.notAccepting') }}</span>
-              <router-link
-                :to="{ name: 'public-library', params: { username: reader.username } }"
-                class="see-shelf"
-              >{{ t('discover.see_shelf') }}</router-link>
-            </div>
-          </li>
-        </ul>
       </section>
 
-      <!-- Seguindo -->
       <section
         v-show="activeTab === 'following'"
         id="panel-following"
@@ -532,80 +96,28 @@
         aria-labelledby="tab-following"
         class="panel"
       >
-        <ul
-          v-if="connectionsLoading && !connectionsLoaded"
-          class="people-list skeleton-list"
-          aria-busy="true"
-          :aria-label="t('common.loading')"
+        <PeopleList
+          v-bind="connectionsState"
+          :people="connections.following"
+          empty-icon="pi pi-users"
+          :empty-title="t('communityView.no_following')"
+          @retry="loadConnections"
         >
-          <li
-            v-for="n in 3"
-            :key="n"
-          >
-            <span class="person">
-              <AppSkeleton
-                width="40px"
-                height="40px"
-                border-radius="50%"
-              />
-              <AppSkeleton
-                width="9rem"
-                height="1rem"
-              />
-            </span>
-          </li>
-        </ul>
-        <EmptyState
-          v-else-if="connectionsError"
-          variant="error"
-          compact
-          :level="3"
-          :title="t('communityView.load_error')"
-          :loading="connectionsLoading"
-          @action="loadConnections"
-        />
-        <EmptyState
-          v-else-if="connections.following.length === 0"
-          compact
-          :level="3"
-          icon="pi pi-users"
-          :title="t('communityView.no_following')"
-        />
-        <ul
-          v-else
-          class="people-list"
-        >
-          <li
-            v-for="person in connections.following"
-            :key="person.username"
-          >
-            <span class="person">
-              <ReaderAvatar
-                :username="person.username"
-                :avatar="person.avatarVersion ?? null"
-              />
-              <ReaderName
-                :username="person.username"
-                :is-public="person.isPublic"
-              />
-            </span>
-            <div class="actions">
-              <span
-                v-if="person.status === 'pending'"
-                class="status-pill"
-              >{{ t('communityView.pending') }}</span>
-              <AppButton
-                :label="person.status === 'pending' ? t('profile.cancel_request') : t('communityView.unfollow')"
-                class="btn-sm btn-outlined btn-secondary"
-                :loading="busy === person.username"
-                @click="act(person.username, () => api.unfollow(person.username))"
-              />
-            </div>
-          </li>
-        </ul>
+          <template #actions="{ person }">
+            <span
+              v-if="person.status === 'pending'"
+              class="status-pill"
+            >{{ t('communityView.pending') }}</span>
+            <AppButton
+              :label="person.status === 'pending' ? t('profile.cancel_request') : t('communityView.unfollow')"
+              class="btn-sm btn-outlined btn-secondary"
+              :loading="busy === person.username"
+              @click="act(person.username, () => api.unfollow(person.username))"
+            />
+          </template>
+        </PeopleList>
       </section>
 
-      <!-- Seguidores -->
       <section
         v-show="activeTab === 'followers'"
         id="panel-followers"
@@ -613,116 +125,53 @@
         aria-labelledby="tab-followers"
         class="panel"
       >
-        <ul
-          v-if="connectionsLoading && !connectionsLoaded"
-          class="people-list skeleton-list"
-          aria-busy="true"
-          :aria-label="t('common.loading')"
+        <PeopleList
+          v-bind="connectionsState"
+          :people="connections.followers"
+          empty-icon="pi pi-users"
+          :empty-title="t('communityView.no_followers')"
+          @retry="loadConnections"
         >
-          <li
-            v-for="n in 3"
-            :key="n"
-          >
-            <span class="person">
-              <AppSkeleton
-                width="40px"
-                height="40px"
-                border-radius="50%"
-              />
-              <AppSkeleton
-                width="9rem"
-                height="1rem"
-              />
-            </span>
-          </li>
-        </ul>
-        <EmptyState
-          v-else-if="connectionsError"
-          variant="error"
-          compact
-          :level="3"
-          :title="t('communityView.load_error')"
-          :loading="connectionsLoading"
-          @action="loadConnections"
-        />
-        <EmptyState
-          v-else-if="connections.followers.length === 0"
-          compact
-          :level="3"
-          icon="pi pi-users"
-          :title="t('communityView.no_followers')"
-        />
-        <ul
-          v-else
-          class="people-list"
-        >
-          <li
-            v-for="person in connections.followers"
-            :key="person.username"
-          >
-            <span class="person">
-              <ReaderAvatar
-                :username="person.username"
-                :avatar="person.avatarVersion ?? null"
-              />
-              <ReaderName
-                :username="person.username"
-                :is-public="person.isPublic"
-              />
-            </span>
-            <div class="actions">
-              <AppButton
-                :label="t('communityView.remove')"
-                class="btn-sm btn-outlined btn-danger"
-                :loading="busy === person.username"
-                @click="confirmRemove(person.username)"
-              />
-            </div>
-          </li>
-        </ul>
+          <template #actions="{ person }">
+            <AppButton
+              :label="t('communityView.remove')"
+              class="btn-sm btn-outlined btn-danger"
+              :loading="busy === person.username"
+              @click="confirmRemove(person.username)"
+            />
+          </template>
+        </PeopleList>
       </section>
     </div>
   </div>
 </template>
 
 <script setup>
-import { scrollBehavior } from '../utils/motion.js'
-import PageHeader from '../components/ui/PageHeader.vue'
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../services/toast.js'
 import { useConfirm } from '../services/confirm.js'
-import AppButton from '../components/ui/AppButton.vue'
-import AppSkeleton from '../components/ui/AppSkeleton.vue'
-import EmptyState from '../components/ui/EmptyState.vue'
 import api from '../services/api.js'
-import StarRating from '../components/StarRating.vue'
-import ReaderName from '../components/ReaderName.vue'
-import ReaderAvatar from '../components/ReaderAvatar.vue'
-import BookCover from '../components/BookCover.vue'
-import { groupFeed, dayLabel } from '../utils/feedGroups.js'
-import { currentUser } from '../services/session.js'
+import { currentUser as user } from '../services/session.js'
 import { refreshPendingRequests } from '../services/social.js'
-import { useIsPhone } from '../composables/useIsPhone.js'
 import { usePullToRefresh } from '../composables/usePullToRefresh.js'
+import PageHeader from '../components/ui/PageHeader.vue'
 import PullRefresh from '../components/ui/PullRefresh.vue'
-import SearchField from '../components/ui/SearchField.vue'
+import AppTabs from '../components/ui/AppTabs.vue'
+import AppButton from '../components/ui/AppButton.vue'
+import CommunityFeed from '../components/community/CommunityFeed.vue'
+import CommunityDiscover from '../components/community/CommunityDiscover.vue'
+import PeopleList from '../components/community/PeopleList.vue'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const toast = useToast()
 const confirm = useConfirm()
-const user = currentUser
-
 
 const route = useRoute()
 // ?tab=discover abre direto em "Encontrar leitores" (link do Início).
 const activeTab = ref(['feed', 'discover', 'requests', 'following', 'followers'].includes(route.query.tab) ? route.query.tab : 'feed')
-const events = ref([])
-const feedPage = ref(0)
-const hasMore = ref(false)
-const feedLoading = ref(false)
-const feedError = ref(false)
+const feed = ref(null)
 const connections = ref({ following: [], followers: [], requests: [] })
 const connectionsLoading = ref(true)
 const connectionsLoaded = ref(false)
@@ -737,149 +186,12 @@ const tabs = computed(() => [
   { key: 'followers', label: t('communityView.tab_followers'), count: connections.value.followers.length }
 ])
 
-// Abas que não cabem (celular): degradê na borda que tem mais abas e a aba
-// ativa rola para o meio, para "Seguidores" não ficar escondida.
-const tabsEl = ref(null)
-const tabsFade = ref({ start: false, end: false })
-
-function updateTabsFade() {
-  const el = tabsEl.value
-  if (!el) return
-  const max = el.scrollWidth - el.clientWidth
-  tabsFade.value = { start: el.scrollLeft > 4, end: el.scrollLeft < max - 4 }
-}
-
-function centerActiveTab(smooth = true) {
-  const el = tabsEl.value
-  const tab = el?.querySelector('[aria-selected="true"]')
-  if (!el || !tab) return
-  const left = tab.offsetLeft - (el.clientWidth - tab.offsetWidth) / 2
-  el.scrollTo({ left: Math.max(0, left), behavior: scrollBehavior(smooth) })
-}
-
-watch(activeTab, () => nextTick(() => centerActiveTab()))
-// As contagens chegam depois e mudam a largura das abas
-watch(connections, () => nextTick(() => {
-  centerActiveTab(false)
-  updateTabsFade()
+// As três abas de conexões carregam juntas (uma chamada só)
+const connectionsState = computed(() => ({
+  skeleton: connectionsLoading.value && !connectionsLoaded.value,
+  error: connectionsError.value,
+  retrying: connectionsLoading.value
 }))
-
-onMounted(() => {
-  nextTick(() => {
-    centerActiveTab(false)
-    updateTabsFade()
-  })
-  window.addEventListener('resize', updateTabsFade)
-})
-
-onBeforeUnmount(() => window.removeEventListener('resize', updateTabsFade))
-
-function moveTab(step) {
-  const keys = tabs.value.map(tab => tab.key)
-  const next = keys[(keys.indexOf(activeTab.value) + step + keys.length) % keys.length]
-  activeTab.value = next
-  document.getElementById(`tab-${next}`)?.focus()
-}
-
-// Feed agrupado por dia, com eventos repetidos juntos
-const MANY_SHOWN = 3
-const COVERS_SHOWN = 3
-const feedDays = computed(() => groupFeed(events.value))
-
-// Celular: o feed traz também resenhas e listas (kinds=all), em cartões
-const phone = useIsPhone()
-const feedKinds = () => (phone.value ? 'all' : undefined)
-
-// Cascata só para o que acabou de chegar (a página seguinte não refaz a primeira)
-let staggerBase = 0
-const staggerOrder = new Map()
-function staggerIndex(item) {
-  if (!staggerOrder.has(item.key)) staggerOrder.set(item.key, staggerOrder.size)
-  return Math.max(0, staggerOrder.get(item.key) - staggerBase)
-}
-
-const shownSpoilers = ref(new Set())
-const spoilerHidden = event => Boolean(event.review?.hasSpoiler) && !shownSpoilers.value.has(event.review.id)
-function revealSpoiler(event) {
-  shownSpoilers.value = new Set(shownSpoilers.value).add(event.review.id)
-}
-
-function bookLink(item, book) {
-  return { name: 'public-library', params: { username: item.username }, query: { book: book.bookId } }
-}
-
-async function loadFeed({ append = false } = {}) {
-  feedLoading.value = true
-  feedError.value = false
-  try {
-    const page = append ? feedPage.value + 1 : 1
-    const result = await api.getFeed(page, feedKinds())
-    if (!append) {
-      staggerOrder.clear()
-      staggerBase = 0
-    } else {
-      staggerBase = staggerOrder.size
-    }
-    events.value = append ? [...events.value, ...result.events] : result.events
-    feedPage.value = page
-    hasMore.value = result.hasMore
-  } catch {
-    feedError.value = true
-  } finally {
-    feedLoading.value = false
-  }
-}
-
-// --- Encontrar leitores ---
-const readerQuery = ref('')
-const readers = ref([])
-const readersLoading = ref(false)
-const readersError = ref(false)
-let readersLoaded = false
-let searchTimer = null
-let searchRequest = 0
-
-async function loadReaders() {
-  const current = ++searchRequest
-  readersLoading.value = true
-  readersError.value = false
-  try {
-    const result = await api.findReaders(readerQuery.value.trim())
-    if (current === searchRequest) readers.value = result
-  } catch {
-    // Falha não é "ninguém encontrado": mostra o erro com "Tentar de novo"
-    if (current === searchRequest) {
-      readers.value = []
-      readersError.value = true
-    }
-  } finally {
-    if (current === searchRequest) readersLoading.value = false
-    readersLoaded = true
-  }
-}
-
-function searchReaders() {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(loadReaders, 300)
-}
-
-async function followReader(reader) {
-  busy.value = reader.username
-  try {
-    const result = await api.follow(reader.username)
-    reader.followStatus = result?.status ?? 'pending'
-    toast.add({ severity: 'success', detail: t('discover.requested', { name: reader.username }), life: 3000 })
-    loadConnections()
-  } catch (error) {
-    toast.add({ severity: 'error', detail: error.message, life: 4000 })
-  } finally {
-    busy.value = ''
-  }
-}
-
-watch(activeTab, tab => {
-  if (tab === 'discover' && !readersLoaded) loadReaders()
-})
 
 async function loadConnections() {
   connectionsLoading.value = true
@@ -904,7 +216,7 @@ async function act(username, request, successKey) {
     if (successKey) toast.add({ severity: 'success', detail: t(successKey, { name: username }), life: 3000 })
     await loadConnections()
     refreshPendingRequests({ force: true })
-    loadFeed()
+    feed.value.load()
   } catch (error) {
     toast.add({ severity: 'error', detail: error.message, life: 4000 })
   } finally {
@@ -925,20 +237,16 @@ function confirmRemove(username) {
   })
 }
 
-// Girou/redimensionou passando dos 640 px: o feed muda de formato
-watch(phone, () => loadFeed())
-
 // Puxar para atualizar (celular): feed, pedidos e quem segue
 const pull = usePullToRefresh(async () => {
-  await Promise.all([loadFeed(), loadConnections()])
+  await Promise.all([feed.value.load(), loadConnections()])
   refreshPendingRequests({ force: true })
 })
 
 onMounted(async () => {
-  await Promise.all([loadFeed(), loadConnections()])
+  await Promise.all([feed.value.load(), loadConnections()])
   refreshPendingRequests({ force: true })
-  if (activeTab.value === 'discover') loadReaders()
-  else if (connections.value.requests.length > 0 && events.value.length === 0) activeTab.value = 'requests'
+  if (activeTab.value !== 'discover' && connections.value.requests.length > 0 && feed.value.isEmpty) activeTab.value = 'requests'
 })
 </script>
 
@@ -948,402 +256,9 @@ onMounted(async () => {
   margin: 0 0 var(--space-5);
 }
 
-.tabs-wrap {
-  position: relative;
-  margin-bottom: var(--space-5);
-}
-
-.tabs-wrap::before,
-.tabs-wrap::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 1px;
-  width: 2.5rem;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  z-index: 1;
-}
-
-.tabs-wrap::before {
-  left: 0;
-  background: linear-gradient(to right, var(--bg-app), transparent);
-}
-
-.tabs-wrap::after {
-  right: 0;
-  background: linear-gradient(to left, var(--bg-app), transparent);
-}
-
-.tabs-wrap.fade-start::before,
-.tabs-wrap.fade-end::after {
-  opacity: 1;
-}
-
 .panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-}
-
-.muted {
-  color: var(--text-secondary);
-}
-
-.skeleton-gap {
-  margin-top: var(--space-2);
-}
-
-.feed-list,
-.people-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.feed-days {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.day-title {
-  margin: 0 0 var(--space-1);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-}
-
-.feed-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.feed-item:last-child {
-  border-bottom: none;
-}
-
-.feed-body {
-  flex: 1;
-}
-
-.feed-covers {
-  display: flex;
-  flex-shrink: 0;
-}
-
-.feed-cover {
-  width: 40px;
-  box-shadow: var(--shadow-2);
-}
-
-/* Vários livros: capas sobrepostas, como uma pilha */
-.feed-covers.stack .feed-cover + .feed-cover {
-  margin-left: -22px;
-}
-
-.feed-covers.stack .feed-cover {
-  border: 2px solid var(--bg-app);
-}
-
-.feed-cover :deep(.title) {
-  font-size: 0;
-}
-
-.person {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  max-width: 100%;
-}
-
-.feed-body {
-  min-width: 0;
-}
-
-.feed-text {
-  margin: 0;
-  color: var(--text-primary);
-  line-height: 1.45;
-}
-
-.feed-meta {
-  margin: 0.2rem 0 0;
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.feed-rating {
-  margin-left: var(--space-2);
-}
-
-/* Título do livro em texto forte (o @nome já é o link colorido) */
-.book-link {
-  color: var(--text-primary);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.book-link:hover {
-  color: var(--main-color);
-  text-decoration: underline;
-}
-
-.feed-meta.many {
-  display: block;
-}
-
-.many-item {
-  white-space: normal;
-}
-
-.book-link.small {
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.people-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-.status-pill.ok {
-  color: var(--main-color);
-  background: rgba(var(--main-color-rgb), 0.12);
-}
-
-.muted.small {
-  font-size: var(--fs-sm);
-  margin: 0 0 var(--space-4);
-}
-
-.reader-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.reader-meta {
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-}
-
-.reader-meta strong {
-  color: var(--main-color);
-  font-weight: 600;
-}
-
-.see-shelf {
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  white-space: nowrap;
-}
-
-.see-shelf:hover {
-  color: var(--text-primary);
-}
-
-.status-pill {
-  font-size: var(--fs-xs);
-  color: var(--text-secondary);
-  background: var(--bg-input);
-  border-radius: var(--radius-pill);
-  padding: 0.15rem var(--space-2);
-}
-
-.load-more {
-  display: flex;
-  justify-content: center;
-}
-
-@media (max-width: 639.98px) {
-  /* Cinco abas: no celular a fileira rola para o lado (sem esticar a página). */
-  .app-tabs {
-    contain: inline-size;
-  }
-
-  .people-list li {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
-
-  /* Feed em cartões, como no trailer: capa à direita, resenha e lista com
-     cara própria; entram em cascata (só os que acabaram de chegar) */
-  .feed-days {
-    gap: var(--space-5);
-  }
-
-  .feed-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-  }
-
-  .feed-item,
-  .feed-item:last-child {
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--border-color);
-    border-radius: var(--card-radius);
-    background: var(--bg-panel);
-    animation: feed-in var(--dur-medium) var(--ease-enter) both;
-    animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));
-  }
-
-  .skeleton-list .feed-item {
-    animation: none;
-  }
-
-  .feed-cover {
-    width: 48px;
-  }
-
-  .book-link {
-    font-family: var(--font-display);
-  }
-
-  .feed-review {
-    position: relative;
-    margin-top: var(--space-2);
-  }
-
-  .feed-review-text {
-    display: -webkit-box;
-    margin: 0;
-    overflow: hidden;
-    color: var(--text-secondary);
-    font-size: var(--fs-sm);
-    line-height: 1.5;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    user-select: text;
-  }
-
-  .feed-review.concealed .feed-review-text {
-    filter: blur(6px);
-    opacity: 0.55;
-    user-select: none;
-  }
-
-  .spoiler-btn {
-    position: absolute;
-    inset: 0;
-    margin: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    width: fit-content;
-    height: fit-content;
-    min-height: 44px;
-    padding: 0 var(--space-4);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-pill);
-    background: var(--bg-input);
-    color: var(--text-primary);
-    font: inherit;
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .spoiler-btn .pi {
-    color: var(--warning);
-  }
-
-  .kind-list {
-    align-items: flex-start;
-  }
-
-  .list-title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--fs-lg);
-    font-weight: 700;
-    overflow-wrap: anywhere;
-  }
-
-  .list-title .book-link {
-    font-weight: inherit;
-  }
-
-  .list-covers {
-    display: flex;
-    gap: var(--space-2);
-    margin: var(--space-2) 0 0;
-    padding: 8px 8px 0 0;
-    list-style: none;
-    overflow: hidden;
-  }
-
-  .list-covers li {
-    position: relative;
-    flex: 0 0 auto;
-  }
-
-  .list-covers .feed-cover {
-    width: 44px;
-  }
-
-  .rank {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    display: grid;
-    place-items: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 4px;
-    border-radius: var(--radius-pill);
-    background: var(--main-solid);
-    color: var(--on-main);
-    font-size: var(--fs-2xs);
-    font-weight: 700;
-    box-shadow: 0 0 0 2px var(--bg-panel);
-  }
-
-  .list-covers li:first-child .rank {
-    right: -4px;
-  }
-
-  .list-avatar {
-    flex-shrink: 0;
-  }
-}
-
-@keyframes feed-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 12px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .feed-item,
-  .feed-item:last-child {
-    animation: none !important;
-  }
 }
 </style>
