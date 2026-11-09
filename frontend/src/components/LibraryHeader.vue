@@ -8,8 +8,8 @@
           :title="t('menu.library')"
         />
         <span
-          class="count-badge"
           v-if="booksQuantity !== undefined"
+          class="count-badge"
           aria-live="polite"
         >{{ countLabelLong }}</span>
       </div>
@@ -28,14 +28,14 @@
         <!-- Ordenar à mão, ao lado da busca (antes só dentro da gaveta de filtros).
              AppSelect, e não <select>: a lista nativa não segue o tema. -->
         <AppSelect
-          :modelValue="filters.sortField"
+          :model-value="filters.sortField"
           :options="sortOptions"
-          optionLabel="label"
-          optionValue="value"
+          option-label="label"
+          option-value="value"
           :aria-label="t('library.sort_by')"
           class="sort-quick"
           panel-class="sort-quick-panel"
-          @update:modelValue="value => emitFilter('sortField', value)"
+          @update:model-value="value => emitFilter('sortField', value)"
         >
           <template #value>
             <span class="sort-quick-content">
@@ -51,47 +51,30 @@
       </div>
 
       <div class="actions">
-        <div
-          class="view-toggle"
-          role="group"
+        <LibraryViewToggle
+          :model-value="view"
           :aria-label="t('library.view_label')"
-        >
-          <button
-            v-for="mode in viewModes"
-            :key="mode.value"
-            type="button"
-            class="view-btn"
-            :class="{ active: view === mode.value }"
-            :aria-pressed="view === mode.value"
-            :aria-label="mode.label"
-            v-tooltip.bottom="mode.label"
-            @click="emit('view-change', mode.value)"
-          >
-            <i
-              :class="mode.icon"
-              aria-hidden="true"
-            ></i>
-          </button>
-        </div>
+          @update:model-value="value => emit('view-change', value)"
+        />
 
         <AppButton
+          v-tooltip.bottom="t('batch.selectMode')"
           icon="pi pi-check-square"
           class="btn-rounded btn-text action-btn"
           :class="{ 'active-filter': selecting }"
           :aria-pressed="selecting"
           :aria-label="t('batch.selectMode')"
-          v-tooltip.bottom="t('batch.selectMode')"
           @click="emit('toggle-select')"
         />
 
         <AppButton
+          v-tooltip.bottom="t('library.filters_adv')"
           icon="pi pi-filter"
           class="btn-rounded btn-text action-btn"
           :class="{ 'active-filter': hasActiveFilters }"
-          @click="visibleFilters = true"
-          v-tooltip.bottom="t('library.filters_adv')"
           :aria-label="t('library.filters_adv')"
           :aria-expanded="visibleFilters"
+          @click="visibleFilters = true"
         />
 
         <AppButton
@@ -104,341 +87,38 @@
       </div>
     </div>
 
-    <!-- Celular: Autor, Editora e Categoria sempre à esquerda, no mesmo lugar
-         (abrem a folha de escolha; acesos com a contagem quando há escolha).
-         Os escolhidos ficam na linha de baixo, enchendo da esquerda. -->
-    <div
+    <LibraryFilterChips
       v-if="phone"
-      class="chip-row"
-      role="group"
-      :aria-label="t('library.quickFilters')"
-    >
-      <button
-        v-for="dim in dimensions"
-        :key="dim.key"
-        type="button"
-        class="fchip fchip-dim"
-        :class="{ 'has-picks': filters[dim.key].length }"
-        :aria-label="filters[dim.key].length ? t('library.dimCount', { dim: dim.label, n: filters[dim.key].length }, filters[dim.key].length) : undefined"
-        aria-haspopup="dialog"
-        data-press
-        @click="openPicker(dim)"
-      >
-        {{ dim.label }}
-        <span
-          v-if="filters[dim.key].length"
-          class="fchip-count"
-          aria-hidden="true"
-        >{{ filters[dim.key].length }}</span>
-        <i
-          v-else
-          class="pi pi-chevron-down"
-          aria-hidden="true"
-        ></i>
-      </button>
-    </div>
-
-    <div
-      v-if="phone && hasActiveFilters"
-      class="chip-row chip-row-picked"
-      role="group"
-      :aria-label="t('library.filtering_by')"
-    >
-      <!-- Primeiro, para não sumir no fim de uma fila longa -->
-      <button
-        type="button"
-        class="fchip fchip-clear"
-        data-press
-        @click="emit('reset')"
-      >{{ t('library.clear_all') }}</button>
-      <template
-        v-for="dim in dimensions"
-        :key="dim.key"
-      >
-        <span
-          v-for="name in filters[dim.key]"
-          :key="`${dim.key}-${name}`"
-          class="fchip is-active"
-          :style="dim.key === 'tags' ? { '--tag-color': tagColor(name) } : undefined"
-        >
-          <button
-            type="button"
-            class="fchip-label fchip-open"
-            aria-haspopup="dialog"
-            :aria-label="t('library.chipChange', { dim: dim.label, name })"
-            data-press
-            @click="openPicker(dim)"
-          >{{ name }}</button>
-          <button
-            type="button"
-            class="fchip-x"
-            :aria-label="t('common.removeItem', { name })"
-            @click="removeFromList(dim.key, name)"
-          >
-            <i
-              class="pi pi-times"
-              aria-hidden="true"
-            ></i>
-          </button>
-        </span>
-      </template>
-      <span
-        v-for="chip in otherChips"
-        :key="chip.key"
-        class="fchip is-active"
-      >
-        <span class="fchip-label">{{ chip.label }}</span>
-        <button
-          type="button"
-          class="fchip-x"
-          :aria-label="t('common.removeItem', { name: chip.label })"
-          @click="chip.remove"
-        >
-          <i
-            class="pi pi-times"
-            aria-hidden="true"
-          ></i>
-        </button>
-      </span>
-    </div>
-
-    <FilterPickerSheet
-      v-if="phone"
-      v-model:visible="pickerOpen"
-      :title="pickerDim ? pickerDim.title : ''"
-      :options="pickerDim ? pickerDim.options : []"
-      :selected="pickerDim ? filters[pickerDim.key] : []"
-      @update:selected="value => emitFilter(pickerDim.key, value)"
+      :filters="filters"
+      :active="hasActiveFilters"
+      :other-chips="otherChips"
+      :authors="authorsList"
+      :publishers="publishersList"
+      :tags="tagsList"
+      @filter-change="forward"
+      @remove="removeFromList"
+      @reset="emit('reset')"
     />
 
-    <div
-      class="active-filters-bar"
+    <LibraryActiveFilters
       v-if="hasActiveFilters && !phone"
-    >
-      <div class="filter-label">{{ t('library.filtering_by') }}</div>
-      <div class="chips-container">
-        <AppChip
-          v-if="filters.readState !== 'all'"
-          :label="readStateLabel(filters.readState)"
-          removable
-          @remove="emitFilter('readState', 'all')"
-          class="custom-chip theme-border"
-        />
-        <AppChip
-          v-if="hasReadYear"
-          :label="readPeriodLabel"
-          removable
-          @remove="clearReadPeriod"
-          class="custom-chip theme-border"
-        />
-        <AppChip
-          v-if="filters.series"
-          :label="t('series.chip', { series: filters.series })"
-          removable
-          @remove="emitFilter('series', '')"
-          class="custom-chip theme-border"
-        />
-        <AppChip
-          v-if="filters.isbnStatus === 'invalid'"
-          :label="t('library.invalid_isbn_chip')"
-          removable
-          @remove="emitFilter('isbnStatus', 'all')"
-          class="custom-chip theme-border"
-        />
-        <AppChip
-          v-for="name in filters.author"
-          :key="`author-${name}`"
-          :label="name"
-          removable
-          @remove="removeFromList('author', name)"
-          class="custom-chip theme-border"
-        />
-        <AppChip
-          v-for="name in filters.publisher"
-          :key="`publisher-${name}`"
-          :label="name"
-          removable
-          @remove="removeFromList('publisher', name)"
-          class="custom-chip theme-border"
-        />
-        <AppChip
-          v-for="name in filters.tags"
-          :key="`tag-${name}`"
-          :label="'#' + name"
-          removable
-          @remove="removeFromList('tags', name)"
-          class="custom-chip tag-chip"
-          :style="{ '--tag-color': tagColor(name) }"
-        />
-      </div>
-      <AppButton
-        :label="t('library.clear_all')"
-        class="btn-text btn-sm btn-secondary clear-all-btn"
-        @click="emit('reset')"
-      />
-    </div>
+      :filters="filters"
+      :other-chips="otherChips"
+      @remove="removeFromList"
+      @reset="emit('reset')"
+    />
 
-    <AppDialog
+    <LibraryFiltersDrawer
       v-model:visible="visibleFilters"
-      drawer
-      dialog-class="filters-drawer"
-      :aria-label="t('library.filters_adv')"
-    >
-      <div class="drawer-body">
-        <div class="sidebar-header">
-          <div>
-            <h3>{{ t('library.filters_adv') }}</h3>
-            <p>{{ t('library.refine_view') }}</p>
-          </div>
-          <IconButton
-            icon="pi pi-times"
-            :label="t('common.close')"
-            @click="visibleFilters = false"
-          />
-        </div>
-
-        <div class="sidebar-content">
-          <!-- Celular: o alternador grade/lista sai do cabeçalho e mora aqui
-               (no cabeçalho ele empurrava o título para baixo das ações) -->
-          <div class="filter-group view-group">
-            <span
-              id="filter-view"
-              class="group-label"
-            >{{ t('library.view_label') }}</span>
-            <div
-              class="view-toggle view-toggle-wide"
-              role="group"
-              aria-labelledby="filter-view"
-            >
-              <button
-                v-for="mode in viewModes"
-                :key="mode.value"
-                type="button"
-                class="view-btn view-btn-wide"
-                :class="{ active: view === mode.value }"
-                :aria-pressed="view === mode.value"
-                @click="emit('view-change', mode.value)"
-              >
-                <i
-                  :class="mode.icon"
-                  aria-hidden="true"
-                ></i>
-                <span>{{ mode.label }}</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="filter-group">
-            <label id="filter-read-status">{{ t('library.read_status') }}</label>
-            <AppSelect
-              :modelValue="filters.readState"
-              :options="readStateOptions"
-              optionLabel="label"
-              optionValue="value"
-              aria-labelledby="filter-read-status"
-              class="w-full"
-              @update:modelValue="value => emitFilter('readState', value)"
-            />
-          </div>
-
-          <div class="filter-group">
-            <label for="filter-read-year">{{ t('library.read_year') }}</label>
-            <AppSelect
-              inputId="filter-read-year"
-              :modelValue="hasReadYear ? filters.readYear : 'all'"
-              :options="yearOptions"
-              optionLabel="label"
-              optionValue="value"
-              :placeholder="t('library.select_year')"
-              class="w-full"
-              @update:modelValue="setReadYear"
-            />
-          </div>
-
-          <div class="filter-group">
-            <label for="filter-sort">{{ t('library.sort_by') }}</label>
-            <div class="sort-row">
-              <AppSelect
-                inputId="filter-sort"
-                :modelValue="filters.sortField"
-                :options="sortOptions"
-                optionLabel="label"
-                optionValue="value"
-                class="custom-dropdown"
-                @update:modelValue="value => emitFilter('sortField', value)"
-              />
-              <AppButton
-                @click="emitFilter('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc')"
-                :icon="filters.sortOrder === 'asc' ? 'pi pi-sort-amount-down' : 'pi pi-sort-amount-up-alt'"
-                :aria-label="filters.sortOrder === 'asc' ? t('library.sort_asc') : t('library.sort_desc')"
-                v-tooltip.bottom="filters.sortOrder === 'asc' ? t('library.sort_asc') : t('library.sort_desc')"
-                class="btn-outlined btn-secondary sort-btn"
-              />
-            </div>
-          </div>
-
-          <div class="filter-group">
-            <label for="filter-tags">{{ t('library.tags') }}</label>
-            <AppMultiSelect
-              inputId="filter-tags"
-              :modelValue="filters.tags"
-              :options="tagsList"
-              optionLabel="name"
-              optionValue="name"
-              :placeholder="t('library.select_tags')"
-              :max-labels="2"
-              :selected-label="`{0} ${t('library.selected_tags')}`"
-              filter
-              class="w-full"
-              @update:modelValue="value => emitFilter('tags', value)"
-            />
-          </div>
-
-          <div class="filter-group">
-            <label for="filter-authors">{{ t('library.authors') }}</label>
-            <AppMultiSelect
-              inputId="filter-authors"
-              :modelValue="filters.author"
-              :options="authorsList"
-              optionLabel="name"
-              optionValue="name"
-              :placeholder="t('library.select_authors')"
-              :max-labels="2"
-              :selected-label="`{0} ${t('library.selected_authors')}`"
-              filter
-              class="w-full"
-              @update:modelValue="value => emitFilter('author', value)"
-            />
-          </div>
-
-          <div class="filter-group">
-            <label for="filter-publishers">{{ t('library.publishers') }}</label>
-            <AppMultiSelect
-              inputId="filter-publishers"
-              :modelValue="filters.publisher"
-              :options="publishersList"
-              optionLabel="name"
-              optionValue="name"
-              :placeholder="t('library.select_publishers')"
-              :max-labels="2"
-              :selected-label="`{0} ${t('library.selected_publishers')}`"
-              filter
-              class="w-full"
-              @update:modelValue="value => emitFilter('publisher', value)"
-            />
-          </div>
-        </div>
-
-        <div class="sidebar-footer">
-          <AppButton
-            :label="t('library.clear_all')"
-            icon="pi pi-filter-slash"
-            class="btn-outlined btn-danger w-full"
-            @click="emit('reset')"
-          />
-        </div>
-      </div>
-    </AppDialog>
+      :filters="filters"
+      :view="view"
+      :authors="authorsList"
+      :publishers="publishersList"
+      :tags="tagsList"
+      @filter-change="forward"
+      @view-change="value => emit('view-change', value)"
+      @reset="emit('reset')"
+    />
 
     <AddBookDialog
       v-model:visible="addBookDialogVisible"
@@ -448,22 +128,22 @@
 </template>
 
 <script setup>
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import PageHeader from './ui/PageHeader.vue'
 import SearchField from './ui/SearchField.vue'
-import { tagColor } from '../utils/tagColors.js'
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import AppButton from './ui/AppButton.vue'
-import AppDialog from './ui/AppDialog.vue'
-import IconButton from './form/IconButton.vue'
-import AppMultiSelect from './ui/AppMultiSelect.vue'
 import AppSelect from './ui/AppSelect.vue'
-import AppChip from './ui/AppChip.vue'
 import AddBookDialog from './AddBookDialog.vue'
-import FilterPickerSheet from './FilterPickerSheet.vue'
+import LibraryViewToggle from './library/LibraryViewToggle.vue'
+import LibraryFilterChips from './library/LibraryFilterChips.vue'
+import LibraryActiveFilters from './library/LibraryActiveFilters.vue'
+import LibraryFiltersDrawer from './library/LibraryFiltersDrawer.vue'
 import { useIsPhone } from '../composables/useIsPhone.js'
+import { isFiltered } from '../composables/useLibrary.js'
+import { useLibraryFilterOptions, hasReadYear } from '../composables/useLibraryFilterOptions.js'
 import api from '../services/api.js'
 import { librarySearchRequest, takeLibrarySearchRequest } from '../services/librarySearch.js'
-import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
 
@@ -481,38 +161,22 @@ const props = defineProps({
 
 const emit = defineEmits(['filter-change', 'reset', 'book-created', 'view-change', 'toggle-select'])
 
-const viewModes = computed(() => [
-  { value: 'grid', icon: 'pi pi-th-large', label: t('library.view_grid') },
-  { value: 'list', icon: 'pi pi-list', label: t('library.view_list') }
-])
-
 const visibleFilters = ref(false)
 const addBookDialogVisible = ref(false)
 const phone = useIsPhone()
+const { sortOptions, readStateLabel, readPeriodLabel } = useLibraryFilterOptions()
 
-// ---------------------------------------------------------------------------
-// Celular: chips de filtro abaixo da busca
-// ---------------------------------------------------------------------------
-const pickerOpen = ref(false)
-const pickerKey = ref('')
-const dimensions = computed(() => [
-  { key: 'author', label: t('library.dim.author'), title: t('library.authors'), options: authorsList.value },
-  { key: 'publisher', label: t('library.dim.publisher'), title: t('library.publishers'), options: publishersList.value },
-  { key: 'tags', label: t('library.dim.tag'), title: t('library.tags'), options: tagsList.value }
-])
-const pickerDim = computed(() => dimensions.value.find(dim => dim.key === pickerKey.value) || null)
+const currentSortLabel = computed(() => sortOptions.value.find(option => option.value === props.filters.sortField)?.label ?? '')
 
-function openPicker(dim) {
-  pickerKey.value = dim.key
-  pickerOpen.value = true
-}
+// A ordenação e a busca não contam como filtro aqui (a busca tem o campo)
+const hasActiveFilters = computed(() => isFiltered({ ...props.filters, search: '' }))
 
 // Os outros filtros ativos (status, período, série, ISBN) também viram chip
 const otherChips = computed(() => {
   const f = props.filters
   const chips = []
   if (f.readState !== 'all') chips.push({ key: 'state', label: readStateLabel(f.readState), remove: () => emitFilter('readState', 'all') })
-  if (hasReadYear.value) chips.push({ key: 'year', label: readPeriodLabel.value, remove: clearReadPeriod })
+  if (hasReadYear(f)) chips.push({ key: 'year', label: readPeriodLabel(f), remove: clearReadPeriod })
   if (f.series) chips.push({ key: 'series', label: t('series.chip', { series: f.series }), remove: () => emitFilter('series', '') })
   if (f.isbnStatus === 'invalid') chips.push({ key: 'isbn', label: t('library.invalid_isbn_chip'), remove: () => emitFilter('isbnStatus', 'all') })
   return chips
@@ -551,82 +215,6 @@ watch(() => props.filters.search, (value) => {
   if (value !== searchText.value) searchText.value = value || ''
 })
 
-const authorsList = ref([])
-const publishersList = ref([])
-const tagsList = ref([])
-
-const FIRST_YEAR = 1950
-
-const currentSortLabel = computed(() => sortOptions.value.find(option => option.value === props.filters.sortField)?.label ?? '')
-
-const sortOptions = computed(() => [
-  { label: t('library.sort.recent'), value: 'recent' },
-  { label: t('library.sort.title'), value: 'title' },
-  { label: t('library.sort.author'), value: 'authors' },
-  { label: t('library.sort.read_date'), value: 'readDate' },
-  { label: t('library.sort.pub_date'), value: 'pubDate' },
-  { label: t('library.sort.rating'), value: 'rating' },
-  { label: t('library.sort.series'), value: 'series' }
-])
-
-const yearOptions = computed(() => {
-  const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: currentYear - FIRST_YEAR + 1 }, (_, i) => {
-    const year = String(currentYear - i)
-    return { label: year, value: year }
-  })
-  return [{ label: t('library.sort.all_years'), value: 'all' }, ...years]
-})
-
-const hasReadYear = computed(() => Boolean(props.filters.readYear) && props.filters.readYear !== 'all')
-
-const READ_STATE_KEYS = {
-  all: 'library.all',
-  want: 'status.want',
-  reading: 'status.reading',
-  read: 'library.read',
-  unread: 'library.unread'
-}
-
-const readStateOptions = computed(() =>
-  ['all', 'want', 'reading', 'read', 'unread'].map(value => ({ value, label: t(READ_STATE_KEYS[value]) }))
-)
-
-function readStateLabel(value) {
-  return t(READ_STATE_KEYS[value] ?? 'library.all')
-}
-
-// "Lidos em 2025" ou "Lidos em março de 2025" (quando veio do gráfico mensal).
-const readPeriodLabel = computed(() => {
-  const { readYear, readMonth } = props.filters
-  if (!readMonth) return t('library.read_year_chip', { year: readYear })
-  const month = new Date(Number(readYear), readMonth - 1, 1)
-    .toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR', { month: 'long', year: 'numeric' })
-  return t('library.read_month_chip', { period: month })
-})
-
-// Trocar o ano tira o mês (ele só existe junto com o ano de onde veio).
-function setReadYear(value) {
-  emit('filter-change', { key: 'readMonth', value: null, silent: true })
-  emitFilter('readYear', value)
-}
-
-function clearReadPeriod() {
-  emit('filter-change', { key: 'readMonth', value: null, silent: true })
-  emitFilter('readYear', 'all')
-}
-
-const hasActiveFilters = computed(() => {
-  const f = props.filters
-  return f.readState !== 'all' ||
-    hasReadYear.value ||
-    f.isbnStatus === 'invalid' ||
-    Boolean(f.series) ||
-    f.author.length > 0 ||
-    f.publisher.length > 0 ||
-    f.tags.length > 0
-})
-
 // Celular: selo tingido com a palavra ("152 livros", "12 de 150")
 const countLabelLong = computed(() => {
   const label = countLabel.value
@@ -637,8 +225,7 @@ const countLabelLong = computed(() => {
 const countLabel = computed(() => {
   const shown = props.booksQuantity
   const total = props.libraryTotal
-  const filtered = hasActiveFilters.value || Boolean(props.filters.search)
-  if (filtered && total !== null && total !== shown) return t('library.count_of', { shown, total })
+  if (isFiltered(props.filters) && total !== null && total !== shown) return t('library.count_of', { shown, total })
   return String(shown)
 })
 
@@ -646,14 +233,29 @@ function emitFilter(key, value) {
   emit('filter-change', { key, value })
 }
 
+// Mudança vinda dos chips ou da gaveta ({ key, value, silent? })
+function forward(change) {
+  emit('filter-change', change)
+}
+
 function onSearch(value) {
   searchText.value = value
   emitFilter('search', value)
 }
 
-function removeFromList(key, name) {
+function removeFromList({ key, name }) {
   emitFilter(key, props.filters[key].filter(item => item !== name))
 }
+
+// Tirar o período tira o mês junto (ele só existe junto com o ano)
+function clearReadPeriod() {
+  emit('filter-change', { key: 'readMonth', value: null, silent: true })
+  emitFilter('readYear', 'all')
+}
+
+const authorsList = ref([])
+const publishersList = ref([])
+const tagsList = ref([])
 
 async function loadOptions() {
   try {
@@ -719,43 +321,6 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   align-items: center;
   gap: var(--space-3);
   white-space: nowrap;
-}
-
-.view-toggle {
-  display: inline-flex;
-  padding: 3px;
-  gap: 2px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-color);
-  background: var(--bg-app);
-}
-
-.view-btn {
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.view-btn:hover {
-  color: var(--text-primary);
-}
-
-.view-btn.active {
-  background: var(--main-solid);
-  color: var(--on-main);
-}
-
-.view-btn:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
 }
 
 .search-area {
@@ -832,144 +397,6 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   font-weight: 600;
   padding: var(--space-2) var(--space-5);
   font-size: var(--fs-md);
-}
-
-.active-filters-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border-color);
-  animation: slideDown 0.2s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.filter-label {
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.chips-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  flex: 1;
-}
-
-.custom-chip {
-  background-color: var(--bg-input);
-  color: var(--text-primary);
-  font-size: var(--fs-sm);
-  border: 1px solid var(--border-color);
-}
-
-.custom-chip.tag-chip {
-  color: color-mix(in srgb, var(--tag-color) var(--tint-text), var(--text-primary));
-  background: color-mix(in srgb, var(--tag-color) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tag-color) 40%, transparent);
-}
-
-.custom-chip.theme-border {
-  border-color: rgba(var(--main-color-rgb), 0.3);
-  background-color: rgba(var(--main-color-rgb), 0.05);
-  color: var(--text-primary);
-}
-
-.clear-all-btn {
-  font-size: var(--fs-sm);
-  white-space: nowrap;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-7);
-}
-
-.sidebar-header h3 {
-  margin: 0;
-  font-size: var(--fs-xl);
-  color: var(--text-primary);
-}
-
-.sidebar-header p {
-  margin: var(--space-2) 0 0;
-  color: var(--text-secondary);
-  font-size: var(--fs-md);
-}
-
-.sidebar-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.filter-group label,
-.filter-group .group-label {
-  display: block;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  margin-bottom: var(--space-2);
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.sort-row {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  width: 100%;
-}
-
-.sort-row .custom-dropdown {
-  flex: 1;
-  width: auto;
-  min-width: 0;
-}
-
-.sort-btn {
-  flex-shrink: 0;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding-top: var(--space-7);
-}
-
-/* Grade/lista dentro da gaveta: só no celular (no resto ele fica no cabeçalho) */
-.view-group {
-  display: none;
-}
-
-.view-toggle-wide {
-  display: flex;
-  width: 100%;
-}
-
-.view-btn-wide {
-  flex: 1;
-  width: auto;
-  height: 2.75rem;
-  gap: var(--space-2);
-  font: inherit;
-  font-size: var(--fs-md);
-  font-weight: 600;
 }
 
 /* Com o cabeçalho abaixo de 1000 px (janela até ~1300) numa linha só não
@@ -1081,39 +508,6 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     width: auto;
     padding: var(--space-2) var(--space-4);
   }
-
-  /* Filtros ativos numa linha só: os chips rolam para o lado e o
-     "Limpar tudo" fica sempre à mão no fim. */
-  .active-filters-bar {
-    margin-top: var(--space-2);
-    gap: var(--space-2);
-    flex-wrap: nowrap;
-  }
-
-  .filter-label {
-    display: none;
-  }
-
-  .chips-container {
-    flex: 1;
-    min-width: 0;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .chips-container::-webkit-scrollbar {
-    display: none;
-  }
-
-  .chips-container .custom-chip {
-    flex-shrink: 0;
-  }
-
-  .clear-all-btn.btn {
-    flex-shrink: 0;
-    padding: var(--space-1) var(--space-2);
-  }
 }
 
 /* Celular: "Adicionar livro" vira o botão flutuante (Library.vue); título
@@ -1127,169 +521,12 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
     padding-bottom: var(--space-2);
   }
 
-  /* Linha dos três filtros: sempre à esquerda, no mesmo lugar */
-  .chip-row {
-    display: flex;
-    justify-content: flex-start;
-    gap: var(--space-2);
-    margin-top: var(--space-3);
-  }
-
-  /* Escolhidos: lado a lado numa linha só, a partir da esquerda; muitos
-     rolam de lado (a altura não cresce) */
-  .chip-row-picked {
-    flex-wrap: nowrap;
-    margin: var(--space-2) calc(-1 * var(--space-4)) 0;
-    padding: 0 var(--space-4) var(--space-1);
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-padding-inline: var(--space-4);
-    scrollbar-width: none;
-  }
-
-  .chip-row-picked::-webkit-scrollbar {
-    display: none;
-  }
-
-  .fchip-dim.has-picks {
-    border-color: rgba(var(--main-color-rgb), 0.45);
-    color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
-    font-weight: 600;
-  }
-
-  /* 320 px com os três acesos: um pouco menos de respiro para caber */
-  @media (max-width: 359.98px) {
-    .chip-row {
-      gap: 6px;
-    }
-
-    .chip-row .fchip-dim {
-      padding: 0 var(--space-2) 0 calc(var(--space-2) + 2px);
-    }
-  }
-
-  .fchip-count {
-    min-width: 1.15rem;
-    padding: 0 var(--space-1);
-    border-radius: var(--radius-pill);
-    background: var(--main-solid);
-    color: var(--on-main);
-    font-size: var(--fs-xs);
-    font-weight: 700;
-    line-height: 1.15rem;
-    text-align: center;
-  }
-
-  .fchip {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    flex: none;
-    max-width: 70vw;
-    min-height: 36px;
-    padding: 0 var(--space-3);
-    border: 1px solid var(--border-hover);
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--text-primary);
-    font: inherit;
-    font-size: var(--fs-sm);
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .fchip .pi-chevron-down {
-    font-size: 0.65rem;
-    color: var(--text-secondary);
-  }
-
-  .fchip.is-active {
-    gap: 0;
-    padding: 0 0 0 var(--space-3);
-    border-color: rgba(var(--main-color-rgb), 0.45);
-    background: rgba(var(--main-color-rgb), 0.15);
-    color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
-    font-weight: 600;
-  }
-
-  .fchip-label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .fchip-open {
-    align-self: stretch;
-    padding: 0;
-    border: none;
-    background: none;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-  }
-
-  .fchip-x {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 34px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: none;
-    color: inherit;
-    cursor: pointer;
-  }
-
-  .fchip-x .pi {
-    font-size: 0.7rem;
-  }
-
-  .fchip-clear {
-    border-color: transparent;
-    color: var(--text-secondary);
-  }
-
-  .fchip:focus-visible,
-  .fchip-open:focus-visible,
-  .fchip-x:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: 1px;
-  }
-}
-
-/* Toque: os chips ficam com 36 px de desenho e 44 px de área */
-@media (max-width: 639.98px) and (pointer: coarse) {
-  .fchip,
-  .fchip-x {
-    position: relative;
-  }
-
-  .fchip::after,
-  .fchip-x::after {
-    content: '';
-    position: absolute;
-    inset: -4px 0;
-  }
-
-  .fchip.is-active::after {
-    content: none;
-  }
-}
-
-/* Celular: a 320 px as quatro ações somavam ~290 px e cobriam o título e o
-   contador. O alternador grade/lista vai para a gaveta de filtros e o título
-   ganha a coluna de volta; se ainda faltar espaço, corta com reticências em
-   vez de passar por baixo das ações. */
-@media (max-width: 639.98px) {
+  /* A 320 px as quatro ações somavam ~290 px e cobriam o título e o
+     contador. O alternador grade/lista vai para a gaveta de filtros e o título
+     ganha a coluna de volta; se ainda faltar espaço, corta com reticências em
+     vez de passar por baixo das ações. */
   .top-bar .view-toggle {
     display: none;
-  }
-
-  .view-group {
-    display: block;
   }
 
   .header-title,
@@ -1305,32 +542,9 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 </style>
 
 <style>
-/* Gaveta de filtros (AppDialog drawer) */
-.filters-drawer .drawer-body {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: var(--space-6) var(--space-6) var(--space-6) var(--space-7);
-  overflow-y: auto;
-}
-
 /* Lista do "Ordenar" ao lado da busca */
 .sort-quick-panel {
   min-width: 13rem;
-}
-
-/* Tela de toque: área de toque de 44px sem mudar o desenho de 34px */
-@media (pointer: coarse) {
-  .view-btn {
-    position: relative;
-  }
-
-  .view-btn::after {
-    content: '';
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-  }
 }
 
 /* "Adicionar livro" é mais longo que o antigo "Novo": abaixo de 420 px fica

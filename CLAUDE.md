@@ -308,11 +308,12 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 39c (2026-11-08). Último commit: `cb46ba2`
-(o 39c ainda não commitado). Próximo: 39d, `LibraryHeader.vue`, seguindo o
-roteiro do 39b descrito na fila.
+Atualizado ao fim do pacote 39d (2026-11-08). Último commit: `b3cacfc`
+(39c; o 39d ainda não commitado). Próximo: 39e, `Dashboard.vue` (1.220
+linhas), seguindo o roteiro do 39b descrito na fila.
 
-Linha de base depois do 39c (igual à do 39b): backend 755/755, frontend 123/123 e lint limpo,
+Linha de base depois do 39d (igual à do 39b): backend 755/755, frontend
+123/123 e lint limpo,
 E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium` nesta máquina WSL,
 que não tem as dependências do WebKit).
 
@@ -336,8 +337,8 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 
 ### Fila (um pacote por item, nesta ordem)
 
-**39d em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
-`Settings.vue`, 39c `Community.vue`)
+**39e em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
+`Settings.vue`, 39c `Community.vue`, 39d `LibraryHeader.vue`)
 - Como foi no 39b: subcomponentes por seção em `components/<área>/`, cada um
   com as próprias folhas; nenhum texto, rótulo ou papel muda (os E2E
   selecionam por eles). Conferir com capturas antes/depois pixel a pixel
@@ -351,10 +352,13 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
   Apagar o spec temporário no fim. Dados de tela que dependem de outras
   contas (como no 39c): o spec cria as contas uma vez e guarda em
   `e2e/.tmp/<pacote>/accounts.json`, e "antes" e "depois" usam as mesmas
-  (`--workers=1`, `CAPTURE=before|after` no nome da pasta).
+  (`--workers=1`, `CAPTURE=before|after` no nome da pasta). Com o pacote
+  anterior já commitado, o `git stash push -u --` pode levar só os arquivos
+  do pacote (como no 39d). Depois de `Escape` num diálogo/gaveta, esperar
+  antes do próximo `goto` (no celular o fechar mexe no histórico e aborta a
+  navegação).
 - Telas com mais de 1.100 linhas, subcomponentes por seção sem mudar
-  comportamento: `LibraryHeader.vue`,
-  `Dashboard.vue`, `NavigationMenu.vue`, `BookEditForm.vue`,
+  comportamento: `Dashboard.vue`, `NavigationMenu.vue`, `BookEditForm.vue`,
   `PublicLibrary.vue`, `YearInBooks.vue`, `BookDialog.vue`. Um pacote por tela
   se ficar pesado. Rodar o E2E depois de cada uma.
 
@@ -410,6 +414,9 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 - Feed da Comunidade, evento com mais de 3 livros: falta o espaço antes de
   "e mais N" ("Vidas Secase mais 2"), em `CommunityFeedItem.vue` (o espaço
   inicial do `<span>` some no template). Já era assim antes do 39c.
+- Biblioteca no computador (1366 px, menu lateral aberto): a busca fica
+  estreita entre o título e o ordenar e até o texto curto aparece cortado
+  ("Buscar li"). Já era assim antes do 39d (visto nas capturas).
 
 ### Lembrete guardado (não fazer agora)
 Apps iOS e Android: avaliar empacotar o PWA (Capacitor ou TWA) em vez de um
