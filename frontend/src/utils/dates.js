@@ -26,6 +26,13 @@ export function toApiDate(date) {
   return `${year}-${month}-${day}`
 }
 
+/** 'YYYY-MM-DD' → Date local à meia-noite (sem passar por UTC); vazio → null. */
+export function localDate(text) {
+  if (!text) return null
+  const [year, month, day] = String(text).split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 /** Idioma do app ('pt' | 'en') → tag de data do Intl. */
 export function dateTag(locale) {
   return locale === 'en' ? 'en-US' : 'pt-BR'

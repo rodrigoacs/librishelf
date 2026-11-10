@@ -1,133 +1,10 @@
 <template>
   <div class="navigation-container">
 
-    <!-- Barra do topo no celular: landmark próprio para o logo não ficar solto -->
-    <header
-      ref="mobileHeader"
-      class="mobile-header"
-    >
-      <!-- No celular o menu fica na aba "Menu" da barra de baixo -->
-      <AppButton
-        v-if="!phone"
-        ref="menuButton"
-        icon="pi pi-bars"
-        class="btn-text menu-btn"
-        :aria-label="t('menu.openMenu')"
-        :aria-expanded="mobileMenuOpen"
-        aria-controls="app-sidebar"
-        @click="mobileMenuOpen = true"
-      />
-      <div class="mobile-logo-wrapper">
-        <img
-          src="/bookshelf.png"
-          alt=""
-          width="30"
-          height="30"
-        />
-        <BrandWordmark class="logo-text" />
-      </div>
-      <!-- Contrapeso do botão do menu, para o logo ficar no centro (tablet) -->
-      <div
-        class="header-spacer"
-        aria-hidden="true"
-      ></div>
+    <MobileHeader ref="appBar" />
+    <AccentPopover v-if="phone" />
 
-      <!-- Celular: busca, tema/cor e conta à direita -->
-      <div
-        v-if="phone"
-        class="bar-actions"
-      >
-        <button
-          type="button"
-          class="bar-btn"
-          data-press
-          :aria-label="t('menu.search')"
-          @click="openSearch"
-        >
-          <i
-            class="pi pi-search"
-            aria-hidden="true"
-          ></i>
-        </button>
-        <button
-          type="button"
-          class="bar-btn theme-btn"
-          data-press
-          popovertarget="accent-popover"
-          :aria-label="t('menu.appearance')"
-        >
-          <i
-            class="pi"
-            :class="currentTheme === 'dark' ? 'pi-sun' : 'pi-moon'"
-            aria-hidden="true"
-          ></i>
-        </button>
-        <router-link
-          to="/settings"
-          class="bar-avatar"
-          :class="{ 'has-photo': myPhoto }"
-          :aria-label="t('menu.settings')"
-          data-press
-        >
-          <img
-            v-if="myPhoto"
-            :src="myPhoto"
-            alt=""
-            class="bar-photo"
-            draggable="false"
-            @error="photoFailed = true"
-          />
-          <template v-else>{{ userInitials }}</template>
-        </router-link>
-      </div>
-    </header>
-
-    <!-- Balão do botão de tema: cor de destaque e claro/escuro -->
-    <div
-      v-if="phone"
-      id="accent-popover"
-      ref="accentPopover"
-      popover="auto"
-      class="accent-pop"
-      role="dialog"
-      aria-labelledby="accent-pop-title"
-    >
-      <p
-        id="accent-pop-title"
-        class="accent-pop-title"
-      >{{ t('theme.accentGroup') }}</p>
-      <div
-        class="accent-dots"
-        role="group"
-        :aria-label="t('theme.accentGroup')"
-      >
-        <button
-          v-for="color in ACCENT_COLORS"
-          :key="color"
-          type="button"
-          class="accent-dot"
-          :class="{ active: accentColor === color }"
-          :style="{ '--dot': `rgb(var(--${color}-solid-rgb))` }"
-          :aria-label="t('theme.accent', { color: t(`theme.colors.${color}`) })"
-          :aria-pressed="accentColor === color"
-          @click="setAccent(color)"
-        ></button>
-      </div>
-      <button
-        type="button"
-        class="accent-theme"
-        @click="toggleTheme"
-      >
-        <i
-          class="pi"
-          :class="currentTheme === 'dark' ? 'pi-sun' : 'pi-moon'"
-          aria-hidden="true"
-        ></i>
-        {{ currentTheme === 'dark' ? t('theme.toLight') : t('theme.toDark') }}
-      </button>
-    </div>
-
-    <!-- Celular: faixa da borda esquerda que abre o menu arrastando -->
+    <!-- Celular: faixa da borda direita que abre o menu arrastando -->
     <div
       v-if="phone && !mobileMenuOpen"
       class="drawer-edge"
@@ -177,168 +54,49 @@
         </button>
       </div>
 
-      <nav
-        class="nav-links"
-        :aria-label="t('menu.library')"
-      >
-        <router-link
-          v-for="(item, index) in items"
-          :key="item.route"
-          v-slot="{ href, navigate, isActive, isExactActive }"
-          :to="item.route"
-          custom
-        >
-          <a
-            :href="href"
-            class="nav-item"
-            :class="{ active: isActive || (item.route === '/lists' && route.name === 'list') }"
-            :aria-current="isExactActive ? 'page' : undefined"
-            :style="{ '--i': index }"
-            @click="event => goTo(event, navigate)"
-          >
-            <i
-              :class="item.icon"
-              aria-hidden="true"
-            ></i>
-            <span>{{ item.label }}</span>
-            <span
-              v-if="item.badge"
-              class="nav-badge"
-              :aria-label="t('menu.pending_requests', { n: item.badge }, item.badge)"
-            >{{ item.badge }}</span>
-          </a>
-        </router-link>
-
-        <div
-          class="separator"
-          role="separator"
-          :style="{ '--i': items.length }"
-        ></div>
-
-        <button
-          type="button"
-          class="nav-item action-item"
-          :style="{ '--i': items.length + 1 }"
-          @click="handleLogout"
-        >
-          <i
-            class="pi pi-sign-out"
-            aria-hidden="true"
-          ></i>
-          <span>{{ t('menu.logout') }}</span>
-        </button>
-      </nav>
-
-      <div class="sidebar-footer">
-
-        <Transition name="scale-up">
-          <div
-            v-if="showSettings"
-            id="nav-preferences"
-            class="settings-menu"
-          >
-            <div class="settings-header">{{ $t('menu.configurations') }}</div>
-
-            <div class="settings-row">
-              <span class="settings-label">{{ $t('menu.language') }}</span>
-              <LanguageSwitcher />
-            </div>
-
-            <div class="settings-divider"></div>
-
-            <div class="settings-row">
-              <ThemeSwitcher />
-            </div>
-          </div>
-        </Transition>
-
-        <div class="footer-content">
-          <div class="user-info">
-            <div
-              class="avatar-circle"
-              :class="{ 'has-photo': myPhoto }"
-              aria-hidden="true"
-            >
-              <img
-                v-if="myPhoto"
-                :src="myPhoto"
-                alt=""
-                draggable="false"
-                @error="photoFailed = true"
-              />
-              <template v-else>{{ userInitial }}</template>
-            </div>
-            <div class="user-details">
-              <span
-                class="username"
-                :title="displayName"
-              >{{ truncateName(displayName) }}</span>
-              <span class="user-role">{{ currentUser?.isAdmin ? $t('menu.adminRole') : $t('menu.role') }}</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            class="settings-btn"
-            :class="{ active: showSettings }"
-            :aria-label="t('menu.preferences')"
-            :aria-expanded="showSettings"
-            aria-controls="nav-preferences"
-            v-tooltip.top="t('menu.preferences')"
-            @click="showSettings = !showSettings"
-          >
-            <i
-              class="pi pi-cog"
-              aria-hidden="true"
-            ></i>
-          </button>
-        </div>
-      </div>
+      <NavLinks @navigate="goTo" />
+      <SidebarFooter />
     </aside>
 
   </div>
 </template>
 
 <script setup>
-import { avatarUrl } from '../utils/avatars.js'
-import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import AppButton from './ui/AppButton.vue'
-import ThemeSwitcher from './ThemeSwitcher.vue'
-import LanguageSwitcher from './LanguageSwitcher.vue'
-import { currentUser, logout } from '../services/session.js'
-import { useToast } from '../services/toast.js'
-import { pendingRequests, refreshPendingRequests, resetPendingRequests } from '../services/social.js'
+import BrandWordmark from './BrandWordmark.vue'
+import MobileHeader from './nav/MobileHeader.vue'
+import AccentPopover from './nav/AccentPopover.vue'
+import NavLinks from './nav/NavLinks.vue'
+import SidebarFooter from './nav/SidebarFooter.vue'
 import { useIsPhone } from '../composables/useIsPhone.js'
 import { useDrag } from '../composables/useDrag.js'
-import { useTheme, ACCENT_COLORS } from '../composables/useTheme.js'
 import { pushOverlay } from '../services/backStack.js'
-import { requestLibrarySearch } from '../services/librarySearch.js'
 import { shouldComplete } from '../utils/motion.js'
 import { drawerOpen } from '../services/appNav.js'
-import BrandWordmark from './BrandWordmark.vue'
 
-const router = useRouter()
+/**
+ * Menu do app: lateral fixa no computador; no tablet e no celular, a barra do
+ * topo (MobileHeader) e a gaveta. Este arquivo cuida da gaveta: abrir e
+ * fechar, foco, voltar do aparelho e o arrasto. As seções ficam em
+ * components/nav/.
+ */
 const route = useRoute()
 const { t } = useI18n()
-const toast = useToast()
 
 // Mesma gaveta que a aba "Menu" da barra de abas (celular) abre
 const mobileMenuOpen = drawerOpen
-const menuButton = ref(null)
+const appBar = ref(null)
 const closeButton = ref(null)
 const phone = useIsPhone()
-const { currentTheme, accentColor, toggleTheme, setAccent } = useTheme()
 
 // Menu do celular: trava a rolagem da página, leva o foco para dentro ao abrir
 // e devolve ao botão do menu ao fechar (teclado e leitor de tela). Aberto, o
 // resto da tela fica inert (o Tab não sai do menu) e o Esc fecha de qualquer
 // lugar, não só com o foco dentro dele.
-const mobileHeader = ref(null)
-
 function outsideMenu() {
-  return [document.getElementById('main-content'), mobileHeader.value, document.querySelector('.skip-link'), document.querySelector('.tab-bar')].filter(Boolean)
+  return [document.getElementById('main-content'), appBar.value?.$el, document.querySelector('.skip-link'), document.querySelector('.tab-bar')].filter(Boolean)
 }
 
 function setInert(on) {
@@ -367,8 +125,7 @@ watch(mobileMenuOpen, async (open) => {
   if (open) closeButton.value?.focus()
   else if (!document.activeElement || document.activeElement === document.body || document.activeElement.closest?.('#app-sidebar')) {
     // Foco volta para quem abriu: ☰ (tablet) ou a aba "Menu" (celular)
-    if (menuButton.value) menuButton.value.$el?.focus()
-    else document.querySelector('.tab-bar .tab-menu')?.focus()
+    if (!appBar.value?.focusMenuButton()) document.querySelector('.tab-bar .tab-menu')?.focus()
   }
 })
 
@@ -379,20 +136,9 @@ onBeforeUnmount(() => {
   setInert(false)
   document.removeEventListener('keydown', onDocumentKeydown)
 })
-const showSettings = ref(false)
 
-const displayName = computed(() => currentUser.value?.name || t('menu.guest'))
-const userInitial = computed(() => displayName.value.charAt(0).toUpperCase())
-// Foto de perfil (Conta → Foto de perfil); sem foto ou se falhar, as iniciais
-const photoFailed = ref(false)
-watch(() => currentUser.value?.avatarVersion, () => { photoFailed.value = false })
-const myPhoto = computed(() => (photoFailed.value ? null : avatarUrl(currentUser.value?.name, currentUser.value?.avatarVersion ?? null)))
-// Avatar da barra: até duas iniciais ("maria_souza" → MS)
-const userInitials = computed(() => {
-  const parts = displayName.value.split(/[\s._-]+/).filter(Boolean)
-  const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : displayName.value.slice(0, 1)
-  return letters.toUpperCase()
-})
+// Trocou de tela: a gaveta fecha
+watch(() => route.path, () => { mobileMenuOpen.value = false })
 
 // ---------------------------------------------------------------------------
 // Celular: voltar do aparelho fecha o menu antes de sair da tela
@@ -415,9 +161,7 @@ function forgetBack() {
 
 // Item do menu: fecha (consumindo a posição extra do histórico) e só então
 // navega; assim o voltar da tela nova vem direto para a de antes.
-async function goTo(event, navigate) {
-  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-  event.preventDefault()
+async function goTo(navigate) {
   const wasOpen = mobileMenuOpen.value
   mobileMenuOpen.value = false
   if (wasOpen) await forgetBack()
@@ -467,76 +211,16 @@ const edgeDrag = useDrag({
 
 const closeDrag = useDrag({
   axis: 'x',
+  // As preferências (SidebarFooter) têm controles próprios
   canStart: event => !event.target.closest?.('.settings-menu, input, select'),
   onStart: () => { dragging.value = true },
   // Arrastar para a direita fecha
   onMove: distance => setProgress(1 - Math.max(0, distance) / DRAWER_WIDTH),
   onEnd: ({ distance, velocity }) => settle(!shouldComplete({ distance, velocity, size: DRAWER_WIDTH }))
 })
-
-// ---------------------------------------------------------------------------
-// Celular: barra do topo
-// ---------------------------------------------------------------------------
-async function openSearch() {
-  if (route.name !== 'library') await router.push({ name: 'library' })
-  requestLibrarySearch()
-}
-
-function truncateName(name) {
-  return name.length > 15 ? name.substring(0, 12) + '...' : name
-}
-
-async function handleLogout() {
-  // Mesmo se a chamada falhar, este aparelho sai; o pedido fica guardado e
-  // o servidor encerra a sessão quando o app voltar a ter conexão.
-  const { serverDone } = await logout()
-  resetPendingRequests()
-  if (!serverDone) toast.add({ severity: 'warn', detail: t('menu.logoutPending'), life: 10000 })
-  router.push('/login')
-}
-
-watch(() => route.path, () => {
-  showSettings.value = false
-  mobileMenuOpen.value = false
-  if (currentUser.value) refreshPendingRequests()
-}, { immediate: true })
-
-const items = computed(() => [
-  { label: t('menu.home'), icon: 'pi pi-home', route: '/' },
-  { label: t('menu.library'), icon: 'pi pi-book', route: '/books' },
-  { label: t('menu.lists'), icon: 'pi pi-list', route: '/lists' },
-  { label: t('menu.authors'), icon: 'pi pi-users', route: '/authors' },
-  { label: t('menu.publishers'), icon: 'pi pi-building', route: '/publishers' },
-  { label: t('menu.categories'), icon: 'pi pi-tags', route: '/tags' },
-  { label: t('menu.loans'), icon: 'pi pi-arrow-up-right', route: '/loans' },
-  { label: t('menu.dashboard'), icon: 'pi pi-chart-bar', route: '/dashboard' },
-  { label: t('menu.community'), icon: 'pi pi-globe', route: '/community', badge: pendingRequests.value },
-  { label: t('menu.settings'), icon: 'pi pi-user', route: '/settings' },
-  ...(currentUser.value?.isAdmin ? [{ label: t('menu.admin'), icon: 'pi pi-shield', route: '/admin' }] : [])
-])
 </script>
 
 <style scoped>
-.header-spacer {
-  width: 40px;
-  flex-shrink: 0;
-}
-
-.nav-badge {
-  margin-left: auto;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 var(--space-1);
-  border-radius: var(--radius-pill);
-  background: var(--main-solid);
-  color: var(--on-main);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .navigation-container {
   width: 260px;
   height: 100vh;
@@ -547,10 +231,6 @@ const items = computed(() => [
   position: sticky;
   top: 0;
   z-index: 100;
-}
-
-.mobile-header {
-  display: none;
 }
 
 .mobile-overlay {
@@ -585,197 +265,6 @@ const items = computed(() => [
   display: none;
 }
 
-.nav-links {
-  flex: 1;
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  overflow-y: auto;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.2s;
-  font-size: var(--fs-md);
-}
-
-button.nav-item {
-  background: none;
-  border: none;
-  width: 100%;
-  font: inherit;
-  font-weight: 500;
-  font-size: var(--fs-md);
-  cursor: pointer;
-  text-align: left;
-}
-
-.nav-item:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.nav-item.active {
-  background-color: rgba(var(--main-color-rgb), 0.15);
-  color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
-  font-weight: 600;
-}
-
-.nav-item.action-item:hover {
-  background-color: color-mix(in srgb, var(--danger) 10%, transparent);
-  color: var(--danger);
-}
-
-.separator {
-  height: 1px;
-  background-color: var(--border-color);
-  margin: var(--space-2) 0;
-}
-
-.sidebar-footer {
-  padding: var(--space-5);
-  border-top: 1px solid var(--border-color);
-  background-color: var(--bg-app);
-  position: relative;
-}
-
-.footer-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  overflow: hidden;
-}
-
-.avatar-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: var(--main-solid);
-  color: var(--on-main);
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-md);
-  flex-shrink: 0;
-}
-
-.avatar-circle.has-photo {
-  background: var(--bg-input);
-}
-
-.avatar-circle img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.username {
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: var(--fs-md);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-role {
-  color: var(--text-muted);
-  font-size: var(--fs-xs);
-}
-
-.settings-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.settings-btn:hover,
-.settings-btn.active {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.settings-btn.active i {
-  transform: rotate(45deg);
-}
-
-.settings-btn i {
-  font-size: var(--fs-lg);
-  transition: transform 0.3s ease;
-}
-
-.settings-menu {
-  position: absolute;
-  bottom: 80px;
-  left: 1rem;
-  right: 1rem;
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-3);
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.settings-header {
-  font-size: var(--fs-sm);
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 600;
-  margin-bottom: 0.2rem;
-}
-
-.settings-row {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-}
-
-.settings-label {
-  font-size: var(--fs-md);
-  color: var(--text-primary);
-}
-
-.settings-divider {
-  height: 1px;
-  background-color: var(--border-color);
-  margin: 0.2rem 0;
-}
-
 @media (max-width: 1023.98px) {
   .navigation-container {
     width: 100%;
@@ -785,31 +274,6 @@ button.nav-item {
     border-right: none;
     border-bottom: 1px solid var(--border-color);
     z-index: 200;
-  }
-
-  .mobile-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-3) var(--space-4);
-    background-color: var(--bg-app);
-    height: 60px;
-  }
-
-  .menu-btn.btn {
-    --btn-fg: var(--text-primary);
-    padding: 0;
-    width: 40px;
-  }
-
-  .mobile-logo-wrapper {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
-  .mobile-header .logo-text {
-    font-size: var(--fs-lg);
   }
 
   .sidebar {
@@ -858,104 +322,15 @@ button.nav-item {
   }
 }
 
-.bar-actions,
 .drawer-edge {
   display: none;
 }
 
 /* ---------------------------------------------------------------- celular
- * Barra do topo de app (☰ + logo à esquerda; busca, tema e conta à direita),
- * gaveta arrastável e balão de cor. Só abaixo de 640 px; o tablet continua
- * com o logo no centro.
+ * Gaveta arrastável que vem da direita. Só abaixo de 640 px; no tablet ela
+ * vem da esquerda, pelo ☰.
  */
 @media (max-width: 639.98px) {
-  .mobile-header {
-    justify-content: flex-start;
-    gap: var(--space-1);
-    height: calc(56px + var(--safe-top));
-    padding: var(--safe-top) var(--space-2) 0 var(--space-4);
-    view-transition-name: app-bar;
-  }
-
-  .menu-btn.btn {
-    width: 44px;
-    min-height: 44px;
-  }
-
-  .mobile-logo-wrapper {
-    gap: var(--space-2);
-    min-width: 0;
-  }
-
-  .mobile-logo-wrapper img {
-    width: 26px;
-    height: 26px;
-  }
-
-  .header-spacer {
-    display: none;
-  }
-
-
-  .bar-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    margin-left: auto;
-  }
-
-  .bar-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: var(--fs-lg);
-  }
-
-  .bar-btn .pi {
-    font-size: 1.15rem;
-  }
-
-  .bar-btn:focus-visible,
-  .bar-avatar:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: -2px;
-  }
-
-  .bar-avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    color: var(--on-main);
-    font-size: var(--fs-xs);
-    font-weight: 700;
-    text-decoration: none;
-    letter-spacing: 0.02em;
-    /* Círculo de 32 px desenhado dentro do alvo de 44 px */
-    background: radial-gradient(circle closest-side, var(--main-solid) 15.5px, transparent 16px);
-  }
-
-  .bar-avatar.has-photo {
-    background: none;
-  }
-
-  .bar-photo {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 0 0 1px var(--border-color);
-  }
-
   /* Faixa invisível na borda direita (lado da aba "Menu"): arrastar dali
      abre o menu. A esquerda fica livre para o voltar do iPhone. pan-y
      deixa a página rolar na vertical; o lado fica com o gesto. */
@@ -998,95 +373,9 @@ button.nav-item {
     touch-action: none;
   }
 
-  /* A lista rola na vertical; o lado é do gesto de fechar (sem pan-y aqui o
-     navegador toma o toque e cancela o arrasto) */
-  .nav-links,
-  .sidebar-footer {
-    overscroll-behavior: contain;
-    touch-action: pan-y;
-  }
-
-  /* Itens entram em cascata quando o menu termina de abrir */
-  .sidebar-mobile-open .nav-item,
-  .sidebar-mobile-open .separator {
-    animation: nav-item-in var(--dur-medium) var(--ease-enter) both;
-    animation-delay: calc(min(var(--i, 10), 10) * var(--stagger));
-  }
-
-  .accent-pop {
-    position: fixed;
-    inset: auto;
-    top: calc(var(--app-bar-height) + var(--space-1));
-    right: var(--space-2);
-    margin: 0;
-    padding: var(--space-3) var(--space-4) var(--space-2);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    background: var(--bg-panel);
-    color: var(--text-primary);
-    box-shadow: var(--shadow-3);
-    transform-origin: calc(100% - 60px) 0;
-  }
-
-  .accent-pop:popover-open {
-    animation: accent-pop-in var(--dur-spring) var(--ease-spring);
-  }
-
-  .accent-pop-title {
-    margin: 0 0 var(--space-2);
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-
-  .accent-dots {
-    display: flex;
-    gap: 2px;
-  }
-
-  .accent-dot {
-    width: 44px;
-    height: 44px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    /* Bolinha de 28 px; selecionada ganha um anel */
-    background: radial-gradient(circle closest-side, var(--dot) 13px, transparent 14px);
-  }
-
-  .accent-dot.active {
-    background:
-      radial-gradient(circle closest-side, var(--dot) 11px, transparent 11.5px, transparent 13px, var(--text-primary) 13.5px, var(--text-primary) 15px, transparent 15.5px);
-  }
-
-  .accent-dot:focus-visible,
-  .accent-theme:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: -2px;
-  }
-
-  .accent-theme {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    min-height: 44px;
-    margin-top: var(--space-1);
-    padding: 0 var(--space-1);
-    border: none;
-    border-top: 1px solid var(--border-color);
-    background: transparent;
-    color: var(--text-primary);
-    font: inherit;
-    font-size: var(--fs-sm);
-    cursor: pointer;
-  }
-}
-
-/* Conteúdo é empurrado 12 px para a esquerda com o menu aberto (o arrasto
-   faz o mesmo à mão). Sem encolher: o scale(0.97) antigo tinha o centro no
-   meio da página inteira e o que estava à vista descia até 58 px. */
-@media (max-width: 639.98px) {
+  /* Conteúdo é empurrado 12 px para a esquerda com o menu aberto (o arrasto
+     faz o mesmo à mão). Sem encolher: o scale(0.97) antigo tinha o centro no
+     meio da página inteira e o que estava à vista descia até 58 px. */
   :global(#main-content) {
     transition: transform var(--dur-medium) var(--ease-exit);
   }
@@ -1095,40 +384,6 @@ button.nav-item {
     transform: translate3d(-12px, 0, 0);
     transition: transform var(--dur-spring) var(--ease-spring);
   }
-}
-
-/* Livro abrindo/fechando em tela cheia: a barra entra na troca junto com a
-   página (senão ficaria por cima do livro até a animação acabar) */
-@media (max-width: 639.98px) {
-  :global(html[data-nav^="book"] .mobile-header) {
-    view-transition-name: none;
-  }
-}
-
-@keyframes nav-item-in {
-  from {
-    opacity: 0;
-    /* Entram vindo da direita, como a gaveta (só no celular) */
-    transform: translate3d(16px, 0, 0);
-  }
-}
-
-@keyframes accent-pop-in {
-  from {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-}
-
-.scale-up-enter-active,
-.scale-up-leave-active {
-  transition: all 0.2s ease-out;
-}
-
-.scale-up-enter-from,
-.scale-up-leave-to {
-  opacity: 0;
-  transform: translateY(10px) scale(0.95);
 }
 
 .fade-enter-active,

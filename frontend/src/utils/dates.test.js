@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dateTag, fromApiDate, monthNames, toApiDate } from './dates.js'
+import { dateTag, fromApiDate, localDate, monthNames, toApiDate } from './dates.js'
 
 describe('fromApiDate', () => {
   it('lê o dia que veio da API, sem cair na véspera no fuso de Brasília', () => {
@@ -29,6 +29,18 @@ describe('toApiDate', () => {
   it('vazio ou inválido → null', () => {
     expect(toApiDate(null)).toBeNull()
     expect(toApiDate('nada')).toBeNull()
+  })
+})
+
+describe('localDate', () => {
+  it('monta a data local do dia, sem fuso', () => {
+    const d = localDate('2024-03-09')
+    expect([d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()]).toEqual([2024, 2, 9, 0])
+  })
+
+  it('vazio vira null', () => {
+    expect(localDate('')).toBeNull()
+    expect(localDate(null)).toBeNull()
   })
 })
 

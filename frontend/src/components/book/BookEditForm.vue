@@ -134,127 +134,25 @@
           required
         />
 
-        <fieldset class="form-group">
-          <legend>{{ t('bookForm.aboutSection') }}</legend>
+        <BookAboutFields
+          v-model:publisher="form.publisher"
+          v-model:pubdate="form.pubdate"
+          v-model:series="form.series"
+          v-model:series-index="form.series_index"
+          v-model:page-count="form.pageCount"
+          v-model:tags="form.tags"
+          :id-prefix="idPrefix"
+          :errors="errors"
+        />
 
-          <div class="grid-2">
-            <TextField
-              :id="`${idPrefix}-publisher`"
-              v-model="form.publisher"
-              :label="t('bookForm.publisher')"
-              :error="errors.publisher"
-              maxlength="200"
-            />
-            <DateField
-              :id="`${idPrefix}-pubdate`"
-              v-model="form.pubdate"
-              :label="t('bookForm.pubDate')"
-              :min-date="PUB_MIN_DATE"
-              :max-date="PUB_MAX_DATE"
-              :error="errors.pubDate"
-            />
-          </div>
-
-          <div class="grid-series">
-            <TextField
-              :id="`${idPrefix}-series`"
-              v-model="form.series"
-              :label="t('series.name')"
-              :list="`${idPrefix}-series-options`"
-              maxlength="200"
-              :error="errors.series"
-              :input-attrs="{ onFocus: loadSeriesOptions }"
-            />
-            <TextField
-              :id="`${idPrefix}-volume`"
-              v-model="form.series_index"
-              :label="t('series.volume')"
-              inputmode="decimal"
-              maxlength="7"
-              :error="errors.seriesIndex"
-            />
-            <TextField
-              :id="`${idPrefix}-pages`"
-              v-model="form.pageCount"
-              :label="t('bookForm.pages')"
-              inputmode="numeric"
-              maxlength="5"
-              :error="errors.pageCount"
-            />
-          </div>
-          <datalist :id="`${idPrefix}-series-options`">
-            <option
-              v-for="item in seriesOptions"
-              :key="item.name"
-              :value="item.name"
-            ></option>
-          </datalist>
-
-          <TextField
-            :id="`${idPrefix}-tags`"
-            v-model="form.tags"
-            :label="t('bookForm.tags')"
-            :hint="t('bookForm.tagsHint')"
-            :error="errors.tags"
-          />
-        </fieldset>
-
-        <fieldset class="form-group">
-          <legend>{{ t('bookForm.readingSection') }}</legend>
-
-          <div>
-            <FieldLabel :id="`${idPrefix}-status-label`">{{ t('status.label') }}</FieldLabel>
-            <div
-              class="status-picker"
-              role="group"
-              :aria-labelledby="`${idPrefix}-status-label`"
-            >
-              <PillButton
-                v-for="option in STATUS_OPTIONS"
-                :key="option"
-                :icon="STATUS_ICONS[option]"
-                :label="t(`status.${option}`)"
-                :active="status === option"
-                @click="pickStatus(option)"
-              />
-            </div>
-            <p class="status-caption">{{ statusCaption }}</p>
-          </div>
-
-          <DateField
-            v-if="status === 'read' || status === 'reading'"
-            :id="`${idPrefix}-status-date`"
-            v-model="statusDate"
-            :label="status === 'read' ? t('bookForm.readOn') : t('bookForm.startedOn')"
-            :min-date="READ_MIN_DATE"
-            :max-date="today"
-            :error="errors.statusDate"
-          />
-
-          <div>
-            <FieldLabel :id="`${idPrefix}-rating-label`">{{ t('rating.label') }}</FieldLabel>
-            <StarRating
-              v-model="form.rating"
-              size="lg"
-              :label="t('rating.label')"
-            />
-            <small
-              v-if="errors.rating"
-              class="inline-error"
-            >{{ errors.rating }}</small>
-          </div>
-
-          <TextField
-            :id="`${idPrefix}-notes`"
-            v-model="form.notes"
-            :label="t('notes.label')"
-            :hint="`${t('notes.privateHint')} · ${(form.notes || '').length}/5000`"
-            :error="errors.notes"
-            multiline
-            rows="3"
-            maxlength="5000"
-          />
-        </fieldset>
+        <BookReadingFields
+          v-model:status="status"
+          v-model:status-date="statusDate"
+          v-model:rating="form.rating"
+          v-model:notes="form.notes"
+          :id-prefix="idPrefix"
+          :errors="errors"
+        />
       </div>
     </div>
 
@@ -279,36 +177,41 @@
 
 <script setup>
 import { scrollBehavior } from '../../utils/motion.js'
-import { computed, nextTick, reactive, ref, watch, onBeforeUnmount, onMounted } from 'vue'
+import { computed, nextTick, reactive, ref, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
 import { useIsPhone } from '../../composables/useIsPhone.js'
+import { useBookLookup } from '../../composables/useBookLookup.js'
 import { useToast } from '../../services/toast.js'
 import { useConfirm, confirmDiscard } from '../../services/confirm.js'
 import { formSnapshot, hasChanges } from '../../utils/formState.js'
 import api from '../../services/api.js'
 import AuthorsInput from '../AuthorsInput.vue'
-import StarRating from '../StarRating.vue'
 import TextField from '../form/TextField.vue'
-import DateField from '../form/DateField.vue'
-import FieldLabel from '../form/FieldLabel.vue'
 import PillButton from '../form/PillButton.vue'
 import CoverDrop from '../form/CoverDrop.vue'
 import IconButton from '../form/IconButton.vue'
 import BookSearch from './BookSearch.vue'
 import BarcodeScanner from './BarcodeScanner.vue'
-import { hasCamera } from '../../services/barcode.js'
-import { toApiDate, PUB_MIN_DATE, PUB_MAX_DATE, READ_MIN_DATE } from '../../utils/dates.js'
-import { statusOf, STATUS_OPTIONS, STATUS_ICONS } from '../../utils/readingStatus.js'
+import BookAboutFields from './BookAboutFields.vue'
+import BookReadingFields from './BookReadingFields.vue'
+import { toApiDate } from '../../utils/dates.js'
+import { statusOf } from '../../utils/readingStatus.js'
 import { validateImageFile, createPreviewHandle } from '../../utils/files.js'
 import { coverUrl } from '../../utils/covers.js'
 import { fieldErrorFromApi, FIELD_ORDER } from '../../utils/bookFormErrors.js'
+import { blankBookForm, createBookData, updateBookPayload, validateBookForm } from '../../utils/bookForm.js'
 
 /**
  * Formulário de livro, o mesmo no "Novo livro" e na edição.
  *   mode="create": POST /library (+ status de leitura, se escolhido)
  *   mode="edit":   PUT /library/:id (+ status e capa, se mudaram)
  * Emite 'saved' com o resultado e 'cancel'.
+ *
+ * Seções: busca por ISBN/título (aqui, porque no celular cada peça entra
+ * numa posição da grade; lógica em composables/useBookLookup.js),
+ * BookAboutFields ("Sobre o livro") e BookReadingFields ("Sua leitura").
+ * Regras sem Vue (validação, corpo do envio) em utils/bookForm.js.
  */
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -328,14 +231,8 @@ const toast = useToast()
 const confirm = useConfirm()
 
 const isCreate = computed(() => props.mode === 'create')
-// Data de leitura não pode estar no futuro (o servidor também recusa).
-const today = new Date()
 
-function blankForm() {
-  return { title: '', authorNames: [], publisher: '', tags: '', isbn: '', pubdate: null, rating: null, series: '', series_index: '', notes: '', pageCount: '' }
-}
-
-const form = reactive(blankForm())
+const form = reactive(blankBookForm())
 const status = ref('none')
 const statusDate = ref(null)
 const initialStatus = ref('none')
@@ -343,11 +240,12 @@ const initialStatusDate = ref(null)
 const errors = reactive({})
 const saving = ref(false)
 const isbnField = ref(null)
+const bookSearch = ref(null)
 const phone = useIsPhone()
 
 function load() {
   const source = props.initial || {}
-  Object.assign(form, blankForm(), {
+  Object.assign(form, blankBookForm(), {
     title: source.title || '',
     authorNames: [...(source.authorNames || [])],
     publisher: source.publisher || '',
@@ -402,23 +300,6 @@ function clearErrors() {
   Object.keys(errors).forEach(key => { delete errors[key] })
 }
 
-// ---------------------------------------------------------------- status
-
-function pickStatus(option) {
-  status.value = status.value === option ? 'none' : option
-  if ((status.value === 'read' || status.value === 'reading') && !statusDate.value) {
-    const now = new Date()
-    statusDate.value = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  }
-  delete errors.statusDate
-}
-
-const statusCaption = computed(() => {
-  if (status.value === 'want') return t('status.wantCaption')
-  if (status.value === 'none') return t('bookForm.statusNone')
-  return t('bookForm.statusClear')
-})
-
 // ---------------------------------------------------------------- capa
 
 const selectedFile = ref(null)
@@ -459,154 +340,24 @@ const coverCaption = computed(() => {
 
 onBeforeUnmount(() => preview.clear())
 
-// ---------------------------------------------------------------- séries
+// ---------------------------------------------------------------- ISBN, câmera e título
 
-const seriesOptions = ref([])
-async function loadSeriesOptions() {
-  if (seriesOptions.value.length) return
-  try {
-    seriesOptions.value = await api.getSeries()
-  } catch {
-    seriesOptions.value = []
-  }
-}
-
-// ---------------------------------------------------------------- ISBN
-
-// As chaves do Open Library só valem para o ISBN com que foram achadas (o
-// buscado, ou o do resultado da busca por título — que pode não ter ISBN);
-// se a pessoa trocar o ISBN depois, elas não são enviadas.
-const lookup = reactive({ active: false, isbn: '', olWorkKey: null, olEditionKey: null, coverId: null })
-const lookingUp = ref(false)
-const lookupState = ref('idle') // idle | found | missing | error
-
-function resetLookup() {
-  Object.assign(lookup, { active: false, isbn: '', olWorkKey: null, olEditionKey: null, coverId: null })
-  lookupState.value = 'idle'
-}
-
-const lookupMatchesForm = () => lookup.active && lookup.isbn === form.isbn.trim()
-// Celular: com o ISBN já encontrado, o campo mostra "✓ Encontrado" e o Buscar
-// sai (volta assim que o ISBN mudar), deixando o número inteiro à vista
-const isbnFoundHere = computed(() => phone.value && lookupState.value === 'found' && lookupMatchesForm())
-
-const lookupMessage = computed(() => {
-  if (lookupState.value === 'found') return t('isbn.found')
-  if (lookupState.value === 'missing') return t('isbn.not_found')
-  if (lookupState.value === 'error') return t('isbn.error')
-  return t('isbn.hint')
-})
-
-watch(() => form.isbn, () => {
-  delete errors.isbn
-  if (lookup.active && !lookupMatchesForm()) resetLookup()
-})
-
-function onIsbnKeydown(event) {
-  if (event.key === 'Enter') {
-    event.preventDefault()
-    lookupIsbn()
-  }
-}
-
-function parseApiDate(value) {
-  if (!value) return null
-  const [year, month, day] = value.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-
-// Preenche só os campos vazios: o que a pessoa já digitou tem prioridade.
-// via = 'scan' quando veio da câmera (o servidor só conta, para saber se o leitor é usado)
-async function lookupIsbn(via) {
-  const isbn = form.isbn.trim()
-  if (!isbn || lookingUp.value) return
-
-  lookingUp.value = true
-  delete errors.isbn
-  try {
-    const found = await api.lookupIsbn(isbn, via === 'scan' ? 'scan' : undefined)
-    if (!form.title.trim() && found.title) form.title = found.title
-    if (form.authorNames.length === 0 && found.authors?.length) form.authorNames = [...found.authors]
-    if (!form.publisher.trim() && found.publisher) form.publisher = found.publisher
-    if (!form.pubdate && found.pubDate) form.pubdate = parseApiDate(found.pubDate)
-    if (!String(form.pageCount).trim() && found.pages) form.pageCount = String(found.pages)
-
-    Object.assign(lookup, {
-      active: true,
-      isbn,
-      olWorkKey: found.olWorkKey,
-      olEditionKey: found.olEditionKey,
-      coverId: selectedFile.value ? null : found.coverId
-    })
-    lookupState.value = 'found'
-  } catch (error) {
-    resetLookup()
-    if (error.status === 404) lookupState.value = 'missing'
-    else if (error.status === 400) errors.isbn = t('isbn.invalid')
-    else lookupState.value = 'error'
-  } finally {
-    lookingUp.value = false
-  }
-}
-
-// ---------------------------------------------------------------- câmera e título
-
-const findMode = ref('isbn') // isbn | title
-const bookSearch = ref(null)
-const scannerOpen = ref(false)
-const canScan = ref(false)
-
-onMounted(async () => {
-  if (isCreate.value) canScan.value = await hasCamera()
-})
-
-async function setFindMode(mode) {
-  if (findMode.value === mode) return
-  findMode.value = mode
-  await nextTick()
-  if (mode === 'title') bookSearch.value?.focus()
-  else isbnField.value?.focus()
-}
-
-// Erro no ISBN (ex.: já cadastrado) com a busca por título aberta: mostra o campo
-watch(() => errors.isbn, value => {
-  if (value) findMode.value = 'isbn'
-})
-
-function onScanned(isbn) {
-  form.isbn = isbn
-  lookupIsbn('scan')
-}
-
-// Resultado da busca por título: mesma regra do ISBN (só campos vazios)
-async function applySearchResult(item) {
-  if (!form.title.trim() && item.title) form.title = item.title
-  if (form.authorNames.length === 0 && item.authors?.length) form.authorNames = [...item.authors]
-  if (!form.publisher.trim() && item.publisher) form.publisher = item.publisher
-  if (!form.pubdate && item.pubDate) form.pubdate = parseApiDate(item.pubDate)
-  if (!form.isbn.trim() && item.isbn13) form.isbn = item.isbn13
-  if (!String(form.pageCount).trim() && item.pages) form.pageCount = String(item.pages)
-
-  delete errors.isbn
-  const sameIsbn = (item.isbn13 || '') === form.isbn.trim()
-  if (sameIsbn) {
-    Object.assign(lookup, {
-      active: true,
-      isbn: item.isbn13 || '',
-      olWorkKey: item.olWorkKey,
-      olEditionKey: item.olEditionKey,
-      coverId: selectedFile.value ? null : item.coverId
-    })
-    lookupState.value = 'found'
-  } else {
-    resetLookup()
-    lookupState.value = 'found'
-  }
-
-  findMode.value = 'isbn'
-  await nextTick()
-  isbnField.value?.focus()
-}
+const {
+  lookup,
+  lookingUp,
+  resetLookup,
+  lookupMatchesForm,
+  isbnFoundHere,
+  lookupMessage,
+  onIsbnKeydown,
+  lookupIsbn,
+  findMode,
+  scannerOpen,
+  canScan,
+  setFindMode,
+  onScanned,
+  applySearchResult
+} = useBookLookup({ form, errors, selectedFile, isbnField, bookSearch, isCreate })
 
 // ---------------------------------------------------------------- validação
 
@@ -615,25 +366,12 @@ watch(() => form.authorNames, () => { delete errors.authors })
 watch(() => form.series_index, () => { delete errors.seriesIndex })
 watch(() => form.pageCount, () => { delete errors.pageCount })
 watch(() => form.pubdate, () => { delete errors.pubDate })
-watch(statusDate, () => { delete errors.statusDate })
+watch([status, statusDate], () => { delete errors.statusDate })
 
 function validate() {
   clearErrors()
-  if (!form.title.trim()) errors.title = t('bookForm.errors.titleRequired')
-  if (form.authorNames.length === 0) errors.authors = t('bookForm.errors.authorsRequired')
-  const volume = String(form.series_index ?? '').trim()
-  if (volume) {
-    const number = Number(volume.replace(',', '.'))
-    if (!Number.isFinite(number) || number < 0 || number > 9999) errors.seriesIndex = t('bookForm.errors.volume')
-  }
-  const pages = String(form.pageCount ?? '').trim()
-  if (pages && !/^\d{1,5}$/.test(pages) || pages && (Number(pages) < 1 || Number(pages) > 20000)) {
-    errors.pageCount = t('bookForm.errors.pages')
-  }
-  // Compara só o dia (texto YYYY-MM-DD), sem a hora
-  if (statusDate.value && toApiDate(statusDate.value) > toApiDate(new Date()) && (status.value === 'read' || status.value === 'reading')) {
-    errors.statusDate = t('bookForm.errors.futureDate')
-  }
+  const found = validateBookForm(form, { status: status.value, statusDate: statusDate.value })
+  for (const [field, key] of Object.entries(found)) errors[field] = t(key)
   return Object.keys(errors).length === 0
 }
 
@@ -738,29 +476,11 @@ async function applyStatus(bookId) {
 }
 
 async function create() {
-  const data = new FormData()
-  data.append('title', form.title.trim())
-  // Um campo "authors" por autor: nomes podem conter vírgula.
-  form.authorNames.forEach(name => data.append('authors', name))
-  data.append('publisher', form.publisher || '')
-  data.append('isbn', form.isbn || '')
-  data.append('tags', form.tags || '')
-  if (form.pubdate) data.append('pubDate', toApiDate(form.pubdate))
-  const readDate = readDateToSend()
-  if (readDate) data.append('readDate', readDate)
-  if (form.rating) data.append('rating', String(form.rating))
-  if (form.series?.trim()) data.append('series', form.series.trim())
-  if (String(form.series_index ?? '').trim()) data.append('seriesIndex', String(form.series_index).trim())
-  if (form.notes?.trim()) data.append('notes', form.notes)
-  if (String(form.pageCount).trim()) data.append('pageCount', String(form.pageCount).trim())
-
-  if (lookupMatchesForm()) {
-    if (lookup.olWorkKey) data.append('olWorkKey', lookup.olWorkKey)
-    if (lookup.olEditionKey) data.append('olEditionKey', lookup.olEditionKey)
-    if (!selectedFile.value && lookup.coverId) data.append('olCoverId', String(lookup.coverId))
-  }
-  if (selectedFile.value) data.append('coverImage', selectedFile.value)
-
+  const data = createBookData(form, {
+    readDate: readDateToSend(),
+    openLibrary: lookupMatchesForm() ? lookup : null,
+    cover: selectedFile.value
+  })
   const result = await api.createBook(data)
 
   // "Quero ler" e "Lendo" vão por PATCH /library/:id/status (o POST só conhece a data de leitura)
@@ -785,20 +505,7 @@ async function create() {
 }
 
 async function update() {
-  const response = await api.updateBook(props.bookId, {
-    title: form.title.trim(),
-    authors: form.authorNames,
-    publisher: form.publisher,
-    tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-    isbn: form.isbn,
-    rating: form.rating,
-    pubDate: toApiDate(form.pubdate),
-    readDate: readDateToSend(),
-    series: (form.series || '').trim(),
-    seriesIndex: String(form.series_index ?? '').trim() || null,
-    notes: form.notes || '',
-    pageCount: String(form.pageCount ?? '').trim() || null
-  })
+  const response = await api.updateBook(props.bookId, updateBookPayload(form, { readDate: readDateToSend() }))
   const book = { ...response.book }
 
   if (statusChanged() && status.value !== 'read' || (status.value === 'read' && initialStatus.value !== 'read' && initialStatus.value !== 'none')) {
@@ -908,58 +615,6 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
 .isbn-btn.btn {
   height: 3.25rem;
   border-radius: var(--radius-md);
-}
-
-.form-group {
-  border: none;
-  margin: var(--space-2) 0 0;
-  padding: var(--space-4) 0 0;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  min-width: 0;
-}
-
-.form-group legend {
-  float: left;
-  width: 100%;
-  padding: 0;
-  margin-bottom: 0.1rem;
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.grid-2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-4);
-}
-
-.grid-series {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem;
-  gap: var(--space-4);
-}
-
-.status-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.status-caption {
-  margin: var(--space-2) 0 0;
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-}
-
-.inline-error {
-  display: block;
-  margin-top: var(--space-1);
-  color: var(--red);
-  font-size: var(--fs-xs);
 }
 
 /* Rodapé fora da área que rola: Salvar sempre à vista */
@@ -1107,18 +762,6 @@ defineExpose({ focusIsbn: () => isbnField.value?.focus(), isDirty, confirmLeave 
     font-weight: 600;
     white-space: nowrap;
     animation: isbn-found-in var(--dur-spring) var(--ease-spring);
-  }
-
-  .grid-2 {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .grid-series {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .grid-series > :first-child {
-    grid-column: 1 / -1;
   }
 }
 

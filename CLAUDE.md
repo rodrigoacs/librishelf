@@ -308,13 +308,20 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 39e (2026-11-08). Último commit: `19fd611`
-(39d; o 39e ainda não commitado). Próximo: 39f, `NavigationMenu.vue`,
-seguindo o roteiro do 39b descrito na fila.
+Atualizado ao fim do pacote 39g (2026-11-09). Último commit: `f48b5b2`
+(39e). Prontos e ainda não commitados: 39f (`NavigationMenu.vue` →
+`components/nav/`) e 39g (`BookEditForm.vue`), com arquivos separados para
+dois commits. Próximo: 39h, `PublicLibrary.vue`, seguindo o roteiro do 39b
+descrito na fila.
 
-Linha de base depois do 39e: backend 755/755 (não mexido), frontend
-131/131 e lint limpo, E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium`
+Linha de base depois do 39g: backend 755/755 (não mexido), frontend
+150/150 e lint limpo, E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium`
 nesta máquina WSL, que não tem as dependências do WebKit).
+Capturas instáveis (39f e 39g): um rebuild do frontend pode mudar alguns
+pixels de antisserrilhado (cantos arredondados, ~30 px) sem mudar layout.
+Antes de culpar a mudança, gere um segundo "antes" (stash + rebuild) e meça
+os elementos (`getBoundingClientRect` gravado em JSON no spec): no 39g o
+"depois" bateu 0 px com o segundo "antes" e as medidas eram idênticas.
 
 Atenção nesta máquina: o relógio do Postgres no Docker fica ~570 ms à frente
 do Node no WSL. Comparação entre hora do banco e hora da API quebra aqui.
@@ -336,9 +343,9 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 
 ### Fila (um pacote por item, nesta ordem)
 
-**39f em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
+**39h em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
 `Settings.vue`, 39c `Community.vue`, 39d `LibraryHeader.vue`, 39e
-`Dashboard.vue`)
+`Dashboard.vue`, 39f `NavigationMenu.vue`, 39g `BookEditForm.vue`)
 - Como foi no 39b: subcomponentes por seção em `components/<área>/`, cada um
   com as próprias folhas; nenhum texto, rótulo ou papel muda (os E2E
   selecionam por eles). Conferir com capturas antes/depois pixel a pixel
@@ -360,10 +367,12 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
   janela e o chart.js redesenha; aumente a janela até a altura da página
   (`setViewportSize`) e capture até duas seguidas saírem iguais. Classe
   renomeada: procure em `main.css` (a lista de alvos de toque de 44 px cita
-  classes de componentes).
+  classes de componentes). Layout com `display: contents` (como o
+  `.fields-column` do BookEditForm no celular): os filhos diretos ordenados
+  pela grade ficam no próprio arquivo; só sai para componente o que é um
+  bloco único (com uma raiz, ela herda o escopo do pai).
 - Telas com mais de 1.100 linhas, subcomponentes por seção sem mudar
-  comportamento: `NavigationMenu.vue`, `BookEditForm.vue`,
-  `PublicLibrary.vue`, `YearInBooks.vue`, `BookDialog.vue`. Um pacote por tela
+  comportamento: `PublicLibrary.vue`, `YearInBooks.vue`, `BookDialog.vue`. Um pacote por tela
   se ficar pesado. Rodar o E2E depois de cada uma.
 
 **40 — Padrões compartilhados**
@@ -381,7 +390,10 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 - `AdminFilters` nos radiogroups escritos à mão em AdminAccounts,
   AdminModeration e AdminQueue.
 - Varredura de CSS e funções duplicados (data, número, dinheiro; ex.:
-  `money`/`shortDate` em SettingsPlan).
+  `money`/`shortDate` em SettingsPlan). Data 'YYYY-MM-DD' → Date local: usar
+  `localDate` de `utils/dates.js` (39g) no lugar de `fromIso`
+  (`utils/statPeriods.js`) e das cópias em `DateField.vue`, `YearInBooks.vue`
+  e `Legal.vue`; `isoDate` de statPeriods repete o `toApiDate`.
 
 **41 — Métricas da página pública**
 - Contador próprio, sem cookies e sem IP guardado. Eventos: visita a
