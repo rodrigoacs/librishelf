@@ -140,6 +140,13 @@ docker-compose.local.yml   Postgres de desenvolvimento (127.0.0.1:5433)
 
 ## Comandos
 
+### Tudo junto (raiz)
+
+| Comando | O quê |
+|---|---|
+| `npm run dev` | API, worker e Vite juntos (`scripts/dev.js`, saída com `[api]`/`[worker]`/`[web]`); Ctrl+C encerra os três |
+| `npm run dev:local` | o mesmo com `src/.env.local` |
+
 ### Backend (`cd backend`)
 
 | Comando | O quê |

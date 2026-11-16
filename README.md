@@ -84,7 +84,9 @@ docker-compose.local.yml   Postgres for development (127.0.0.1:5433)
 
    On an empty database this applies `db/schema.sql`; on an existing one it applies only the pending files in `db/migrations/`.
 
-4. **Start both servers**
+4. **Start everything**
+
+   From the repository root, `npm run dev` starts the API, the worker and Vite together, each line prefixed with `[api]`, `[worker]` or `[web]` (`npm run dev:local` uses `backend/src/.env.local`). Ctrl+C stops all three; if one of them exits, the others are stopped too. To run them in separate terminals:
 
    ```sh
    cd backend && npm run server     # API on http://localhost:3050 (node --watch)
@@ -106,6 +108,8 @@ npm run db:migrate:local
 npm run db:seed                                      # --reset to start over; --users=80 --books=150 for more
 npm run server:local                                 # API on :3050 using the local database
 ```
+
+Or, from the repository root, `npm run dev:local` (API, worker and Vite together, using the local database).
 
 Log in as `demo` / `senha12345` (every seeded account uses that password; `privado` has everything off, `vazio` has no books). The seed refuses to run against a non-local host, with `NODE_ENV=production`, or on a database that already has users (unless `--reset`).
 
