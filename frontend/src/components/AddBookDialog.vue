@@ -20,6 +20,7 @@
         :key="formKey"
         mode="create"
         id-prefix="new-book"
+        :initial-find-mode="findMode"
         @saved="onSaved"
         @cancel="visible = false"
       />
@@ -37,7 +38,9 @@ import IconButton from './form/IconButton.vue'
 const { t } = useI18n()
 
 const props = defineProps({
-  visible: Boolean
+  visible: Boolean,
+  // Como achar os dados: isbn (digitado ou pela câmera) | title (busca)
+  findMode: { type: String, default: 'isbn' }
 })
 
 const emit = defineEmits(['update:visible', 'save'])

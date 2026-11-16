@@ -19,18 +19,12 @@
 
       <template v-else-if="user">
         <div class="tags">
-          <span
-            v-if="user.isAdmin"
-            class="tag admin"
-          >{{ t('admin.accounts.adminTag') }}</span>
-          <span
-            class="tag"
-            :class="user.active ? 'active' : 'suspended'"
-          >{{ user.active ? t('admin.user.active') : t('admin.accounts.suspendedTag') }}</span>
-          <span
+          <AppTag v-if="user.isAdmin">{{ t('admin.accounts.adminTag') }}</AppTag>
+          <AppTag :tone="user.active ? 'green' : 'red'">{{ user.active ? t('admin.user.active') : t('admin.accounts.suspendedTag') }}</AppTag>
+          <AppTag
             v-if="!user.emailVerifiedAt"
-            class="tag pending"
-          >{{ t('admin.accounts.unverifiedTag') }}</span>
+            tone="neutral"
+          >{{ t('admin.accounts.unverifiedTag') }}</AppTag>
           <a
             v-if="user.privacy.isPublic && user.active"
             class="public-link"
@@ -214,6 +208,7 @@
 </template>
 
 <script setup>
+import AppTag from '../ui/AppTag.vue'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -338,19 +333,6 @@ async function confirmDialog() {
   gap: var(--space-2);
   align-items: center;
 }
-
-.tag {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  border-radius: var(--radius-pill);
-  padding: 0.1rem var(--space-2);
-  color: var(--text-primary);
-}
-
-.tag.admin { background: rgba(var(--main-color-rgb), 0.18); }
-.tag.active { background: rgba(var(--green-rgb), 0.16); }
-.tag.suspended { background: rgba(var(--red-rgb), 0.18); }
-.tag.pending { background: var(--bg-input); color: var(--text-secondary); }
 
 .public-link {
   margin-left: auto;

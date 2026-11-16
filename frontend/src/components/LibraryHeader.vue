@@ -399,11 +399,12 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
   font-size: var(--fs-md);
 }
 
-/* Com o cabeçalho abaixo de 1000 px (janela até ~1300) numa linha só não
-   cabem título, busca, ordenar e ações (a 1024 a busca ficava com 0 px): duas
-   linhas — título e ações em cima, busca e ordenar embaixo. Container query
-   (largura do próprio cabeçalho), porque depende do menu lateral. */
-@container libheader (max-width: 999.98px) {
+/* Título, ordenar e ações ocupam uns 900 px; abaixo de 1200 px de cabeçalho
+   (janela até ~1520 com o menu lateral) a busca numa linha só ficava estreita
+   demais (144 px a 1366, "Buscar li"; 0 px a 1024): duas linhas — título e
+   ações em cima, busca e ordenar embaixo. Container query (largura do próprio
+   cabeçalho), porque depende do menu lateral. */
+@container libheader (max-width: 1199.98px) {
   .top-bar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -436,7 +437,7 @@ defineExpose({ reloadOptions: loadOptions, openAddBook: () => { addBookDialogVis
 
 /* Uma linha: o ordenar mostra o ícone e o valor inteiro (sem o "Ordenar:",
    que segue no nome acessível) e a busca fica com o resto */
-@container libheader (min-width: 1000px) {
+@container libheader (min-width: 1200px) {
   .sort-quick-prefix {
     display: none;
   }

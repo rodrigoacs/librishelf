@@ -113,6 +113,16 @@ export default {
     return client.post('/library/import', formData)
   },
 
+  /** Primeiros passos (pacote 42): { status, step, start, books, firstBooks, isPublic, vanguarda } */
+  getOnboarding() {
+    return client.get('/onboarding')
+  },
+
+  /** { status?: pending | skipped | done, step?: start | books | public | finish, start?: import | scan | search } */
+  updateOnboarding(changes) {
+    return client.patch('/onboarding', changes)
+  },
+
   /** Qualquer combinação de { isPublic, showInCommunity, showActivity, allowIndexing }. */
   setPrivacy(settings) {
     return client.patch('/auth/me/visibility', settings)
@@ -248,6 +258,19 @@ export default {
 
   getProfilePage() {
     return client.get('/profile-page')
+  },
+
+  /** Visitas da página pública por dia (Pro: page_visits). */
+  getPageVisits(days = 30) {
+    return client.get(`/profile-page/visits${toQuery({ days })}`)
+  },
+
+  /**
+   * Métricas da página pública (visit, share, invite_register, invite_login).
+   * Nunca atrapalha a tela: erro aqui é ignorado.
+   */
+  trackPublicPage(username, event) {
+    return client.post(`/public-metrics/u/${enc(username)}`, { event }).catch(() => {})
   },
 
   saveBio(bio) {
@@ -685,6 +708,10 @@ export default {
 
   adminUsage() {
     return client.get('/admin/usage')
+  },
+
+  adminPublicPages(days = 30) {
+    return client.get(`/admin/public-pages${toQuery({ days })}`)
   },
 
   adminSystem() {

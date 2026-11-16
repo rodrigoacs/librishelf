@@ -1,3 +1,5 @@
+import { dateTag } from '../../utils/dates.js'
+import { formatMoney as formatCents } from '../../utils/money.js'
 import { inject } from 'vue'
 
 /**
@@ -18,7 +20,7 @@ export function useAdminCall() {
   return inject(ADMIN_CALL, fn => fn())
 }
 
-const tag = locale => (locale === 'en' ? 'en-US' : 'pt-BR')
+const tag = dateTag
 
 /** Data e hora curtas no idioma da pessoa ('' se não houver data). */
 export function formatDateTime(value, locale) {
@@ -59,7 +61,7 @@ export function formatBytes(bytes, locale) {
 
 /** 4990 → "R$ 49,90" */
 export function formatMoney(cents, locale, currency = 'BRL') {
-  return (Number(cents || 0) / 100).toLocaleString(tag(locale), { style: 'currency', currency })
+  return formatCents(Number(cents || 0), tag(locale), currency)
 }
 
 /** Data ISO → "2026-11-02" (dia local), para <input type="date"> */

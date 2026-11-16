@@ -4,8 +4,10 @@ import { setSessionExpiredHandler, setProRequiredHandler } from '../services/fet
 import { onProRequired } from '../services/plan.js'
 import { setRouteTitle } from '../services/pageTitle.js'
 import { installRouteFocus } from '../services/routeFocus.js'
-import { waitForContent } from '../services/scrollRestore.js'
+import { waitForContent, waitForElement } from '../services/scrollRestore.js'
+import { anchorId } from '../utils/anchor.js'
 import { installViewTransitions } from '../services/viewTransitions.js'
+import { needsOnboarding } from '../utils/onboarding.js'
 
 /**
  * meta:
@@ -23,6 +25,7 @@ import { installViewTransitions } from '../services/viewTransitions.js'
  * Views carregadas sob demanda: o chart.js do Dashboard e as telas internas
  * não entram no bundle do login.
  */
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -45,6 +48,7 @@ const router = createRouter({
 
     { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPassword.vue'), meta: { standalone: true, title: 'forgotPassword' } },
     { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPassword.vue'), meta: { standalone: true, title: 'resetPassword' } },
+    { path: '/welcome', name: 'onboarding', component: () => import('../views/Onboarding.vue'), meta: { requiresAuth: true, standalone: true, title: 'onboarding' } },
     { path: '/verify-email', name: 'verify-email', component: () => import('../views/VerifyEmail.vue'), meta: { standalone: true, title: 'verifyEmail' } },
     { path: '/unsubscribe', name: 'unsubscribe', component: () => import('../views/Unsubscribe.vue'), meta: { standalone: true, title: 'unsubscribe', noindex: true } },
     { path: '/moderation', name: 'moderation', component: () => import('../views/Moderation.vue'), meta: { standalone: true, title: 'moderation', noindex: true } },
@@ -64,6 +68,12 @@ const router = createRouter({
     // Voltar/avançar: espera a tela carregar o conteúdo (services/scrollRestore.js)
     // antes de devolver a posição; senão a página ainda está curta e para no topo.
     if (savedPosition) return waitForContent().then(() => savedPosition)
+    // Link para uma seção (#settings-notifications, do descadastro): rola até
+    // ela quando aparecer (a Conta monta as seções depois de carregar)
+    const anchor = anchorId(to.hash)
+    if (anchor) {
+      return waitForContent().then(() => waitForElement(anchor)).then(el => (el ? { el, top: 16 } : { top: 0 }))
+    }
     // Mesma tela, só a query mudou (livro aberto em ?book=, filtros): não rola
     if (to.path === from.path) return false
     return { top: 0 }
@@ -85,6 +95,9 @@ router.beforeEach(async (to) => {
     if (to.meta.requiresAdmin && !user.isAdmin) {
       return { name: 'not-found', params: { pathMatch: to.path.slice(1).split('/') }, query: to.query, hash: to.hash }
     }
+    // Conta nova com o e-mail confirmado: o Início leva aos primeiros passos
+    // (pacote 42). Só o Início: links diretos para outras telas continuam valendo.
+    if (to.name === 'home' && needsOnboarding(user)) return { name: 'onboarding' }
     return true
   }
 

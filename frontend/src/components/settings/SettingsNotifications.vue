@@ -3,6 +3,7 @@
   <SettingsGroup
     :title="t('settings.notifications.title')"
     title-id="settings-group-notifications"
+    anchor="settings-notifications"
   >
     <SettingsRow
       :label="t('settings.notifications.follow')"

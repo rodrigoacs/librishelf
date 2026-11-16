@@ -140,6 +140,7 @@
 </template>
 
 <script setup>
+import { useDateTag } from '../../composables/useDateTag.js'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { colorFor } from '../../utils/tagColors.js'
@@ -158,8 +159,8 @@ const props = defineProps({
 
 defineEmits(['open-month', 'open-tag'])
 
-const { t, locale } = useI18n()
-const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
+const { t } = useI18n()
+const dateLocale = useDateTag()
 const monthInitials = computed(() =>
   Array.from({ length: 12 }, (_, i) => new Date(2000, i, 1).toLocaleDateString(dateLocale.value, { month: 'narrow' })))
 const maxMonth = computed(() => Math.max(1, ...props.months))

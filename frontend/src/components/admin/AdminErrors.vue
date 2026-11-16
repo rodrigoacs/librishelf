@@ -46,10 +46,10 @@
         :class="{ resolved: item.resolvedAt }"
       >
         <div class="head">
-          <span
-            class="source"
-            :class="item.source"
-          >{{ t(`admin.errors.sources.${item.source}`) }}</span>
+          <AppTag
+            :tone="['server', 'worker', 'webhook'].includes(item.source) ? 'red' : 'main'"
+            caps
+          >{{ t(`admin.errors.sources.${item.source}`) }}</AppTag>
           <span class="count">{{ t('admin.errors.occurrences', { n: item.occurrences }, item.occurrences) }}</span>
         </div>
         <p class="message">{{ item.message }}</p>
@@ -95,6 +95,7 @@
 </template>
 
 <script setup>
+import AppTag from '../ui/AppTag.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -231,23 +232,6 @@ onMounted(load)
   justify-content: space-between;
   align-items: center;
   gap: var(--space-2);
-}
-
-.source {
-  padding: 0.1rem var(--space-2);
-  border-radius: var(--radius-pill);
-  background: rgba(var(--main-color-rgb), 0.12);
-  color: var(--text-primary);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.source.server,
-.source.worker,
-.source.webhook {
-  background: rgba(var(--red-rgb), 0.12);
 }
 
 .count {

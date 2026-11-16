@@ -4,6 +4,8 @@ import * as dataService from '../services/dataService.js'
 import * as entitlementService from '../services/entitlementService.js'
 import * as personalizationService from '../services/personalizationService.js'
 import * as termsService from '../services/termsService.js'
+import * as publicMetricsService from '../services/publicMetricsService.js'
+import * as onboardingService from '../services/onboardingService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 import { loginLimiter, registerLimiter, sensitiveLimiter, mailLimiter, tokenLimiter } from '../middlewares/rateLimiter.js'
@@ -64,7 +66,7 @@ router.post('/logout', async (req, res) => {
     // Sem o banco a sessão não foi encerrada: o cookie fica para o app tentar
     // de novo (ele guarda o pedido de saída e repete quando puder).
     logger.error('Falha ao encerrar sessão no logout', { message: error.message })
-    return res.status(503).json(errorBody('Não foi possível sair agora. Tente de novo.', 'LOGOUT_FAILED'))
+    return res.status(STATUS.SERVICE_UNAVAILABLE).json(errorBody('Não foi possível sair agora. Tente de novo.', 'LOGOUT_FAILED'))
   }
   res.clearCookie(AUTH_COOKIE_NAME, { ...authCookieOptions, maxAge: undefined })
   clearUnlockCookie(res)
@@ -78,14 +80,15 @@ router.get('/me', authenticateToken, async (req, res) => {
     if (!user) throw httpError('Usuário não encontrado.', STATUS.NOT_FOUND, 'USER_NOT_FOUND')
 
     // Plano, recursos liberados e selos: o servidor decide, o app só mostra
-    const [plan, badges, personalization, terms] = await Promise.all([
+    const [plan, badges, personalization, terms, onboarding] = await Promise.all([
       entitlementService.planOf(req.user.id),
       entitlementService.badgesOf(req.user.id),
       personalizationService.get(req.user.id),
-      termsService.statusOf(req.user.id)
+      termsService.statusOf(req.user.id),
+      onboardingService.statusOf(req.user.id)
     ])
 
-    res.status(STATUS.OK).json({ user: { ...user, plan, badges, personalization, terms } })
+    res.status(STATUS.OK).json({ user: { ...user, plan, badges, personalization, terms, onboarding } })
   } catch (error) {
     sendError(res, error, 'Erro ao buscar usuário')
   }
@@ -93,13 +96,15 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 router.post('/register', registerLimiter, async (req, res) => {
   try {
-    const { username, password, email, locale, acceptTerms } = req.body ?? {}
+    const { username, password, email, locale, acceptTerms, redirect } = req.body ?? {}
 
     if (!username || !password || !email) {
       throw httpError('Informe usuário, senha e e-mail.', STATUS.BAD_REQUEST, 'REGISTER_FIELDS_REQUIRED')
     }
 
     const user = await authService.registerUser(username, password, email, locale, acceptTerms)
+    // Veio de uma página pública (/u/...): conta para a conversão daquela página
+    if (redirect) await publicMetricsService.recordSignup(redirect)
 
     res.status(STATUS.CREATED).json({ message: 'User registered successfully', user })
   } catch (error) {

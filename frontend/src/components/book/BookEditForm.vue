@@ -177,7 +177,7 @@
 
 <script setup>
 import { scrollBehavior } from '../../utils/motion.js'
-import { computed, nextTick, reactive, ref, watch, onBeforeUnmount } from 'vue'
+import { computed, nextTick, reactive, ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
 import { useIsPhone } from '../../composables/useIsPhone.js'
@@ -222,7 +222,9 @@ const props = defineProps({
   coverVersion: { type: [Number, null], default: undefined },
   idPrefix: { type: String, default: 'book-form' },
   // Pergunta antes de salvar (usado na edição)
-  confirmMessage: { type: String, default: '' }
+  confirmMessage: { type: String, default: '' },
+  // Novo livro: começar pela busca por título (onboarding)
+  initialFindMode: { type: String, default: 'isbn' }
 })
 
 const emit = defineEmits(['saved', 'cancel'])
@@ -358,6 +360,10 @@ const {
   onScanned,
   applySearchResult
 } = useBookLookup({ form, errors, selectedFile, isbnField, bookSearch, isCreate })
+
+onMounted(() => {
+  if (isCreate.value && props.initialFindMode === 'title') setFindMode('title')
+})
 
 // ---------------------------------------------------------------- validação
 

@@ -83,6 +83,8 @@
 </template>
 
 <script setup>
+import { localDate, toApiDate } from '../../utils/dates.js'
+import { useDateTag } from '../../composables/useDateTag.js'
 import { computed, reactive, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../../services/api.js'
@@ -93,7 +95,7 @@ import AppSkeleton from '../ui/AppSkeleton.vue'
 import ChartCanvas from '../ui/ChartCanvas.vue'
 import ChartDataTable from '../ui/ChartDataTable.vue'
 import DateField from '../form/DateField.vue'
-import { CHART_PERIODS, chartPeriod, isoDate, fromIso } from '../../utils/statPeriods.js'
+import { CHART_PERIODS, chartPeriod } from '../../utils/statPeriods.js'
 
 const METRICS = ['readings', 'pages', 'rating', 'days']
 const GROUPS = ['month', 'year', 'weekday', 'author', 'publisher', 'category', 'rating', 'length']
@@ -101,8 +103,8 @@ const TYPES = ['bar', 'line', 'doughnut']
 const TIME_GROUPS = new Set(['month', 'year', 'weekday'])
 const STORAGE_KEY = 'librishelf:pro-chart'
 
-const { t, locale } = useI18n()
-const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
+const { t } = useI18n()
+const dateLocale = useDateTag()
 
 const DEFAULTS = { metric: 'readings', group: 'month', type: 'bar', period: 'last12' }
 
@@ -127,16 +129,16 @@ function persist() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       ...config,
-      from: customFrom.value ? isoDate(customFrom.value) : null,
-      to: customTo.value ? isoDate(customTo.value) : null
+      from: customFrom.value ? toApiDate(customFrom.value) : null,
+      to: customTo.value ? toApiDate(customTo.value) : null
     }))
   } catch { /* modo privado */ }
 }
 
 const saved = restore()
 const config = reactive({ metric: saved.metric, group: saved.group, type: saved.type, period: saved.period })
-const customFrom = ref(saved.from ? fromIso(saved.from) : null)
-const customTo = ref(saved.to ? fromIso(saved.to) : null)
+const customFrom = ref(saved.from ? localDate(saved.from) : null)
+const customTo = ref(saved.to ? localDate(saved.to) : null)
 
 const result = ref(null)
 const loading = ref(false)
@@ -156,8 +158,8 @@ function set(key, value) {
   if (key === 'period' && value === 'custom') {
     if (!customFrom.value || !customTo.value) {
       const range = chartPeriod('last12')
-      customFrom.value = fromIso(range.from)
-      customTo.value = fromIso(range.to)
+      customFrom.value = localDate(range.from)
+      customTo.value = localDate(range.to)
     }
     persist()
     return
@@ -169,7 +171,7 @@ function set(key, value) {
 
 async function load() {
   const range = config.period === 'custom'
-    ? { from: isoDate(customFrom.value), to: isoDate(customTo.value) }
+    ? { from: toApiDate(customFrom.value), to: toApiDate(customTo.value) }
     : chartPeriod(config.period)
   persist()
   loading.value = true

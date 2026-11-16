@@ -40,10 +40,10 @@
               <td class="num">{{ formatNumber(row.value, locale) }}</td>
               <td class="share-cell">
                 <div class="share">
-                  <div
-                    class="bar"
-                    aria-hidden="true"
-                  ><span :style="{ width: `${row.percent}%` }"></span></div>
+                  <ProgressBar
+                    class="share-bar"
+                    :value="row.percent"
+                  />
                   <span class="pct">{{ row.percent }}%</span>
                 </div>
               </td>
@@ -88,6 +88,68 @@
           class="note"
         >{{ t('admin.usage.scanShare', { p: scanShare }) }}</p>
       </section>
+
+      <!-- Páginas públicas (pacote 41): visita → cadastro, sem dado de quem visitou -->
+      <section
+        v-if="pages"
+        class="card"
+        aria-labelledby="admin-public-pages-title"
+      >
+        <h2
+          id="admin-public-pages-title"
+          class="section-title"
+        >{{ t('admin.publicPages.title') }}</h2>
+        <p class="hint">{{ t('admin.publicPages.hint', { n: pages.days }) }}</p>
+        <table>
+          <tbody>
+            <tr
+              v-for="event in PAGE_EVENTS"
+              :key="event"
+            >
+              <th scope="row">{{ t(`admin.publicPages.events.${event}`) }}</th>
+              <td class="num">{{ formatNumber(pages.totals[event], locale) }}</td>
+            </tr>
+            <tr>
+              <th scope="row">{{ t('admin.publicPages.conversion') }}</th>
+              <td class="num">{{ pages.conversion === null ? '—' : `${formatNumber(pages.conversion, locale)}%` }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <template v-if="pages.topPages.length">
+          <h3 class="section-title sub">{{ t('admin.publicPages.top') }}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">{{ t('admin.publicPages.page') }}</th>
+                <th
+                  scope="col"
+                  class="num"
+                >{{ t('admin.publicPages.events.visit') }}</th>
+                <th
+                  scope="col"
+                  class="num"
+                >{{ t('admin.publicPages.events.signup') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in pages.topPages"
+                :key="row.username"
+              >
+                <th scope="row">
+                  <router-link :to="{ name: 'public-library', params: { username: row.username } }">/u/{{ row.username }}</router-link>
+                </th>
+                <td class="num">{{ formatNumber(row.visits, locale) }}</td>
+                <td class="num">{{ formatNumber(row.signups, locale) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+        <p
+          v-else
+          class="note"
+        >{{ t('admin.publicPages.empty') }}</p>
+      </section>
     </template>
   </div>
 </template>
@@ -98,11 +160,14 @@ import { useI18n } from 'vue-i18n'
 import AppSkeleton from '../ui/AppSkeleton.vue'
 import EmptyState from '../ui/EmptyState.vue'
 import api from '../../services/api.js'
+import ProgressBar from '../ui/ProgressBar.vue'
 import { LockedError, useAdminCall, formatNumber } from './adminCall.js'
 
 const { t, locale } = useI18n()
 const call = useAdminCall()
 const data = ref(null)
+const pages = ref(null)
+const PAGE_EVENTS = ['visit', 'share', 'invite_register', 'invite_login', 'signup']
 const loading = ref(true)
 const failed = ref(false)
 
@@ -127,7 +192,9 @@ async function load() {
   loading.value = true
   failed.value = false
   try {
-    data.value = await call(() => api.adminUsage())
+    const [usage, publicPages] = await Promise.all([call(() => api.adminUsage()), call(() => api.adminPublicPages(30))])
+    data.value = usage
+    pages.value = publicPages
   } catch (error) {
     if (!(error instanceof LockedError)) failed.value = true
   } finally {
@@ -212,19 +279,13 @@ tbody tr:last-child td {
   gap: var(--space-2);
 }
 
-.bar {
+.share-bar {
   flex: 1;
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-input);
-  overflow: hidden;
+  --bar-fill: var(--main-color);
 }
 
-.bar span {
-  display: block;
-  height: 100%;
-  background: var(--main-color);
-  border-radius: inherit;
+h3.sub {
+  margin: var(--space-5) 0 var(--space-2);
 }
 
 .pct {
@@ -234,5 +295,4 @@ tbody tr:last-child td {
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
-
 </style>

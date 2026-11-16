@@ -35,7 +35,8 @@
     "inviteWant": "Escolher na minha lista Quero ler",
     "yearInBooks": "Seu ano em livros {year}: veja a retrospectiva | Seu ano em livros {year}: 1 livro até agora — veja a retrospectiva | Seu ano em livros {year}: {n} livros até agora — veja a retrospectiva",
     "loadError": "Seus livros continuam salvos. Verifique sua conexão e tente de novo.",
-    "loadErrorTitle": "Não foi possível carregar sua estante"
+    "loadErrorTitle": "Não foi possível carregar sua estante",
+    "resumeOnboarding": "Continuar os primeiros passos"
   },
   "menu": {
     "home": "Início",
@@ -600,7 +601,8 @@
           "Listas são privadas por padrão. As que você marcar como públicas aparecem no seu perfil e ganham um link próprio, com prévia (nome da lista, livros e capas) quando compartilhado — só enquanto a biblioteca também for pública.",
           "Você pode desativar quando quiser, e a mudança vale na hora.",
           "Por padrão, bibliotecas públicas não aparecem em buscadores como o Google: o site pede para não serem indexadas. Só aparecem se você ligar \"Aparecer em buscadores\" em Conta.",
-          "A foto de perfil tem uma opção própria de quem vê: todos, só seguidores aprovados ou ninguém. A apresentação, os favoritos e a capa de fundo aparecem na sua página pública, junto com a biblioteca."
+          "A foto de perfil tem uma opção própria de quem vê: todos, só seguidores aprovados ou ninguém. A apresentação, os favoritos e a capa de fundo aparecem na sua página pública, junto com a biblioteca.",
+          "Contamos, por dia, quantas vezes sua biblioteca pública é aberta e compartilhada e quantas pessoas criam uma conta a partir dela. Não guardamos quem visitou: sem cookie, sem IP e sem conta. Com o Pro, você vê as visitas da sua página dia a dia; as suas próprias visitas não contam."
         ]
       },
       {
@@ -657,6 +659,7 @@
         "paragraphs": [
           "Usamos apenas um cookie essencial, que mantém você conectado. Ele não serve para rastreamento nem publicidade.",
           "Suas preferências de tema e idioma ficam salvas só no seu navegador.",
+          "Quando você abre a biblioteca pública de alguém, o navegador anota que a visita daquele dia já foi contada, para não contar de novo. A anotação some quando você fecha a aba.",
           "Para o app abrir sem internet, o navegador guarda a última versão das telas que você viu (como sua biblioteca e os livros que abriu), as capas e seu nome de usuário. Isso fica só neste aparelho, vale por até 7 dias depois da última vez que o app falou com o servidor e é apagado quando você sai da conta. Se você sair sem internet, o app guarda o pedido e encerra a sessão no servidor assim que a conexão voltar."
         ]
       },
@@ -1199,7 +1202,8 @@
     "import": "Importar livros",
     "importSkoob": "Vindo do Skoob",
     "loans": "Empréstimos",
-    "terms": "Termos de uso"
+    "terms": "Termos de uso",
+    "onboarding": "Primeiros passos"
   },
   "password": {
     "show": "Mostrar senha",
@@ -1374,6 +1378,7 @@
     "EMAIL_NOT_VERIFIED_CHECKOUT": "Confirme seu e-mail para assinar o Pro.",
     "PAYMENTS_UNAVAILABLE": "Pagamentos indisponíveis no momento.",
     "PAYMENT_PROVIDER_ERROR": "Não foi possível abrir o pagamento agora. Tente de novo em instantes.",
+    "REFUND_PROVIDER_ERROR": "Não foi possível pedir o reembolso agora. Tente de novo em instantes.",
     "CHECKOUT_NOT_FOUND": "Compra não encontrada.",
     "SUBSCRIPTION_ACTIVE": "Você já tem uma assinatura mensal ativa.",
     "SUBSCRIPTION_NOT_FOUND": "Você não tem assinatura mensal ativa.",
@@ -2240,6 +2245,21 @@
         "line": "Linha",
         "disposition": "Modo"
       }
+    },
+    "publicPages": {
+      "title": "Páginas públicas",
+      "hint": "Todas as páginas somadas nos últimos {n} dias. Sem dado de quem visitou.",
+      "conversion": "Cadastros por visita",
+      "top": "Mais visitadas",
+      "page": "Página",
+      "empty": "Nenhuma visita no período.",
+      "events": {
+        "visit": "Visitas",
+        "share": "Compartilhamentos",
+        "invite_register": "Cliques no convite: criar conta",
+        "invite_login": "Cliques no convite: entrar",
+        "signup": "Cadastros"
+      }
     }
   },
   "readCard": {
@@ -2397,6 +2417,10 @@
       "auto_backup": {
         "name": "Backup automático",
         "desc": "Uma cópia da sua biblioteca feita sozinha de tempos em tempos."
+      },
+      "page_visits": {
+        "name": "Visitas da sua página",
+        "desc": "Quantas pessoas abriram a sua biblioteca pública, dia a dia, nos últimos 30 dias."
       }
     },
     "vanguarda": {
@@ -2863,6 +2887,68 @@
     "removeFavorite": "Tirar {title} dos favoritos",
     "searchPlaceholder": "Buscar na sua estante",
     "noResults": "Nenhum livro encontrado.",
-    "view": "Ver minha página pública"
+    "view": "Ver minha página pública",
+    "visits": {
+      "title": "Visitas da sua página",
+      "pro": "Pro",
+      "short": "Nenhuma em {days} dias | 1 em {days} dias | {n} em {days} dias",
+      "total": "Nenhuma visita nos últimos {days} dias. | 1 visita nos últimos {days} dias. | {n} visitas nos últimos {days} dias.",
+      "chart": "Visitas por dia: {n} nos últimos {days} dias | Visitas por dia: 1 nos últimos {days} dias | Visitas por dia: {n} nos últimos {days} dias",
+      "day": "{date}: nenhuma visita | {date}: 1 visita | {date}: {n} visitas",
+      "help": "Conta uma visita por pessoa por dia. As suas não entram. Ninguém é identificado.",
+      "failed": "Não foi possível carregar as visitas."
+    }
+  },
+  "onboarding": {
+    "visual": "Seus primeiros passos",
+    "stepOf": "Passo {n} de {total}",
+    "progress": "Primeiros passos",
+    "skip": "Pular por agora",
+    "failed": "Não foi possível carregar os primeiros passos.",
+    "back": "Voltar",
+    "next": "Continuar",
+    "start": {
+      "title": "Como prefere começar?",
+      "text": "Escolha um jeito de trazer seus livros. Dá para usar os outros depois.",
+      "import": "Importar do Goodreads ou de um CSV",
+      "importText": "Traz a estante inteira de uma vez, com notas e datas de leitura.",
+      "scan": "Ler o código de barras",
+      "scanText": "Aponte a câmera para o livro e os dados aparecem sozinhos.",
+      "search": "Buscar pelo título",
+      "searchText": "Digite o título ou o autor e escolha o livro certo."
+    },
+    "books": {
+      "title": "Seus primeiros livros",
+      "text": {
+        "import": "Importe o arquivo exportado do Goodreads ou de outra planilha. Também dá para adicionar um por um.",
+        "scan": "Leia o código de barras de 3 livros que estão perto de você.",
+        "search": "Busque 3 livros que você leu ou quer ler."
+      },
+      "progressLabel": "Primeiros livros",
+      "left": "Nenhum livro faltando | Falta 1 livro | Faltam {n} livros",
+      "done": "Nenhum livro | 1 livro na estante | {n} livros na estante",
+      "import": "Importar livros",
+      "scan": "Ler código de barras",
+      "add": "Adicionar livro"
+    },
+    "public": {
+      "title": "Quer mostrar sua estante?",
+      "text": "Com a biblioteca pública, qualquer pessoa com o link vê seus livros. É opcional.",
+      "preview": "Como fica o link",
+      "visible": "Aparecem livros, capas, notas e o que você está lendo. Anotações pessoais nunca aparecem.",
+      "switch": "Biblioteca pública",
+      "later": "Dá para mudar a qualquer momento em Conta."
+    },
+    "finish": {
+      "title": "Tudo pronto",
+      "text": "Sua estante já está no Librishelf.",
+      "vanguardaHas": "Você é do Vanguarda: o Pro é seu enquanto o Librishelf existir.",
+      "vanguardaText": "As primeiras contas com {n} livros ganham o selo Vanguarda e o Pro para sempre.",
+      "vanguardaLabel": "Caminho até o Vanguarda",
+      "vanguardaLeft": "Nenhum livro faltando para o Vanguarda | Falta 1 livro para o Vanguarda | Faltam {n} livros para o Vanguarda",
+      "vanguardaSoon": "Você já tem os livros: o selo chega em instantes.",
+      "slots": "Nenhuma vaga sobrando | Resta 1 vaga | Restam {n} vagas",
+      "go": "Ir para o início"
+    }
   }
 }

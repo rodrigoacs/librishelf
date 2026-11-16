@@ -50,7 +50,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { toApiDate } from '../../utils/dates.js'
+import { toApiDate, localDate } from '../../utils/dates.js'
 
 /**
  * Data com rótulo flutuante, no seletor nativo do navegador
@@ -83,8 +83,7 @@ const describedBy = computed(() => (props.error ? `${props.id}-error` : undefine
 function onNativeInput(event) {
   const value = event.target.value
   if (!value) return emit('update:modelValue', null)
-  const [year, month, day] = value.split('-').map(Number)
-  emit('update:modelValue', new Date(year, month - 1, day))
+  emit('update:modelValue', localDate(value))
 }
 </script>
 

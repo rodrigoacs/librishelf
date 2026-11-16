@@ -28,13 +28,14 @@
       />
       <router-link
         :to="{ name: 'pricing', query: { feature } }"
-        class="pro-notice-link"
+        class="link-btn tall pro-notice-link"
       >{{ t('pro.notice.plans') }}</router-link>
     </div>
   </section>
 </template>
 
 <script setup>
+import { dateTag, formatLongDate } from '../utils/dates.js'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from './ui/AppButton.vue'
@@ -61,7 +62,7 @@ const trialAvailable = computed(() => Boolean(plan.value?.trial?.available) && !
 const endedAt = computed(() => {
   const value = plan.value?.endedAt
   if (!value || plan.value?.pro) return ''
-  return new Date(value).toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return formatLongDate(value, dateTag(locale.value))
 })
 
 async function startTrial() {
@@ -128,18 +129,6 @@ async function startTrial() {
 }
 
 .pro-notice-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  color: var(--main-color);
-  font-size: var(--fs-sm);
-  font-weight: 600;
   white-space: nowrap;
-}
-
-.pro-notice-link:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-  border-radius: var(--radius-sm);
 }
 </style>

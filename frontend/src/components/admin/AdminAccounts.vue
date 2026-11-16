@@ -10,22 +10,12 @@
         :placeholder="t('admin.accounts.searchPh')"
         maxlength="100"
       />
-      <div
-        class="filters"
-        role="radiogroup"
-        :aria-label="t('admin.accounts.filter')"
-      >
-        <button
-          v-for="option in filters"
-          :key="option.value"
-          type="button"
-          role="radio"
-          class="filter"
-          :class="{ active: status === option.value }"
-          :aria-checked="status === option.value"
-          @click="setStatus(option.value)"
-        >{{ option.label }}</button>
-      </div>
+      <AdminFilters
+        :model-value="status"
+        :options="filters"
+        :label="t('admin.accounts.filter')"
+        @update:model-value="setStatus"
+      />
       <span
         class="total"
         aria-live="polite"
@@ -84,18 +74,15 @@
                   :aria-label="t('admin.accounts.openWho', { name: user.username })"
                   @click="emit('open-user', user.id)"
                 >{{ user.username }}</button>
-                <span
-                  v-if="user.isAdmin"
-                  class="tag admin"
-                >{{ t('admin.accounts.adminTag') }}</span>
-                <span
+                <AppTag v-if="user.isAdmin">{{ t('admin.accounts.adminTag') }}</AppTag>
+                <AppTag
                   v-if="!user.active"
-                  class="tag suspended"
-                >{{ t('admin.accounts.suspendedTag') }}</span>
-                <span
+                  tone="red"
+                >{{ t('admin.accounts.suspendedTag') }}</AppTag>
+                <AppTag
                   v-if="!user.emailVerified"
-                  class="tag pending"
-                >{{ t('admin.accounts.unverifiedTag') }}</span>
+                  tone="neutral"
+                >{{ t('admin.accounts.unverifiedTag') }}</AppTag>
               </div>
               <p class="email">{{ user.email }}</p>
               <p
@@ -153,6 +140,8 @@
 </template>
 
 <script setup>
+import AdminFilters from './AdminFilters.vue'
+import AppTag from '../ui/AppTag.vue'
 import { useScrollEdges } from '../../composables/useScrollEdges.js'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -252,37 +241,6 @@ onMounted(load)
   position: relative;
   flex: 1 1 280px;
   max-width: 420px;
-}
-
-.filters {
-  display: inline-flex;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  padding: 0.2rem;
-  gap: 0.2rem;
-}
-
-.filter {
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-}
-
-.filter.active {
-  background: rgba(var(--main-color-rgb), 0.16);
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.filter:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 1px;
 }
 
 .total {
@@ -402,28 +360,6 @@ td.warn {
 
 tbody tr {
   cursor: default;
-}
-
-.tag {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  border-radius: var(--radius-pill);
-  padding: 0.05rem var(--space-2);
-}
-
-.tag.admin {
-  background: rgba(var(--main-color-rgb), 0.18);
-  color: var(--text-primary);
-}
-
-.tag.suspended {
-  background: rgba(var(--red-rgb), 0.18);
-  color: var(--text-primary);
-}
-
-.tag.pending {
-  background: var(--bg-input);
-  color: var(--text-secondary);
 }
 
 .reason {

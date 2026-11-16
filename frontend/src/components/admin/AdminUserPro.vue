@@ -91,10 +91,7 @@
         >
           <div class="line">
             <span class="strong">{{ t(`admin.billing.kinds.${item.kind}`) }}</span>
-            <span
-              class="tag"
-              :class="item.current ? 'on' : 'off'"
-            >{{ item.current ? t('admin.userPro.current') : t(`admin.userPro.statuses.${item.status}`) }}</span>
+            <AppTag :tone="item.current ? 'green' : 'neutral'">{{ item.current ? t('admin.userPro.current') : t(`admin.userPro.statuses.${item.status}`) }}</AppTag>
             <AppButton
               v-if="item.status === 'active'"
               :label="t('admin.userPro.revoke')"
@@ -143,6 +140,7 @@
 </template>
 
 <script setup>
+import AppTag from '../ui/AppTag.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -311,23 +309,6 @@ h3 {
 
 .note {
   font-style: italic;
-}
-
-.tag {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  border-radius: var(--radius-pill);
-  padding: var(--space-1) var(--space-2);
-  color: var(--text-primary);
-}
-
-.tag.on {
-  background: rgba(var(--green-rgb), 0.16);
-}
-
-.tag.off {
-  background: var(--bg-input);
-  color: var(--text-secondary);
 }
 
 .problem {

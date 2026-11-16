@@ -1,39 +1,20 @@
 <template>
   <div class="moderation">
     <!-- Resenhas ou fotos de perfil denunciadas -->
-    <div
-      class="filters kinds"
-      role="radiogroup"
-      :aria-label="t('admin.moderation.avatars.kind')"
-    >
-      <button
-        v-for="option in kinds"
-        :key="option.value"
-        type="button"
-        role="radio"
-        class="filter"
-        :class="{ active: kind === option.value }"
-        :aria-checked="kind === option.value"
-        @click="kind = option.value"
-      >{{ option.label }}</button>
-    </div>
-
-    <div
+    <AdminFilters
+      v-model="kind"
       class="filters"
-      role="radiogroup"
-      :aria-label="t('admin.moderation.filter')"
-    >
-      <button
-        v-for="option in filters"
-        :key="option.value"
-        type="button"
-        role="radio"
-        class="filter"
-        :class="{ active: status === option.value }"
-        :aria-checked="status === option.value"
-        @click="setStatus(option.value)"
-      >{{ option.label }}</button>
-    </div>
+      :options="kinds"
+      :label="t('admin.moderation.avatars.kind')"
+    />
+
+    <AdminFilters
+      class="filters"
+      :model-value="status"
+      :options="filters"
+      :label="t('admin.moderation.filter')"
+      @update:model-value="setStatus"
+    />
 
     <AdminAvatarQueue
       v-if="kind === 'avatars'"
@@ -83,10 +64,10 @@
                 class="person"
                 @click="emit('open-user', row.id)"
               >@{{ row.username }}</button>
-              <span
+              <AppTag
                 v-if="!row.active"
-                class="state-tag hidden"
-              >{{ t('admin.accounts.suspendedTag') }}</span>
+                tone="orange"
+              >{{ t('admin.accounts.suspendedTag') }}</AppTag>
               <span class="muted">{{ group.describe(row) }}</span>
             </li>
           </ul>
@@ -145,10 +126,7 @@
             >
               <span class="queue-head">
                 <span class="queue-book">{{ item.book.title }}</span>
-                <span
-                  class="state-tag"
-                  :class="item.hidden ? 'hidden' : 'visible'"
-                >{{ item.hidden ? t('admin.moderation.hidden') : t('admin.moderation.visible') }}</span>
+                <AppTag :tone="item.hidden ? 'orange' : 'green'">{{ item.hidden ? t('admin.moderation.hidden') : t('admin.moderation.visible') }}</AppTag>
               </span>
               <span class="queue-excerpt">{{ item.excerpt }}</span>
               <span class="queue-meta">
@@ -261,6 +239,8 @@
 </template>
 
 <script setup>
+import AdminFilters from './AdminFilters.vue'
+import AppTag from '../ui/AppTag.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -397,35 +377,7 @@ onMounted(() => {
 }
 
 .filters {
-  display: inline-flex;
   align-self: flex-start;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  padding: 0.2rem;
-  gap: 0.2rem;
-}
-
-.filter {
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-}
-
-.filter.active {
-  background: rgba(var(--main-color-rgb), 0.16);
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.filter:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 1px;
 }
 
 .layout {
@@ -528,26 +480,6 @@ onMounted(() => {
   margin-right: var(--space-1);
   border-radius: 50%;
   background: var(--orange);
-}
-
-.state-tag {
-  flex-shrink: 0;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  border-radius: var(--radius-pill);
-  padding: 0.1rem var(--space-2);
-}
-
-.state-tag {
-  color: var(--text-primary);
-}
-
-.state-tag.visible {
-  background: rgba(var(--green-rgb), 0.16);
-}
-
-.state-tag.hidden {
-  background: rgba(var(--orange-rgb), 0.18);
 }
 
 .detail {

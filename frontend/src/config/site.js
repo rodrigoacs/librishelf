@@ -7,7 +7,7 @@ export const CONTACT_EMAIL = 'contato@librishelf.com'
 // vendas. Vazios, ficam fora do texto.
 export const OWNER = Object.freeze({
   name: 'Rodrigo Soares',
-  document: '', // ex.: 'CPF 000.000.000-00' ou, depois, 'CNPJ 00.000.000/0001-00'
+  document: 'CPF 133.009.486-73', // ex.: 'CPF 000.000.000-00' ou, depois, 'CNPJ 00.000.000/0001-00'
   address: 'Rua São Luiz, 109, Congonhas (MG), CEP 36410-136' // ex.: 'Rua …, nº …, Congonhas (MG), CEP …'
 })
 

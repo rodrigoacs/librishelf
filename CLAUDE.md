@@ -202,8 +202,8 @@ Sem as dependências do WebKit: `E2E_IPHONE_BROWSER=chromium` (ou
 - Efeito que a API dispara sem segurar a resposta (e-mail, registro de
   erro, limpeza de fila): espere com `tests/helpers/waitFor.js`, nunca com
   pausa fixa.
-- Contagem no fim do pacote 38: 755 no backend, 120 no frontend, 30 no E2E
-  (6 cenários × Pixel, iPhone e desktop).
+- Contagem no fim da sessão de 2026-11-12: 773 no backend, 158 no frontend,
+  36 no E2E (12 cenários × Pixel, iPhone e desktop).
 
 ## Backend: convenções
 
@@ -308,15 +308,27 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado ao fim do pacote 39g (2026-11-09). Último commit: `f48b5b2`
-(39e). Prontos e ainda não commitados: 39f (`NavigationMenu.vue` →
-`components/nav/`) e 39g (`BookEditForm.vue`), com arquivos separados para
-dois commits. Próximo: 39h, `PublicLibrary.vue`, seguindo o roteiro do 39b
-descrito na fila.
+Atualizado em 2026-11-12, fim da sessão "fazer tudo de uma vez" (39h a 42,
+README e os três bugs anotados). Último commit: `55e5f2f`; tudo o mais está
+no working tree, sem commit. Patches acumulados por pacote (desde `55e5f2f`)
+foram entregues ao Rodrigo; o 41 e o 42 saíram num patch só.
+Feitos nesta sessão: 39h (`PublicLibrary.vue` → `components/public/`
+`PublicProfileHeader`, `PublicFollowActions`, `PublicShelf`), 39i
+(`YearInBooks.vue` → `components/year/`), 39j (`BookDialog.vue` →
+`components/book/BookActions`, `BookPageBar`, `BookCoverPanel`,
+`BookRateBlock`, `BookPublicReview`, `useBookReading.js`), 40, 41, 42, README
+e os bugs. Fila de pacotes vazia; sobram as pendências antes das vendas.
 
-Linha de base depois do 39g: backend 755/755 (não mexido), frontend
-150/150 e lint limpo, E2E 30/30 no modo Docker (`E2E_IPHONE_BROWSER=chromium`
-nesta máquina WSL, que não tem as dependências do WebKit).
+Linha de base no fim da sessão: backend 772/773 (o 1 é o ritmo, ver
+abaixo), frontend 158/158 com lint limpo e build ok, E2E 36/36 no modo Docker
+(`E2E_IPHONE_BROWSER=chromium` nesta máquina WSL, sem as dependências do
+WebKit).
+Testes do backend que dependem da hora: `proStats.test.js` › "previsão de
+término" falha entre 21h e meia-noite de Brasília (o `CURRENT_DATE` do banco
+já é o dia seguinte em UTC: dá 9 dias em vez de 10). `backups.test.js` (dois
+testes de agenda) falhou em duas rodadas da suíte inteira e passou sozinho e
+na rodada seguinte: instável, provavelmente o relógio do Postgres no Docker
+adiantado (ver abaixo). Nenhum dos dois foi mexido nesta sessão.
 Capturas instáveis (39f e 39g): um rebuild do frontend pode mudar alguns
 pixels de antisserrilhado (cantos arredondados, ~30 px) sem mudar layout.
 Antes de culpar a mudança, gere um segundo "antes" (stash + rebuild) e meça
@@ -333,7 +345,9 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 - Preencher `OWNER.document` (CPF ou CNPJ) em `frontend/src/config/site.js`.
 - Revisão do advogado nos Termos e na Privacidade; depois, `LEGAL_DRAFT = false`
   e nova `TERMS_VERSION` nos dois arquivos.
-- Testar a desistência no sandbox do Mercado Pago real, com cartão e com Pix.
+- Testar em produção (o sandbox não cobre, ver "Sandbox do Mercado Pago"
+  abaixo): mensal com cartão real (R$ 6,90), conferir se chegam os webhooks
+  de assinatura, cancelar pelo app e desistir; anual com Pix e desistir.
 - Decidir se a vaga de fundador volta para a oferta quando a compra é desistida
   ou reembolsada (hoje não volta).
 - CSP: conferir o job E2E do CI (nginx real) e a aba Erros; sem violações,
@@ -341,11 +355,13 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
 - HSTS no nginx da VPS.
 - Conferir `ALLOWED_ORIGINS` em produção (ver "Ambientes e variáveis").
 
-### Fila (um pacote por item, nesta ordem)
+### Fila
 
-**39h em diante — Divisão das telas grandes** (feitos: 39 `queries.js`, 39b
+**39 — Divisão das telas grandes: concluído** (39 `queries.js`, 39b
 `Settings.vue`, 39c `Community.vue`, 39d `LibraryHeader.vue`, 39e
-`Dashboard.vue`, 39f `NavigationMenu.vue`, 39g `BookEditForm.vue`)
+`Dashboard.vue`, 39f `NavigationMenu.vue`, 39g `BookEditForm.vue`, 39h
+`PublicLibrary.vue`, 39i `YearInBooks.vue`, 39j `BookDialog.vue`). O roteiro
+abaixo vale para qualquer divisão futura.
 - Como foi no 39b: subcomponentes por seção em `components/<área>/`, cada um
   com as próprias folhas; nenhum texto, rótulo ou papel muda (os E2E
   selecionam por eles). Conferir com capturas antes/depois pixel a pixel
@@ -371,68 +387,78 @@ repetiu. Se voltar, dar um timeout maior a esse hook.
   `.fields-column` do BookEditForm no celular): os filhos diretos ordenados
   pela grade ficam no próprio arquivo; só sai para componente o que é um
   bloco único (com uma raiz, ela herda o escopo do pai).
-- Telas com mais de 1.100 linhas, subcomponentes por seção sem mudar
-  comportamento: `PublicLibrary.vue`, `YearInBooks.vue`, `BookDialog.vue`. Um pacote por tela
-  se ficar pesado. Rodar o E2E depois de cada uma.
 
-**40 — Padrões compartilhados**
-- Abas: `components/ui/AppTabs.vue` (do 39c: degradê nas bordas com
-  `useScrollEdges`, aba ativa centralizada, setas do teclado) só está na
-  Comunidade. Passar Admin (máscara própria, ícone nas abas: pede slot ou
-  `icon` no item) e PublicLibrary (`.public-tabs`) para ele; o visual das
-  bordas muda no Admin, conferir com captura.
-- Selo (`.offer-tag`, `.late-tag`, admin pills, `.source` da aba Erros) →
-  componente `AppTag`.
-- Cascata do celular (Community, Loans, ReadingNow) → classe global com `--i`.
-- Botões de texto (`.link-button`, `.action-link`, `.bar-link`,
-  `.pro-notice-link`) → `.link-btn` (criar).
-- Barra de progresso (Import, ReadingNow, ReadingNowCard) → componente.
-- `AdminFilters` nos radiogroups escritos à mão em AdminAccounts,
-  AdminModeration e AdminQueue.
-- Varredura de CSS e funções duplicados (data, número, dinheiro; ex.:
-  `money`/`shortDate` em SettingsPlan). Data 'YYYY-MM-DD' → Date local: usar
-  `localDate` de `utils/dates.js` (39g) no lugar de `fromIso`
-  (`utils/statPeriods.js`) e das cópias em `DateField.vue`, `YearInBooks.vue`
-  e `Legal.vue`; `isoDate` de statPeriods repete o `toApiDate`.
+**40 — Padrões compartilhados: concluído.** `AppTabs` (com `icon` e
+`--tabs-margin`) no Admin, Comunidade e página pública; `AppTag` (tom,
+variante, `caps`); `.stagger-in` global (Comunidade, Empréstimos, Lendo
+agora; Library e NavLinks têm movimento próprio e ficaram); `.link-btn`
+global (`.tall`, `.danger`, `.muted`); `ProgressBar` (translateX, cores por
+`--bar-fill`/`--bar-track`; o `GoalCard` ficou de fora pelo marcador de
+ritmo); `AdminFilters` em todo o Admin; `useDateTag`, `formatLongDate`,
+`localDate`/`toApiDate` no lugar das cópias (`isoDate`/`fromIso` saíram de
+`statPeriods.js`), `formatMoney` único.
 
-**41 — Métricas da página pública**
-- Contador próprio, sem cookies e sem IP guardado. Eventos: visita a
-  `/u/:usuario` (uma por sessão do navegador, hash do dia); cliques em
-  Compartilhar, "Criar conta" e "Entrar" no convite; cadastro com origem
-  `/u/...` pelo `redirect`. Agregado por dia, nada individual.
-- Tela no Admin com a conversão página → cadastro. Atualizar a Privacidade
-  se precisar (hoje diz "métricas internas").
-- Estender o cenário E2E da página pública para conferir a contagem.
-- Decisão pendente: "visitas da sua página" para o dono só no Pro?
+**41 — Métricas da página pública: concluído.** Tabela
+`public_page_daily` (028), `POST /public-metrics/u/:usuario`,
+`GET /profile-page/visits` (Pro: `page_visits`), `GET /admin/public-pages`
+(seção na aba Uso), cadastro conta pelo `redirect`. Visita uma vez por
+sessão e dia (`utils/publicVisit.js`, sessionStorage). Privacidade ganhou
+dois parágrafos (sem nova `TERMS_VERSION`: decidir com o advogado).
 
-**42 — Onboarding**
-- Depois de confirmar o e-mail: como prefere começar (Goodreads/CSV, códigos
-  de barras ou busca por título), 3 primeiros livros, ligar a biblioteca
-  pública (opcional, com prévia), progresso até o Vanguarda (10 livros).
-  Pode ser pulado e retomado; estado no servidor.
-- Os cenários E2E que entram logo após o cadastro vão precisar pular o
-  onboarding.
-- Decisão pendente: a meta anual entra no onboarding?
+**42 — Onboarding: concluído.** Migration 029 (`onboarding_status`,
+`_step`, `_start`; contas antigas como `done`), `GET/PATCH /onboarding`,
+`user.onboarding` no `/auth/me`, tela `/welcome` (`views/Onboarding.vue` e
+`components/onboarding/`), o Início leva a ela enquanto estiver pendente
+(`utils/onboarding.js`) e mostra "Continuar os primeiros passos" quando
+pulado. Sem meta anual. No E2E, `createAccount` conclui o onboarding
+(`onboarding: true` para deixar pendente); cenário em `onboarding.spec.js`.
 
-**Por último — README**
-- Pro e Mercado Pago (variáveis), desistência e reembolso; worker e jobs
-  (inclui `errors.digest`); migrations até a mais nova; `ADMIN_EMAIL`,
-  `BACKUP_DIR`, `ERROR_DIGEST_MINUTES` (a fila antiga citava `PROFILE_COVER`,
-  mas no código só existe o erro `PROFILE_COVER_INVALID`: conferir); CSP
-  (`nginx-security.conf`, `/csp-report`, como trocar para bloqueio),
-  `/client-errors`, Termos (`TERMS_VERSION`, `LEGAL_DRAFT`, `OWNER`); CI, E2E
-  (dois modos, `NODE_ENV=e2e`, `MP_API_URL`) e o fluxo de trabalho.
+**README: concluído** (Pro e Mercado Pago, desistência e reembolso, jobs,
+backups e erros, CSP, Termos, E2E e CI, migrations até a 029, fluxo de
+trabalho). `.env.example` ganhou as variáveis que faltavam.
+
+### Sandbox do Mercado Pago (sessões de 2026-11-13 e 14)
+Feito com conta de teste vendedora (TESTUSER5414…, id 3843975860, dona da
+aplicação; token `APP_USR-…` de produção dela) e compradora
+(`test_user_4506985576096390792@testuser.com`, id 3843975862), túnel ngrok,
+API/worker/Vite locais com `MP_SANDBOX=true`. Conta `comprador` (id 46) no
+banco local, com 2 pagamentos de teste aprovados.
+- **ok:** anual aprovado (checkout, webhook assinado, worker, e-mail);
+  segunda compra com Pro ativo entra na fila depois do primeiro ano.
+- **Reembolso não é testável no sandbox:** MP responde 401 "Unauthorized use
+  of live credentials" (pagamentos de teste saem com `live_mode=true`). A
+  falha foi tratada certo: nada mudou sem o estorno.
+- **Travou no checkout do MP, não no Librishelf:** cartão novo na compradora
+  ("Ops, ocorreu um erro"), então recusado/pendente não rodaram; mensal
+  (preapproval) recusado e `cancelled` pelo MP com o Visa salvo `APRO`.
+  Nenhum webhook de assinatura chegou (nem o do cancelamento): conferir em
+  produção se "Planos e assinaturas" está marcado.
+- Fundador anual está `available: false` nas ofertas (B9 não rodou).
+
+**43 — Ajustes do sandbox: concluído (2026-11-14).**
+1. Desistência com erro do MP agora dá `REFUND_PROVIDER_ERROR` ("Não foi
+   possível pedir o reembolso agora…"), nos dois locales.
+2. IPN (`?id=&topic=`, sem `data.id` e sem `x-signature`) recebe 200 e é
+   ignorada sem gravar (`isIpn` em `webhookService.js`); com `x-signature`
+   continua conferida.
+3. O log de diagnóstico da assinatura inválida ficou, com teste (formato sem
+   valores).
+4. Decisão: o Pro anual é **sempre 365 dias**, também em ano bissexto
+   (comentário no `YEAR_MS` de `paymentService.js`).
+5. `STATUS.BAD_GATEWAY` e `SERVICE_UNAVAILABLE` em `statusCodes.js`; nenhum
+   5xx solto no backend.
+Instável: `mercadopago-checkout.test.js` estourou os 5 s do `beforeAll`
+(14 cadastros com bcrypt) em 3 de 6 rodadas; o "sync confere na API" falhou
+2 vezes (`plan.pro` falso) e passou nas outras. Nenhum dos dois foi mexido.
+`backups.test.js` (dois testes de agenda) falhou de novo, na suíte e sozinho
+(`sweep` enfileira 0): o mesmo instável do relógio. Suíte: 773/775.
 
 ### Bugs anotados (fora de pacote)
-- `Unsubscribe.vue` manda para `/settings#settings-notifications`, mas o
-  `scrollBehavior` do router ignora o hash e a seção de avisos não tem esse
-  `id` (o `SettingsGroup` aceita `anchor`). Hoje cai no topo da Conta.
-- Feed da Comunidade, evento com mais de 3 livros: falta o espaço antes de
-  "e mais N" ("Vidas Secase mais 2"), em `CommunityFeedItem.vue` (o espaço
-  inicial do `<span>` some no template). Já era assim antes do 39c.
-- Biblioteca no computador (1366 px, menu lateral aberto): a busca fica
-  estreita entre o título e o ordenar e até o texto curto aparece cortado
-  ("Buscar li"). Já era assim antes do 39d (visto nas capturas).
+- Nenhum aberto. Corrigidos no fim da sessão de 2026-11-12: âncora
+  `#settings-notifications` do descadastro (`utils/anchor.js`,
+  `scrollBehavior` e `routeFocus`), espaço antes de "e mais N" no feed
+  (`CommunityFeedItem.vue`) e busca estreita da Biblioteca a 1366 px com o
+  menu (limite da linha única do `LibraryHeader` subiu para 1200 px).
 
 ### Lembrete guardado (não fazer agora)
 Apps iOS e Android: avaliar empacotar o PWA (Capacitor ou TWA) em vez de um

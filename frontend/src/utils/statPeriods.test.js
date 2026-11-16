@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { comparePeriods, chartPeriod, change, isoDate, fromIso } from './statPeriods.js'
+import { comparePeriods, chartPeriod, change } from './statPeriods.js'
 
 const today = new Date(2026, 10, 2) // 2 de novembro de 2026
 
@@ -35,10 +35,6 @@ describe('períodos das estatísticas', () => {
     expect(chartPeriod('thisYear', today)).toEqual({ from: '2026-01-01', to: '2026-11-02' })
     expect(chartPeriod('lastYear', today)).toEqual({ from: '2025-01-01', to: '2025-12-31' })
     expect(chartPeriod('last5', today)).toEqual({ from: '2022-01-01', to: '2026-11-02' })
-  })
-
-  it('datas ida e volta', () => {
-    expect(isoDate(fromIso('2026-03-09'))).toBe('2026-03-09')
   })
 
   it('variação em porcentagem e em valor', () => {

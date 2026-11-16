@@ -230,6 +230,8 @@
 </template>
 
 <script setup>
+import { localDate, toApiDate } from '../../utils/dates.js'
+import { useDateTag } from '../../composables/useDateTag.js'
 import { computed, reactive, ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../../services/api.js'
@@ -243,21 +245,21 @@ import ChartCanvas from '../ui/ChartCanvas.vue'
 import ChartDataTable from '../ui/ChartDataTable.vue'
 import DateField from '../form/DateField.vue'
 import ProChartBuilder from './ProChartBuilder.vue'
-import { COMPARE_PRESETS, comparePeriods, formatRange, change, isoDate, fromIso } from '../../utils/statPeriods.js'
+import { COMPARE_PRESETS, comparePeriods, formatRange, change } from '../../utils/statPeriods.js'
 
 const props = defineProps({
   year: { type: Number, required: true }
 })
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const { plan, canUse } = usePlan()
 
-const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
+const dateLocale = useDateTag()
 const enabled = computed(() => canUse('stats_advanced'))
 
 const num = (value, decimals = 0) =>
   value === null || value === undefined ? '—' : new Intl.NumberFormat(dateLocale.value, { maximumFractionDigits: decimals }).format(value)
-const shortDate = text => fromIso(text).toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short' })
+const shortDate = text => localDate(text).toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short' })
 const rangeLabel = side => formatRange(side.from, side.to, dateLocale.value)
 
 const palette = useChartPalette()
@@ -301,8 +303,8 @@ function changePreset(value) {
     // Começa do que está na tela, para ajustar em vez de digitar tudo
     const [a, b] = comparison.value ? [comparison.value.a, comparison.value.b] : comparePeriods('yearToDate')
     for (const [side, range] of [['a', a], ['b', b]]) {
-      custom[side].from = fromIso(range.from)
-      custom[side].to = fromIso(range.to)
+      custom[side].from = localDate(range.from)
+      custom[side].to = localDate(range.to)
     }
     return
   }
@@ -311,7 +313,7 @@ function changePreset(value) {
 
 function loadCompare() {
   const [a, b] = preset.value === 'custom'
-    ? ['a', 'b'].map(side => ({ from: isoDate(custom[side].from), to: isoDate(custom[side].to) }))
+    ? ['a', 'b'].map(side => ({ from: toApiDate(custom[side].from), to: toApiDate(custom[side].to) }))
     : comparePeriods(preset.value)
   return run(compareState, async () => {
     comparison.value = await api.getProCompare({ aFrom: a.from, aTo: a.to, bFrom: b.from, bTo: b.to })

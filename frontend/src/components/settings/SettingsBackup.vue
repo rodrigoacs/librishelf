@@ -158,6 +158,7 @@
 </template>
 
 <script setup>
+import { useDateTag } from '../../composables/useDateTag.js'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../../services/api.js'
@@ -171,7 +172,7 @@ import AppSwitch from '../ui/AppSwitch.vue'
 import SettingsRow from './SettingsRow.vue'
 import SettingsGroup from './SettingsGroup.vue'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const { canUse } = usePlan()
 const toast = useToast()
 const confirm = useConfirm()
@@ -183,7 +184,7 @@ const loadError = ref('')
 const busy = ref(false)
 const sheet = ref('')
 
-const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
+const dateLocale = useDateTag()
 const when = value => new Date(value).toLocaleString(dateLocale.value, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const size = bytes => (bytes < 1024 * 1024
   ? t('backup.kb', { n: Math.max(1, Math.round(bytes / 1024)) })

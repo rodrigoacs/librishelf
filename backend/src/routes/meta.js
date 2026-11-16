@@ -2,6 +2,7 @@ import express from 'express'
 import { metaLimiter, publicLimiter } from '../middlewares/rateLimiter.js'
 import * as metaService from '../services/metaService.js'
 import logger from '../utils/logger.js'
+import STATUS from '../utils/statusCodes.js'
 
 const router = express.Router()
 
@@ -18,7 +19,7 @@ router.get('/u/:username', metaLimiter, async (req, res) => {
     res.type('html').send(head)
   } catch (error) {
     logger.error('Erro ao montar meta da biblioteca pública', { error: error.message })
-    res.status(500).type('html').send('')
+    res.status(STATUS.INTERNAL_SERVER_ERROR).type('html').send('')
   }
 })
 
@@ -36,7 +37,7 @@ router.get('/u/:username/image.jpg', publicLimiter, async (req, res) => {
     res.type('jpeg').send(image.buffer)
   } catch (error) {
     logger.error('Erro ao montar a imagem da prévia', { error: error.message })
-    res.status(500).type('text').send('')
+    res.status(STATUS.INTERNAL_SERVER_ERROR).type('text').send('')
   }
 })
 
@@ -48,7 +49,7 @@ router.get('/u/:username/lists/:id', metaLimiter, async (req, res) => {
     res.type('html').send(head)
   } catch (error) {
     logger.error('Erro ao montar meta da lista pública', { error: error.message })
-    res.status(500).type('html').send('')
+    res.status(STATUS.INTERNAL_SERVER_ERROR).type('html').send('')
   }
 })
 
@@ -62,7 +63,7 @@ router.get('/u/:username/lists/:id/image.jpg', publicLimiter, async (req, res) =
     res.type('jpeg').send(image.buffer)
   } catch (error) {
     logger.error('Erro ao montar a imagem da lista', { error: error.message })
-    res.status(500).type('text').send('')
+    res.status(STATUS.INTERNAL_SERVER_ERROR).type('text').send('')
   }
 })
 

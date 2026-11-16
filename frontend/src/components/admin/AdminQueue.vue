@@ -105,22 +105,12 @@
             id="admin-queue-webhooks"
             class="section-title"
           >{{ t('admin.queue.webhooks') }}</h2>
-          <div
-            class="filters"
-            role="radiogroup"
-            :aria-label="t('admin.queue.webhooksFilter')"
-          >
-            <button
-              v-for="option in WEBHOOK_FILTERS"
-              :key="option"
-              type="button"
-              role="radio"
-              class="filter"
-              :class="{ active: filter === option }"
-              :aria-checked="filter === option"
-              @click="setFilter(option)"
-            >{{ t(`admin.queue.filters.${option}`) }}</button>
-          </div>
+          <AdminFilters
+            :model-value="filter"
+            :options="webhookFilters"
+            :label="t('admin.queue.webhooksFilter')"
+            @update:model-value="setFilter"
+          />
         </div>
         <p class="hint">{{ t('admin.queue.webhooksHint') }}</p>
         <div class="table-wrap">
@@ -187,6 +177,7 @@
 </template>
 
 <script setup>
+import AdminFilters from './AdminFilters.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -205,6 +196,7 @@ const call = useAdminCall()
 const toast = useToast()
 
 const WEBHOOK_FILTERS = ['error', 'pending', 'all']
+const webhookFilters = computed(() => WEBHOOK_FILTERS.map(value => ({ value, label: t(`admin.queue.filters.${value}`) })))
 const data = ref(null)
 const loading = ref(true)
 const failed = ref(false)
@@ -421,34 +413,4 @@ tbody tr:last-child td {
   font-size: var(--fs-sm);
 }
 
-.filters {
-  display: inline-flex;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  padding: var(--space-1);
-  gap: var(--space-1);
-}
-
-.filter {
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-}
-
-.filter.active {
-  background: rgba(var(--main-color-rgb), 0.16);
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.filter:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 1px;
-}
 </style>

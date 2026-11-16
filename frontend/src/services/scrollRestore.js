@@ -44,6 +44,22 @@ export function holdScroll() {
 }
 
 /** Resolve quando nenhuma tela está segurando a rolagem. */
+/**
+ * Elemento pelo id, quando aparecer (a tela pode montar a seção depois de
+ * carregar os dados). null depois de MAX_WAIT_MS.
+ */
+export function waitForElement(id) {
+  const started = performance.now()
+  return new Promise(resolve => {
+    const look = () => {
+      const el = document.getElementById(id)
+      if (el || performance.now() - started > MAX_WAIT_MS) resolve(el)
+      else requestAnimationFrame(look)
+    }
+    look()
+  })
+}
+
 export function waitForContent() {
   return new Promise(resolve => {
     nextTick(() => {

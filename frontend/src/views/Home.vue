@@ -29,6 +29,23 @@
     </PageHeader>
 
     <!-- Avisos entram junto com o conteúdo, não por cima do esqueleto -->
+    <!-- Pulou os primeiros passos (pacote 42): retoma de onde parou -->
+    <router-link
+      v-if="resumeOnboarding"
+      :to="{ name: 'onboarding' }"
+      class="notice"
+    >
+      <i
+        class="pi pi-compass"
+        aria-hidden="true"
+      ></i>
+      <span>{{ t('home.resumeOnboarding') }}</span>
+      <i
+        class="pi pi-angle-right notice-arrow"
+        aria-hidden="true"
+      ></i>
+    </router-link>
+
     <router-link
       v-if="!loading && pendingRequests > 0"
       :to="{ name: 'community' }"
@@ -347,6 +364,7 @@ import api from '../services/api.js'
 import BookItem from '../components/BookItem.vue'
 import ReadingNowCard from '../components/ReadingNowCard.vue'
 import AddBookDialog from '../components/AddBookDialog.vue'
+import { canResumeOnboarding } from '../utils/onboarding.js'
 import ReaderName from '../components/ReaderName.vue'
 import ReaderAvatar from '../components/ReaderAvatar.vue'
 import { currentUser } from '../services/session.js'
@@ -376,6 +394,7 @@ const total = ref(0)
 const readThisYear = ref(0)
 const events = ref([])
 const addDialogVisible = ref(false)
+const resumeOnboarding = computed(() => !loading.value && canResumeOnboarding(currentUser.value))
 const loadError = ref(false)
 const retrying = ref(false)
 

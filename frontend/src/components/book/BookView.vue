@@ -14,7 +14,7 @@
         <button
           v-if="titleClamped || titleExpanded"
           type="button"
-          class="link-btn title-toggle"
+          class="link-btn muted title-toggle"
           :aria-expanded="titleExpanded ? 'true' : 'false'"
           :aria-controls="titleId"
           @click="titleExpanded = !titleExpanded"
@@ -117,7 +117,7 @@
           {{ statusCaption }}
           <button
             type="button"
-            class="link-btn"
+            class="link-btn muted"
             :disabled="readSaving"
             @click="emit('change-status', currentStatus)"
           >{{ t('status.clear') }}</button>
@@ -396,27 +396,6 @@ const statusCaption = computed(() => {
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
-}
-
-.link-btn {
-  background: none;
-  border: none;
-  padding: var(--space-1);
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.link-btn:hover {
-  color: var(--text-primary);
-}
-
-.link-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 
 /* Editora · ano · ISBN */

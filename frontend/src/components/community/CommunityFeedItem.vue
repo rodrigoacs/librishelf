@@ -140,8 +140,10 @@
             v-if="item.isPublic"
             :to="bookLink(entry)"
             class="book-link small"
-          >{{ entry.title }}</router-link><template v-else>{{ entry.title }}</template>{{ index < Math.min(item.books.length, MANY_SHOWN) - 1 ? ', ' : '' }}</span>
-        <span v-if="item.books.length > MANY_SHOWN"> {{ t('communityView.and_more', { n: item.books.length - MANY_SHOWN }) }}</span>
+          >{{ entry.title }}</router-link><template v-else>{{ entry.title }}</template>{{ manySeparator(index) }}</span>
+        <!-- O espaço antes de "e mais" vem do separador acima: espaço solto no
+             começo do <span> o compilador do Vue descarta -->
+        <span v-if="item.books.length > MANY_SHOWN">{{ t('communityView.and_more', { n: item.books.length - MANY_SHOWN }) }}</span>
       </p>
     </div>
     <div
@@ -193,6 +195,13 @@ const spoilerHidden = computed(() => {
 
 function bookLink(entry) {
   return { name: 'public-library', params: { username: props.item.username }, query: { book: entry.bookId } }
+}
+
+// Entre os livros mostrados, vírgula; depois do último, espaço se vier "e mais N"
+function manySeparator(index) {
+  const shown = Math.min(props.item.books.length, MANY_SHOWN)
+  if (index < shown - 1) return ', '
+  return props.item.books.length > MANY_SHOWN ? ' ' : ''
 }
 </script>
 

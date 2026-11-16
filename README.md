@@ -19,6 +19,10 @@ Live at **[librishelf.com](https://librishelf.com)**.
 - **Community (opt-in)** — see who else has a book, their average rating and what people who have it also have. Follow other readers (they approve each request) and get a feed of what they add and finish. Everything is off until the user turns it on.
 - **Admin area** (`/admin`, desktop) — for accounts with `role = 'admin'`, after re-entering the password (unlocked for 30 idle minutes): site numbers and weekly sign-ups, the queue of reported reviews (hide / keep) and of reported profile photos (keep / remove), account search with suspend / reactivate (nothing is deleted; a suspended account can't sign in and its public pages disappear) a log of every admin action, usage (sign-up funnel, who uses each feature, daily counters such as camera scans and imports), moderation signals (frequent reporters, new accounts already reported), a per-account drawer (totals, privacy flags, history; resend confirmation) and a **System** tab: backend/frontend versions, database and pending migrations, disk and covers, SMTP status with a test email, Open Library calls and failure rate, rate-limit hits and the latest 500 errors. Optional: set `APP_VERSION` (e.g. the git commit) to show it there.
 - **Account control** — email confirmation, password recovery by email, change your password (signs out other sessions), sign out that ends the session on the server (the old cookie stops working), download all your data (JSON, including follows, blocks, likes and reports; or books as CSV) and delete your account with all its data. Usernames and emails are unique regardless of case (`Demo` = `demo`).
+- **Import** — Goodreads export or any CSV (pick the columns in a preview), with a guide for Skoob; runs in the background and fetches covers afterwards.
+- **Collection and loans** — who has your books and since when (free); copy photos, shelf location, price paid, collection value and loan reminders by email (Pro).
+- **First steps** — after confirming the email, new accounts choose how to start (Goodreads/CSV import, barcode or title search), add their first 3 books, optionally turn on the public library (with a preview) and see the road to the Vanguarda badge. It can be skipped and resumed from Home; the step is stored on the server.
+- **Pro plan** — paid with [Mercado Pago](https://www.mercadopago.com.br) (monthly subscription, annual, founder offers), 14-day free trial, 7-day withdrawal from inside the app. Pro adds advanced stats, collector tools, extra themes (also on your public page), automatic backups and your public page visits. Nothing that is free becomes paid. The first 100 accounts with a confirmed email and 10 books get the **Vanguarda** badge and Pro for life.
 - **Portuguese and English**, light and dark themes, six accent colors.
 
 ## Tech stack
@@ -36,11 +40,15 @@ backend/
   db/migrations/           incremental changes for existing databases
   db/manual/               optional, destructive scripts (never run automatically)
   src/                     Express app (routes → services → repositories)
+  src/worker.js            job queue (same image, own container)
 frontend/
   src/                     Vue app
   nginx.conf               production server + /api proxy
   nginx-security.conf      security headers and Content-Security-Policy (every location)
-docker-compose.yml
+e2e/                       Playwright end-to-end tests + fake Mercado Pago and SMTP
+.github/workflows/ci.yml   backend, frontend and E2E jobs
+docker-compose.yml         production: frontend, backend and worker on the "proxy" network
+docker-compose.local.yml   Postgres for development (127.0.0.1:5433)
 ```
 
 ## Running locally
@@ -80,6 +88,7 @@ docker-compose.yml
 
    ```sh
    cd backend && npm run server     # API on http://localhost:3050 (node --watch)
+   cd backend && npm run worker     # job queue: emails, imports, backups, expirations
    cd frontend && npm run dev       # app on http://localhost:5173
    ```
 
@@ -112,13 +121,34 @@ npm test                                  # unit + integration
 npm run test:unit                         # unit only, no database needed
 ```
 
+Mercado Pago, email and Open Library are faked in the integration tests (`setFetch()` in `services/mercadoPago.js`, `testOutbox()` in `mailService.js`, `tests/helpers/openLibraryMock.js`); with `NODE_ENV=test` nothing leaves the machine and rate limits are off.
+
 Frontend (no database or server needed):
 
 ```sh
 cd frontend
-npm test        # Vitest: src/utils and the pt/en locale files
-npm run lint    # ESLint (eslint-plugin-vue); npm run lint -- --fix fixes what it can
+npm test        # Vitest: src/utils, composables and the pt/en locale files
+npm run lint    # ESLint (eslint-plugin-vue), --max-warnings=0; npm run lint -- --fix fixes what it can
 ```
+
+### End-to-end (Playwright)
+
+`e2e/` runs real browsers (Pixel, iPhone and desktop) against fake Mercado Pago and SMTP servers (`e2e/fakes`). Tests select elements by their Portuguese accessible names, create their own users (the database is not cleaned between runs) and fail on any Content-Security-Policy violation. Two ways to run:
+
+```sh
+cd e2e && npm ci
+# 1. Docker, same as CI: production images (nginx with CSP and SSI)
+npm run stack:up && npm run test:stack && npm run stack:down
+# 2. No Docker: Playwright starts the fakes, backend + worker and `vite preview`
+docker compose -f ../docker-compose.local.yml exec db createdb -U librishelf librishelf_e2e   # once
+npm test
+```
+
+The backend runs with `NODE_ENV=e2e`: rate limits are off and `MP_API_URL` points Mercado Pago at the fake (it is ignored in every other environment). `npx playwright test --project=pixel` runs one device; without WebKit's system dependencies, `E2E_IPHONE_BROWSER=chromium` emulates the iPhone in Chromium.
+
+### CI
+
+`.github/workflows/ci.yml` runs on every push and pull request: backend (migrations on a fresh Postgres, unit and integration tests), frontend (lint, Vitest, build and an `nginx -t` check of the production config) and E2E (the Docker stack and Playwright, with traces uploaded when something fails).
 
 ## Deploying with Docker
 
@@ -176,11 +206,57 @@ To send as `@librishelf.com` without landing in spam, add the SPF and DKIM recor
 
 ### Background jobs (worker)
 
-The `worker` service runs the job queue (table `librishelf.jobs`, consumed with `FOR UPDATE SKIP LOCKED`; no Redis): Pro expiry, releasing founder slots held by unpaid checkouts, cleanup, and — in later releases — payment reconciliation, emails, imports and backups. It uses the same image and `.env` as the backend; `docker compose up -d` starts both. Locally: `npm run worker` (or `worker:local`). More than one worker is fine: each job is taken by one only.
+The `worker` service runs the job queue (table `librishelf.jobs`, consumed with `FOR UPDATE SKIP LOCKED`; no Redis). It uses the same image and `.env` as the backend; `docker compose up -d` starts both. Locally: `npm run worker` (or `worker:local`). More than one worker is fine: each job is taken by one only. A job that keeps failing is retried with backoff and then given up (it shows up in Admin → Errors).
+
+| Job | When | What |
+|-----|------|------|
+| `entitlements.expire` | every 15 min | ends Pro that ran out |
+| `reservations.release` | every 5 min | frees founder slots held by unpaid checkouts (`CHECKOUT_TTL_MINUTES`) |
+| `mercadopago.reconcile` | daily | asks Mercado Pago about payments the webhook may have missed |
+| `webhook.process` | on demand | processes a Mercado Pago notification (idempotent) |
+| `billing.reminders` | hourly | finds annual plans and free trials about to end and queues the reminder emails |
+| `email.send` | on demand | queued emails, within the mailbox daily limit (`MAIL_DAILY_LIMIT`, `MAIL_DIRECT_RESERVE`) |
+| `follow-emails.sweep` | every 5 min | follower notifications, at most one per `FOLLOW_EMAIL_INTERVAL_HOURS` |
+| `import.run`, `import.covers` | on demand | CSV imports and their covers (`IMPORT_COVER_PAUSE_MS` between Open Library calls) |
+| `backups.sweep`, `backup.create` | hourly / on demand | automatic backups (Pro) |
+| `errors.digest` | every 15 min | emails `ADMIN_EMAIL` a summary of new errors, at most every `ERROR_DIGEST_MINUTES` (default 60, minimum 5) |
+| `jobs.cleanup`, `tokens.cleanup`, `imports.cleanup` | daily | removes old jobs, expired tokens, forgotten import drafts and files of failed imports |
 
 ```sh
 docker compose logs -f worker
 ```
+
+### Pro and Mercado Pago
+
+Payments go through Mercado Pago's REST API with `fetch` (no SDK). Pro is granted only by the webhook or by asking the API (`paymentService.processPayment`, idempotent), never by the browser's return URL. Checkout requires a confirmed email and the current Terms accepted.
+
+```sh
+MP_ACCESS_TOKEN=APP_USR-...             # Your integrations → app → Credentials (TEST-... in development). Empty: checkout off
+MP_WEBHOOK_SECRET=...                   # Webhooks → secret key; events "Payments" and "Plans and subscriptions"
+# MP_NOTIFICATION_URL=...               # default {APP_URL}/api/webhooks/mercadopago (use a tunnel in development)
+# MP_SANDBOX=false                      # sandbox checkout link
+# CHECKOUT_TTL_MINUTES=30               # how long a checkout (and a founder slot) is held
+# SUBSCRIPTION_GRACE_DAYS=3             # monthly: days of Pro after the paid month while Mercado Pago retries
+```
+
+- **Withdrawal (7 days)** — Brazilian consumer law (CDC art. 49, Decree 7.962/2013): the buyer can withdraw from inside the app (Account → plan → billing history) within 7 days of the payment. The app cancels the subscription (monthly), asks Mercado Pago for a full refund, removes that purchase's Pro and emails a confirmation. Only the first charge of a subscription qualifies (`withdrawalRules.js`).
+- **Refunds** — refund in the Mercado Pago dashboard, then mark it in Admin → Pro (it removes the Pro of that purchase and stops the renewal). A refund or chargeback that arrives by webhook does the same automatically.
+- Offers, prices and founder slots are edited in Admin → Pro. Founder slots do not come back after a withdrawal or refund.
+
+### Backups, errors and logs
+
+- **Automatic backups (Pro)** go to `BACKUP_DIR` (default `UPLOAD_DIR/backups`, i.e. the `./uploads` volume); the newest `BACKUP_KEEP` (default 5) per account are kept.
+- **Errors** — 500s from the API, jobs that gave up, failed webhooks, browser errors (`POST /client-errors`, also from the public page) and CSP violations all land in one table (`error_reports`, grouped by signature, no personal data) and in Admin → Errors; `errors.digest` emails new ones to `ADMIN_EMAIL`.
+- **Logs** — `LOG_FORMAT=json` (one line per event; the default in production) or `pretty`; `LOG_LEVEL` is `debug`, `info` (default in production), `warn` or `error`. Logs never contain full emails, tokens, passwords or payment bodies.
+- `APP_VERSION` (e.g. the git commit) shows in Admin → System; `MAIL_LOGO_URL` changes the logo in emails; `APP_TIME_ZONE` (default `America/Sao_Paulo`) sets the day used in emails and daily counts.
+
+### Content-Security-Policy
+
+`frontend/nginx-security.conf` (included in every nginx `location`) sets the security headers and a strict CSP: no `unsafe-inline`, no `unsafe-eval` (only `wasm-unsafe-eval`, for the barcode reader), nothing from other domains. It ships as `Content-Security-Policy-Report-Only`: browsers report violations to `/api/csp-report` (they show up in Admin → Errors) without blocking. Once the E2E job (which fails on any violation) and the Errors tab stay clean in production, switch to blocking by renaming the header to `Content-Security-Policy` in that file and rebuilding the frontend image. HSTS belongs on the host nginx, not in the container.
+
+### Terms and privacy
+
+The Terms of Use and the Privacy Policy are accepted together. `TERMS_VERSION` lives in `backend/src/config/terms.js` **and** `frontend/src/config/site.js` and must match; changing it makes every user accept again on their next visit (checkout is refused until then). `frontend/src/config/site.js` also holds `OWNER` (name, document, contact shown in the texts) and `LEGAL_DRAFT` (shows a "draft" notice while the texts await legal review).
 
 ### Upgrading an existing installation
 
@@ -190,6 +266,8 @@ docker compose build
 docker compose run --rm backend npm run db:migrate:docker   # the API refuses to start with pending migrations
 docker compose up -d
 ```
+
+Migrations live in `backend/db/migrations` (`001` to `029_onboarding`, each in its own transaction) and the same SQL is appended, idempotent, to `db/schema.sql` for fresh installs. Recent ones: `018`–`019` Pro and checkout, `020` email sends, `021` imports, `022` collector, `023`–`026` personalization, backups, profile cover and public page, `027` error reports, `028` public page counters, `029` first steps (accounts that already existed are marked as done, so only new ones see them).
 
 Migrations must run as the role that **owns** the tables (the same `DB_USER` the app uses, if it created them). Back up first: `003_per_user_names_and_community` moves authors, publishers and tags from shared tables to per-user ones (each user gets their own copy; case-only duplicates are merged).
 
@@ -216,7 +294,15 @@ Then sign out and in again (or reload) and **Admin** shows in the menu. `npm run
 
 ## Privacy
 
-Libraries are private unless the owner turns on sharing; community and followers are separate opt-ins, both off by default. ISBN lookups go from the server to Open Library with only the ISBN. Session uses a single essential httpOnly cookie (admins get a second one, `admin_unlock`, while the admin area is unlocked); usage is counted as daily totals with no user or IP attached (IPs that hit a rate limit stay only in memory, for at most 2 hours); fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
+Libraries are private unless the owner turns on sharing; community and followers are separate opt-ins, both off by default. ISBN lookups go from the server to Open Library with only the ISBN. Session uses a single essential httpOnly cookie (admins get a second one, `admin_unlock`, while the admin area is unlocked); usage is counted as daily totals with no user or IP attached (IPs that hit a rate limit stay only in memory, for at most 2 hours). Public pages count visits, shares, invite clicks and sign-ups per page and per day, with no cookie, IP or visitor account; the browser remembers in `sessionStorage` that today's visit was counted. Fonts are self-hosted and the app loads nothing from third parties. See the in-app privacy policy at `/privacy`.
+
+## Development workflow
+
+- One change ("package") at a time, finished and tested before the next; big screens are split into section components without changing texts, labels or roles, checked with before/after screenshots.
+- Native Node over packages: ESM only, `--env-file` instead of dotenv, `--watch` instead of nodemon, `fetch` instead of axios or SDKs.
+- Thin routes (validate → service → respond), SQL grouped per domain in `database/queries/` with `$1` parameters, controlled errors as `httpError(message, status, 'STABLE_CODE')` translated by the frontend via `errors.<CODE>` in both locales.
+- Every UI text goes in `frontend/src/locales/pt.json` and `en.json` with the same keys, parameters and plural forms (a test checks it). Design tokens from `frontend/src/assets/main.css` only; mobile first.
+- New behavior comes with tests; run what the change touches (backend, frontend and E2E) before calling it done.
 
 ---
 

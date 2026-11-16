@@ -121,6 +121,10 @@
 </template>
 
 <script setup>
+import { formatMoney } from '../../utils/money.js'
+import { formatLongDate } from '../../utils/dates.js'
+import { formatShortDate } from '../admin/adminCall.js'
+import { useDateTag } from '../../composables/useDateTag.js'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -144,10 +148,10 @@ const historyLoading = ref(false)
 const historyFailed = ref(false)
 const payments = ref([])
 
-const tag = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
-const longDate = value => new Date(value).toLocaleDateString(tag.value, { day: 'numeric', month: 'long', year: 'numeric' })
-const shortDate = value => (value ? new Date(value).toLocaleDateString(tag.value, { dateStyle: 'short' }) : '')
-const money = (cents, currency = 'BRL') => (cents / 100).toLocaleString(tag.value, { style: 'currency', currency })
+const tag = useDateTag()
+const longDate = value => formatLongDate(value, tag.value)
+const shortDate = value => formatShortDate(value, locale.value)
+const money = (cents, currency = 'BRL') => formatMoney(cents, tag.value, currency)
 
 const current = computed(() => (plan.value?.pro ? plan.value.current : null))
 const currentName = computed(() => (current.value ? t(`plan.kinds.${current.value.kind}`) : t('settings.plan.free')))

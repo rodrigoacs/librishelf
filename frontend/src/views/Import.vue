@@ -224,14 +224,13 @@
         id="import-running-title"
         class="section-title"
       >{{ t('settings.data.importing') }}</h2>
-      <div
-        class="bar"
-        role="progressbar"
-        :aria-valuenow="current.processed"
-        aria-valuemin="0"
-        :aria-valuemax="current.total"
-        :aria-label="t('settings.data.importing')"
-      ><span :style="{ width: `${percent(current.processed, current.total)}%` }"></span></div>
+      <ProgressBar
+        class="import-bar"
+        :value="current.processed"
+        :max="current.total"
+        :label="t('settings.data.importing')"
+        size="lg"
+      />
       <p class="text">{{ t('import.progress', { done: current.processed, total: current.total }) }}</p>
       <p class="muted small">{{ t('import.canLeave') }}</p>
     </section>
@@ -320,6 +319,7 @@
 </template>
 
 <script setup>
+import ProgressBar from '../components/ui/ProgressBar.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/ui/PageHeader.vue'
@@ -364,7 +364,6 @@ const booksToImport = computed(() => {
   return Math.max(0, p.total - (p.untitled || 0) - (includeWant.value ? 0 : p.want || 0))
 })
 
-const percent = (done, total) => (total ? Math.min(100, Math.round((done / total) * 100)) : 0)
 
 function reason(error) {
   return translateApiError(error.code, error.params, error.reason)
@@ -748,18 +747,8 @@ onBeforeUnmount(() => clearTimeout(timer))
   gap: var(--space-5);
 }
 
-.bar {
-  height: 10px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-input);
-  overflow: hidden;
-}
-
-.bar span {
-  display: block;
-  height: 100%;
-  background: var(--main-color);
-  transition: width 0.3s ease;
+.import-bar {
+  --bar-fill: var(--main-color);
 }
 
 .covers {

@@ -832,6 +832,55 @@ body {
 /* Toque: alvos de pelo menos 44 × 44 px (WCAG 2.5.5). O !important fica só em
    min-height/min-width: o CSS com escopo dos componentes empata em
    especificidade com estas classes e entraria depois. */
+/* Botão ou link de texto ("Ver os planos", "Tirar status", "Excluir").
+   Link (<a>) fica sublinhado como os outros; botão não.
+     .tall   alvo de 44 px também no computador (ações soltas numa linha)
+     .danger em vermelho
+     .muted  discreto e sublinhado (dentro de uma frase) */
+.link-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--main-color);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-sm);
+}
+
+.link-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.link-btn.tall {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.link-btn.danger {
+  color: var(--red);
+}
+
+.link-btn.muted {
+  padding: var(--space-1);
+  color: var(--text-secondary);
+  font-weight: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link-btn.muted:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
 @media (pointer: coarse) {
   .btn,
   .btn.btn-sm,
@@ -847,7 +896,7 @@ body {
   .tag-bar-row,
   .rank-row,
   .skip-link,
-  .link-button {
+  .recent-book {
     min-height: 2.75rem !important;
   }
 
@@ -1075,7 +1124,28 @@ html[data-nav="book-close"]::view-transition-new(root) {
   }
 }
 
+/* Cascata de entrada no celular (feed, empréstimos, lendo agora): o item
+   leva `:style="{ '--i': índice }"`; teto no 10º para a lista longa não
+   demorar. Só transform e opacity; sem movimento reduzido, nada. */
+@media (max-width: 639.98px) {
+  .stagger-in {
+    animation: stagger-in var(--dur-medium) var(--ease-enter) both;
+    animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));
+  }
+}
+
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .stagger-in {
+    animation: none !important;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {

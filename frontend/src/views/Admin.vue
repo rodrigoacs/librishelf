@@ -65,39 +65,13 @@
     </section>
 
     <template v-else>
-      <div
-        ref="tabsEl"
-        class="app-tabs"
-        :class="{ 'more-start': tabsEdges.moreStart.value, 'more-end': tabsEdges.moreEnd.value }"
-        role="tablist"
-        :aria-label="t('admin.title')"
-      >
-        <button
-          v-for="tab in tabs"
-          :id="`admin-tab-${tab.key}`"
-          :key="tab.key"
-          type="button"
-          role="tab"
-          class="app-tab"
-          :class="{ active: activeTab === tab.key }"
-          :aria-selected="activeTab === tab.key"
-          :aria-controls="`admin-panel-${tab.key}`"
-          :tabindex="activeTab === tab.key ? 0 : -1"
-          @click="selectTab(tab.key)"
-          @keydown.right.prevent="moveTab(1)"
-          @keydown.left.prevent="moveTab(-1)"
-        >
-          <i
-            :class="tab.icon"
-            aria-hidden="true"
-          ></i>
-          {{ tab.label }}
-          <span
-            v-if="tab.count"
-            class="app-tab-count"
-          >{{ tab.count }}</span>
-        </button>
-      </div>
+      <AppTabs
+        :model-value="activeTab"
+        :tabs="tabs"
+        :label="t('admin.title')"
+        id-prefix="admin-"
+        @update:model-value="selectTab"
+      />
 
       <section
         :id="`admin-panel-${activeTab}`"
@@ -148,7 +122,7 @@
 </template>
 
 <script setup>
-import { useScrollEdges } from '../composables/useScrollEdges.js'
+import AppTabs from '../components/ui/AppTabs.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import { computed, nextTick, onMounted, provide, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -176,9 +150,6 @@ import { ADMIN_CALL, LockedError } from '../components/admin/adminCall.js'
  */
 const { t } = useI18n()
 
-// Abas que não cabem (celular): degradê na borda indica que dá para rolar
-const tabsEl = ref(null)
-const tabsEdges = useScrollEdges(tabsEl)
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -235,12 +206,6 @@ function selectTab(key, options = {}) {
   if (key === 'accounts' && options.status) accountStatus.value = options.status
   activeTab.value = key
   router.replace({ query: { tab: key === 'overview' ? undefined : key } })
-}
-
-function moveTab(step) {
-  const next = TAB_KEYS[(TAB_KEYS.indexOf(activeTab.value) + step + TAB_KEYS.length) % TAB_KEYS.length]
-  selectTab(next)
-  document.getElementById(`admin-tab-${next}`)?.focus()
 }
 
 function openUser(id) {
@@ -311,9 +276,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Abas em main.css (.app-tabs) */
-.app-tabs {
-  margin-bottom: var(--space-6);
+.admin-container {
+  --tabs-margin: 0 0 var(--space-6);
 }
 
 .loading {
@@ -366,19 +330,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-}
-
-/* Há abas escondidas: a borda some num degradê (antes cortava em "Modera") */
-.app-tabs.more-end {
-  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
-}
-
-.app-tabs.more-start {
-  mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
-}
-
-.app-tabs.more-start.more-end {
-  mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
 }
 
 .panel {

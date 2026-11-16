@@ -1,5 +1,6 @@
 import { httpError } from '../utils/httpError.js'
 import logger from '../utils/logger.js'
+import STATUS from '../utils/statusCodes.js'
 
 /**
  * Cliente da API REST do Mercado Pago com fetch (sem SDK).
@@ -55,7 +56,7 @@ export function isConfigured() {
 
 async function request(path, { method = 'GET', body, idempotencyKey } = {}) {
   if (!isConfigured()) {
-    throw httpError('Pagamentos indisponíveis no momento.', 503, 'PAYMENTS_UNAVAILABLE')
+    throw httpError('Pagamentos indisponíveis no momento.', STATUS.SERVICE_UNAVAILABLE, 'PAYMENTS_UNAVAILABLE')
   }
 
   const headers = {

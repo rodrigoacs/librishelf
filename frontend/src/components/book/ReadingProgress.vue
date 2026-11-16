@@ -3,20 +3,12 @@
     class="reading-progress"
     :class="{ compact }"
   >
-    <div
-      class="bar"
-      role="progressbar"
-      :aria-valuenow="percent ?? 0"
-      aria-valuemin="0"
-      aria-valuemax="100"
-      :aria-valuetext="label"
-      :aria-label="t('progress.label')"
-    >
-      <span
-        class="fill"
-        :style="{ width: `${percent ?? 0}%` }"
-      ></span>
-    </div>
+    <ProgressBar
+      :value="percent ?? 0"
+      :label="t('progress.label')"
+      :value-text="label"
+      :size="compact ? 'sm' : 'md'"
+    />
 
     <div
       v-if="!editing"
@@ -143,6 +135,7 @@
 </template>
 
 <script setup>
+import ProgressBar from '../ui/ProgressBar.vue'
 import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -270,31 +263,6 @@ async function save() {
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
-}
-
-.bar {
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-input);
-  overflow: hidden;
-}
-
-.compact .bar {
-  height: 6px;
-}
-
-.fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--main-solid);
-  transition: width 0.3s ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fill {
-    transition: none;
-  }
 }
 
 .summary {

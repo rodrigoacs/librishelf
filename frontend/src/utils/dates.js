@@ -38,6 +38,13 @@ export function dateTag(locale) {
   return locale === 'en' ? 'en-US' : 'pt-BR'
 }
 
+/** Data (Date, instante ISO ou 'YYYY-MM-DD') → "9 de novembro de 2026"; vazia ou inválida → ''. */
+export function formatLongDate(value, tag) {
+  if (!value) return ''
+  const date = value instanceof Date ? value : (/^\d{4}-\d{2}-\d{2}$/.test(value) ? localDate(value) : new Date(value))
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(tag, { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 /** Os 12 meses no idioma: style 'long' | 'short' | 'narrow' (sem o ponto de "jan."). */
 export function monthNames(tag, style = 'long') {
   return Array.from({ length: 12 }, (_, i) =>

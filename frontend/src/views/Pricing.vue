@@ -3,7 +3,7 @@
     <PublicBar v-if="!isAuthenticated">
       <router-link
         :to="{ name: 'login', query: { redirect: route.fullPath } }"
-        class="bar-link"
+        class="link-btn tall"
       >{{ t('plan.login') }}</router-link>
     </PublicBar>
 
@@ -67,14 +67,16 @@
                 :id="`offer-${offer.code}`"
                 class="offer-name"
               >{{ t(`plan.offers.${offer.code}.name`) }}</component>
-              <span
+              <AppTag
                 v-if="isCurrent(offer)"
-                class="offer-tag current-tag"
-              >{{ t('plan.yourPlan') }}</span>
-              <span
+                variant="outline"
+                caps
+              >{{ t('plan.yourPlan') }}</AppTag>
+              <AppTag
                 v-else-if="offer.code === recommended"
-                class="offer-tag"
-              >{{ t('plan.recommended') }}</span>
+                variant="solid"
+                caps
+              >{{ t('plan.recommended') }}</AppTag>
             </div>
             <p class="offer-price">
               <span class="amount">{{ money(offer.priceCents) }}</span>
@@ -179,6 +181,10 @@
 </template>
 
 <script setup>
+import { formatMoney } from '../utils/money.js'
+import { formatLongDate } from '../utils/dates.js'
+import { useDateTag } from '../composables/useDateTag.js'
+import AppTag from '../components/ui/AppTag.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -199,7 +205,7 @@ import { PRO_FEATURES, FREE_FEATURES, FREE_FEATURES_READY, OFFER_ORDER } from '.
  * Preços e o que o Pro traz. Aberta para quem não entrou: o botão de assinar
  * leva ao login e volta para cá. Assinar abre o checkout do Mercado Pago.
  */
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -210,9 +216,9 @@ const failed = ref(false)
 const busy = ref('')
 const recommended = 'annual'
 
-const tag = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
-const money = cents => (cents / 100).toLocaleString(tag.value, { style: 'currency', currency: 'BRL' })
-const longDate = value => new Date(value).toLocaleDateString(tag.value, { day: 'numeric', month: 'long', year: 'numeric' })
+const tag = useDateTag()
+const money = cents => formatMoney(cents, tag.value)
+const longDate = value => formatLongDate(value, tag.value)
 
 const current = computed(() => plan.value?.current ?? null)
 const lifetime = computed(() => Boolean(current.value?.lifetime))
@@ -315,15 +321,6 @@ onMounted(load)
   margin-bottom: 0;
 }
 
-.bar-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  color: var(--main-color);
-  font-weight: 600;
-  font-size: var(--fs-sm);
-}
-
 .current-note {
   margin: 0;
   padding: var(--space-3) var(--space-4);
@@ -402,24 +399,6 @@ onMounted(load)
   margin: 0;
   font-size: var(--fs-md);
   color: var(--text-primary);
-}
-
-.offer-tag {
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--main-solid);
-  color: var(--on-main);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.offer-tag.current-tag {
-  background: transparent;
-  color: var(--main-color);
-  box-shadow: inset 0 0 0 1px var(--main-color);
 }
 
 .offer-price {

@@ -14,10 +14,12 @@
       <router-link
         :to="{ name: 'register', query: { redirect } }"
         class="btn btn-primary"
+        @click="api.trackPublicPage(username, 'invite_register')"
       >{{ t('publicPage.invite.cta') }}</router-link>
       <router-link
         :to="{ name: 'login', query: { redirect } }"
         class="btn btn-text btn-secondary"
+        @click="api.trackPublicPage(username, 'invite_login')"
       >{{ t('publicPage.invite.login') }}</router-link>
     </div>
     <IconButton
@@ -33,9 +35,12 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IconButton from '../form/IconButton.vue'
+import api from '../../services/api.js'
 
 defineProps({
   name: { type: String, required: true },
+  // Dono da página: os cliques em "Criar conta" e "Entrar" contam para ela
+  username: { type: String, required: true },
   // Volta para cá depois do cadastro/login
   redirect: { type: String, required: true }
 })

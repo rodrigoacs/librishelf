@@ -12,6 +12,7 @@
       <li
         v-for="(item, index) in items"
         :key="item.bookId"
+        class="stagger-in"
         :style="{ '--i': index }"
       >
         <button
@@ -37,13 +38,10 @@
               v-if="percentOf(item) !== null"
               class="reading-progress"
             >
-              <span
-                class="progress-track"
-                aria-hidden="true"
-              ><span
-                class="progress-fill"
-                :style="{ width: `${percentOf(item)}%` }"
-              ></span></span>
+              <ProgressBar
+                :value="percentOf(item)"
+                size="xs"
+              />
               <span class="progress-label">{{ progressLabel(item) }}</span>
             </span>
           </span>
@@ -54,6 +52,7 @@
 </template>
 
 <script setup>
+import ProgressBar from '../ui/ProgressBar.vue'
 import { useI18n } from 'vue-i18n'
 import BookCover from '../BookCover.vue'
 
@@ -157,43 +156,13 @@ function progressLabel(item) {
   margin-top: var(--space-1);
 }
 
-.progress-track {
-  display: block;
-  height: 4px;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: var(--border-color);
-}
-
-.progress-fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--main-color);
+.reading-progress {
+  --bar-track: var(--border-color);
+  --bar-fill: var(--main-color);
 }
 
 .progress-label {
   color: var(--text-secondary);
   font-size: var(--fs-xs);
-}
-
-@media (max-width: 639.98px) {
-  .reading-list li {
-    animation: public-in var(--dur-medium) var(--ease-enter) both;
-    animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));
-  }
-}
-
-@keyframes public-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 12px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reading-list li {
-    animation: none !important;
-  }
 }
 </style>

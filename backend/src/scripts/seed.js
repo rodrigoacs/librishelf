@@ -329,8 +329,8 @@ async function insertUsers(users) {
   const hash = await bcrypt.hash(PASSWORD, 10)
   for (const user of users) {
     const { rows: [row] } = await db.query(`
-      INSERT INTO librishelf.users (name, email, password_hash, is_public, show_in_community, show_activity, created_at, email_verified_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO librishelf.users (name, email, password_hash, is_public, show_in_community, show_activity, created_at, email_verified_at, onboarding_status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'done')
       RETURNING id
     `, [user.name, `${user.name.toLowerCase()}@exemplo.test`, hash, user.isPublic, user.showInCommunity, user.showActivity,
       new Date(user.createdAt), user.unverified ? null : new Date(user.createdAt)])

@@ -176,7 +176,9 @@ async function handleRegister() {
       email: email.value.trim(),
       password: password.value,
       locale: locale.value,
-      acceptTerms: acceptTerms.value
+      acceptTerms: acceptTerms.value,
+      // Veio de uma página pública (/u/...): conta na conversão dela
+      redirect: typeof route.query.redirect === 'string' ? route.query.redirect : undefined
     })
 
     toast.add({ severity: 'success', detail: t('register.accountCreatedVerify'), life: 7000 })

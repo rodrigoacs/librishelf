@@ -56,7 +56,7 @@ function userAgent() {
 }
 
 function unavailable(cause) {
-  const error = httpError('A busca no Open Library está indisponível no momento. Tente de novo mais tarde.', 502, 'OPENLIBRARY_UNAVAILABLE')
+  const error = httpError('A busca no Open Library está indisponível no momento. Tente de novo mais tarde.', STATUS.BAD_GATEWAY, 'OPENLIBRARY_UNAVAILABLE')
   error.cause = cause
   return error
 }
@@ -331,10 +331,10 @@ export async function fetchCover(coverId, size = 'L') {
   record(startedAt, 'ok')
 
   const declared = Number(response.headers.get('content-length'))
-  if (declared > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502, 'COVER_TOO_LARGE')
+  if (declared > MAX_COVER_BYTES) throw httpError('Capa grande demais.', STATUS.BAD_GATEWAY, 'COVER_TOO_LARGE')
 
   const buffer = Buffer.from(await response.arrayBuffer())
-  if (buffer.length > MAX_COVER_BYTES) throw httpError('Capa grande demais.', 502, 'COVER_TOO_LARGE')
+  if (buffer.length > MAX_COVER_BYTES) throw httpError('Capa grande demais.', STATUS.BAD_GATEWAY, 'COVER_TOO_LARGE')
 
   cacheSet(cache, id, buffer, CACHE_TTL_MS, max)
   return buffer

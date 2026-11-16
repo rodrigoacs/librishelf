@@ -20,6 +20,7 @@
       interactive
       @click="openFavorites"
     />
+    <ProfilePageVisits v-if="publicName" />
     <router-link
       v-if="publicName"
       :to="{ name: 'public-library', params: { username: publicName } }"
@@ -183,6 +184,7 @@ import IconButton from '../form/IconButton.vue'
 import BookCover from '../BookCover.vue'
 import SettingsRow from './SettingsRow.vue'
 import SettingsGroup from './SettingsGroup.vue'
+import ProfilePageVisits from './ProfilePageVisits.vue'
 import api from '../../services/api.js'
 import { currentUser } from '../../services/session.js'
 import { useToast } from '../../services/toast.js'

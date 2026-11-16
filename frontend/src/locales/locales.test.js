@@ -50,7 +50,9 @@ const PROPER = new Set([
   // exemplos ("Ex.: Duna", "E.g. Dune")
   'Ex', 'Duna', 'Dune', 'Emprestados', 'Lent', 'Ficção', 'Clássicos', 'Fiction', 'Classics', 'I',
   // plano e meios de pagamento
-  'Pro', 'Mercado', 'Pago', 'Pix', 'App', 'Store', 'Play', 'Apple', 'Skoob'
+  'Pro', 'Mercado', 'Pago', 'Pix', 'App', 'Store', 'Play', 'Apple', 'Skoob',
+  // selo das primeiras contas
+  'Vanguarda'
 ])
 
 /** Rótulo curto (botão, título, campo): até 5 palavras e sem ponto final. */

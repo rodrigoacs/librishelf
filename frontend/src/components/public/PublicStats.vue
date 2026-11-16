@@ -107,7 +107,7 @@
           >
             <button
               type="button"
-              class="link-button"
+              class="recent-book"
               @click="openBook(item.book_id)"
             >
               <span class="recent-title">{{ item.title }}</span>
@@ -141,7 +141,7 @@
           >
             <button
               type="button"
-              class="link-button"
+              class="recent-book"
               @click="openBook(item.book_id)"
             >
               <span class="recent-title">{{ item.title }}</span>
@@ -342,7 +342,7 @@ const openBook = id => emit('open', id)
   border-bottom: none;
 }
 
-.link-button {
+.recent-book {
   background: none;
   border: none;
   padding: 0;
@@ -355,11 +355,11 @@ const openBook = id => emit('open', id)
   font: inherit;
 }
 
-.link-button:hover .recent-title {
+.recent-book:hover .recent-title {
   color: var(--main-color);
 }
 
-.link-button:focus-visible {
+.recent-book:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
   border-radius: var(--radius-sm);

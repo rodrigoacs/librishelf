@@ -18,43 +18,14 @@
       class="dialog-shell"
       :class="{ viewing: !isEditing }"
     >
-      <!-- Celular: tela cheia com "‹ Biblioteca" e as ações no topo -->
-      <div
+      <BookPageBar
         v-if="phone"
-        class="page-bar"
-      >
-        <button
-          type="button"
-          class="page-back"
-          data-press
-          @click="requestClose"
-        >
-          <i
-            class="pi pi-chevron-left"
-            aria-hidden="true"
-          ></i>
-          <span>{{ backLabel }}</span>
-        </button>
-        <div
-          v-if="!isReadOnly && !loading && !loadFailed && !isEditing"
-          class="book-actions page-actions"
-        >
-          <AppButton
-            :label="t('bookDialog.editShort')"
-            class="btn-secondary btn-sm action-edit"
-            @click="editMode"
-          />
-          <IconButton
-            icon="pi pi-ellipsis-h"
-            :label="t('bookDialog.moreActions')"
-            class="action-more"
-            aria-haspopup="true"
-            aria-controls="book-more-menu"
-            aria-expanded="false"
-            @click="event => moreMenu.toggle(event)"
-          />
-        </div>
-      </div>
+        :back-label="backLabel"
+        :show-actions="ownerReady && !isEditing"
+        @back="requestClose"
+        @edit="editMode"
+        @more="event => moreMenu.toggle(event)"
+      />
       <IconButton
         v-else
         class="close-btn"
@@ -85,37 +56,13 @@
         v-else
         class="dialog-body"
       >
-      <div
-        class="cover-section"
-        :style="coverMissing ? { '--cover-color': colorFor(book.title || book.authors) } : undefined"
-        :class="{ 'no-cover': coverMissing }"
-      >
-        <img
-          v-if="!coverMissing"
-          :src="displayCoverUrl"
-          class="blur-bg"
-          alt=""
-          aria-hidden="true"
+        <BookCoverPanel
+          :url="displayCoverUrl"
+          :missing="coverMissing"
+          :title="book.title"
+          :authors="book.authors"
+          @error="onCoverError"
         />
-        <div class="image-container">
-          <div class="cover-wrapper">
-            <img
-              v-if="!coverMissing"
-              :key="displayCoverUrl"
-              :src="displayCoverUrl"
-              :alt="t('bookDialog.bookCover')"
-              class="main-cover"
-              @error="onCoverError"
-            />
-            <GeneratedCover
-              v-else
-              class="main-cover"
-              :title="book.title"
-              :author="book.authors"
-            />
-          </div>
-        </div>
-      </div>
 
         <div class="details-section">
           <BookView
@@ -131,28 +78,13 @@
             @navigate="visible = false"
           >
             <template
-              v-if="!isReadOnly && !loading && !loadFailed && !phone"
+              v-if="ownerReady && !phone"
               #actions
             >
-              <div class="book-actions">
-                <AppButton
-                  v-tooltip.top="t('bookDialog.editShortcut')"
-                  :label="t('bookDialog.editShort')"
-                  icon="pi pi-pencil"
-                  class="btn-outlined btn-secondary btn-sm action-edit"
-                  aria-keyshortcuts="E"
-                  @click="editMode"
-                />
-                <IconButton
-                  icon="pi pi-ellipsis-h"
-                  :label="t('bookDialog.moreActions')"
-                  class="action-more"
-                  aria-haspopup="true"
-                  aria-controls="book-more-menu"
-                  aria-expanded="false"
-                  @click="event => moreMenu.toggle(event)"
-                />
-              </div>
+              <BookActions
+                @edit="editMode"
+                @more="event => moreMenu.toggle(event)"
+              />
             </template>
             <template #cover>
               <span
@@ -176,7 +108,7 @@
           </BookView>
 
           <ReadingPanel
-            v-if="!isReadOnly && !loading && !loadFailed"
+            v-if="ownerReady"
             :book-id="bookId"
             :book="book"
             :phone-layout="phone"
@@ -186,63 +118,35 @@
           >
             <!-- Celular: a nota vem logo depois do cartão da leitura -->
             <template #after-card>
-              <section
-                class="rate-block"
-                aria-labelledby="rate-block-title"
-              >
-                <h3
-                  id="rate-block-title"
-                  class="section-title rate-title"
-                >{{ t('rating.yours') }}</h3>
-                <StarRating
-                  :model-value="book.rating"
-                  size="lg"
-                  animated
-                  :disabled="ratingSaving"
-                  :label="t('rating.label')"
-                  @update:model-value="quickRate"
-                />
-              </section>
+              <BookRateBlock
+                :rating="book.rating"
+                :saving="ratingSaving"
+                @rate="quickRate"
+              />
             </template>
           </ReadingPanel>
 
           <ReviewEditor
-            v-if="!isReadOnly && !loading && !loadFailed"
+            v-if="ownerReady"
             ref="reviewEditor"
             :book-id="bookId"
             :notes="book.notes || ''"
           />
 
-          <!-- Biblioteca de outra pessoa: a resenha dela, se puder ver -->
-          <section
+          <BookPublicReview
             v-if="isReadOnly && !loading && book.review"
-            class="public-review"
-            aria-labelledby="public-review-title"
-          >
-            <h3
-              id="public-review-title"
-              class="section-title public-review-title"
-            >
-              <i
-                class="pi pi-comment"
-                aria-hidden="true"
-              ></i>
-              {{ t('review.ofOwner', { name: ownerUsername }) }}
-            </h3>
-            <ReviewCard
-              :review="book.review"
-              flat
-            />
-          </section>
+            :review="book.review"
+            :owner-username="ownerUsername"
+          />
 
           <BookCollection
-            v-if="!isReadOnly && !loading && !loadFailed"
+            v-if="ownerReady"
             :book-id="bookId"
             :book-title="book.title"
           />
 
           <BookCommunity
-            v-if="!isReadOnly && !loading && !loadFailed"
+            v-if="ownerReady"
             :book-id="bookId"
             :book-title="book.title"
           />
@@ -262,14 +166,18 @@
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppDialog from './ui/AppDialog.vue'
-import AppButton from './ui/AppButton.vue'
 import { useToast } from '../services/toast.js'
 import { useConfirm, confirmDiscard } from '../services/confirm.js'
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import api from '../services/api.js'
-import { colorFor } from '../utils/tagColors.js'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
 import GeneratedCover from './GeneratedCover.vue'
+import BookActions from './book/BookActions.vue'
+import BookCoverPanel from './book/BookCoverPanel.vue'
+import BookPageBar from './book/BookPageBar.vue'
+import BookPublicReview from './book/BookPublicReview.vue'
+import BookRateBlock from './book/BookRateBlock.vue'
+import { useBookReading } from './book/useBookReading.js'
 import IconButton from './form/IconButton.vue'
 import BookView from './book/BookView.vue'
 import BookEditForm from './book/BookEditForm.vue'
@@ -277,16 +185,12 @@ import ReadingPanel from './book/ReadingPanel.vue'
 import BookCommunity from './book/BookCommunity.vue'
 import BookCollection from './book/BookCollection.vue'
 import ReviewEditor from './review/ReviewEditor.vue'
-import ReviewCard from './review/ReviewCard.vue'
 import AddToListDialog from './list/AddToListDialog.vue'
 import PopupMenu from './ui/PopupMenu.vue'
-import { fromApiDate, toApiDate } from '../utils/dates.js'
-import { statusOf } from '../utils/readingStatus.js'
+import { fromApiDate } from '../utils/dates.js'
 import { setOverlayTitle } from '../services/pageTitle.js'
-import StarRating from './StarRating.vue'
 import { useIsPhone } from '../composables/useIsPhone.js'
 import { useRoute } from 'vue-router'
-import { readUndoSteps } from '../utils/readUndo.js'
 
 /**
  * Livro aberto: visualização (BookView + BookCommunity) ou edição
@@ -321,8 +225,6 @@ const visible = ref(props.modelValue)
 const loading = ref(true)
 const loadFailed = ref(false)
 const isEditing = ref(false)
-const ratingSaving = ref(false)
-const readSaving = ref(false)
 const addToListOpen = ref(false)
 
 // Menu "⋯" ao lado de Editar: Listas e Excluir
@@ -339,6 +241,13 @@ function emptyBook() {
 }
 
 const book = ref(emptyBook())
+
+// Status, painel de leituras e nota (sem o modo de edição)
+const { readSaving, ratingSaving, changeStatus, quickRate, onReadingChanged, refreshReadingFields } =
+  useBookReading({ book, bookId: () => props.bookId, phone, applyResponse, emit })
+
+// Livro do dono carregado: Editar, ⋯ e os painéis de leitura, resenha e coleção
+const ownerReady = computed(() => !props.isReadOnly && !loading.value && !loadFailed.value)
 
 function previewBook() {
   const base = emptyBook()
@@ -358,159 +267,6 @@ const coverMissing = computed(() => !displayCoverUrl.value || coverFailed.value)
 
 function onCoverError(event) {
   if (coverFallbackExhausted(event)) coverFailed.value = true
-}
-
-/**
- * Quero ler / Lendo / Lido. Clicar no status que já está marcado tira o status
- * (o livro volta a só estar na estante). Datas vão no fuso da pessoa.
- *
- * A tela muda na hora (o servidor confirma depois); se der erro, volta como
- * estava e avisa.
- *
- * Celular: tocar de novo em "✓ Lido em …" logo depois de marcar desfaz
- * exatamente (utils/readUndo.js, o mesmo "Desfazer" do card) em vez de
- * apagar a leitura. O aviso com "Desfazer" não serve aqui: com o livro aberto
- * (diálogo modal) o resto da página, avisos inclusive, fica inerte.
- */
-let pendingUndo = null
-
-async function changeStatus(option) {
-  if (readSaving.value) return
-  const current = statusOf(book.value)
-  if (option === 'read' && current === 'read' && pendingUndo) {
-    const steps = pendingUndo.steps
-    pendingUndo = null
-    return undoStatus(steps)
-  }
-  pendingUndo = null
-  const next = current === option ? 'none' : option
-  // "Quero ler"/nenhum apagam o histórico: com mais de uma leitura, pergunta antes
-  const total = (book.value.read_count || 0) + (book.value.reading_status === 'reading' ? 1 : 0)
-  if ((next === 'none' || next === 'want') && total > 1 && !(await confirmClearHistory(total))) return
-
-  const previous = { read_date: book.value.read_date, started_at: book.value.started_at, reading_status: book.value.reading_status }
-  const now = new Date()
-  const today = toApiDate(now)
-  const predicted = {
-    read: { read_date: now, reading_status: null },
-    reading: { reading_status: 'reading', started_at: now },
-    want: { reading_status: 'want', read_date: null },
-    none: { reading_status: null, read_date: null }
-  }[next]
-  Object.assign(book.value, predicted)
-
-  readSaving.value = true
-  try {
-    const touchesRead = phone.value && next === 'read'
-    const before = touchesRead ? await api.getReadings(props.bookId).then(data => data?.readings ?? null).catch(() => null) : null
-    const result = await api.setReadingStatus(props.bookId, next, next === 'read' || next === 'reading' ? today : undefined)
-    book.value.read_date = fromApiDate(result.readDate)
-    book.value.started_at = fromApiDate(result.startedAt)
-    book.value.reading_status = result.status === 'want' || result.status === 'reading' ? result.status : null
-    emit('updated', {
-      book: { book_id: props.bookId, read_date: result.readDate, reading_status: book.value.reading_status, started_at: result.startedAt },
-      coverChanged: false
-    })
-    refreshReadingFields()
-    if (next === 'read' && phone.value) {
-      const steps = readUndoSteps(current, before)
-      pendingUndo = steps ? { steps } : null
-    }
-  } catch (error) {
-    Object.assign(book.value, previous)
-    toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
-  } finally {
-    readSaving.value = false
-  }
-}
-
-async function undoStatus(steps) {
-  const previous = { read_date: book.value.read_date, started_at: book.value.started_at, reading_status: book.value.reading_status }
-  // Na hora: volta ao status de antes; o servidor confirma em seguida
-  const back = steps.some(step => step.op === 'reopen') ? { read_date: null, reading_status: 'reading' }
-    : steps.some(step => step.op === 'want') ? { read_date: null, reading_status: 'want' }
-      : { read_date: null, reading_status: null }
-  Object.assign(book.value, back)
-  readSaving.value = true
-  try {
-    for (const step of steps) {
-      if (step.op === 'add') await api.addReading(props.bookId, step.reading)
-      else if (step.op === 'reopen') await api.updateReading(props.bookId, step.readingId, { finishedOn: null })
-      else if (step.op === 'unread') await api.markAsUnread(props.bookId)
-      else if (step.op === 'want') await api.setReadingStatus(props.bookId, 'want')
-    }
-    const fresh = await api.getBookById(props.bookId)
-    applyResponse(fresh)
-    emit('updated', {
-      book: { book_id: props.bookId, read_date: fresh.read_date ?? null, reading_status: fresh.reading_status ?? null, started_at: fresh.started_at ?? null },
-      coverChanged: false
-    })
-  } catch (error) {
-    Object.assign(book.value, previous)
-    toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
-  } finally {
-    readSaving.value = false
-  }
-}
-
-function confirmClearHistory(count) {
-  return new Promise(resolve => {
-    confirm.require({
-      header: t('history.clearTitle'),
-      message: t('history.clearMessage', { n: count }),
-      icon: 'pi pi-exclamation-triangle',
-      acceptClass: 'btn-danger',
-      rejectClass: 'btn-text btn-secondary',
-      acceptLabel: t('history.clearConfirm'),
-      rejectLabel: t('common.cancel'),
-      accept: () => resolve(true),
-      reject: () => resolve(false),
-      onHide: () => resolve(false)
-    })
-  })
-}
-
-// Contagem de leituras e progresso depois de mudar o status (o servidor sabe)
-async function refreshReadingFields() {
-  try {
-    const data = await api.getBookById(props.bookId)
-    Object.assign(book.value, {
-      read_count: data.read_count ?? 0,
-      current_page: data.current_page ?? null,
-      progress_percent: data.progress_percent ?? null,
-      page_count: data.page_count ?? null
-    })
-  } catch {
-    // Só os números do painel ficam desatualizados até reabrir
-  }
-}
-
-// Painel de leituras: progresso, "Ler de novo", histórico
-function onReadingChanged(patch) {
-  const changes = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined))
-  const local = { ...changes }
-  if ('read_date' in changes) local.read_date = fromApiDate(changes.read_date)
-  if ('started_at' in changes) local.started_at = fromApiDate(changes.started_at)
-  Object.assign(book.value, local)
-  emit('updated', { book: { book_id: props.bookId, ...changes }, coverChanged: false })
-  if ('reading_status' in changes && !('read_count' in changes)) refreshReadingFields()
-}
-
-// Nota direto da visualização, sem entrar no modo de edição.
-async function quickRate(value) {
-  const previous = book.value.rating
-  book.value.rating = value
-  ratingSaving.value = true
-  try {
-    const result = await api.setRating(props.bookId, value)
-    book.value.rating = result?.rating ?? value
-    emit('updated', { book: { book_id: props.bookId, rating: book.value.rating }, coverChanged: false })
-  } catch (error) {
-    book.value.rating = previous
-    toast.add({ severity: 'error', detail: error.message || t('bookDialog.updateFailed'), life: 4000 })
-  } finally {
-    ratingSaving.value = false
-  }
 }
 
 function deleteBook() {
@@ -692,25 +448,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.public-review {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  border-top: 1px solid var(--border-color);
-  padding-top: var(--space-4);
-}
-
-.public-review-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-}
-
-.public-review-title .pi {
-  color: var(--text-secondary);
-}
-
 .dialog-shell {
   position: relative;
   display: flex;
@@ -736,60 +473,6 @@ onBeforeUnmount(() => {
   background-color: var(--bg-panel);
 }
 
-.cover-section {
-  flex: 1;
-  max-width: 350px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  padding: 0;
-  background-color: #09090b;
-}
-
-.cover-section.no-cover {
-  background: color-mix(in srgb, var(--cover-color) 30%, #09090b);
-}
-
-.blur-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(30px) brightness(0.5);
-  z-index: 1;
-  transform: scale(1.2);
-}
-
-.image-container {
-  position: relative;
-  z-index: 2;
-  padding: var(--space-7);
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.cover-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 250px;
-  aspect-ratio: 2/3;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-3);
-}
-
-.main-cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: filter 0.3s ease;
-}
-
 .details-section {
   flex: 1.5;
   padding: 2.5rem;
@@ -800,24 +483,6 @@ onBeforeUnmount(() => {
   gap: var(--space-6);
   overflow-y: auto;
   max-height: inherit;
-}
-
-/* Editar e o menu "⋯" (Listas, Excluir) no topo, numa linha só deles ao
-   lado do X: o título fica logo abaixo e com a largura toda */
-.book-actions {
-  order: -1;
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: var(--space-1);
-  /* Na altura do X (top 1rem) e sem encostar nele (44 px + folga) */
-  margin-top: -1.5rem;
-  padding-right: var(--space-6);
-}
-
-.action-edit.btn {
-  border-radius: var(--radius-md);
 }
 
 .mini-cover {
@@ -847,13 +512,6 @@ onBeforeUnmount(() => {
     min-height: 0;
   }
 
-  .cover-section {
-    flex: none;
-    max-width: 100%;
-    height: 190px;
-    border-bottom: 1px solid var(--border-color);
-  }
-
   .details-section {
     flex: 1;
     min-height: 0;
@@ -861,35 +519,12 @@ onBeforeUnmount(() => {
     padding: var(--space-5);
     gap: var(--space-5);
   }
-
-  /* O X está sobre a faixa da capa: a linha das ações não precisa desviar */
-  .book-actions {
-    margin-top: 0;
-    padding-right: 0;
-  }
-
-  /* Capa inteira e pequena, em vez de um recorte gigante. */
-  .image-container {
-    padding: var(--space-4);
-    height: 100%;
-    box-sizing: border-box;
-  }
-
-  .cover-wrapper {
-    width: auto;
-    height: 100%;
-    max-width: none;
-  }
 }
 
 /* Celular: o livro abre em tela cheia (AppDialog page), com "‹ Biblioteca"
    e Editar/⋯ numa barra no topo; capa pequena ao lado do título (é ela que
    viaja do card, data-shared-cover) e o resto rola embaixo. */
 @media (max-width: 639.98px) {
-  .cover-section {
-    display: none;
-  }
-
   .dialog-shell {
     height: 100dvh;
     max-height: 100dvh;
@@ -905,56 +540,6 @@ onBeforeUnmount(() => {
     gap: var(--space-5);
     overflow-y: auto;
     overscroll-behavior: contain;
-  }
-
-  .page-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-    flex: none;
-    min-height: calc(56px + var(--safe-top, 0px));
-    padding: var(--safe-top, 0px) var(--space-2) 0 var(--space-1);
-    background: var(--bg-panel);
-  }
-
-  .page-back {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    min-height: 44px;
-    max-width: 60%;
-    padding: 0 var(--space-3) 0 var(--space-2);
-    border: none;
-    border-radius: var(--radius-pill);
-    background: none;
-    color: color-mix(in srgb, var(--main-color) var(--tint-text), var(--text-primary));
-    font: inherit;
-    font-size: var(--fs-md);
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .page-back span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .page-back:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: -2px;
-  }
-
-  .page-actions {
-    order: 0;
-    width: auto;
-    margin: 0;
-    padding: 0;
-  }
-
-  .page-actions .action-edit.btn {
-    border-radius: var(--radius-pill);
   }
 
   .mini-cover {
@@ -973,23 +558,6 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-
-  .rate-block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-  }
-
-  .rate-title {
-    margin: 0;
-  }
-
-  /* 5 estrelas de 44 px + o X de limpar = 264 px: cabe a partir de 296 px
-     (antes passavam da coluna ao lado da capa e cortavam o X) */
-  .rate-block :deep(.star-rating) {
-    flex-wrap: nowrap;
-    margin-left: calc(-1 * var(--space-2));
   }
 }
 </style>

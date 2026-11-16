@@ -1,4 +1,5 @@
 import { nextTick } from 'vue'
+import { anchorId } from '../utils/anchor.js'
 
 /**
  * Trocou de página: o foco vai para o <h1> da página nova. Sem isso o foco
@@ -24,9 +25,20 @@ function findHeading() {
   return main?.querySelector('h1') ?? document.querySelector('h1')
 }
 
-function focusHeading(frame = 0) {
+function focusHeading(frame = 0, anchor = null) {
   // Uma janela aberta por cima (livro, confirmação) tem prioridade
   if (document.querySelector('dialog[open]')) return
+
+  // Link para uma seção (#settings-notifications): o foco vai para ela
+  const section = anchor && document.getElementById(anchor)
+  if (section) {
+    section.focus({ preventScroll: true })
+    return
+  }
+  if (anchor && frame < MAX_FRAMES) {
+    requestAnimationFrame(() => focusHeading(frame + 1, anchor))
+    return
+  }
 
   const heading = findHeading()
   if (!heading) {
@@ -41,6 +53,6 @@ function focusHeading(frame = 0) {
 export function installRouteFocus(router) {
   router.afterEach((to, from, failure) => {
     if (failure || from.matched.length === 0 || samePage(to, from)) return
-    nextTick(() => focusHeading())
+    nextTick(() => focusHeading(0, anchorId(to.hash)))
   })
 }

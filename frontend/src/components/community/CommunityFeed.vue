@@ -66,7 +66,7 @@
         <li
           v-for="item in day.items"
           :key="item.key"
-          class="feed-item"
+          class="feed-item stagger-in"
           :class="`kind-${item.type}`"
           :style="{ '--i': staggerIndex(item) }"
         >
@@ -232,30 +232,10 @@ defineExpose({ load, isEmpty })
     border: 1px solid var(--border-color);
     border-radius: var(--card-radius);
     background: var(--bg-panel);
-    animation: feed-in var(--dur-medium) var(--ease-enter) both;
-    animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));
-  }
-
-  .skeleton-list .feed-item {
-    animation: none;
   }
 
   .kind-list {
     align-items: flex-start;
-  }
-}
-
-@keyframes feed-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 12px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .feed-item,
-  .feed-item:last-child {
-    animation: none !important;
   }
 }
 </style>

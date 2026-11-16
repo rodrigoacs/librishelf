@@ -24,6 +24,11 @@
         @keydown.right.prevent="move(1)"
         @keydown.left.prevent="move(-1)"
       >
+        <i
+          v-if="tab.icon"
+          :class="tab.icon"
+          aria-hidden="true"
+        ></i>
         {{ tab.label }}
         <span
           v-if="tab.count"
@@ -39,13 +44,15 @@
 // (celular), degradê na borda que tem mais abas e a aba ativa rola para o
 // meio, para a última não ficar escondida. Os painéis usam os ids
 // `${idPrefix}panel-${key}` e `aria-labelledby="${idPrefix}tab-${key}"`.
+// A margem em volta vem de --tabs-margin (padrão: 0 0 --space-5), que a
+// tela pode trocar num ancestral.
 import { ref, watch, nextTick, onMounted } from 'vue'
 import { useScrollEdges } from '../../composables/useScrollEdges.js'
 import { scrollBehavior } from '../../utils/motion.js'
 
 const props = defineProps({
   modelValue: { type: String, required: true },
-  // [{ key, label, count? }]
+  // [{ key, label, count?, icon? }] (icon: classe do PrimeIcons)
   tabs: { type: Array, required: true },
   label: { type: String, required: true },
   idPrefix: { type: String, default: '' }
@@ -91,7 +98,7 @@ onMounted(() => nextTick(() => {
 <style scoped>
 .tabs-wrap {
   position: relative;
-  margin-bottom: var(--space-5);
+  margin: var(--tabs-margin, 0 0 var(--space-5));
 }
 
 .tabs-wrap::before,

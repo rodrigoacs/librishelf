@@ -48,6 +48,7 @@
 </template>
 
 <script setup>
+import { dateTag, formatLongDate } from '../utils/dates.js'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/ui/PageHeader.vue'
@@ -77,12 +78,7 @@ const keys = computed(() => DOCS[props.doc])
 const params = legalParams()
 const sections = computed(() => tm(keys.value.sections))
 
-const updatedAt = computed(() => {
-  const [year, month, day] = TERMS_VERSION.split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString(locale.value === 'pt' ? 'pt-BR' : 'en-US', {
-    day: 'numeric', month: 'long', year: 'numeric'
-  })
-})
+const updatedAt = computed(() => formatLongDate(TERMS_VERSION, dateTag(locale.value)))
 </script>
 
 <style scoped>

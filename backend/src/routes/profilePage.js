@@ -2,6 +2,8 @@ import express from 'express'
 import * as profilePageService from '../services/profilePageService.js'
 import { authenticateToken } from '../middlewares/auth.js'
 import { reportLimiter } from '../middlewares/rateLimiter.js'
+import { requirePro } from '../middlewares/requirePro.js'
+import * as publicMetricsService from '../services/publicMetricsService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 
@@ -11,6 +13,7 @@ import sendError from '../utils/sendError.js'
  *   GET  /profile-page                       { bio, bioHidden, favorites }
  *   PUT  /profile-page/bio                   { bio: string | null }
  *   PUT  /profile-page/favorites             { bookIds: number[] }
+ *   GET  /profile-page/visits?days=30        visitas por dia (Pro: page_visits)
  *   POST /profile-page/u/:username/bio/report { reason, note? }
  */
 const router = express.Router()
@@ -29,6 +32,7 @@ router.post('/u/:username/bio/report', reportLimiter, authenticateToken,
 router.use(authenticateToken)
 router.get('/', handle('Erro ao carregar a página pública', req => profilePageService.get(req.user.id)))
 router.put('/bio', handle('Erro ao salvar a apresentação', req => profilePageService.setBio(req.user.id, req.body ?? {})))
+router.get('/visits', requirePro('page_visits'), handle('Erro ao carregar as visitas', req => publicMetricsService.ownerVisits(req.user.id, req.query.days)))
 router.put('/favorites', handle('Erro ao salvar os favoritos', req => profilePageService.setFavorites(req.user.id, req.body ?? {})))
 
 export default router

@@ -1,3 +1,4 @@
+import { dateTag } from '../utils/dates.js'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -51,7 +52,7 @@ export function useLibraryFilterOptions() {
   function readPeriodLabel({ readYear, readMonth }) {
     if (!readMonth) return t('library.read_year_chip', { year: readYear })
     const month = new Date(Number(readYear), readMonth - 1, 1)
-      .toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR', { month: 'long', year: 'numeric' })
+      .toLocaleDateString(dateTag(locale.value), { month: 'long', year: 'numeric' })
     return t('library.read_month_chip', { period: month })
   }
 

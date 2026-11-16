@@ -14,6 +14,8 @@
  * Para ver o resultado sem enviar: npm run email:preview
  */
 
+import { appTimeZone } from '../utils/appTime.js'
+
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 
 const BRAND = {
@@ -673,7 +675,7 @@ const BILLING_LABELS = {
 /** Datas no fuso do app (APP_TIME_ZONE, padrão America/Sao_Paulo): "9 de novembro de 2026" */
 export function formatDate(date, locale) {
   return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'pt-BR', {
-    day: 'numeric', month: 'long', year: 'numeric', timeZone: process.env.APP_TIME_ZONE?.trim() || 'America/Sao_Paulo'
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: appTimeZone()
   }).format(new Date(date))
 }
 

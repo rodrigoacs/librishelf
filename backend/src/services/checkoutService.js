@@ -59,7 +59,7 @@ export async function start(userId, offerCode) {
     throw httpError('Oferta inválida.', STATUS.BAD_REQUEST, 'OFFER_INVALID')
   }
   if (!mercadoPago.isConfigured()) {
-    throw httpError('Pagamentos indisponíveis no momento.', 503, 'PAYMENTS_UNAVAILABLE')
+    throw httpError('Pagamentos indisponíveis no momento.', STATUS.SERVICE_UNAVAILABLE, 'PAYMENTS_UNAVAILABLE')
   }
 
   const reservation = await transaction(async (client) => {
@@ -137,9 +137,9 @@ export async function start(userId, offerCode) {
   } catch (err) {
     // A vaga não fica presa por um checkout que nem abriu
     await db.query(q.ABORT_RESERVATION, [reservation.id]).catch(() => { })
-    if (err.status === 503) throw err
+    if (err.status === STATUS.SERVICE_UNAVAILABLE) throw err
     logger.error('Falha ao criar o checkout no Mercado Pago', { userId, offer: offerCode, message: err.message })
-    throw httpError('Não foi possível abrir o pagamento agora. Tente de novo em instantes.', 502, 'PAYMENT_PROVIDER_ERROR')
+    throw httpError('Não foi possível abrir o pagamento agora. Tente de novo em instantes.', STATUS.BAD_GATEWAY, 'PAYMENT_PROVIDER_ERROR')
   }
 }
 

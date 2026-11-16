@@ -3,13 +3,7 @@
  * no formato que a API espera (AAAA-MM-DD).
  */
 
-export const isoDate = date =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-
-export const fromIso = text => {
-  const [y, m, d] = String(text).split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
+import { localDate, toApiDate } from './dates.js'
 
 const day = (y, m, d) => new Date(y, m, d)
 
@@ -19,7 +13,7 @@ function sameDayIn(year, date) {
   return day(year, date.getMonth(), Math.min(date.getDate(), last))
 }
 
-const period = (from, to) => ({ from: isoDate(from), to: isoDate(to) })
+const period = (from, to) => ({ from: toApiDate(from), to: toApiDate(to) })
 
 /** Comparações prontas: [a, b], com b o período mais recente. */
 export const COMPARE_PRESETS = ['yearToDate', 'lastYears', 'monthToDate', 'rolling']
@@ -58,8 +52,8 @@ export function chartPeriod(preset, today = new Date()) {
 /** "1 de jan. – 2 de nov. de 2026" (ou o mais curto que o navegador souber). */
 export function formatRange(from, to, locale) {
   const options = { day: 'numeric', month: 'short', year: 'numeric' }
-  const a = fromIso(from)
-  const b = fromIso(to)
+  const a = localDate(from)
+  const b = localDate(to)
   try {
     return new Intl.DateTimeFormat(locale, options).formatRange(a, b)
   } catch {

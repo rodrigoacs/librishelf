@@ -106,7 +106,7 @@ import { useI18n } from 'vue-i18n'
 import BookDialog from './BookDialog.vue'
 import GeneratedCover from './GeneratedCover.vue'
 import { coverUrl, coverFallbackExhausted } from '../utils/covers.js'
-import { fromApiDate } from '../utils/dates.js'
+import { fromApiDate, dateTag } from '../utils/dates.js'
 import { useReadToggle } from '../composables/useReadToggle.js'
 import { statusOf } from '../utils/readingStatus.js'
 import { seriesText } from '../utils/series.js'
@@ -152,7 +152,7 @@ const pubYear = computed(() => {
 const readDateLabel = computed(() => {
   const date = fromApiDate(props.book.read_date)
   if (!date) return t('library.read')
-  return date.toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return date.toLocaleDateString(dateTag(locale.value), { day: '2-digit', month: '2-digit', year: 'numeric' })
 })
 
 // Coluna "Lido em": só a data (lido sem data diz "Lido")

@@ -27,17 +27,18 @@
       <router-link
         v-if="['rejected', 'expired'].includes(view)"
         :to="{ name: 'pricing', query: checkout?.offer ? { offer: checkout.offer } : {} }"
-        class="action-link"
+        class="link-btn tall"
       >{{ t('planReturn.tryAgain') }}</router-link>
       <router-link
         :to="{ name: 'settings' }"
-        class="action-link"
+        class="link-btn tall"
       >{{ t('planReturn.toAccount') }}</router-link>
     </div>
   </div>
 </template>
 
 <script setup>
+import { dateTag, formatLongDate } from '../utils/dates.js'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -85,7 +86,7 @@ const icon = computed(() => ({
   ok: 'pi pi-check-circle', bad: 'pi pi-times-circle', warn: 'pi pi-exclamation-circle', wait: 'pi pi-spinner pi-spin'
 }[tone.value]))
 
-const longDate = value => new Date(value).toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+const longDate = value => formatLongDate(value, dateTag(locale.value))
 
 const body = computed(() => {
   if (view.value === 'active') {
@@ -94,7 +95,7 @@ const body = computed(() => {
     if (current?.endsAt) return t('planReturn.activeUntil', { date: longDate(current.endsAt) })
   }
   if (view.value === 'pending' && checkout.value?.expiresAt) {
-    return t('planReturn.pendingUntil', { date: new Date(checkout.value.expiresAt).toLocaleString(locale.value === 'en' ? 'en-US' : 'pt-BR', { dateStyle: 'short', timeStyle: 'short' }) })
+    return t('planReturn.pendingUntil', { date: new Date(checkout.value.expiresAt).toLocaleString(dateTag(locale.value), { dateStyle: 'short', timeStyle: 'short' }) })
   }
   if (timedOut.value && WAITING.includes(view.value)) return t('planReturn.slow')
   return t(`planReturn.states.${view.value}.body`)
@@ -198,28 +199,13 @@ onBeforeUnmount(() => clearTimeout(timer))
   gap: var(--space-2) var(--space-5);
 }
 
-.action-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  color: var(--main-color);
-  font-weight: 600;
-  font-size: var(--fs-sm);
-}
-
-.action-link:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-  border-radius: var(--radius-sm);
-}
-
 @media (max-width: 639.98px) {
   .actions {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .action-link {
+  .actions .link-btn {
     justify-content: center;
   }
 }

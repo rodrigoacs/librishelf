@@ -17,6 +17,7 @@ import logger from '../utils/logger.js'
  */
 const STATUSES = new Set(['pending', 'approved', 'authorized', 'in_process', 'in_mediation', 'rejected', 'cancelled', 'refunded', 'charged_back'])
 const CARD_TYPES = new Set(['credit_card', 'debit_card', 'prepaid_card'])
+// Pro anual é sempre 365 dias, também em ano bissexto (decisão do dono, 2026-11-14)
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000
 
 export function methodOf(payment) {

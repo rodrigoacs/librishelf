@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dateTag, fromApiDate, localDate, monthNames, toApiDate } from './dates.js'
+import { dateTag, formatLongDate, fromApiDate, localDate, monthNames, toApiDate } from './dates.js'
 
 describe('fromApiDate', () => {
   it('lê o dia que veio da API, sem cair na véspera no fuso de Brasília', () => {
@@ -59,5 +59,23 @@ describe('monthNames', () => {
     expect(monthNames('pt-BR', 'short')[1]).toBe('fev')
     expect(monthNames('en-US', 'short')[11]).toBe('Dec')
     expect(monthNames('pt-BR', 'narrow')[0]).toBe('J')
+  })
+})
+
+describe('formatLongDate', () => {
+  it('data por extenso, sem cair na véspera com AAAA-MM-DD', () => {
+    expect(formatLongDate('2026-11-09', 'pt-BR')).toBe('9 de novembro de 2026')
+    expect(formatLongDate(new Date(2026, 10, 9), 'en-US')).toBe('November 9, 2026')
+  })
+
+  it('vazia ou inválida → texto vazio', () => {
+    expect(formatLongDate(null, 'pt-BR')).toBe('')
+    expect(formatLongDate('ontem', 'pt-BR')).toBe('')
+  })
+})
+
+describe('toApiDate e localDate', () => {
+  it('ida e volta no dia local', () => {
+    expect(toApiDate(localDate('2026-03-09'))).toBe('2026-03-09')
   })
 })

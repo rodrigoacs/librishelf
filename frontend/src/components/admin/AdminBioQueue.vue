@@ -45,14 +45,11 @@
               class="person"
               @click="emit('open-user', item.userId)"
             >@{{ item.username }}</button>
-            <span
-              class="state-tag"
-              :class="item.hidden ? 'hidden' : 'visible'"
-            >{{ item.hidden ? t('admin.moderation.hidden') : t('admin.moderation.visible') }}</span>
-            <span
+            <AppTag :tone="item.hidden ? 'orange' : 'green'">{{ item.hidden ? t('admin.moderation.hidden') : t('admin.moderation.visible') }}</AppTag>
+            <AppTag
               v-if="!item.active"
-              class="state-tag hidden"
-            >{{ t('admin.accounts.suspendedTag') }}</span>
+              tone="orange"
+            >{{ t('admin.accounts.suspendedTag') }}</AppTag>
           </span>
           <blockquote class="bio-text">{{ item.bio }}</blockquote>
           <span class="meta">
@@ -92,6 +89,7 @@
 </template>
 
 <script setup>
+import AppTag from '../ui/AppTag.vue'
 import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppButton from '../ui/AppButton.vue'
@@ -217,23 +215,6 @@ onMounted(load)
 .person:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
-}
-
-.state-tag {
-  padding: 0.1rem var(--space-2);
-  border-radius: var(--radius-pill);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-}
-
-.state-tag.visible {
-  background: rgba(var(--green-rgb), 0.12);
-  color: var(--green);
-}
-
-.state-tag.hidden {
-  background: rgba(var(--orange-rgb), 0.14);
-  color: var(--orange);
 }
 
 .count.open {

@@ -17,8 +17,10 @@ export function newIdentity(prefix) {
  * teste): cadastro com aceite dos termos, confirmação pelo link do e-mail e
  * login. `api` é o page.request (a sessão vale na página) ou outro contexto
  * (o dono de uma página pública, enquanto a página do teste é o visitante).
+ * Os primeiros passos (onboarding) já vêm concluídos; `onboarding: true`
+ * deixa pendentes, para o teste deles.
  */
-export async function createAccount(api, { prefix = 'e2e', verified = true } = {}) {
+export async function createAccount(api, { prefix = 'e2e', verified = true, onboarding = false } = {}) {
   const user = newIdentity(prefix)
 
   const created = await api.post('/api/auth/register', {
@@ -33,6 +35,10 @@ export async function createAccount(api, { prefix = 'e2e', verified = true } = {
   }
 
   await login(api, user)
+  if (verified && !onboarding) {
+    const res = await api.patch('/api/onboarding', { data: { status: 'done' } })
+    expect(res.ok(), await res.text()).toBeTruthy()
+  }
   return user
 }
 

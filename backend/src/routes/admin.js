@@ -10,6 +10,7 @@ import * as billing from '../services/adminBillingService.js'
 import STATUS from '../utils/statusCodes.js'
 import sendError from '../utils/sendError.js'
 import * as errorReports from '../services/errorReportService.js'
+import * as publicMetricsService from '../services/publicMetricsService.js'
 
 /**
  * Área administrativa (só role = 'admin'). Fluxo:
@@ -91,6 +92,7 @@ router.get('/users/:id', validateNumericId(), handle('Erro ao abrir conta', req 
 router.post('/users/:id/resend-verification', validateNumericId(), handle('Erro ao reenviar confirmação',
   req => adminService.resendUserVerification(req.user.id, Number(req.params.id))))
 router.get('/usage', handle('Erro ao carregar uso', () => adminService.usage()))
+router.get('/public-pages', handle('Erro ao carregar as páginas públicas', req => publicMetricsService.adminSummary(req.query.days)))
 router.get('/system', handle('Erro ao carregar o sistema', () => adminService.system()))
 router.post('/email/test', mailLimiter, handle('Erro ao enviar e-mail de teste', req => adminService.sendTestEmail(req.user.id)))
 router.get('/moderation/insights', handle('Erro ao carregar sinais de moderação', () => adminService.moderationInsights()))

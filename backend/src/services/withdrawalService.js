@@ -40,7 +40,7 @@ export async function withdraw(userId, paymentId) {
       await mercadoPago.refundPayment(payment.external_id, `withdrawal-${payment.id}`)
     } catch (err) {
       logger.error('Falha ao pedir o estorno da desistência', { paymentId: Number(payment.id), status: err.status, message: err.message })
-      throw httpError('O Mercado Pago não respondeu agora, então a desistência não foi registrada. Tente de novo em instantes ou escreva para contato@librishelf.com.', 502, 'PAYMENT_PROVIDER_ERROR')
+      throw httpError('Não foi possível pedir o reembolso agora. Tente de novo em instantes.', STATUS.BAD_GATEWAY, 'REFUND_PROVIDER_ERROR')
     }
 
     const entitlementRevoked = entitlement

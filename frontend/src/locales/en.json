@@ -89,7 +89,8 @@
     "inviteWant": "Pick from my Want to read list",
     "yearInBooks": "Your {year} in books: see your recap | Your {year} in books: 1 book so far — see your recap | Your {year} in books: {n} books so far — see your recap",
     "loadError": "Your books are still saved. Check your connection and try again.",
-    "loadErrorTitle": "Couldn't load your shelf"
+    "loadErrorTitle": "Couldn't load your shelf",
+    "resumeOnboarding": "Continue your first steps"
   },
   "book": {
     "toast_added": "Book added",
@@ -600,7 +601,8 @@
           "Lists are private by default. The ones you mark as public show on your profile and get their own link, with a preview (list name, books and covers) when shared — only while your library is public too.",
           "You can turn it off at any time, and the change takes effect immediately.",
           "By default, public libraries don't show up in search engines like Google: the site asks not to be indexed. They only show up if you turn on \"Show in search engines\" in Account.",
-          "Your profile photo has its own setting for who can see it: everyone, only approved followers or no one. Your bio, favorites and background cover show on your public page, together with your library."
+          "Your profile photo has its own setting for who can see it: everyone, only approved followers or no one. Your bio, favorites and background cover show on your public page, together with your library.",
+          "We count, per day, how many times your public library is opened and shared and how many people create an account from it. We don't keep who visited: no cookie, no IP and no account. With Pro, you see your page visits day by day; your own visits don't count."
         ]
       },
       {
@@ -657,6 +659,7 @@
         "paragraphs": [
           "We only use one essential cookie, which keeps you signed in. It isn't used for tracking or advertising.",
           "Your theme and language preferences are saved only in your browser.",
+          "When you open someone's public library, the browser notes that the visit for that day was already counted, so it isn't counted again. The note disappears when you close the tab.",
           "So the app can open without internet, your browser keeps the last version of the screens you saw (such as your library and the books you opened), the covers and your username. This stays on this device only, is kept for up to 7 days after the app last reached the server and is deleted when you sign out. If you sign out without internet, the app remembers it and closes the session on the server as soon as the connection is back."
         ]
       },
@@ -1199,7 +1202,8 @@
     "import": "Import books",
     "importSkoob": "Coming from Skoob",
     "loans": "Loans",
-    "terms": "Terms of use"
+    "terms": "Terms of use",
+    "onboarding": "First steps"
   },
   "password": {
     "show": "Show password",
@@ -1374,6 +1378,7 @@
     "EMAIL_NOT_VERIFIED_CHECKOUT": "Confirm your email to subscribe to Pro.",
     "PAYMENTS_UNAVAILABLE": "Payments are unavailable right now.",
     "PAYMENT_PROVIDER_ERROR": "We could not open the payment right now. Try again in a moment.",
+    "REFUND_PROVIDER_ERROR": "We could not request the refund right now. Try again in a moment.",
     "CHECKOUT_NOT_FOUND": "Purchase not found.",
     "SUBSCRIPTION_ACTIVE": "You already have an active monthly subscription.",
     "SUBSCRIPTION_NOT_FOUND": "You have no active monthly subscription.",
@@ -2240,6 +2245,21 @@
         "line": "Line",
         "disposition": "Mode"
       }
+    },
+    "publicPages": {
+      "title": "Public pages",
+      "hint": "All pages added up over the last {n} days. Nothing about who visited.",
+      "conversion": "Sign-ups per visit",
+      "top": "Most visited",
+      "page": "Page",
+      "empty": "No visits in this period.",
+      "events": {
+        "visit": "Visits",
+        "share": "Shares",
+        "invite_register": "Invite clicks: create account",
+        "invite_login": "Invite clicks: log in",
+        "signup": "Sign-ups"
+      }
     }
   },
   "readCard": {
@@ -2397,6 +2417,10 @@
       "auto_backup": {
         "name": "Automatic backup",
         "desc": "A copy of your library made on its own every so often."
+      },
+      "page_visits": {
+        "name": "Page visits",
+        "desc": "How many people opened your public library, day by day, over the last 30 days."
       }
     },
     "vanguarda": {
@@ -2863,6 +2887,68 @@
     "removeFavorite": "Remove {title} from favorites",
     "searchPlaceholder": "Search your shelf",
     "noResults": "No books found.",
-    "view": "View my public page"
+    "view": "View my public page",
+    "visits": {
+      "title": "Page visits",
+      "pro": "Pro",
+      "short": "None in {days} days | 1 in {days} days | {n} in {days} days",
+      "total": "No visits in the last {days} days. | 1 visit in the last {days} days. | {n} visits in the last {days} days.",
+      "chart": "Visits per day: {n} in the last {days} days | Visits per day: 1 in the last {days} days | Visits per day: {n} in the last {days} days",
+      "day": "{date}: no visits | {date}: 1 visit | {date}: {n} visits",
+      "help": "Counts one visit per person per day. Your own visits don't count. Nobody is identified.",
+      "failed": "Couldn't load the visits."
+    }
+  },
+  "onboarding": {
+    "visual": "Your first steps",
+    "stepOf": "Step {n} of {total}",
+    "progress": "First steps",
+    "skip": "Skip for now",
+    "failed": "Couldn't load your first steps.",
+    "back": "Back",
+    "next": "Continue",
+    "start": {
+      "title": "How would you like to start?",
+      "text": "Pick a way to bring your books in. You can use the others later.",
+      "import": "Import from Goodreads or a CSV",
+      "importText": "Brings your whole shelf at once, with ratings and reading dates.",
+      "scan": "Scan the barcode",
+      "scanText": "Point the camera at the book and the details fill in.",
+      "search": "Search by title",
+      "searchText": "Type the title or author and pick the right book."
+    },
+    "books": {
+      "title": "Your first books",
+      "text": {
+        "import": "Import the file exported from Goodreads or another spreadsheet. You can also add books one by one.",
+        "scan": "Scan the barcode of 3 books near you.",
+        "search": "Search for 3 books you've read or want to read."
+      },
+      "progressLabel": "First books",
+      "left": "No books to go | 1 book to go | {n} books to go",
+      "done": "No books | 1 book on your shelf | {n} books on your shelf",
+      "import": "Import books",
+      "scan": "Scan barcode",
+      "add": "Add book"
+    },
+    "public": {
+      "title": "Want to show your shelf?",
+      "text": "With a public library, anyone with the link can see your books. It's optional.",
+      "preview": "How the link looks",
+      "visible": "Books, covers, ratings and what you're reading show up. Personal notes never do.",
+      "switch": "Public library",
+      "later": "You can change it anytime in Account."
+    },
+    "finish": {
+      "title": "All set",
+      "text": "Your shelf is now on Librishelf.",
+      "vanguardaHas": "You're part of Vanguarda: Pro is yours for as long as Librishelf exists.",
+      "vanguardaText": "The first accounts with {n} books get the Vanguarda badge and Pro forever.",
+      "vanguardaLabel": "Road to Vanguarda",
+      "vanguardaLeft": "No books to go for Vanguarda | 1 book to go for Vanguarda | {n} books to go for Vanguarda",
+      "vanguardaSoon": "You have the books: the badge arrives in a moment.",
+      "slots": "No spots left | 1 spot left | {n} spots left",
+      "go": "Go to home"
+    }
   }
 }

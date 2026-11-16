@@ -23,21 +23,12 @@
       class="sr-only"
     >{{ t('status.label') }}</h3>
 
-    <!-- Barra que enche (transform: scaleX); o número fica no progressbar -->
-    <div
+    <!-- Barra que enche; o número fica no progressbar -->
+    <ProgressBar
       v-if="showProgress"
-      class="rc-bar"
-      role="progressbar"
-      :aria-valuenow="shownPercent"
-      aria-valuemin="0"
-      aria-valuemax="100"
-      :aria-label="t('progress.label')"
-    >
-      <span
-        class="rc-fill"
-        :style="{ transform: `scaleX(${shownPercent / 100})` }"
-      ></span>
-    </div>
+      :value="shownPercent"
+      :label="t('progress.label')"
+    />
 
     <!-- Lendo: "Página 212 de 340 · 62%" e atualizar (o editor do progresso) -->
     <ReadingProgress
@@ -114,6 +105,8 @@
 </template>
 
 <script setup>
+import { dateTag } from '../../utils/dates.js'
+import ProgressBar from '../ui/ProgressBar.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ReadingProgress from './ReadingProgress.vue'
@@ -151,7 +144,7 @@ const shownPercent = computed(() => {
 const readDateText = computed(() => {
   const date = props.book.read_date
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString(locale.value === 'en' ? 'en-US' : 'pt-BR')
+  return date.toLocaleDateString(dateTag(locale.value))
 })
 </script>
 
@@ -184,23 +177,8 @@ const readDateText = computed(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.rc-bar {
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-input);
-  overflow: hidden;
-}
-
-.rc-fill {
-  display: block;
-  height: 100%;
-  background: var(--main-solid);
-  transform-origin: left center;
-  transition: transform var(--dur-long) var(--ease-standard);
-}
-
-.is-read .rc-fill {
-  background: var(--success);
+.is-read {
+  --bar-fill: var(--success);
 }
 
 /* O progresso de verdade já está na barra de cima */

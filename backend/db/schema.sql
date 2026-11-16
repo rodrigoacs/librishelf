@@ -2275,3 +2275,34 @@ ALTER TABLE librishelf.admin_actions ADD CONSTRAINT admin_actions_action_check
                     'pro.grant', 'pro.revoke', 'payment.refund', 'webhook.reprocess', 'offer.update',
                     'error.resolve'));
 INSERT INTO librishelf.schema_migrations (version) VALUES ('027_error_reports') ON CONFLICT (version) DO NOTHING;
+
+-- 028_public_page_metrics
+-- Métricas da página pública (pacote 41): quantas visitas cada /u/:usuario
+-- recebe, quantos compartilham, quantos clicam em "Criar conta" ou "Entrar"
+-- no convite e quantos se cadastram vindos dela. Só contagem por dono e por
+-- dia: sem visitante, sem IP, sem cookie. A visita conta uma vez por sessão
+-- do navegador (o frontend guarda o "já contei" em sessionStorage).
+CREATE TABLE IF NOT EXISTS librishelf.public_page_daily (
+  owner_id integer NOT NULL REFERENCES librishelf.users(id) ON DELETE CASCADE,
+  day      date NOT NULL,
+  event    text NOT NULL CHECK (event IN ('visit', 'share', 'invite_register', 'invite_login', 'signup')),
+  count    integer NOT NULL DEFAULT 0,
+  PRIMARY KEY (owner_id, day, event)
+);
+CREATE INDEX IF NOT EXISTS public_page_daily_day ON librishelf.public_page_daily (day);
+INSERT INTO librishelf.schema_migrations (version) VALUES ('028_public_page_metrics') ON CONFLICT (version) DO NOTHING;
+
+-- 029_onboarding
+-- Onboarding (pacote 42): primeiros passos depois de confirmar o e-mail.
+-- Quem já tinha conta entra como 'done' (não vê o onboarding); conta nova
+-- começa 'pending'. 'skipped' = pulou, pode retomar pelo Início.
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS onboarding_status text NOT NULL DEFAULT 'done'
+  CHECK (onboarding_status IN ('pending', 'skipped', 'done'));
+ALTER TABLE librishelf.users ALTER COLUMN onboarding_status SET DEFAULT 'pending';
+-- Passo em que parou: start (como começar), books (3 primeiros), public (biblioteca pública), finish
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS onboarding_step text NOT NULL DEFAULT 'start'
+  CHECK (onboarding_step IN ('start', 'books', 'public', 'finish'));
+-- Como preferiu começar: importar (Goodreads/CSV), código de barras ou busca por título
+ALTER TABLE librishelf.users ADD COLUMN IF NOT EXISTS onboarding_start text
+  CHECK (onboarding_start IN ('import', 'scan', 'search'));
+INSERT INTO librishelf.schema_migrations (version) VALUES ('029_onboarding') ON CONFLICT (version) DO NOTHING;

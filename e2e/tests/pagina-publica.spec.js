@@ -68,6 +68,11 @@ test('página pública sem sessão: filtros na URL, convite e compartilhar', asy
   await page.reload()
   await expect(book('Dom Casmurro')).toBeVisible()
   await expect(invite).toBeHidden()
+
+  // Métricas: a visita conta uma vez na sessão do navegador, mesmo com as
+  // recargas; o dono vê o número com o Pro (aqui, o teste grátis)
+  expect((await request.post('/api/plan/trial')).ok()).toBeTruthy()
+  await expect.poll(async () => (await (await request.get('/api/profile-page/visits?days=1')).json()).total).toBe(1)
 })
 
 test('biblioteca privada não aparece para quem não é o dono', async ({ page, request }) => {

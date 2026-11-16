@@ -244,7 +244,7 @@ export async function sendTestEmail(adminId) {
     })
   } catch (err) {
     await log(adminId, 'email.test', { details: { ok: false } })
-    throw httpError(`O servidor de e-mail recusou: ${err.message}`.slice(0, 300), 502, 'EMAIL_TEST_FAILED', { message: String(err.message).slice(0, 200) })
+    throw httpError(`O servidor de e-mail recusou: ${err.message}`.slice(0, 300), STATUS.BAD_GATEWAY, 'EMAIL_TEST_FAILED', { message: String(err.message).slice(0, 200) })
   }
   await log(adminId, 'email.test', { details: { ok: true } })
   return { sent: config.configured, to: admin.email, smtp: config.configured }

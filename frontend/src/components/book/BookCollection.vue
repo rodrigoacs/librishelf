@@ -70,7 +70,7 @@
             />
             <button
               type="button"
-              class="link-button"
+              class="link-btn"
               @click="startEdit(data.loan)"
             >{{ t('collection.loan.edit') }}</button>
           </div>
@@ -119,13 +119,13 @@
             />
             <button
               type="button"
-              class="link-button"
+              class="link-btn"
               @click="editingLoan = false"
             >{{ t('common.cancel') }}</button>
             <button
               v-if="draft.id"
               type="button"
-              class="link-button danger"
+              class="link-btn danger"
               @click="removeLoan(draft.id)"
             >{{ t('collection.loan.remove') }}</button>
           </div>
@@ -309,6 +309,8 @@
 </template>
 
 <script setup>
+import { localDate, toApiDate } from '../../utils/dates.js'
+import { useDateTag } from '../../composables/useDateTag.js'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../../services/api.js'
@@ -321,7 +323,6 @@ import AppSwitch from '../ui/AppSwitch.vue'
 import TextField from '../form/TextField.vue'
 import DateField from '../form/DateField.vue'
 import ProNotice from '../ProNotice.vue'
-import { isoDate, fromIso } from '../../utils/statPeriods.js'
 import { parseCents, centsToInput, formatMoney } from '../../utils/money.js'
 
 const props = defineProps({
@@ -329,16 +330,16 @@ const props = defineProps({
   bookTitle: { type: String, default: '' }
 })
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const { canUse } = usePlan()
 const toast = useToast()
 const confirm = useConfirm()
 
-const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
-const longDate = text => fromIso(text).toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short', year: 'numeric' })
-const shortDate = text => (text ? fromIso(text).toLocaleDateString(dateLocale.value, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '')
+const dateLocale = useDateTag()
+const longDate = text => localDate(text).toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short', year: 'numeric' })
+const shortDate = text => (text ? localDate(text).toLocaleDateString(dateLocale.value, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '')
 const money = cents => formatMoney(cents, dateLocale.value, data.value?.copy?.currency || 'BRL')
-const isOverdue = loan => Boolean(loan.dueOn && !loan.returnedOn && loan.dueOn < isoDate(new Date()))
+const isOverdue = loan => Boolean(loan.dueOn && !loan.returnedOn && loan.dueOn < toApiDate(new Date()))
 
 const data = ref(null)
 const loading = ref(false)
@@ -385,8 +386,8 @@ function startEdit(loan) {
   Object.assign(draft, {
     id: loan?.id ?? null,
     borrower: loan?.borrower ?? '',
-    lentOn: loan ? fromIso(loan.lentOn) : new Date(),
-    dueOn: loan?.dueOn ? fromIso(loan.dueOn) : null,
+    lentOn: loan ? localDate(loan.lentOn) : new Date(),
+    dueOn: loan?.dueOn ? localDate(loan.dueOn) : null,
     notes: loan?.notes ?? ''
   })
   editingLoan.value = true
@@ -395,8 +396,8 @@ function startEdit(loan) {
 function saveLoan() {
   const body = {
     borrower: draft.borrower,
-    lentOn: draft.lentOn ? isoDate(draft.lentOn) : null,
-    dueOn: draft.dueOn ? isoDate(draft.dueOn) : null,
+    lentOn: draft.lentOn ? toApiDate(draft.lentOn) : null,
+    dueOn: draft.dueOn ? toApiDate(draft.dueOn) : null,
     notes: draft.notes
   }
   return run(async () => {
@@ -439,7 +440,7 @@ function resetCopyDraft() {
     location: copy.location ?? '',
     price: centsToInput(copy.priceCents, dateLocale.value),
     value: centsToInput(copy.valueCents, dateLocale.value),
-    acquiredOn: copy.acquiredOn ? fromIso(copy.acquiredOn) : null
+    acquiredOn: copy.acquiredOn ? localDate(copy.acquiredOn) : null
   })
 }
 
@@ -451,7 +452,7 @@ const copyBody = computed(() => ({
   location: copyDraft.location.trim() || null,
   priceCents: parseCents(copyDraft.price),
   valueCents: parseCents(copyDraft.value),
-  acquiredOn: copyDraft.acquiredOn ? isoDate(copyDraft.acquiredOn) : null
+  acquiredOn: copyDraft.acquiredOn ? toApiDate(copyDraft.acquiredOn) : null
 }))
 
 const copyDirty = computed(() => {
@@ -599,22 +600,10 @@ watch(() => props.bookId, () => {
   flex: 1 1 12rem;
 }
 
-.link-button {
+.link-btn {
   padding: var(--space-1) 0;
-  border: none;
-  background: none;
-  color: var(--main-color);
-  font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
 }
 
-.link-button.danger {
-  color: var(--red);
-}
-
-.link-button:focus-visible,
 .photo-remove:focus-visible,
 .photo-grid a:focus-visible {
   outline: var(--focus-ring);

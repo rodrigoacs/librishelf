@@ -7,7 +7,7 @@ describe('mapa de recursos', () => {
   })
 
   test('os quatro recursos do Pro', () => {
-    expect([...PRO_FEATURES].sort()).toEqual(['auto_backup', 'collector', 'personalization', 'stats_advanced'])
+    expect([...PRO_FEATURES].sort()).toEqual(['auto_backup', 'collector', 'page_visits', 'personalization', 'stats_advanced'])
   })
 
   test('todo recurso é free ou pro', () => {

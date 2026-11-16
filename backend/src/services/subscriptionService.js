@@ -144,9 +144,9 @@ export async function cancel(userId) {
   try {
     await mercadoPago.cancelPreapproval(active.external_id)
   } catch (err) {
-    if (err.status === 503) throw err
+    if (err.status === STATUS.SERVICE_UNAVAILABLE) throw err
     logger.error('Falha ao cancelar a assinatura no Mercado Pago', { userId, preapprovalId: active.external_id, message: err.message })
-    throw httpError('Não foi possível cancelar agora. Tente de novo em instantes.', 502, 'PAYMENT_PROVIDER_ERROR')
+    throw httpError('Não foi possível cancelar agora. Tente de novo em instantes.', STATUS.BAD_GATEWAY, 'PAYMENT_PROVIDER_ERROR')
   }
 
   const row = (await db.query(s.CANCEL_MONTHLY, [active.external_id, GRACE_DAYS])).rows[0]
@@ -180,7 +180,7 @@ export async function stopForAccountDeletion(userId) {
         continue
       }
       logger.error('Falha ao cancelar o mensal na exclusão da conta', { userId, preapprovalId, message: err.message })
-      throw httpError('Não foi possível cancelar sua assinatura mensal agora, então a conta não foi excluída. Tente de novo em instantes.', 502, 'SUBSCRIPTION_CANCEL_FAILED')
+      throw httpError('Não foi possível cancelar sua assinatura mensal agora, então a conta não foi excluída. Tente de novo em instantes.', STATUS.BAD_GATEWAY, 'SUBSCRIPTION_CANCEL_FAILED')
     }
   }
   logger.info('Mensal cancelado no Mercado Pago antes da exclusão da conta', { userId, preapprovals: preapprovals.size })
@@ -203,7 +203,7 @@ export async function stopRenewal(entitlement) {
   } catch (err) {
     if (err.status === 404) return false
     logger.error('Falha ao cancelar a assinatura no Mercado Pago', { entitlementId: entitlement.id, message: err.message })
-    throw httpError('O Mercado Pago não respondeu. Tente de novo em instantes.', 502, 'PAYMENT_PROVIDER_ERROR')
+    throw httpError('O Mercado Pago não respondeu. Tente de novo em instantes.', STATUS.BAD_GATEWAY, 'PAYMENT_PROVIDER_ERROR')
   }
 }
 

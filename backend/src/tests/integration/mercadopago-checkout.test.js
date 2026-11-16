@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import request from 'supertest'
 import app from '../../app.js'
 import { db } from '../../database/connection.js'
@@ -7,6 +8,7 @@ import { clearDatabase, closeDatabase } from '../../utils/db.js'
 import { setFetch, API_URL } from '../../services/mercadoPago.js'
 import { sign, buildManifest } from '../../utils/mercadoPagoSignature.js'
 import { drain } from '../../jobs/worker.js'
+import logger from '../../utils/logger.js'
 
 const PASSWORD = 'senha12345'
 const SECRET = 'segredo-do-webhook-de-teste'
@@ -175,6 +177,28 @@ describe('webhook', () => {
     expect(unsigned.body.code).toBe('INVALID_SIGNATURE')
     expect((await webhook('1', { secret: 'outra-chave' })).status).toBe(401)
     expect(await count('webhook_events')).toBe(before)
+  })
+
+  test('assinatura inválida: o log diz o formato da notificação, sem valores', async () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {})
+    try {
+      await request(app).post('/webhooks/mercadopago?data.id=987654&type=payment').set('x-signature', 'ts=1,v1=errada').send({ type: 'payment' })
+      expect(warn).toHaveBeenCalledWith('Webhook do Mercado Pago com assinatura inválida', expect.objectContaining({ hasSignature: true, query: 'data.id,type', topic: 'payment' }))
+      expect(JSON.stringify(warn.mock.calls)).not.toContain('987654')
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('IPN (?id=&topic=) sem assinatura: 200, ignorada e nada gravado', async () => {
+    const before = await count('webhook_events')
+    for (const topic of ['payment', 'merchant_order']) {
+      const res = await request(app).post(`/webhooks/mercadopago?id=123&topic=${topic}`).send({ resource: '123', topic })
+      expect(res.status).toBe(200)
+    }
+    expect(await count('webhook_events')).toBe(before)
+    // Com x-signature não é IPN: a assinatura é conferida como sempre
+    expect((await request(app).post('/webhooks/mercadopago?id=123&topic=payment').set('x-signature', 'ts=1,v1=x').send({})).status).toBe(401)
   })
 
   test('pagamento aprovado vira Pro anual; nada de cartão no banco', async () => {
@@ -402,7 +426,7 @@ describe('desistência da compra (7 dias)', () => {
     try {
       const res = await withdraw('otto', payment.id)
       expect(res.status).toBe(502)
-      expect(res.body.code).toBe('PAYMENT_PROVIDER_ERROR')
+      expect(res.body.code).toBe('REFUND_PROVIDER_ERROR')
     } finally {
       mp.failRefund = false
     }

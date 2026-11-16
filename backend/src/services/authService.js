@@ -224,7 +224,7 @@ async function resendVerification(userId, locale) {
     await deliverVerification(user, locale)
   } catch (err) {
     logger.error('Falha ao reenviar confirmação de e-mail', { userId, message: err.message })
-    throw httpError('Não foi possível enviar o e-mail agora. Tente de novo em alguns minutos.', 502, 'EMAIL_SEND_FAILED')
+    throw httpError('Não foi possível enviar o e-mail agora. Tente de novo em alguns minutos.', STATUS.BAD_GATEWAY, 'EMAIL_SEND_FAILED')
   }
   return { alreadyVerified: false }
 }

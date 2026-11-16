@@ -79,6 +79,7 @@
       <li
         v-for="(loan, index) in loans"
         :key="loan.id"
+        class="stagger-in"
         :style="{ '--i': index }"
       >
         <button
@@ -96,10 +97,12 @@
           />
           <span class="loan-text">
             <span class="loan-title">{{ loan.title }}</span>
-            <span
+            <AppTag
               v-if="loan.overdue && !loan.returnedOn"
               class="late-tag"
-            >{{ t('loans.overdue') }}</span>
+              tone="red"
+              caps
+            >{{ t('loans.overdue') }}</AppTag>
             <span class="loan-who">{{ loan.borrower }}</span>
             <span class="loan-when">{{ when(loan) }}</span>
           </span>
@@ -124,6 +127,9 @@
 </template>
 
 <script setup>
+import { localDate } from '../utils/dates.js'
+import { useDateTag } from '../composables/useDateTag.js'
+import AppTag from '../components/ui/AppTag.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../services/api.js'
@@ -137,12 +143,11 @@ import BookDialog from '../components/BookDialog.vue'
 import ProNotice from '../components/ProNotice.vue'
 import PullRefresh from '../components/ui/PullRefresh.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh.js'
-import { fromIso } from '../utils/statPeriods.js'
 import { formatMoney } from '../utils/money.js'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const { plan, canUse } = usePlan()
-const dateLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'pt-BR'))
+const dateLocale = useDateTag()
 
 const status = ref('open')
 const loans = ref(null)
@@ -153,7 +158,7 @@ const loadError = ref('')
 const statusOptions = computed(() =>
   ['open', 'returned', 'all'].map(value => ({ value, label: t(`loans.lists.${value}`) })))
 
-const date = text => fromIso(text).toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short', year: 'numeric' })
+const date = text => localDate(text).toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short', year: 'numeric' })
 
 function when(loan) {
   if (loan.returnedOn) return t('loans.returnedOn', { from: date(loan.lentOn), to: date(loan.returnedOn) })
@@ -271,15 +276,6 @@ onMounted(load)
 .late-tag {
   align-self: flex-start;
   margin: var(--space-1) 0;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: rgba(var(--red-rgb), 0.12);
-  color: var(--red);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  text-transform: uppercase;
 }
 
 @media (hover: hover) {
@@ -339,25 +335,6 @@ onMounted(load)
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-4);
-  }
-
-  /* Cascata ao entrar, como o feed da Comunidade */
-  .loan-list li {
-    animation: loan-in var(--dur-medium) var(--ease-enter) both;
-    animation-delay: calc(min(var(--i, 0), 10) * var(--stagger));
-  }
-}
-
-@keyframes loan-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 12px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loan-list li {
-    animation: none !important;
   }
 }
 </style>

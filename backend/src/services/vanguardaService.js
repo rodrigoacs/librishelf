@@ -16,7 +16,7 @@ export const OFFER_CODE = 'vanguarda'
 export const BADGE = 'vanguarda'
 export const MIN_BOOKS = 10
 
-const isOpen = offer => Boolean(offer)
+export const isOpen = offer => Boolean(offer)
   && offer.active
   && offer.in_window
   && (offer.slots_total === null || offer.slots_used < offer.slots_total)
@@ -61,5 +61,20 @@ export async function checkSafely(userId) {
   } catch (err) {
     logger.error('Falha ao verificar a Vanguarda', { userId, message: err.message })
     return { status: 'error' }
+  }
+}
+
+/**
+ * Para mostrar o progresso (onboarding): a oferta está aberta, a conta já
+ * tem, quantos livros ela tem e quantas vagas sobram (null = sem limite).
+ */
+export async function progressOf(userId) {
+  const [row, offer] = await Promise.all([repo.eligibility(userId), repo.offer(OFFER_CODE)])
+  return {
+    open: isOpen(offer),
+    has: Boolean(row?.has_vanguarda),
+    books: row?.books ?? 0,
+    minBooks: MIN_BOOKS,
+    slotsLeft: offer && offer.slots_total !== null ? Math.max(0, offer.slots_total - offer.slots_used) : null
   }
 }

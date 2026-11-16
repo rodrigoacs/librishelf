@@ -42,14 +42,31 @@ export function isAuthentic(req) {
   })
 }
 
-/** → { duplicate } */
+/**
+ * Notificação IPN (?id=&topic=), que o MP manda junto da Webhook quando há
+ * notification_url. Não tem assinatura e a Webhook do mesmo recurso já chega:
+ * https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/ipn
+ */
+export function isIpn(req) {
+  return Boolean(req.query.topic) && req.query['data.id'] === undefined && !req.get('x-signature')
+}
+
+/** → { duplicate } ou { ignored } */
 export async function receive(req) {
+  // 200 sem gravar nada: com 4xx o MP reenviaria a IPN e o log encheria de ruído
+  if (isIpn(req)) return { ignored: true }
   if (!process.env.MP_WEBHOOK_SECRET?.trim()) {
     logger.error('Webhook do Mercado Pago recebido sem MP_WEBHOOK_SECRET configurado; recusado')
     throw httpError('Assinatura inválida.', STATUS.UNAUTHORIZED, 'INVALID_SIGNATURE')
   }
   if (!isAuthentic(req)) {
-    logger.warn('Webhook do Mercado Pago com assinatura inválida', { requestId: req.get('x-request-id') })
+    // Formato da notificação (sem valores), para separar Webhook (data.id/type) de IPN (id/topic)
+    logger.warn('Webhook do Mercado Pago com assinatura inválida', {
+      requestId: req.get('x-request-id'),
+      hasSignature: Boolean(req.get('x-signature')),
+      query: Object.keys(req.query).join(','),
+      topic: req.query.type || req.query.topic || req.body?.type || req.body?.topic
+    })
     throw httpError('Assinatura inválida.', STATUS.UNAUTHORIZED, 'INVALID_SIGNATURE')
   }
 
