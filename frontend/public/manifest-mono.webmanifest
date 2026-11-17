@@ -31,7 +31,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/alt/mono-512.png",
+      "src": "/icons/alt/mono-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

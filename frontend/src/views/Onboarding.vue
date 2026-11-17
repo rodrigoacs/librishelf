@@ -1,6 +1,5 @@
 <template>
   <AuthLayout
-    title="Librishelf"
     :subtitle="t('onboarding.visual')"
   >
     <div class="onboarding">

@@ -315,10 +315,12 @@ da VPS, não no container.
 
 ## Estado e fila
 
-Atualizado em 2026-11-12, fim da sessão "fazer tudo de uma vez" (39h a 42,
-README e os três bugs anotados). Último commit: `55e5f2f`; tudo o mais está
-no working tree, sem commit. Patches acumulados por pacote (desde `55e5f2f`)
-foram entregues ao Rodrigo; o 41 e o 42 saíram num patch só.
+Atualizado em 2026-11-16 (pacote 44; 45 em discussão). Último commit:
+`af2c709` (`npm run dev` na raiz); até o 43 está commitado. O 44 está no
+working tree, sem commit (mensagem sugerida: `fix: logo e marca únicos
+(ícone plano em favicon, pwa e apple-touch; LIBRI + SHELF no login e nos
+e-mails)`). O 45 (ícone selo de cera) também está no working tree, esperando o teste
+no celular e em produção.
 Feitos nesta sessão: 39h (`PublicLibrary.vue` → `components/public/`
 `PublicProfileHeader`, `PublicFollowActions`, `PublicShelf`), 39i
 (`YearInBooks.vue` → `components/year/`), 39j (`BookDialog.vue` →
@@ -441,6 +443,17 @@ banco local, com 2 pagamentos de teste aprovados.
   Nenhum webhook de assinatura chegou (nem o do cancelamento): conferir em
   produção se "Planos e assinaturas" está marcado.
 - Fundador anual está `available: false` nas ofertas (B9 não rodou).
+- Como subir o sandbox de novo (2026-11-15, funcionou): `MP_ACCESS_TOKEN`,
+  `MP_WEBHOOK_SECRET` e `MP_SANDBOX=true` no `src/.env.local`. O token é o
+  **Access Token** de produção da vendedora de teste (`APP_USR-<16 díg>-…`,
+  longo); a Public Key (`APP_USR-` + UUID) dá 401 "Unauthorized access to
+  resource". `ngrok http 5173`, e o endereço dele em `APP_URL`,
+  `ALLOWED_ORIGINS` (junto com localhost) e `MP_NOTIFICATION_URL`
+  (`…/api/webhooks/mercadopago`): o `/preapproval` recusa `back_url` em
+  localhost. Subir com
+  `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=.ngrok-free.app npm run dev:local`
+  e abrir o app pelo ngrok (cookie é por domínio). Conta `comprador` (id 46)
+  com senha `senha12345` no banco local (trocada nesta data).
 
 **43 — Ajustes do sandbox: concluído (2026-11-14).**
 1. Desistência com erro do MP agora dá `REFUND_PROVIDER_ERROR` ("Não foi
@@ -460,6 +473,60 @@ Instável: `mercadopago-checkout.test.js` estourou os 5 s do `beforeAll`
 `backups.test.js` (dois testes de agenda) falhou de novo, na suíte e sozinho
 (`sweep` enfileira 0): o mesmo instável do relógio. Suíte: 773/775.
 
+**44 — Logo único (ícone plano): concluído (2026-11-16).** O desenho
+isométrico saiu; tudo vem do `favicon.svg` (porta-livros plano).
+- PNG gerados com ImageMagick (`convert -background none -density 2400 …`):
+  `bookshelf.png` (440, transparente: `og:image` e logo dos e-mails, mesma
+  URL), `icons/icon-192|512.png` (transparentes), `favicon.ico` (48/32/16).
+- Fundo opaco e glifo centrado: maskable 512 com escala 0,62 (o canto (30,30)
+  fica dentro do círculo de 40%) e apple 180 com escala 0,75. Padrão em
+  `#121212` (`icon-maskable-512.png`, `apple-touch-icon.png`); alternativos
+  com a cor do próprio SVG (`icons/alt/<n>-maskable-512.png`, `<n>-apple.png`).
+  Os manifestos alternativos apontam o maskable para o arquivo novo.
+- `apple-touch-icon` opaco (o iOS pinta a transparência de preto) no
+  `index.html`, `theme-boot.js` e `useTheme.js`; o seletor de ícone usa os
+  `-apple.png` (os quatro com fundo).
+- Menu, barra do celular, `PublicBar` e Início vazio usam `/favicon.svg`;
+  `bookshelf.png` saiu do precache do service worker.
+- Desenho mudar de novo: editar `favicon.svg` (e os `alt/*.svg`) e gerar os
+  PNG do mesmo jeito.
+- Marca escrita igual em todo lugar (LIBRI sem serifa + SHELF serifado):
+  `BrandWordmark` ganhou `mono` (as duas partes na cor do texto em volta);
+  o `AuthLayout` mostra a marca quando não recebe `title` (as telas de
+  entrada pararam de passar "Librishelf"; o Cadastro mantém "Junte-se."), com
+  `drop-shadow` no lugar do `text-shadow`; topo dos e-mails com os dois
+  `<span>`. O resumo do ano (`yearStory.js`) já desenhava assim. Título da aba,
+  assuntos e textos corridos continuam "Librishelf".
+
+**45 — Ícone novo: selo de cera "W4": no código (2026-11-16), falta testar
+no celular e em produção.** Depois de 12 rodadas de desenho (página:
+https://claude.ai/artifact/BAAscCwRLubopbFryZs9j2, ler com a ferramenta
+Artifact), o Rodrigo escolheu o W4: gota de lacre vermelho (`#e5484d`) com
+sombra deslocada (`#c2272d`), anel e "LS" em relevo (L da Inter 800 + S da
+Source Serif 4 700, contornos tirados dos woff2 com fontTools). Conceito:
+ex-libris ("dos livros de"; "libris" é o LIBRI do nome).
+- `favicon.svg` e `icons/alt/{paper,night,mono}.svg` novos (letras num
+  `<defs>` usado duas vezes: sombra e relevo). Pro: papel = cera vinho
+  `#9b1c2e` em `#f2e8d5`; noite = cera dourada `#e0b354` em `#141a2e`;
+  mono = cera `#e6e6e6` com letras escuras `#2e2e2e` em `#111111`.
+- PNG gerados **pelo Chromium do Playwright** (o ImageMagick não aplica bem
+  os transforms das letras): `bookshelf.png` 440, `icon-192|512`,
+  maskable `#121212` a 0,62, apple 180 `#121212` a 0,75, os `alt/` com o
+  fundo do quadro; `favicon.ico` 48/32/16 juntado pelo ImageMagick. Script em
+  `/tmp/claude-0/-root-librishelf/34edc410-5d29-463e-ad77-d5190e483b62/scratchpad/w4/gerar-icones.mjs`
+  (pode sumir; para refazer basta renderizar os SVG de `public/` no tamanho).
+- Service worker: o `BUILD_ID` agora inclui o conteúdo dos arquivos de
+  `public/` do precache, e a instalação busca de novo tudo que não é de
+  `/assets/` (antes um ícone novo com o mesmo nome ficava preso no cache).
+- Testes: lint limpo, frontend 158/158, build ok. Falta: ver no celular
+  (PWA instalado: Android pode demorar a trocar o ícone da tela inicial; no
+  iOS, remover e adicionar de novo), aba, seletor de ícone do Pro e e-mail
+  (o logo do e-mail é o `bookshelf.png` de produção, então só muda depois do
+  deploy).
+- Ajuste ainda em aberto: na prévia de link (og-image do lembrete abaixo),
+  trocar a faixa de madeira por nada ou um fio vermelho.
+- Alternativa guardada: "8a4i", pilha de livros na tábua (rodada 6 da página).
+
 ### Bugs anotados (fora de pacote)
 - Nenhum aberto. Corrigidos no fim da sessão de 2026-11-12: âncora
   `#settings-notifications` do descadastro (`utils/anchor.js`,
@@ -471,3 +538,16 @@ Instável: `mercadopago-checkout.test.js` estourou os 5 s do `beforeAll`
 Apps iOS e Android: avaliar empacotar o PWA (Capacitor ou TWA) em vez de um
 app React Native separado. Atenção à regra de compra dentro do app no iOS
 para o Pro via Mercado Pago. O Rodrigo pediu para esperar e ser lembrado.
+
+Logo com o texto em fontes fixas (aprovado em 2026-11-16, fazer depois do
+pacote 45): o ícone e a marca juntos numa imagem, renderizados
+com Inter e Source Serif 4 pelo Playwright do `e2e/` (script que lê um HTML
+de modelo, sem dependência nova). Saídas: `og-image.png` 1200×630 (fundo
+`#18181b`, frase "Sua biblioteca pessoal, em todo lugar.", faixa marrom de
+prateleira embaixo) com `twitter:card` `summary_large_image` no `index.html`
+e no `metaService.js` (a página com capas mantém o mosaico; ajustar o
+`linkPreview.test.js`); `email-logo.png` 2x no topo dos e-mails, no lugar
+do ícone com o texto, com `alt="Librishelf"`. `LIBRI` no azul fixo
+(`rgb(58,134,255)` no escuro, `rgb(10,104,180)` no claro) e respiro de
+0,04em antes do `SHELF`. SVG com as letras em contorno ficou de fora (só para
+impressão e imprensa; pediria `opentype.js`).

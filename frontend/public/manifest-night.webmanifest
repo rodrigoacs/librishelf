@@ -31,7 +31,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/alt/night-512.png",
+      "src": "/icons/alt/night-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

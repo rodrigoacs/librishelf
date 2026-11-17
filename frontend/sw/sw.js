@@ -44,9 +44,11 @@ const API_BYPASS = [/^\/api\/auth\//, /^\/api\/isbn\//, /^\/api\/meta\//, /^\/ap
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const assets = await caches.open(ASSETS)
-    // Um por um: um arquivo que falhar não impede o resto (nem a instalação)
+    // Um por um: um arquivo que falhar não impede o resto (nem a instalação).
+    // Os de /assets/ têm hash no nome e nunca mudam; os de public/ (ícones,
+    // manifest) mantêm o nome, então são buscados de novo a cada versão.
     await Promise.all(PRECACHE.map(async url => {
-      if (await assets.match(url)) return
+      if (url.includes('/assets/') && await assets.match(url)) return
       try {
         const response = await fetch(url, { cache: 'no-cache' })
         if (response.ok) await assets.put(url, response)

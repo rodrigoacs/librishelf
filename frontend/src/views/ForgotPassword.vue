@@ -1,6 +1,5 @@
 <template>
   <AuthLayout
-    title="Librishelf"
     :subtitle="t('login.header')"
   >
     <div class="header">

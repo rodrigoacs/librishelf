@@ -77,7 +77,7 @@ function setLink(selector, href) {
 function applyIcon() {
   const icon = APP_ICONS.includes(account.value.appIcon) ? account.value.appIcon : null
   setLink('link[rel="icon"][type="image/svg+xml"]', icon ? `/icons/alt/${icon}.svg` : '/favicon.svg')
-  setLink('link[rel="apple-touch-icon"]', icon ? `/icons/alt/${icon}-192.png` : '/bookshelf.png')
+  setLink('link[rel="apple-touch-icon"]', icon ? `/icons/alt/${icon}-apple.png` : '/icons/apple-touch-icon.png')
   setLink('link[rel="manifest"]', icon ? `/manifest-${icon}.webmanifest` : '/manifest.webmanifest')
 }
 

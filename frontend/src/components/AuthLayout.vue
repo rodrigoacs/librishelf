@@ -7,7 +7,14 @@
       <div class="visual-overlay"></div>
 
       <div class="visual-content">
-        <p class="visual-title">{{ title }}</p>
+        <!-- Sem título: a marca, igual à do menu (toda branca sobre o mosaico) -->
+        <p class="visual-title">
+          <template v-if="title">{{ title }}</template>
+          <BrandWordmark
+            v-else
+            mono
+          />
+        </p>
         <p
           v-if="subtitle"
           class="visual-subtitle"
@@ -43,11 +50,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import BrandWordmark from './BrandWordmark.vue'
 import api from '../services/api.js'
 import { coverFileUrl } from '../utils/covers.js'
 
 defineProps({
-  title: { type: String, required: true },
+  title: { type: String, default: '' },
   subtitle: { type: String, default: '' }
 })
 
@@ -163,7 +171,8 @@ onMounted(async () => {
   color: #fff;
   letter-spacing: -3px;
   line-height: 1.1;
-  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  /* Sombra do bloco todo: com text-shadow, a do SHELF escurecia o I do LIBRI */
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.8));
   animation: fadeUp 1s ease-out;
 }
 

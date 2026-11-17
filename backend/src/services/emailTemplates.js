@@ -7,7 +7,7 @@
  *   com imagens bloqueadas;
  * - o logo vem por URL pública (MAIL_LOGO_URL, padrão https://librishelf.com/bookshelf.png),
  *   com largura e altura fixas: se o leitor bloquear imagens, o layout não pula
- *   e o nome "Librishelf" logo abaixo continua identificando o e-mail.
+ *   e a marca (LIBRI sem serifa + SHELF serifado, como no app) logo abaixo continua identificando o e-mail.
  *
  * Para criar um e-mail novo: acrescente os textos em TEXTS (pt e en) e
  * exporte uma função que chama build('chave', params).
@@ -487,7 +487,7 @@ function layout({ locale, lang, t, name, link, items = [], unsubscribe = null })
           <tr>
             <td align="center" bgcolor="${BRAND.shelf}" style="background:${BRAND.shelf};border-radius:16px 16px 0 0;padding:28px 24px 26px">
               <img src="${escapeHtml(logoUrl())}" width="72" height="72" alt="" style="display:block;margin:0 auto;width:72px;height:72px;border:0;outline:none;text-decoration:none">
-              <p style="margin:14px 0 0;font-family:${SERIF};font-size:24px;line-height:1;color:#ffffff;letter-spacing:0.5px">Librishelf</p>
+              <p style="margin:14px 0 0;font-size:24px;line-height:1;color:#ffffff;letter-spacing:0.5px"><span style="font-family:${SANS};font-weight:800">LIBRI</span><span style="font-family:${SERIF};font-weight:bold">SHELF</span></p>
               <p style="margin:8px 0 0;font-family:${SANS};font-size:13px;color:#a1a1aa">${escapeHtml(lang.tagline)}</p>
             </td>
           </tr>

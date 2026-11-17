@@ -151,7 +151,7 @@
     >
       <template #media>
         <img
-          src="/bookshelf.png"
+          src="/favicon.svg"
           alt=""
           width="96"
           height="96"

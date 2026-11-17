@@ -14,7 +14,7 @@
     />
     <div class="mobile-logo-wrapper">
       <img
-        src="/bookshelf.png"
+        src="/favicon.svg"
         alt=""
         width="30"
         height="30"

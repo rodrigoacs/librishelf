@@ -83,7 +83,7 @@
               ></span>
               <img
                 v-else
-                :src="option.value ? `/icons/alt/${option.value}-192.png` : '/icons/icon-192.png'"
+                :src="option.value ? `/icons/alt/${option.value}-apple.png` : '/icons/apple-touch-icon.png'"
                 alt=""
                 width="48"
                 height="48"

@@ -7,7 +7,7 @@
       class="public-bar-brand"
     >
       <img
-        src="/bookshelf.png"
+        src="/favicon.svg"
         alt=""
         width="24"
         height="24"

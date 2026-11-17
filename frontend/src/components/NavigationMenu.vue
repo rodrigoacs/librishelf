@@ -33,7 +33,7 @@
       <div class="sidebar-header">
         <div class="logo-wrapper">
           <img
-            src="/bookshelf.png"
+            src="/favicon.svg"
             alt=""
             width="40"
             height="40"

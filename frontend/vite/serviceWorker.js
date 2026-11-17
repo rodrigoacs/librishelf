@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 
@@ -12,7 +13,8 @@ import { fileURLToPath } from 'node:url'
  * é pesado: o leitor de código de barras (WebAssembly), fontes de outros
  * alfabetos e formatos antigos de fonte (o navegador usa o woff2).
  *
- * O BUILD_ID muda a cada build com arquivos diferentes: é o que faz o
+ * O BUILD_ID muda a cada build com arquivos diferentes, ou com o conteúdo
+ * dos arquivos de public/ mudado (ícone novo com o mesmo nome): é o que faz o
  * navegador perceber o service worker novo.
  */
 const TEMPLATE = fileURLToPath(new URL('../sw/sw.js', import.meta.url))
@@ -29,7 +31,6 @@ const PUBLIC_FILES = [
   '/manifest.webmanifest',
   '/favicon.svg',
   '/favicon.ico',
-  '/bookshelf.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ]
@@ -47,15 +48,22 @@ export function precacheList(fileNames, base = '/') {
 
 export default function serviceWorker() {
   let base = '/'
+  let publicDir = ''
   return {
     name: 'librishelf:service-worker',
     apply: 'build',
     configResolved(config) {
       base = config.base
+      publicDir = config.publicDir
     },
     generateBundle(_options, bundle) {
       const files = precacheList(Object.keys(bundle), base)
-      const buildId = createHash('sha256').update(files.join('\n')).digest('hex').slice(0, 12)
+      const hash = createHash('sha256').update(files.join('\n'))
+      for (const file of PUBLIC_FILES) {
+        const path = join(publicDir, file)
+        if (publicDir && existsSync(path)) hash.update(readFileSync(path))
+      }
+      const buildId = hash.digest('hex').slice(0, 12)
       const source = readFileSync(TEMPLATE, 'utf8')
         .replace("const BUILD_ID = '__BUILD_ID__'", `const BUILD_ID = ${JSON.stringify(buildId)}`)
         .replace('const PRECACHE = __PRECACHE__', `const PRECACHE = ${JSON.stringify(files, null, 2)}`)

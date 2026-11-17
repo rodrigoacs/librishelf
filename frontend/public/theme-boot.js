@@ -28,7 +28,7 @@
       var setHref = function (sel, href) { var el = document.querySelector(sel); if (el) el.setAttribute('href', href) }
       setHref('link[rel="manifest"]', '/manifest-' + pz.appIcon + '.webmanifest')
       setHref('link[rel="icon"][type="image/svg+xml"]', '/icons/alt/' + pz.appIcon + '.svg')
-      setHref('link[rel="apple-touch-icon"]', '/icons/alt/' + pz.appIcon + '-192.png')
+      setHref('link[rel="apple-touch-icon"]', '/icons/alt/' + pz.appIcon + '-apple.png')
     }
     root.setAttribute('data-theme', theme)
     if (accents.indexOf(accent) !== -1 || proAccents.indexOf(accent) !== -1) {
