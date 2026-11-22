@@ -526,6 +526,140 @@ ex-libris ("dos livros de"; "libris" é o LIBRI do nome).
 - Ajuste ainda em aberto: na prévia de link (og-image do lembrete abaixo),
   trocar a faixa de madeira por nada ou um fio vermelho.
 - Alternativa guardada: "8a4i", pilha de livros na tábua (rodada 6 da página).
+- Exploração depois do W4 (sem mudar código): rodada 13 = carimbo retangular
+  com LS e tinta falhada (C1–C9); rodada 14 (2026-11-19) = xilogravura a partir
+  das referências do Rodrigo em `~/temp/` (G1–G9: pilha entalhada, placa
+  negativa, selo redondo, livro com raios, leitura noturna). O Rodrigo pediu
+  só o L sem serifa, o S serifado e a borda: rodada 15 (H1–H9: redondo,
+  redondo com fio, quadrado, em pé; tinta escura no papel ou vermelha sem
+  quadro; L azul; disco vazado). Depois pediu mais natural e com linhas retas:
+  rodada 16 (J1–J9), mesma geometria com filtro de tinta (`stampPrint`:
+  ruído fino + manchas largas num limiar, borda 1,9). Em 16 px a textura
+  estraga as letras: o favicon pequeno teria de sair sem textura. Pediu menos
+  falha (wear baixou na 16) e depois falhas só horizontais: rodada 17
+  (K1–K9, `streak: true` = ruído esticado em x, sem tremido na borda).
+  Rodada 18 (N1–N9): forma preta com o LS vazado (transparente); N1/N2
+  chapados (`flatPrint`). Preto some no fundo escuro: precisaria de versão
+  clara no tema escuro. Rodada 19 (P1–P10): o preto vazado num quadro
+  colorido (vermelho, azul do LIBRI, amarelo, verde); a cor aparece dentro
+  das letras. Rodada 20 (Q1–Q10): só o quadrado vazado no quadro colorido, com
+  detalhes de carimbo (fio, poucas falhas, riscos horizontais, batida torta de
+  4°, pouca tinta); Q10 = o mesmo chapado, para o favicon.
+  **Decisão (2026-11-19): ideia do carimbo/xilogravura abandonada** (rodadas
+  13 a 20): o Rodrigo achou todos ruins de visualização. Fica o W4, que já
+  está commitado (`e821f9b`); nada do carimbo foi para o código.
+  Rodada 21 (T1–T12, chapados): marcador de página, prateleira com vaga,
+  lombadas-gráfico, livro inclinado, livro-telhado (casa) e ficha de
+  biblioteca, duas versões de cada. O Rodrigo gostou do T8 (livro
+  inclinado + livro em pé + tábua, silhueta escura no quadro amarelo) por
+  lembrar um L de longe. Rodada 22 (U1–U11, 2026-11-20, helper `leanL`):
+  só o L, L mais reto, apoio baixo, canto fechado (tábua sem sobra à
+  esquerda), vazado, azul, amarelo no escuro, azul sem quadro, lombadas,
+  vermelho, L azul + apoio vermelho. O Rodrigo pediu variações do U5
+  (vazado): rodada 23 (V1–V11, helper `cutTile`): quadro azul, vermelho,
+  escuro, só o L, L mais reto, apoio baixo, centrado e maior, redondo,
+  filetes sem recorte, L vazado + apoio em tinta, L vazado no azul.
+  Pediu mais cara de livro e física certa: rodada 24 (Y1–Y10, helpers
+  `physBooks`/`physCut`/`spine`): o inclinado gira no canto de baixo do
+  lado para onde tomba e o ângulo sai do contato do canto de cima com o
+  livro em pé (`asin`); cabeceado, etiqueta, dobras da capa dura, lombadas
+  finas com 3 livros. Em 16 px os detalhes viram ruído.
+  Rodada 25 (E1–E11, 2026-11-21, helpers `emblem`/`emblemMini`/`mono`/
+  `arches`/`arcText`): emblema redondo a partir de uma foto do Rodrigo
+  (`~/temp/2026-11-21_11-28.png`: fio vinho, anel creme com arcos, LIBRI
+  SHELF em curva, disco verde-oliva com LS e S com cortes de "páginas").
+  E1–E5 completos (fiel, com a marca, lombadas no lugar dos arcos, azul,
+  sem texto); E6–E11 reduzidos para ícone (verde, com páginas, serifado,
+  azul, vinho, Pro noite). Rodada 26 (F1–F12, helper `emblem2`):
+  variações do E2: S liso, arcos simples, arcada maior, arcos com livros,
+  EX LIBRIS em cima, pontos separadores, texto maior, disco maior, só
+  vinho, verde por fora, tema escuro, LIBRI em azul. O Rodrigo não gostou de nenhuma (2026-11-22, lançamento
+  com pressa): rodada 27 (R1–R8, chapados, sem estante nem emblema): óculos
+  de leitura (amarelo, escuro), livro com visto, anel de progresso, balão de
+  resenha, "ls" com o l de fita de marcador, L de fita, LS de fita.
+  O Rodrigo gostou do R4 (anel de progresso com livro aberto): rodada 28
+  (S1–S11, helper `progRing`): mais grosso, sem trilho, cursor na ponta,
+  capítulos, página azul, quadro azul, claro, sem quadro, Pro papel e noite,
+  arco em 90%. O Rodrigo mandou guardar a ideia (S1 é o melhor dela) e pediu
+  símbolos de gerenciamento de acervo: rodada 29 (Z1–Z9): gaveta de
+  fichário, código de barras-estante, leitor de ISBN, etiqueta de
+  classificação, escaninhos, divisórias, lupa na estante, livro etiquetado,
+  inventário. Gostou do Z5 (escaninhos) e do Z7 (lupa na estante): rodada 30
+  (B1–B11, helpers `cubby`/`shelfLens`/`lensAt`): escaninhos no escuro,
+  grossos, vaga azul, moldura azul, sem quadro; lupa maior, que amplia, no
+  claro, no azul; escaninhos com a lupa no nicho vazio (claro e escuro).
+  Pediu para seguir só com o Z7: rodada 31 (D1–D10, helper `lensShelf`):
+  "achou" (cinza fora da lente, cor dentro; escuro e claro), sem tábua,
+  lente azul, lupa no canto, duas lombadas, tons de azul, sem quadro, Pro
+  papel e noite. O Rodrigo mandou guardar a ideia do Z7 (D1 "achou" é o
+  melhor dela) e perguntou o que o slogan "Sua biblioteca pessoal, em todo
+  lugar." sugere como logo. Rodada 32 (L1–L10, helpers `pinPath`,
+  `ribbonPin`, `pocketShelf`, `bookRibbon`, `globeSpines`, `globeBands`):
+  pino-livro (escuro, solto vermelho), marcador-pino, estante no bolso,
+  livro com marcador saindo, globo de lombadas (com órbita, em gomos).
+  Gostou do L2 (pino-livro vermelho, sem quadro): rodada 33 (O1–O10, helper
+  `pinBook`): azul, livro maior, sombra no chão, livro vazado, lombadas na
+  cabeça, meio a meio azul/vermelho, quadro escuro, creme com livro
+  vermelho, Pro papel e noite. Pediu variações do O5 (lombadas na cabeça
+  do pino): rodada 34 (I1–I10, helper `pinShelf`, livro inclinado com
+  ângulo por asin): lombadas maiores, uma inclinada, coloridas, inclinada
+  colorida, pino azul, vazada, sem tábua, quadro escuro, Pro papel e
+  noite. **Rumo (2026-11-22): I6** (pino com estante vazada, uma inclinada),
+  sempre vazado, cor principal azul, cor acompanhando o tema. Pendências
+  da ideia: ícone de app (PWA maskable, apple-touch) precisa de fundo
+  opaco, então lá o vazado mostra a cor do quadro; prévia de link e
+  e-mail também com fundo fixo; versão de 16 px com lombadas mais grossas;
+  dentro do app, componente SVG com a cor do token do tema e id de máscara
+  único. Rodada 35 (helpers `pin6`, `pin16`): I6 sem fundo por tema (T-cl
+  azul `rgb(10,104,180)`, T-es `#3a86ff`, T-pa vinho `#9b1c2e`, T-no dourado
+  `#e0b354`, T-mo `#a1a1aa`), com fundo para a tela inicial (A-pd `#121212`,
+  A-cl branco, A-pa `#f2e8d5`, A-no `#141a2e`, A-mo pino `#e6e6e6` em
+  `#111111`) e versão reforçada de 16 px (16-cl, 16-es: duas lombadas +
+  a inclinada, mais grossas, tábua 2,2). No código, o pino nos quadros
+  ainda precisa encolher para a área segura (maskable 0,62; apple 0,75).
+  Pediu o LS do W4 no lugar dos livros: rodada 36 (LS-1–LS-9, helper
+  `pinLS`): LS vazado (azul escuro e claro), maior, branco por cima, L
+  vazado + S branco, todo sem serifa (para 16 px), app padrão a 0,8, Pro
+  papel e noite. O Rodrigo disse que está difícil escolher (2026-11-22).
+  Sugestão dada: parar de gerar rodadas; finalistas W4 (no código), LS-3
+  (pino com LS), D1 (lupa "achou") e S1 (anel de progresso); testar no
+  celular e na aba de verdade, perguntar a leitores, prazo curto e, sem
+  decisão, lançar com o W4. Seção "Finalistas" no topo da página (ROUND37:
+  W4, LS-3, D1, S1, cada um com prévia de link, e-mail e menu). Pediu o
+  W4 em azul: seção "W4 em azul" (ROUND38, `sealAlt(cera, sombra, letras)`):
+  WB1 `#3a86ff`/`#1f5fc4`/`#dbe8ff`, WB2 `rgb(10,104,180)`/`#07477d`/
+  `#d3e6f7`, WB3 marinho `#1e3a8a`/`#13255a`/`#e3ebff`, WB4 LS branco,
+  WB5/WB6 nos quadros (escala 0,8). Para aplicar: trocar as cores no
+  `favicon.svg` atual (mesmo desenho) e gerar os PNG. Pediu borda mais
+  natural e arredondada: seção ROUND39 (helper `waxSoft`, 64 pontos, sem a
+  frequência 11): WR1 suave {a3 .75, a5 .35, a7 .3}, WR2 mais suave {a3 .6,
+  a5 .3, a7 .12}, WR3 solta {a2 .35, a3 .7, a5 .4, a7 .15}; WR4/WR5 no azul
+  do escuro; WR6 no quadro. Aplicar = trocar o contorno da gota no
+  `favicon.svg` (e alternativos) por esse caminho. Pediu mais redondo:
+  ROUND40 (WC1 {a3 .42, a5 .16, a7 .05}, WC2 {a3 .3, a5 .1}, WC3 {a3 .18,
+  a5 .07}; WC4/WC5 no azul do escuro; WC6 no quadro). **Escolhido: WC1**
+  (2026-11-22). Seção ROUND41 mostra todos os usos: favicon claro (cera
+  `rgb(10,104,180)`, sombra `#07477d`, LS `#d3e6f7`) e escuro (`#3a86ff`,
+  `#1f5fc4`, `#dbe8ff`), app padrão `#121212` e claro branco (escala 0,8),
+  Pro papel (`#9b1c2e`, `#6e1220`, `#f5d0d6` em `#f2e8d5`), noite (`#e0b354`,
+  `#a77d22`, `#fff3d1` em `#141a2e`), mono (`#e6e6e6`, `#a1a1aa`, LS
+  `#2e2e2e` em `#111111`). Próximo: pacote 45b (aplicar no código, sessão
+  nova). **Aplicado (pacote 45b, 2026-11-22)**, ver o item 45b abaixo; o W4 segue no código como plano B.
+
+**45b — Ícone WC1 (selo azul, borda redonda): no working tree, sem commit
+(2026-11-22).** Mesmo desenho do W4 com a gota redonda (64 pontos, ondas
+3/5/7 com amplitudes .42/.16/.05, sem a 11) e cera azul.
+- `favicon.svg`, `bookshelf.png` e `icon-192|512` (transparentes): cera
+  `#0a68b4`, sombra/anel `#07477d`, LS `#d3e6f7`. Maskable (0,62) e
+  apple (0,75) em `#121212` com o azul do escuro (`#3a86ff`, `#1f5fc4`,
+  `#dbe8ff`). Alternativos do Pro com a borda nova e as mesmas cores de
+  antes. `favicon.ico` 16/32/48 do Chromium juntado pelo ImageMagick.
+- Gerador: `scratchpad/wc1/gerar.py` desta sessão (pode sumir; refazer =
+  trocar o caminho da gota nos SVG e renderizar como no 45). Cópia de
+  `public/` antes da troca em `scratchpad/wc1/public-antes`.
+- Testes: lint limpo, frontend 158/158, build ok. Falta ver no celular e,
+  depois do deploy, o logo do e-mail. Mensagem sugerida:
+  `feat: ícone em selo de cera azul com borda redonda (favicon, pwa, apple-touch e alternativos do pro)`
 
 ### Bugs anotados (fora de pacote)
 - Nenhum aberto. Corrigidos no fim da sessão de 2026-11-12: âncora
