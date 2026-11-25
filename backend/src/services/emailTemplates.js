@@ -483,11 +483,13 @@ function layout({ locale, lang, t, name, link, items = [], unsubscribe = null })
       <td align="center" style="padding:32px 12px">
         <table role="presentation" class="container" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:560px">
 
-          <!-- Topo: logo + nome -->
+          <!-- Topo: logo + nome. SHELF em 25px: a maiúscula da Georgia (0,69 em)
+               é mais baixa que a das sem serifa da lista (~0,71), e o e-mail não
+               tem font-size-adjust; assim as duas partes ficam da mesma altura. -->
           <tr>
             <td align="center" bgcolor="${BRAND.shelf}" style="background:${BRAND.shelf};border-radius:16px 16px 0 0;padding:28px 24px 26px">
               <img src="${escapeHtml(logoUrl())}" width="72" height="72" alt="" style="display:block;margin:0 auto;width:72px;height:72px;border:0;outline:none;text-decoration:none">
-              <p style="margin:14px 0 0;font-size:24px;line-height:1;color:#ffffff;letter-spacing:0.5px"><span style="font-family:${SANS};font-weight:800">LIBRI</span><span style="font-family:${SERIF};font-weight:bold">SHELF</span></p>
+              <p style="margin:14px 0 0;font-size:24px;line-height:1;color:#ffffff;letter-spacing:0.5px"><span style="font-family:${SANS};font-weight:800">LIBRI</span><span style="font-family:${SERIF};font-weight:bold;font-size:25px">SHELF</span></p>
               <p style="margin:8px 0 0;font-family:${SANS};font-size:13px;color:#a1a1aa">${escapeHtml(lang.tagline)}</p>
             </td>
           </tr>

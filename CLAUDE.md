@@ -661,6 +661,15 @@ ex-libris ("dos livros de"; "libris" é o LIBRI do nome).
   depois do deploy, o logo do e-mail. Mensagem sugerida:
   `feat: ícone em selo de cera azul com borda redonda (favicon, pwa, apple-touch e alternativos do pro)`
 
+**46 — LIBRI e SHELF da mesma altura: no working tree, sem commit
+(2026-11-25).** Na mesma `font-size`, a maiúscula da Source Serif 4 700 tem
+0,672 em e a da Inter 800 tem 0,735 (medido pelo Chromium), então o SHELF
+saía ~9% mais baixo. `BrandWordmark` usa `font-size-adjust: cap-height 0.727`
+nas duas partes; o resumo do ano (`yearStory.js`, canvas) mede o "H" nas duas
+fontes e ajusta o tamanho do SHELF; o topo dos e-mails põe o SHELF (Georgia)
+em 25px contra 24px. Mensagem sugerida:
+`fix: libri e shelf com a mesma altura de maiúscula na marca (app, resumo do ano e e-mails)`
+
 ### Bugs anotados (fora de pacote)
 - Nenhum aberto. Corrigidos no fim da sessão de 2026-11-12: âncora
   `#settings-notifications` do descadastro (`utils/anchor.js`,

@@ -183,7 +183,13 @@ export async function drawYearStory(canvas, { year, covers, text }) {
     ctx.font = `800 30px ${SANS}`
     ctx.fillText('LIBRI', PAD, 150)
     const libriWidth = ctx.measureText('LIBRI').width
+    // SHELF na mesma altura de maiúscula do LIBRI (o canvas não tem
+    // font-size-adjust): mede o "H" nas duas fontes e corrige o tamanho
+    const libriCap = ctx.measureText('H').actualBoundingBoxAscent
     ctx.font = `700 30px ${SERIF}`
+    const shelfCap = ctx.measureText('H').actualBoundingBoxAscent
+    const shelfSize = shelfCap > 0 ? (30 * libriCap) / shelfCap : 30
+    ctx.font = `700 ${shelfSize.toFixed(1)}px ${SERIF}`
     ctx.fillText('SHELF', PAD + libriWidth, 150)
   } else {
     ctx.font = `700 30px ${SANS}`
