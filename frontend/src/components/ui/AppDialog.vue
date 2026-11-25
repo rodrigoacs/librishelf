@@ -124,9 +124,7 @@ const phone = useIsPhone()
 const asPage = computed(() => phone.value && props.page && !props.drawer)
 const asSheet = computed(() => phone.value && props.sheet && !props.page && !props.drawer)
 
-// ---------------------------------------------------------------------------
 // Voltar do celular
-// ---------------------------------------------------------------------------
 let releaseBack = null
 
 function watchBack() {
@@ -145,9 +143,7 @@ function forgetBack() {
   return release ? release() : Promise.resolve()
 }
 
-// ---------------------------------------------------------------------------
 // Folha: arrastar para fechar
-// ---------------------------------------------------------------------------
 let panelAnimation = null
 let dragOffset = 0
 
@@ -331,6 +327,7 @@ html.dialog-open {
 
 .app-dialog::backdrop {
   background: var(--bg-overlay);
+  /* Fundo desfocado separa o diálogo da tela de trás (mesmo do menu) */
   backdrop-filter: blur(4px);
 }
 
@@ -460,7 +457,7 @@ html.dialog-open {
   }
 }
 
-/* ---------------------------------------------------------------- celular
+/* Celular
  * Folha de baixo e tela cheia. Só abaixo de 640 px: as classes is-sheet e
  * is-page nem aparecem acima disso (computed no script).
  */

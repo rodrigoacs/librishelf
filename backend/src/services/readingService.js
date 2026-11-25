@@ -45,7 +45,7 @@ export function toApi(row) {
   }
 }
 
-// ------------------------------------------------------------ passos (dentro da transação)
+// Passos (dentro da transação)
 
 /**
  * Conclui: fecha a leitura em andamento em `date`; sem ela, cria uma leitura
@@ -92,7 +92,7 @@ async function applyStatus(client, bookId, status, date, { keepExisting }) {
   await readingRepository.setWant(client, bookId, status === 'want')
 }
 
-// ------------------------------------------------------------ status (API antiga)
+// Status (API antiga)
 
 function parseStatus(rawStatus) {
   const status = String(rawStatus ?? '')
@@ -197,7 +197,7 @@ export async function importReadings(bookId, { status, finishedDates = [], start
   })
 }
 
-// ------------------------------------------------------------ histórico
+// Histórico
 
 export async function listReadings(bookId, userId) {
   await ensureOwner(bookId, userId)
@@ -266,7 +266,7 @@ export async function deleteReading(bookId, userId, readingId) {
   })
 }
 
-// ------------------------------------------------------------ progresso
+// Progresso
 
 function optionalInt(value, field, min, max) {
   if (value === undefined) return undefined

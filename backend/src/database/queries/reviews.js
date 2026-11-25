@@ -3,9 +3,7 @@
 
 import { SAME_BOOK, NOT_BLOCKED, AUTHORS_OF, AVATAR_FOR } from './fragments.js'
 
-// ---------------------------------------------------------------------------
 // Resenhas (migration 011)
-// ---------------------------------------------------------------------------
 // Quem vê a resenha r (autor u) sendo o leitor `viewer` (id ou NULL):
 //   - public:    biblioteca do autor pública
 //   - followers: leitor é seguidor aprovado (e o autor aceita seguidores)

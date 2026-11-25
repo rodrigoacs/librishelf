@@ -26,10 +26,10 @@ export const CHECKOUT_OFFERS = ['monthly', ...ONE_OFF_OFFERS]
 export const CHECKOUT_TTL_MINUTES = Number(process.env.CHECKOUT_TTL_MINUTES) || 30
 
 const TITLES = {
-  monthly: 'Librishelf Pro — mensal',
-  annual: 'Librishelf Pro — anual',
-  founder_annual: 'Librishelf Pro — fundador anual',
-  founder_lifetime: 'Librishelf Pro — fundador vitalício'
+  monthly: 'Librishelf Pro mensal',
+  annual: 'Librishelf Pro anual',
+  founder_annual: 'Librishelf Pro fundador anual',
+  founder_lifetime: 'Librishelf Pro fundador vitalício'
 }
 
 const appUrl = () => (process.env.APP_URL || 'http://localhost:5173').replace(/\/+$/, '')

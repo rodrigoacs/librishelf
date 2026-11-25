@@ -141,10 +141,8 @@ const tagDialog = ref(false)
 const tagName = ref('')
 const tags = ref([])
 
-// No celular a barra é fixa na janela e tapava a última linha da estante.
-// Ela publica em --batch-bar-height quanto ocupa do pé da janela (altura +
-// distância da borda) para a Library reservar esse espaço no fim da lista.
-// Fora do modo fixo (desktop, onde ela segue o fluxo) vale 0.
+// Fixa no celular, a barra tapava a última linha: publica em --batch-bar-height
+// o espaço que ocupa para a Library reservar no fim da lista (0 no desktop).
 const BAR_VAR = '--batch-bar-height'
 const barEl = ref(null)
 let barObserver = null

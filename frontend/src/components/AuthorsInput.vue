@@ -203,7 +203,11 @@ function onUpdate(values) {
 .author-chip-remove:focus-visible {
   opacity: 1;
   background: rgba(127, 127, 127, 0.25);
-  outline: none;
+}
+
+.author-chip-remove:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 1px;
 }
 
 .chips-input {

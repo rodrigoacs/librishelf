@@ -127,7 +127,8 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: subtleZoom 20s infinite alternate ease-in-out;
+  /* Uma vez só e em menos de 5 s: movimento longo pediria botão de pausa */
+  animation: subtleZoom 4s ease-out forwards;
 }
 
 .span-2x2 {
@@ -145,7 +146,7 @@ onMounted(async () => {
 
 @keyframes subtleZoom {
   from { transform: scale(1); }
-  to { transform: scale(1.1); }
+  to { transform: scale(1.05); }
 }
 
 .visual-overlay {

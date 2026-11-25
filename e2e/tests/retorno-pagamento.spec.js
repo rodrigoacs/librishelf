@@ -31,7 +31,7 @@ test('volta sem pagar e reabre o mesmo pagamento', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Esperando o pagamento' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Abrir o pagamento de novo' }).click()
-  await expect(page.getByRole('heading', { name: 'Librishelf Pro — anual' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Librishelf Pro anual' })).toBeVisible()
   await payOnFake(page, PAY_CARD)
   await expect(page.getByRole('heading', { name: 'Pagamento confirmado' })).toBeVisible()
 })

@@ -37,10 +37,7 @@ import UPLOAD_DIR from '../config/uploadDir.js'
 import { isbn13CheckDigit, normalizeIsbn13 } from '../utils/isbn.js'
 import logger from '../utils/logger.js'
 
-// ---------------------------------------------------------------------------
 // Argumentos e travas de segurança
-// ---------------------------------------------------------------------------
-
 const args = process.argv.slice(2)
 const flag = name => args.includes(`--${name}`)
 const option = (name, fallback) => {
@@ -90,10 +87,7 @@ async function checkSafety() {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Aleatório reprodutível
-// ---------------------------------------------------------------------------
-
 function mulberry32(seed) {
   let a = seed >>> 0
   return () => {
@@ -123,10 +117,7 @@ const NOW = Date.now()
 const iso = time => new Date(time).toISOString().slice(0, 10)
 const between = (start, end) => start + random() * Math.max(0, end - start)
 
-// ---------------------------------------------------------------------------
 // Vocabulário (tudo fictício)
-// ---------------------------------------------------------------------------
-
 const FIRST_NAMES = ['Ana', 'Beatriz', 'Carla', 'Daniela', 'Eduarda', 'Fernanda', 'Gabriela', 'Helena', 'Isabela', 'Júlia',
   'Larissa', 'Mariana', 'Natália', 'Olívia', 'Paula', 'Renata', 'Sofia', 'Tatiana', 'Valéria', 'Yasmin',
   'André', 'Bruno', 'Caio', 'Diego', 'Eduardo', 'Felipe', 'Gustavo', 'Henrique', 'Igor', 'João',
@@ -169,10 +160,7 @@ const NOUNS = ['Tempo', 'Silêncio', 'Abismo', 'Destino', 'Esquecimento', 'Labir
 const PALETTE = ['#1e3a5f', '#5b2a86', '#8c1c13', '#1b4332', '#7f5539', '#264653', '#6d2e46', '#3d405b', '#9c6644', '#0b525b',
   '#4a4e69', '#283618', '#5e548e', '#9d0208', '#14213d', '#3a5a40']
 
-// ---------------------------------------------------------------------------
 // Catálogo de obras e edições
-// ---------------------------------------------------------------------------
-
 function makeAuthorPool(size) {
   const names = new Set()
   while (names.size < size) {
@@ -264,10 +252,7 @@ function pickWork(catalog) {
   return catalog.works.at(-1)
 }
 
-// ---------------------------------------------------------------------------
 // Leitores
-// ---------------------------------------------------------------------------
-
 function buildUsers(count) {
   const used = new Set(['demo', 'privado', 'vazio', 'pendente'])
   const users = [
@@ -307,10 +292,7 @@ function buildUsers(count) {
   }))
 }
 
-// ---------------------------------------------------------------------------
 // Gravação
-// ---------------------------------------------------------------------------
-
 async function resetDatabase() {
   logger.warn('Apagando todos os dados do librishelf', { db: process.env.DB_NAME })
   await db.query(`
@@ -510,10 +492,7 @@ async function insertFollows(users) {
   return pairs.size
 }
 
-// ---------------------------------------------------------------------------
 // Capas
-// ---------------------------------------------------------------------------
-
 const escapeXml = text => text.replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]))
 
 function wrap(text, maxChars) {
@@ -585,8 +564,6 @@ async function generateCovers(catalog) {
   return done
 }
 
-// ---------------------------------------------------------------------------
-
 /**
  * Leituras (migration 009): uma por livro lido/lendo, releituras antigas em
  * ~1 de 12 lidos, total de páginas na maioria e progresso em quem está "Lendo".
@@ -641,7 +618,7 @@ const REVIEW_MIDDLES = [
   'O ritmo alterna capítulos curtíssimos com outros longos e contemplativos, o que nem sempre ajuda.',
   'A ambientação é tão bem feita que dá vontade de procurar o lugar no mapa.',
   'Os diálogos soam naturais, e o humor aparece nos momentos certos.',
-  'Algumas passagens ficaram comigo por dias — marquei várias páginas.',
+  'Algumas passagens ficaram comigo por dias. Marquei várias páginas.',
   'A tradução tem alguns tropeços, mas nada que atrapalhe a leitura.',
   'O narrador esconde informações de propósito, e a recompensa vem no último terço.',
   'Senti falta de mais desenvolvimento dos personagens secundários.',

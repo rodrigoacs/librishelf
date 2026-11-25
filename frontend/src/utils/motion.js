@@ -70,11 +70,8 @@ export function staggerDelay(index) {
   return Math.min(Math.max(index, 0), MOTION.staggerMax) * MOTION.stagger
 }
 
-// ---------------------------------------------------------------------------
 // Gestos: folha (puxar para baixo), gaveta (puxar para o lado) e puxar para
 // atualizar. A distância é no sentido de fechar/abrir; a velocidade em px/ms.
-// ---------------------------------------------------------------------------
-
 export const GESTURE = {
   // Um puxão rápido decide mesmo curto…
   flingVelocity: 0.5,
@@ -141,10 +138,7 @@ export function velocityFrom(samples, windowMs = 80) {
   return dt > 0 ? (last.v - first.v) / dt : 0
 }
 
-// ---------------------------------------------------------------------------
 // Transição entre telas: qual animação, pelo sentido da navegação
-// ---------------------------------------------------------------------------
-
 /**
  * Sentido pela posição no histórico (history.state.position do vue-router):
  * maior = avançou, menor = voltou; sem posição (replace, primeira tela) = troca.

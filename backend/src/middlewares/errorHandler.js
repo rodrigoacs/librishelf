@@ -15,10 +15,8 @@ const BODY_ERRORS = {
   'charset.unsupported': { status: 415, message: 'Codificação não suportada.', code: 'ENCODING_UNSUPPORTED' }
 }
 
-// Último middleware da cadeia. Erros com status < 500 são "controlados" e a
-// mensagem vai para o cliente; qualquer 500 recebe mensagem genérica e os
-// detalhes ficam só no log — mesmo contrato e mesmo corpo ({ error, code?,
-// params? }) do utils/sendError.js.
+// Último middleware: status < 500 manda a mensagem ao cliente; 500 vira
+// mensagem genérica e o detalhe fica no log (mesmo corpo do sendError.js).
 export default (err, req, res, next) => {
   if (res.headersSent) return next(err)
 

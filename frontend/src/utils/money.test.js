@@ -18,6 +18,6 @@ describe('dinheiro em centavos', () => {
     expect(centsToInput(123456, 'en-US')).toBe('1234.56')
     expect(centsToInput(null)).toBe('')
     expect(formatMoney(8990, 'pt-BR').replace(/\s/g, ' ')).toBe('R$ 89,90')
-    expect(formatMoney(null)).toBe('—')
+    expect(formatMoney(null)).toBe('–')
   })
 })

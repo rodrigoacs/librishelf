@@ -47,7 +47,7 @@ function readNote(note) {
   return note.trim() || null
 }
 
-// ------------------------------------------------------------------ conta
+// Conta
 
 /** GET /admin/users/:id/billing */
 export async function userBilling(userId) {
@@ -129,7 +129,7 @@ export async function revoke(adminId, entitlementId, { note } = {}) {
   })
 }
 
-// -------------------------------------------------------------- pagamentos
+// Pagamentos
 
 /** GET /admin/payments?filter=all|problem|refunded */
 export async function payments({ filter = 'all', page, limit } = {}) {
@@ -196,7 +196,7 @@ export async function refund(adminId, paymentId, { note } = {}) {
   })
 }
 
-// ----------------------------------------------------------------- ofertas
+// Ofertas
 
 function offerOut(row) {
   const now = Date.now()
@@ -284,7 +284,7 @@ export async function updateOffer(adminId, code, body = {}) {
   })
 }
 
-// --------------------------------------------------------- webhooks e fila
+// Webhooks e fila
 
 /** GET /admin/webhooks?filter=error|pending|all */
 export async function webhooks({ filter = 'error', page, limit } = {}) {

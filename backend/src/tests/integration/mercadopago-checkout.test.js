@@ -17,7 +17,7 @@ const ids = {}
 const auth = name => ({ Authorization: `Bearer ${tokens[name]}` })
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000
 
-// ---------------------------------------------------------- Mercado Pago falso
+// Mercado Pago falso
 const mp = { preferences: [], payments: new Map(), refunds: [], failPreference: false, failRefund: false, seq: 1000 }
 
 setFetch(async (url, options = {}) => {

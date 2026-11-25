@@ -64,10 +64,10 @@ export function formatRange(from, to, locale) {
 
 /** Variação de b em relação a a: { text, tone } (tone: up, down ou vazio). */
 export function change(a, b, { percent = true, decimals = 0, locale } = {}) {
-  if (a === null || b === null || a === undefined || b === undefined) return { text: '—', tone: '' }
+  if (a === null || b === null || a === undefined || b === undefined) return { text: '–', tone: '' }
   const nf = new Intl.NumberFormat(locale, { maximumFractionDigits: decimals, signDisplay: 'exceptZero' })
   if (percent) {
-    if (a === 0) return { text: b === 0 ? '0%' : '—', tone: b > 0 ? 'up' : '' }
+    if (a === 0) return { text: b === 0 ? '0%' : '–', tone: b > 0 ? 'up' : '' }
     const value = ((b - a) / a) * 100
     return { text: `${nf.format(Math.round(value))}%`, tone: value > 0 ? 'up' : value < 0 ? 'down' : '' }
   }

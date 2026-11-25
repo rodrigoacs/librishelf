@@ -409,6 +409,7 @@ watch(username, () => {
 }
 
 .profile-cover.from-book::after {
+  /* A capa ampliada para faixa fica pixelada: o desfoque esconde isso */
   backdrop-filter: blur(8px) saturate(1.1);
   background: linear-gradient(to bottom, transparent, var(--bg-panel));
 }

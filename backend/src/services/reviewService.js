@@ -80,7 +80,7 @@ function reviewInput(body = {}) {
   return { body: text, hasSpoiler: Boolean(body.hasSpoiler), visibility }
 }
 
-// ------------------------------------------------------------------ dono
+// Dono
 
 export async function getOwn(bookId, userId) {
   await ensureOwner(bookId, userId)
@@ -101,7 +101,7 @@ export async function remove(bookId, userId) {
   await db.query(q.DELETE_OWN, [bookId, userId])
 }
 
-// ------------------------------------------------------------------ leitores
+// Leitores
 
 /** Resenha do livro aberto na biblioteca pública (ou null). */
 export async function forPublicBook(bookId, viewerId) {
@@ -148,7 +148,7 @@ export async function like(reviewId, viewerId, liked) {
   return { liked, likeCount: rows[0].total }
 }
 
-// ------------------------------------------------------------------ denúncias
+// Denúncias
 
 export function moderationLink(reviewId) {
   const token = signId(MODERATION_PURPOSE, reviewId, { ttlDays: MODERATION_LINK_DAYS })
@@ -205,7 +205,7 @@ async function notifyAdmin(reviewId, { reason, note, total, hidden }) {
   }
 }
 
-// ------------------------------------------------------------------ moderação
+// Moderação
 
 function moderationId(token) {
   const id = readSignedId(MODERATION_PURPOSE, token, { requireExpiry: true })

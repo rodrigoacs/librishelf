@@ -125,10 +125,8 @@ export const TOKEN_QUERIES = {
   DELETE_EXPIRED_REVOCATIONS: 'DELETE FROM librishelf.revoked_sessions WHERE expires_at < now()'
 }
 
-// ---------------------------------------------------------------------------
 // Termos de Uso e Política de Privacidade (pacote 35). O aceite no cadastro
 // vai junto com a conta (AUTH_QUERIES.CREATE_USER).
-// ---------------------------------------------------------------------------
 export const TERMS_QUERIES = {
   // Aceitar de novo a mesma versão não muda a data do primeiro aceite
   ACCEPT: `

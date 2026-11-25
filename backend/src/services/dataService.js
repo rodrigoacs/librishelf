@@ -18,10 +18,7 @@ import { PUB_MIN_YEAR, PUB_MAX_YEAR, READ_MIN_YEAR } from '../utils/bookFields.j
  * Goodreads ou o próprio CSV exportado pelo Librishelf.
  */
 
-// ---------------------------------------------------------------------------
 // Exportar
-// ---------------------------------------------------------------------------
-
 /** Colunas do CSV do Librishelf (também aceitas na importação). */
 export const CSV_COLUMNS = [
   'title', 'authors', 'publisher', 'isbn', 'tags', 'rating', 'status', 'read_date',
@@ -167,10 +164,7 @@ export async function exportCsv(userId) {
   return toCsv([CSV_COLUMNS, ...rows])
 }
 
-// ---------------------------------------------------------------------------
 // Importar
-// ---------------------------------------------------------------------------
-
 export const MAX_IMPORT_ROWS = 5000
 const MAX_NOTES = 5000
 const MAX_REVIEW = 5000

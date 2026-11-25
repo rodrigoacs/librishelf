@@ -1,11 +1,9 @@
 // Trechos de SQL usados por mais de um domínio (comunidade, resenhas, perfil, listas…).
 // Parte de database/queries.js, que reexporta todos os grupos.
 
-// ---------------------------------------------------------------------------
 // Comunidade — livros "iguais" entre usuários: mesma obra do Open Library ou
 // mesmo ISBN-13. Só entram usuários com biblioteca pública E que ligaram
 // "aparecer para outros leitores" (show_in_community).
-// ---------------------------------------------------------------------------
 export const SAME_BOOK = (a, b) => `(
   (${a}.ol_work_key IS NOT NULL AND ${b}.ol_work_key = ${a}.ol_work_key)
   OR (${a}.isbn13 IS NOT NULL AND ${b}.isbn13 = ${a}.isbn13)

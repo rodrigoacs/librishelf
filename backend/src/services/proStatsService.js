@@ -80,8 +80,6 @@ function median(values) {
 
 const avg = values => (values.length ? round1(values.reduce((sum, v) => sum + v, 0) / values.length) : null)
 
-// ---------------------------------------------------------------------------
-
 /** Dois períodos lado a lado. */
 export async function compare(userId, query = {}) {
   const a = parsePeriod(query.aFrom, query.aTo, 'a.')

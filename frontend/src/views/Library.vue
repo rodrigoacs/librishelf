@@ -303,9 +303,7 @@ watchEffect(() => {
   }
 })
 
-// ---------------------------------------------------------------------------
 // Seleção para ações em lote
-// ---------------------------------------------------------------------------
 const selecting = ref(false)
 // Seleção em lote: a barra de ações toma o lugar da barra de abas (celular)
 watch(selecting, value => setTabBarHidden('select', value))
@@ -367,9 +365,7 @@ function setViewMode(mode) {
   try { localStorage.setItem(VIEW_STORAGE_KEY, mode) } catch { /* modo privado */ }
 }
 
-// Filtros ⇄ URL. A URL é atualizada com replace (não enche o histórico a cada
-// tecla) e, se ela mudar por fora (link de Autores, voltar do navegador),
-// os filtros acompanham.
+// Filtros ⇄ URL nos dois sentidos, com replace para não encher o histórico.
 // O ?book= do livro aberto fica de fora da comparação e é mantido.
 watch([filters, viewMode], () => {
   const next = filtersToQuery(filters.value, viewMode.value)
@@ -387,9 +383,7 @@ watch(() => route.query, (query) => {
   setFilters(queryToFilters(query))
 })
 
-// ---------------------------------------------------------------------------
 // Livro aberto na URL
-// ---------------------------------------------------------------------------
 const openBookId = computed(() => (route.name === 'library' ? bookIdFromQuery(route.query) : null))
 const openBookCoverVersion = computed(() => {
   const item = books.value.find(book => (book.book_id ?? book.id) === openBookId.value)
@@ -412,9 +406,7 @@ function closeBook() {
   else router.replace({ query: withoutBook(route.query) })
 }
 
-// ---------------------------------------------------------------------------
 // Voltar para a Biblioteca: mesmas páginas carregadas e mesma rolagem
-// ---------------------------------------------------------------------------
 onBeforeRouteLeave(() => {
   rememberPages(routeKey(route), filters.value.page)
 })

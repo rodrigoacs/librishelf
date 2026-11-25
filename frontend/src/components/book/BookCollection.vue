@@ -378,7 +378,7 @@ async function run(task, done) {
   }
 }
 
-// ------------------------------------------------------------------ empréstimo
+// Empréstimo
 const editingLoan = ref(false)
 const draft = reactive({ id: null, borrower: '', lentOn: null, dueOn: null, notes: '' })
 
@@ -426,7 +426,7 @@ function removeLoan(id) {
   })
 }
 
-// ------------------------------------------------------------------ exemplar
+// Exemplar
 const copyDraft = reactive({ location: '', price: '', value: '', acquiredOn: null })
 
 const hasCopyData = computed(() => {
@@ -465,7 +465,7 @@ const copyDirty = computed(() => {
 
 const saveCopy = () => run(() => api.saveBookCopy(props.bookId, { ...copyBody.value, currency: data.value.copy.currency }), 'collection.copy.saved')
 
-// ------------------------------------------------------------------ fotos
+// Fotos
 const photosFull = computed(() =>
   data.value.quota.used >= data.value.quota.max || data.value.quota.inBook >= data.value.quota.perBook)
 

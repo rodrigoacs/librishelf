@@ -136,6 +136,6 @@ describe('prévia do link', () => {
   test('a apresentação entra na descrição', async () => {
     await request(app).put('/profile-page/bio').set(auth('dona')).send({ bio: 'Ficção científica\ne café' })
     const head = await request(app).get('/meta/u/dona')
-    expect(head.text).toContain('Ficção científica e café — ')
+    expect(head.text).toContain('Ficção científica e café · ')
   })
 })

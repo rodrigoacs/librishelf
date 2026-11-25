@@ -40,8 +40,8 @@ describe('períodos das estatísticas', () => {
   it('variação em porcentagem e em valor', () => {
     expect(change(10, 15, { locale: 'pt-BR' })).toEqual({ text: '+50%', tone: 'up' })
     expect(change(10, 5, { locale: 'pt-BR' })).toEqual({ text: '-50%', tone: 'down' })
-    expect(change(0, 3, { locale: 'pt-BR' })).toEqual({ text: '—', tone: 'up' })
+    expect(change(0, 3, { locale: 'pt-BR' })).toEqual({ text: '–', tone: 'up' })
     expect(change(4, 4.5, { percent: false, decimals: 1, locale: 'pt-BR' })).toEqual({ text: '+0,5', tone: 'up' })
-    expect(change(null, 4, { locale: 'pt-BR' }).text).toBe('—')
+    expect(change(null, 4, { locale: 'pt-BR' }).text).toBe('–')
   })
 })

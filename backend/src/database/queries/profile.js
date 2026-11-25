@@ -175,9 +175,7 @@ export const AVATAR_QUERIES = {
   `
 }
 
-// ---------------------------------------------------------------------------
 // Personalização (pacote 29, Pro: personalization)
-// ---------------------------------------------------------------------------
 export const PERSONALIZATION_QUERIES = {
   GET: `
     SELECT u.ui_palette, u.ui_accent, u.app_icon, u.profile_cover_book_id, b.cover_version AS profile_cover_version,
@@ -230,7 +228,7 @@ export const PERSONALIZATION_QUERIES = {
   `
 }
 
-// ------------------------------------------------------------------ página pública (pacote 33)
+// Página pública (pacote 33)
 export const PROFILE_PAGE_QUERIES = {
   BIO: `
     SELECT bio, bio_version, bio_hidden_at, bio_hidden_reason, email_verified_at

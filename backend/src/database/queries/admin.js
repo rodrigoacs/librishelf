@@ -400,9 +400,7 @@ export const ADMIN_BILLING_QUERIES = {
   `
 }
 
-// ---------------------------------------------------------------------------
 // Erros (pacote 37): uma linha por assinatura, ocorrências somadas
-// ---------------------------------------------------------------------------
 export const ERROR_REPORT_QUERIES = {
   // Voltar a acontecer depois de resolvido reabre
   UPSERT: `

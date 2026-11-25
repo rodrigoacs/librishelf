@@ -199,9 +199,7 @@ export const IMPORT_QUERIES = {
   `
 }
 
-// ---------------------------------------------------------------------------
 // Backup automático (pacote 30, Pro: auto_backup)
-// ---------------------------------------------------------------------------
 export const BACKUP_QUERIES = {
   SETTINGS: `
     SELECT enabled, frequency, notify, next_run_at FROM librishelf.backup_settings WHERE user_id = $1

@@ -1,9 +1,6 @@
 <template>
-  <!-- Marca única: "LIBRI" sem serifa na cor de destaque + "SHELF" serifado.
-       O tamanho vem de quem usa (font-size herdado). Com `mono`, as duas
-       partes ficam na cor do texto em volta (sobre imagem ou fundo escuro,
-       como no lado visual do login e no resumo do ano). As duas partes têm a
-       mesma altura de maiúscula, apesar das fontes diferentes. -->
+  <!-- LIBRI sem serifa (destaque) + SHELF serifado, tamanho herdado.
+       `mono`: as duas na cor do texto em volta (sobre imagem ou fundo escuro). -->
   <span
     class="brand-wordmark"
     :class="{ mono }"
@@ -27,9 +24,7 @@ defineProps({
 
 .brand-libri,
 .brand-shelf {
-  /* Mesma altura de maiúscula nas duas fontes, inclusive nas reservas
-     (Georgia, system-ui): 0,727 é a da Inter, então o LIBRI fica igual e o
-     SHELF (Source Serif 4: 0,67) cresce ~8,5%. Navegador sem suporte ignora.
+  /* Mesma altura de maiúscula nas duas fontes (0,727 = a da Inter).
      https://developer.mozilla.org/en-US/docs/Web/CSS/font-size-adjust */
   font-size-adjust: cap-height 0.727;
 }

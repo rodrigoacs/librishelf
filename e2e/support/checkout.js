@@ -15,7 +15,7 @@ export async function openAnnualCheckout(page) {
   await page.goto('/pricing')
   await page.getByRole('article', { name: 'Anual', exact: true }).getByRole('button', { name: 'Comprar' }).click()
   await page.waitForURL(url => url.href.startsWith(`${FAKES_URL}/checkout/`))
-  await expect(page.getByRole('heading', { name: 'Librishelf Pro — anual' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Librishelf Pro anual' })).toBeVisible()
 }
 
 /** Escolhe na página do Mercado Pago falso e espera a volta para o Librishelf */

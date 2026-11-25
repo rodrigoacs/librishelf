@@ -146,11 +146,9 @@ export const YEAR_QUERIES = {
   REVIEWS: `SELECT count(*)::int AS total FROM librishelf.reviews WHERE user_id = $1 AND ${IN_YEAR('created_at')}`
 }
 
-// ---------------------------------------------------------------------------
 // Estatísticas avançadas (Pro, pacote 27). Base de tudo: as leituras
 // concluídas da pessoa ($1). Releitura conta de novo, como no Painel.
 // Datas saem como texto (AAAA-MM-DD) para não passar pelo fuso do Node.
-// ---------------------------------------------------------------------------
 const PRO_STATS_FINISHED = `
     SELECT r.id, r.book_id, r.started_on, r.finished_on,
            COALESCE(r.rating, b.rating) AS rating, b.page_count, b.publisher_id

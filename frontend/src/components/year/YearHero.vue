@@ -28,7 +28,7 @@
             aria-hidden="true"
           ></i>
         </template>
-        <template v-else>—</template>
+        <template v-else>–</template>
       </span>
       <span class="hero-label stat-label">{{ t('year.averageRating') }}</span>
       <span
@@ -60,7 +60,7 @@ const { t } = useI18n()
 const { formatNumber, formatDecimal } = useYearFormat()
 
 const compareValue = computed(() => {
-  if (!props.previousYear) return '—'
+  if (!props.previousYear) return '–'
   const diff = props.totals.readings - props.previousYear
   return diff > 0 ? `+${diff}` : String(diff)
 })

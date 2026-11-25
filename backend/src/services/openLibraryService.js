@@ -340,7 +340,7 @@ export async function fetchCover(coverId, size = 'L') {
   return buffer
 }
 
-// ------------------------------------------------------------------ busca
+// Busca
 
 // Campos pedidos ao /search.json. "editions" traz, para cada obra, a edição
 // que melhor combina com a busca e com o idioma (lang); é dela que vêm ISBN,

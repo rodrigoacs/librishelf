@@ -40,7 +40,7 @@
         <p
           v-if="!user.active"
           class="suspension"
-        >{{ t('admin.accounts.suspendedOn', { date: formatDate(user.suspendedAt, locale) }) }}<template v-if="user.suspendedReason"> — {{ user.suspendedReason }}</template></p>
+        >{{ t('admin.accounts.suspendedOn', { date: formatDate(user.suspendedAt, locale) }) }}<template v-if="user.suspendedReason"> · {{ user.suspendedReason }}</template></p>
 
         <section aria-labelledby="user-account">
           <h3 class="section-title" id="user-account">{{ t('admin.user.account') }}</h3>
@@ -118,7 +118,7 @@
               :key="item.id"
             >
               <span class="strong">{{ t(`admin.log.actions.${item.action.replace('.', '_')}`) }}</span>
-              <span class="muted">{{ formatDateTime(item.createdAt, locale) }}<template v-if="item.admin"> · @{{ item.admin }}</template><template v-if="item.details?.reason"> — {{ item.details.reason }}</template></span>
+              <span class="muted">{{ formatDateTime(item.createdAt, locale) }}<template v-if="item.admin"> · @{{ item.admin }}</template><template v-if="item.details?.reason"> · {{ item.details.reason }}</template></span>
             </li>
           </ul>
         </section>

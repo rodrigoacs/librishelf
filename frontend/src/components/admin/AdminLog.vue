@@ -2,7 +2,7 @@
   <div class="log">
     <p class="intro">{{ t('admin.log.intro') }}</p>
     <div class="table-wrap">
-      <table :aria-busy="loading ? 'true' : 'false'">
+      <table class="data-table" :aria-busy="loading ? 'true' : 'false'">
         <thead>
           <tr>
             <th scope="col">{{ t('admin.log.cols.when') }}</th>
@@ -171,13 +171,6 @@ td {
   color: var(--text-primary);
 }
 
-th {
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
 
 tbody tr:last-child td {
   border-bottom: none;

@@ -100,7 +100,7 @@ async function withItems(row) {
   return { ...toSummary(row), itemCount: rows.length, items: rows.map(toItem) }
 }
 
-// ------------------------------------------------------------------ dono
+// Dono
 
 /** GET /lists?book=ID — as listas do leitor; com ?book, marca as que têm o livro. */
 export async function listOwn(userId, bookId = null) {
@@ -204,7 +204,7 @@ export async function reorder(listId, userId, body = {}) {
   return getOwn(listId, userId)
 }
 
-// ------------------------------------------------------------------ público
+// Público
 
 async function publicOwner(username) {
   if (typeof username !== 'string') return null

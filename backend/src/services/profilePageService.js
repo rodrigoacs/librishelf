@@ -148,7 +148,7 @@ export async function publicBio(userId) {
   return row?.bio && !row.bio_hidden_at ? row.bio : null
 }
 
-// ------------------------------------------------------------------ denúncias
+// Denúncias
 
 /** POST /profile-page/u/:username/bio/report — { reason, note? } */
 export async function reportBio(username, reporterId, raw = {}) {
@@ -188,7 +188,7 @@ async function notifyAdmin({ username, bio, reason, note, total, hidden }) {
     `Apresentação de @${username} denunciada (${reason}).`,
     `Texto: ${bio}`,
     note ? `Observação: ${note}` : null,
-    `Denúncias abertas: ${total}${hidden ? ' — ocultada automaticamente' : ''}.`,
+    `Denúncias abertas: ${total}${hidden ? ', ocultada automaticamente' : ''}.`,
     'Revise em Admin → Moderação → Apresentações.'
   ].filter(Boolean).join('\n')
   try {
@@ -198,7 +198,7 @@ async function notifyAdmin({ username, bio, reason, note, total, hidden }) {
   }
 }
 
-// ------------------------------------------------------------------ moderação (admin)
+// Moderação (admin)
 
 export async function queue(status = 'open') {
   if (!['open', 'hidden', 'all'].includes(status)) {

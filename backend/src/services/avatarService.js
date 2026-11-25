@@ -63,7 +63,7 @@ export async function fileAccess(username, viewerId) {
   return { userId: row.id, version: row.avatar_version, public: row.avatar_visibility === 'everyone' }
 }
 
-// ------------------------------------------------------------------ dono
+// Dono
 
 /** PUT /auth/me/avatar — arquivo já recortado pelo app; visibility opcional. */
 export async function upload(userId, buffer, rawVisibility) {
@@ -101,7 +101,7 @@ export async function removeFiles(userId) {
   await deleteAvatar(userId)
 }
 
-// ------------------------------------------------------------------ denúncia
+// Denúncia
 
 export function moderationLink(version) {
   const token = signId(MODERATION_PURPOSE, version, { ttlDays: MODERATION_LINK_DAYS })
@@ -151,7 +151,7 @@ async function notifyAdmin(version, { username, reason, note, total, hidden }) {
   }
 }
 
-// ------------------------------------------------------------------ moderação
+// Moderação
 
 function toModeration(row, reports) {
   return {

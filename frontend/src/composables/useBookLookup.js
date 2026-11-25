@@ -87,7 +87,7 @@ export function useBookLookup({ form, errors, selectedFile, isbnField, bookSearc
     }
   }
 
-  // ---------------------------------------------------------------- câmera e título
+  // Câmera e título
 
   const findMode = ref('isbn') // isbn | title
   const scannerOpen = ref(false)

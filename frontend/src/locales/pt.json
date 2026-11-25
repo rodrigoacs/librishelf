@@ -33,7 +33,7 @@
     "inviteTitle": "O que você está lendo?",
     "inviteText": "Marque um livro como Lendo e ele aparece aqui, com a data em que você começou.",
     "inviteWant": "Escolher na minha lista Quero ler",
-    "yearInBooks": "Seu ano em livros {year}: veja a retrospectiva | Seu ano em livros {year}: 1 livro até agora — veja a retrospectiva | Seu ano em livros {year}: {n} livros até agora — veja a retrospectiva",
+    "yearInBooks": "Seu ano em livros {year}: veja a retrospectiva | Seu ano em livros {year}: 1 livro até agora. Veja a retrospectiva | Seu ano em livros {year}: {n} livros até agora. Veja a retrospectiva",
     "loadError": "Seus livros continuam salvos. Verifique sua conexão e tente de novo.",
     "loadErrorTitle": "Não foi possível carregar sua estante",
     "resumeOnboarding": "Continuar os primeiros passos"
@@ -82,7 +82,7 @@
     "decrease": "Diminuir",
     "increase": "Aumentar",
     "noResults": "Nada encontrado.",
-    "typeToSeeMore": "Mais {n} — digite para filtrar.",
+    "typeToSeeMore": "Mais {n}. Digite para filtrar.",
     "clearSelection": "Limpar seleção",
     "discardTitle": "Descartar alterações?",
     "discardMessage": "O que você mudou ainda não foi salvo e vai se perder.",
@@ -111,7 +111,7 @@
   "bookForm": {
     "newTitle": "Novo livro",
     "editTitle": "Editar livro",
-    "newSubtitle": "Busque pelo ISBN, pela câmera ou pelo título — ou preencha à mão.",
+    "newSubtitle": "Busque pelo ISBN, pela câmera ou pelo título, ou preencha à mão.",
     "isbn": "ISBN",
     "title": "Título",
     "authors": "Autores",
@@ -288,10 +288,10 @@
     "favoriteGenres": "Categorias favoritas",
     "topAuthors": "Melhores autores",
     "noTagsData": "Nenhuma categoria ainda",
-    "noAuthorsData": "Nenhum dado de autores disponível",
+    "noAuthorsData": "Nenhum autor ainda. Adicione livros para ver quem você mais lê.",
     "loadError": "Não foi possível carregar as estatísticas.",
     "noYearData": "Nenhuma leitura registrada ainda",
-    "invalidIsbn": "{n} livro com ISBN inválido — corrija para ele aparecer na comunidade. | {n} livros com ISBN inválido — corrija para eles aparecerem na comunidade.",
+    "invalidIsbn": "{n} livro com ISBN inválido. Corrija para ele aparecer na comunidade. | {n} livros com ISBN inválido. Corrija para eles aparecerem na comunidade.",
     "yearLabel": "Ano do painel",
     "readingNow": "Lendo agora",
     "wantToRead": "Quero ler",
@@ -300,7 +300,7 @@
     "noMonthData": "Nenhuma leitura registrada em {year}",
     "clickHint": "Releituras contam de novo. Clique numa barra para ver os livros.",
     "topPublishers": "Editoras mais presentes",
-    "noPublishersData": "Nenhum dado de editoras disponível",
+    "noPublishersData": "Nenhuma editora ainda. Preencha a editora dos seus livros para ver este gráfico.",
     "booksCount": "{n} livro | {n} livros",
     "readings": "Leituras",
     "showData": "Ver os números",
@@ -396,7 +396,7 @@
       "on": "Sua biblioteca agora é pública.",
       "off": "Sua biblioteca agora é privada.",
       "error": "Não foi possível alterar a visibilidade.",
-      "copyFallback": "Não deu para copiar — seu link: {url}"
+      "copyFallback": "Não deu para copiar; seu link: {url}"
     },
     "indexing": {
       "toggle": "Aparecer em buscadores (Google, Bing…)",
@@ -408,7 +408,7 @@
       "title": "Avisos por e-mail",
       "verifyFirst": "Confirme seu e-mail para receber avisos.",
       "follow": "Pedidos para seguir e pedidos aceitos",
-      "followHelp": "Vai para {email}. No máximo um e-mail a cada {hours} horas — o que acontecer nesse meio-tempo vem junto. Todo e-mail tem um link para descadastrar.",
+      "followHelp": "Vai para {email}. No máximo um e-mail a cada {hours} horas: o que acontecer nesse meio-tempo vem junto. Todo e-mail tem um link para descadastrar.",
       "on": "Você vai receber avisos por e-mail.",
       "off": "Avisos por e-mail desligados."
     },
@@ -598,7 +598,7 @@
         "paragraphs": [
           "Sua biblioteca é privada por padrão. Se você ativar o compartilhamento em Conta, qualquer pessoa com o seu link pode ver seus livros e capas, e algumas capas podem aparecer nas telas de entrada do site.",
           "Quando alguém compartilha o link da sua biblioteca (WhatsApp, redes sociais), a prévia mostra seu nome de usuário, quantos livros você tem e já leu e um mosaico de algumas das suas capas.",
-          "Listas são privadas por padrão. As que você marcar como públicas aparecem no seu perfil e ganham um link próprio, com prévia (nome da lista, livros e capas) quando compartilhado — só enquanto a biblioteca também for pública.",
+          "Listas são privadas por padrão. As que você marcar como públicas aparecem no seu perfil e ganham um link próprio, com prévia (nome da lista, livros e capas) quando compartilhado, só enquanto a biblioteca também for pública.",
           "Você pode desativar quando quiser, e a mudança vale na hora.",
           "Por padrão, bibliotecas públicas não aparecem em buscadores como o Google: o site pede para não serem indexadas. Só aparecem se você ligar \"Aparecer em buscadores\" em Conta.",
           "A foto de perfil tem uma opção própria de quem vê: todos, só seguidores aprovados ou ninguém. A apresentação, os favoritos e a capa de fundo aparecem na sua página pública, junto com a biblioteca.",
@@ -642,7 +642,7 @@
         "title": "E-mails que enviamos",
         "paragraphs": [
           "Usamos seu e-mail só para assuntos da sua conta: confirmar o endereço no cadastro e enviar o link de recuperação de senha quando você pedir. Não mandamos propaganda.",
-          "Se você ligar os avisos por e-mail em Conta, também avisamos quando alguém pede para seguir você ou aceita o seu pedido — no máximo um e-mail a cada algumas horas. Todo aviso tem um link para descadastrar com um clique.",
+          "Se você ligar os avisos por e-mail em Conta, também avisamos quando alguém pede para seguir você ou aceita o seu pedido, no máximo um e-mail a cada algumas horas. Todo aviso tem um link para descadastrar com um clique.",
           "Os links de senha e confirmação valem por pouco tempo (1 hora para a senha, 3 dias para a confirmação), funcionam uma vez só e guardamos apenas uma versão cifrada deles.",
           "Com o Pro ou o teste grátis, também mandamos e-mails sobre o plano: pagamento confirmado ou recusado, aviso antes do fim de um plano sem renovação automática e o fim do teste. Se você ligar essas opções, avisamos quando um backup fica pronto e lembramos dos prazos de empréstimo."
         ]
@@ -855,7 +855,7 @@
   "isbn": {
     "search": "Buscar",
     "hint": "Digite o ISBN e clique em Buscar para preencher os dados automaticamente.",
-    "found": "Dados encontrados no Open Library. Confira antes de salvar — só os campos vazios foram preenchidos.",
+    "found": "Dados encontrados no Open Library. Confira antes de salvar: só os campos vazios foram preenchidos.",
     "not_found": "Não encontramos este ISBN. Preencha os dados à mão.",
     "error": "A busca está indisponível agora. Preencha os dados à mão ou tente mais tarde.",
     "invalid": "Este ISBN não é válido. Confira os dígitos.",
@@ -1007,7 +1007,7 @@
   "communityView": {
     "title": "Comunidade",
     "subtitle": "O que as pessoas que você segue andam lendo.",
-    "activity_off": "Você não aceita seguidores — ninguém vê sua atividade. Você ainda pode seguir outras pessoas. Para mudar, vá em {settings}.",
+    "activity_off": "Você não aceita seguidores, então ninguém vê sua atividade. Você ainda pode seguir outras pessoas. Para mudar, vá em {settings}.",
     "tab_feed": "Feed",
     "tab_requests": "Pedidos",
     "tab_following": "Seguindo",
@@ -1100,7 +1100,7 @@
     "onTrack": "No ritmo certo",
     "missed": "Faltou {n} livro | Faltaram {n} livros",
     "future": "O ano ainda não começou",
-    "empty": "Sem meta para este ano. Você leu nenhum livro até agora. | Sem meta para este ano. Você leu {n} livro até agora. | Sem meta para este ano. Você leu {n} livros até agora.",
+    "empty": "Sem meta para este ano. Você ainda não leu nenhum livro. | Sem meta para este ano. Você leu {n} livro até agora. | Sem meta para este ano. Você leu {n} livros até agora.",
     "paceMarker": "Onde você precisa estar hoje"
   },
   "series": {
@@ -1450,7 +1450,7 @@
   "review": {
     "title": "Resenha",
     "write": "Escrever uma resenha",
-    "writeHint": "O que você achou? Outros leitores podem ler — as anotações continuam só suas.",
+    "writeHint": "O que você achou? Outros leitores podem ler; as anotações continuam só suas.",
     "edit": "Editar",
     "delete": "Excluir",
     "save": "Publicar resenha",
@@ -1476,7 +1476,7 @@
     "ofOwner": "Resenha de {'@'}{name}",
     "followersBadge": "Seguidores",
     "followersHint": "Visível só para seguidores",
-    "showSpoiler": "Contém spoiler — mostrar",
+    "showSpoiler": "Contém spoiler: mostrar",
     "readMore": "Ler mais",
     "readLess": "Ler menos",
     "like": "Curtir resenha",
@@ -1500,7 +1500,7 @@
     },
     "fromReaders": "Resenhas de leitores | 1 resenha de leitor | {n} resenhas de leitores",
     "showAll": "Ver todas as {n} resenhas",
-    "profileMore": "E mais {n} — abra os livros da estante para ler.",
+    "profileMore": "E mais {n}. Abra os livros da estante para ler.",
     "editAria": "Editar resenha",
     "deleteAria": "Excluir resenha",
     "fromNotes": "Usar a nota como resenha",
@@ -1543,7 +1543,7 @@
   "lists": {
     "total": "Nenhuma lista | 1 lista | {n} listas",
     "title": "Listas",
-    "subtitle": "Separe livros da sua estante em listas, na ordem que quiser — e compartilhe as que forem públicas.",
+    "subtitle": "Separe livros da sua estante em listas, na ordem que quiser, e compartilhe as que forem públicas.",
     "new": "Nova lista",
     "createFirst": "Criar minha primeira lista",
     "emptyTitle": "Nenhuma lista ainda",
@@ -1563,7 +1563,7 @@
     "description": "Descrição (opcional)",
     "descriptionHint": "{n} / {max}",
     "ranked": "Numerada",
-    "rankedHint": "Mostra 1, 2, 3… — bom para rankings.",
+    "rankedHint": "Mostra 1, 2, 3… Bom para rankings.",
     "makePublic": "Pública",
     "publicHint": "Aparece no seu perfil e ganha um link para compartilhar.",
     "privateLibraryHint": "Sua biblioteca está privada: a lista só aparece para outras pessoas quando ela for pública em {settings}.",
@@ -1590,7 +1590,7 @@
     "deleteMessage": "A lista “{title}” será excluída. Os livros continuam na sua estante.",
     "deleteConfirm": "Excluir",
     "deleted": "Lista excluída",
-    "shareText": "{title} — minha lista no Librishelf",
+    "shareText": "{title}: minha lista no Librishelf",
     "linkCopied": "Link copiado",
     "copyThis": "Copie o link:",
     "addBooksTitle": "Adicionar livros",
@@ -1668,7 +1668,7 @@
     "pagesShort": "{n} págs.",
     "days": "no mesmo dia | 1 dia | {n} dias",
     "storyTitle": "Imagem para os stories",
-    "storyText": "Um resumo do seu ano no formato dos stories (9:16), com suas capas favoritas — pronto para Instagram, WhatsApp e afins.",
+    "storyText": "Um resumo do seu ano no formato dos stories (9:16), com suas capas favoritas, pronto para Instagram, WhatsApp e afins.",
     "storyDrawing": "Desenhando…",
     "storyAlt": "Imagem do seu ano em livros {year}: {n} livros",
     "share": "Compartilhar",
@@ -2503,7 +2503,7 @@
     "duplicatesHint": "Duplicados contam pelo ISBN. Livros sem ISBN são comparados por título e autor na hora de importar.",
     "mappingTitle": "Colunas",
     "mappingHint": "Diga de qual coluna vem cada informação. O que ficar sem coluna não é importado.",
-    "skipColumn": "— não importar",
+    "skipColumn": "Não importar",
     "refresh": "Atualizar prévia",
     "fields": {
       "title": "Título",

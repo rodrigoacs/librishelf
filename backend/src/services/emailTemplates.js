@@ -575,7 +575,7 @@ function build(kind, { name, link, locale, unsubscribe = null, ...extra }) {
     '',
     unsubscribe ? `${t.unsubscribe} ${t.unsubscribeLink}: ${unsubscribe}` : t.ignore,
     '',
-    '— Librishelf',
+    'Librishelf',
     siteUrl()
   ].join('\n')
 
@@ -662,7 +662,7 @@ export function avatarReportEmail({ username, reason, note, total, hidden, local
   return build('avatarReport', { ...rest, locale: code, items, username, reasonLabel, total, hidden })
 }
 
-// ------------------------------------------------------------------ cobrança
+// Cobrança
 
 const PLAN_LABELS = {
   pt: { monthly: 'Mensal', annual: 'Anual', founder_annual: 'Anual de fundador', founder_lifetime: 'Vitalício de fundador', vanguarda: 'Vanguarda', trial: 'Teste grátis' },

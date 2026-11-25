@@ -46,8 +46,8 @@
         </span>
       </span>
 
-      <span class="col publisher">{{ book.publisher_name || '—' }}</span>
-      <span class="col year">{{ pubYear || '—' }}</span>
+      <span class="col publisher">{{ book.publisher_name || '–' }}</span>
+      <span class="col year">{{ pubYear || '–' }}</span>
 
       <span class="col rating">
         <template v-if="book.rating">
@@ -62,13 +62,13 @@
         <span
           v-else
           class="muted"
-        >—</span>
+        >–</span>
       </span>
 
       <span
         class="col read"
         :class="{ muted: !readDateText }"
-      >{{ readDateText || '—' }}</span>
+      >{{ readDateText || '–' }}</span>
     </button>
 
     <button

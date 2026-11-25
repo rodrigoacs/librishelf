@@ -92,10 +92,8 @@ export const LIST_QUERIES = {
   `
 }
 
-// ---------------------------------------------------------------------------
 // Coleção (pacote 28): empréstimos (grátis) e exemplar (Pro: collector).
 // Datas saem como texto (AAAA-MM-DD).
-// ---------------------------------------------------------------------------
 const COLLECTION_LOAN_FIELDS = `l.id, l.book_id, l.borrower, l.lent_on::text AS lent_on, l.due_on::text AS due_on,
        l.returned_on::text AS returned_on, l.notes, l.remind`
 

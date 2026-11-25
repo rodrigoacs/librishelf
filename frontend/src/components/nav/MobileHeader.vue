@@ -157,7 +157,7 @@ defineExpose({
   display: none;
 }
 
-/* ---------------------------------------------------------------- celular
+/* Celular
  * Barra do topo de app (logo à esquerda; busca, tema e conta à direita).
  * Só abaixo de 640 px; o tablet continua com o ☰ e o logo no centro.
  */

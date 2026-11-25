@@ -50,7 +50,7 @@ function coverPauseMs() {
 
 const sleep = ms => (ms > 0 ? new Promise(resolve => setTimeout(resolve, ms)) : Promise.resolve())
 
-// ---------------------------------------------------------- CSV genérico
+// CSV genérico
 
 /** Campos que dá para mapear no CSV genérico (title é obrigatório). */
 export const GENERIC_FIELDS = Object.freeze([
@@ -194,7 +194,7 @@ export function fromGeneric(record, mapping) {
   }
 }
 
-// ---------------------------------------------------------------- leitura
+// Leitura
 
 /** CSV → { format, headers, records } (genérico se não for Goodreads nem Librishelf) */
 export function readFile(content) {
@@ -220,7 +220,7 @@ function checkSize(records) {
   }
 }
 
-// ----------------------------------------------------------------- prévia
+// Prévia
 
 /**
  * Prévia: total, duplicados por ISBN (na estante ou repetidos no arquivo),
@@ -252,7 +252,7 @@ async function buildPreview(userId, format, records, mapping) {
   return { needsMapping: false, ...counts, sample }
 }
 
-// ---------------------------------------------------------------- saída
+// Saída
 
 const iso = date => (date ? new Date(date).toISOString() : null)
 
@@ -287,7 +287,7 @@ async function ownImport(userId, id) {
   return row
 }
 
-// ------------------------------------------------------------------ rotas
+// Rotas
 
 /** POST /library/imports — arquivo → rascunho + prévia */
 export async function createDraft(userId, file) {
@@ -361,7 +361,7 @@ export async function remove(userId, id) {
   return { deleted: true }
 }
 
-// ------------------------------------------------------------------- jobs
+// Jobs
 
 /** Job import.run: grava os livros a partir da linha onde parou. */
 export async function runImport(importId) {

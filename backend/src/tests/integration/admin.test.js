@@ -271,7 +271,7 @@ describe('uso, sistema e sinais de moderação', () => {
     testOutbox().length = 0
     const res = await request(app).post('/admin/email/test').set(asAdmin())
     expect(res.status).toBe(200)
-    expect(testOutbox()[0]).toMatchObject({ to: 'chefe@example.com', subject: 'Librishelf — e-mail de teste' })
+    expect(testOutbox()[0]).toMatchObject({ to: 'chefe@example.com', subject: 'Librishelf: e-mail de teste' })
   })
 
   test('sinais: contas novas denunciadas e as mais denunciadas', async () => {

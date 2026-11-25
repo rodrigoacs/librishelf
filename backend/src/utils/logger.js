@@ -22,10 +22,7 @@ function resolveMinLevel() {
 const FORMAT = resolveFormat()
 const MIN_LEVEL = resolveMinLevel()
 
-// ---------------------------------------------------------------------------
 // JSON
-// ---------------------------------------------------------------------------
-
 function formatJson(level, message, meta) {
   return JSON.stringify({
     timestamp: new Date().toISOString(),
@@ -35,10 +32,7 @@ function formatJson(level, message, meta) {
   })
 }
 
-// ---------------------------------------------------------------------------
 // Pretty
-// ---------------------------------------------------------------------------
-
 const LEVEL_STYLE = {
   debug: ['gray'],
   info: ['cyan'],
@@ -87,8 +81,6 @@ function formatPretty(level, message, meta, useColor) {
 
   return line
 }
-
-// ---------------------------------------------------------------------------
 
 function write(level, message, meta) {
   if (LEVELS[level] < MIN_LEVEL) return

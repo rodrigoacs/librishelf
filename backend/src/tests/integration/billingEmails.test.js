@@ -21,7 +21,7 @@ const mailsTo = name => testOutbox().filter(mail => mail.to === `${name}@example
 const emailJobs = async () => (await db.query("SELECT * FROM librishelf.jobs WHERE type = 'email.send' ORDER BY id")).rows
 const runNow = sql => db.query(`UPDATE librishelf.jobs SET run_at = now() WHERE type = 'email.send' AND ${sql}`)
 
-// ---------------------------------------------------------- Mercado Pago falso
+// Mercado Pago falso
 const mp = { payments: new Map(), seq: 5000 }
 setFetch(async (url) => {
   const path = url.replace(API_URL, '')

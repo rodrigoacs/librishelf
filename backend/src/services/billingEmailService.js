@@ -43,7 +43,7 @@ function siteUrl() {
 const later = minutes => new Date(Date.now() + minutes * 60 * 1000)
 const options = (dedupeKey, runAt = null) => ({ dedupeKey, runAt, maxAttempts: MAX_ATTEMPTS })
 
-// ------------------------------------------------------------------ ganchos
+// Ganchos
 
 /** Pagamento que liberou ou estendeu o Pro. `client`: a mesma transação. */
 export function queuePaymentConfirmed(paymentId, client) {
@@ -94,7 +94,7 @@ export async function scanDue() {
   return found
 }
 
-// ---------------------------------------------------------------- montagem
+// Montagem
 
 const skip = reason => ({ skip: reason })
 const reachable = row => Boolean(row?.email && row.email_verified_at)

@@ -39,7 +39,7 @@ export async function logUnlock(adminId) {
   await log(adminId, 'admin.unlock')
 }
 
-// ------------------------------------------------------------------ números
+// Números
 
 export async function stats() {
   const [{ rows: [totals] }, { rows: weeks }, { rows: [eng] }, { rows: [errors] }] = await Promise.all([
@@ -74,7 +74,7 @@ export async function stats() {
   }
 }
 
-// ------------------------------------------------------------------ uso dos recursos
+// Uso dos recursos
 
 // Eventos contados no servidor (utils/metrics.js) que aparecem em "Uso"
 const USAGE_EVENTS = ['book.add', 'isbn.typed', 'isbn.scan', 'search.title', 'cover.upload', 'import.csv', 'export.json', 'export.csv', 'year.view']
@@ -109,7 +109,7 @@ export async function usage() {
   }
 }
 
-// ------------------------------------------------------------------ sistema
+// Sistema
 
 let uploadCache = { at: 0, value: null }
 const UPLOAD_CACHE_MS = 5 * 60 * 1000
@@ -238,7 +238,7 @@ export async function sendTestEmail(adminId) {
   try {
     await sendMail({
       to: admin.email,
-      subject: 'Librishelf — e-mail de teste',
+      subject: 'Librishelf: e-mail de teste',
       text: `Este é um e-mail de teste enviado pela área administrativa em ${new Date().toISOString()}.\nSe chegou, o envio está funcionando.`,
       html: `<p>Este é um e-mail de teste enviado pela área administrativa em ${new Date().toISOString()}.</p><p>Se chegou, o envio está funcionando.</p>`
     })
@@ -250,7 +250,7 @@ export async function sendTestEmail(adminId) {
   return { sent: config.configured, to: admin.email, smtp: config.configured }
 }
 
-// ------------------------------------------------------------------ moderação: sinais
+// Moderação: sinais
 
 const toPerson = row => ({ id: row.id, username: row.name, active: row.active, createdAt: row.created_at })
 
@@ -265,7 +265,7 @@ export async function moderationInsights() {
   }
 }
 
-// ------------------------------------------------------------------ moderação
+// Moderação
 
 export async function reportQueue(status = 'open') {
   if (!QUEUE_STATUSES.includes(status)) {
@@ -305,7 +305,7 @@ export async function moderateReview(adminId, id, hide) {
   return review(id)
 }
 
-// ------------------------------------------------------------------ fotos de perfil
+// Fotos de perfil
 
 export function bioQueue(status = 'open') {
   return profilePageService.queue(status)
@@ -337,7 +337,7 @@ export async function moderateAvatar(adminId, userId, action) {
   return result
 }
 
-// ------------------------------------------------------------------ contas
+// Contas
 
 function likePattern(text) {
   return `%${text.replace(/[\\%_]/g, char => `\\${char}`)}%`
@@ -468,7 +468,7 @@ export async function resendUserVerification(adminId, id) {
   return { sent: true }
 }
 
-// ------------------------------------------------------------------ registro
+// Registro
 
 export async function actions({ page, limit } = {}) {
   const pagination = resolvePagination(page, limit)

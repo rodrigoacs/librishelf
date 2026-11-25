@@ -20,36 +20,38 @@
       >
         <h2 class="section-title" id="admin-adoption-title">{{ t('admin.usage.adoption') }}</h2>
         <p class="hint">{{ t('admin.usage.adoptionHint', { n: data.adoption.users }) }}</p>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.usage.feature') }}</th>
-              <th
-                scope="col"
-                class="num"
-              >{{ t('admin.usage.accounts') }}</th>
-              <th scope="col"><span class="sr-only">{{ t('admin.usage.share') }}</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in adoption"
-              :key="row.key"
-            >
-              <th scope="row">{{ t(`admin.usage.features.${row.key}`) }}</th>
-              <td class="num">{{ formatNumber(row.value, locale) }}</td>
-              <td class="share-cell">
-                <div class="share">
-                  <ProgressBar
-                    class="share-bar"
-                    :value="row.percent"
-                  />
-                  <span class="pct">{{ row.percent }}%</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ t('admin.usage.feature') }}</th>
+                <th
+                  scope="col"
+                  class="num"
+                >{{ t('admin.usage.accounts') }}</th>
+                <th scope="col"><span class="sr-only">{{ t('admin.usage.share') }}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in adoption"
+                :key="row.key"
+              >
+                <th scope="row">{{ t(`admin.usage.features.${row.key}`) }}</th>
+                <td class="num">{{ formatNumber(row.value, locale) }}</td>
+                <td class="share-cell">
+                  <div class="share">
+                    <ProgressBar
+                      class="share-bar"
+                      :value="row.percent"
+                    />
+                    <span class="pct">{{ row.percent }}%</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section
@@ -58,31 +60,33 @@
       >
         <h2 class="section-title" id="admin-events-title">{{ t('admin.usage.events') }}</h2>
         <p class="hint">{{ t('admin.usage.eventsHint') }}</p>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.usage.action') }}</th>
-              <th
-                scope="col"
-                class="num"
-              >{{ t('admin.usage.last7') }}</th>
-              <th
-                scope="col"
-                class="num"
-              >{{ t('admin.usage.last30') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in data.events"
-              :key="row.event"
-            >
-              <th scope="row">{{ t(`admin.usage.eventNames.${row.event.replace('.', '_')}`) }}</th>
-              <td class="num">{{ formatNumber(row.last7, locale) }}</td>
-              <td class="num">{{ formatNumber(row.last30, locale) }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ t('admin.usage.action') }}</th>
+                <th
+                  scope="col"
+                  class="num"
+                >{{ t('admin.usage.last7') }}</th>
+                <th
+                  scope="col"
+                  class="num"
+                >{{ t('admin.usage.last30') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in data.events"
+                :key="row.event"
+              >
+                <th scope="row">{{ t(`admin.usage.eventNames.${row.event.replace('.', '_')}`) }}</th>
+                <td class="num">{{ formatNumber(row.last7, locale) }}</td>
+                <td class="num">{{ formatNumber(row.last30, locale) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p
           v-if="scanShare !== null"
           class="note"
@@ -100,50 +104,54 @@
           class="section-title"
         >{{ t('admin.publicPages.title') }}</h2>
         <p class="hint">{{ t('admin.publicPages.hint', { n: pages.days }) }}</p>
-        <table>
-          <tbody>
-            <tr
-              v-for="event in PAGE_EVENTS"
-              :key="event"
-            >
-              <th scope="row">{{ t(`admin.publicPages.events.${event}`) }}</th>
-              <td class="num">{{ formatNumber(pages.totals[event], locale) }}</td>
-            </tr>
-            <tr>
-              <th scope="row">{{ t('admin.publicPages.conversion') }}</th>
-              <td class="num">{{ pages.conversion === null ? '—' : `${formatNumber(pages.conversion, locale)}%` }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <template v-if="pages.topPages.length">
-          <h3 class="section-title sub">{{ t('admin.publicPages.top') }}</h3>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">{{ t('admin.publicPages.page') }}</th>
-                <th
-                  scope="col"
-                  class="num"
-                >{{ t('admin.publicPages.events.visit') }}</th>
-                <th
-                  scope="col"
-                  class="num"
-                >{{ t('admin.publicPages.events.signup') }}</th>
-              </tr>
-            </thead>
+        <div class="table-scroll">
+          <table class="data-table">
             <tbody>
               <tr
-                v-for="row in pages.topPages"
-                :key="row.username"
+                v-for="event in PAGE_EVENTS"
+                :key="event"
               >
-                <th scope="row">
-                  <router-link :to="{ name: 'public-library', params: { username: row.username } }">/u/{{ row.username }}</router-link>
-                </th>
-                <td class="num">{{ formatNumber(row.visits, locale) }}</td>
-                <td class="num">{{ formatNumber(row.signups, locale) }}</td>
+                <th scope="row">{{ t(`admin.publicPages.events.${event}`) }}</th>
+                <td class="num">{{ formatNumber(pages.totals[event], locale) }}</td>
+              </tr>
+              <tr>
+                <th scope="row">{{ t('admin.publicPages.conversion') }}</th>
+                <td class="num">{{ pages.conversion === null ? '–' : `${formatNumber(pages.conversion, locale)}%` }}</td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <template v-if="pages.topPages.length">
+          <h3 class="section-title sub">{{ t('admin.publicPages.top') }}</h3>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ t('admin.publicPages.page') }}</th>
+                  <th
+                    scope="col"
+                    class="num"
+                  >{{ t('admin.publicPages.events.visit') }}</th>
+                  <th
+                    scope="col"
+                    class="num"
+                  >{{ t('admin.publicPages.events.signup') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="row in pages.topPages"
+                  :key="row.username"
+                >
+                  <th scope="row">
+                    <router-link :to="{ name: 'public-library', params: { username: row.username } }">/u/{{ row.username }}</router-link>
+                  </th>
+                  <td class="num">{{ formatNumber(row.visits, locale) }}</td>
+                  <td class="num">{{ formatNumber(row.signups, locale) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </template>
         <p
           v-else
@@ -250,13 +258,6 @@ td {
   font-weight: 400;
 }
 
-thead th {
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
 
 tbody tr:last-child th,
 tbody tr:last-child td {

@@ -17,7 +17,7 @@ const tokens = {}
 const ids = {}
 const auth = name => ({ Authorization: `Bearer ${tokens[name]}` })
 
-// ---------------------------------------------------------- Mercado Pago falso
+// Mercado Pago falso
 const mp = { preapprovals: new Map(), invoices: new Map(), payments: new Map(), bodies: [], canceled: [], refunds: [], failCancel: false, failRefund: false, seq: 5000 }
 const next = () => String(++mp.seq)
 

@@ -19,11 +19,8 @@ const RECOMMENDATION_LIMIT = 6
 const ALSO_HAVE_LIMIT = 5
 const COMMON_LIMIT = 24
 
-// Classificações caras (busca de leitores, recomendações, "também têm") ficam
-// alguns minutos em memória, por usuário. O que muda na hora — privacidade,
-// bloqueio, conta ativa, "seguir", livro posto na estante — é conferido a cada
-// pedido (READERS_LIVE e SAMPLE_BOOKS), por isso guardamos uma folga além do
-// limite. Nos testes começa desligado (ttlMs = 0), como os rate limits.
+// Classificações caras ficam alguns minutos em memória por usuário; o que muda
+// na hora (privacidade, bloqueio, seguir) é conferido a cada pedido. Testes: ttlMs = 0.
 const TEST = process.env.NODE_ENV === 'test'
 export const rankingCache = {
   readers: createTtlCache({ ttlMs: TEST ? 0 : 60 * 1000 }),

@@ -117,10 +117,8 @@ router.beforeEach(async (to) => {
 
 router.afterEach(to => setRouteTitle(to))
 
-// 401 em qualquer chamada autenticada: limpa a sessão e manda para o login,
-// guardando onde a pessoa estava. Fica aqui (e não em session.js) para o
-// session.js não precisar importar o router — antes era um import dinâmico
-// que o Vite avisava ser inútil (INEFFECTIVE_DYNAMIC_IMPORT).
+// 401 em chamada autenticada: limpa a sessão e vai ao login guardando a rota.
+// Fica aqui para o session.js não importar o router.
 setSessionExpiredHandler(({ silent }) => {
   clearSession()
   if (silent) return

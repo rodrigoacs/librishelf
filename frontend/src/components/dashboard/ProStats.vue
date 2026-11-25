@@ -128,7 +128,7 @@
                 <span class="stat-note">{{ t('proStats.pace.median', { n: num(pace.medianDays, 1) }) }}</span>
               </div>
               <div class="pace-kpi">
-                <span class="stat-value">{{ pace.pagesPerDay === null ? '—' : num(pace.pagesPerDay, 1) }}</span>
+                <span class="stat-value">{{ pace.pagesPerDay === null ? '–' : num(pace.pagesPerDay, 1) }}</span>
                 <span class="stat-label">{{ t('proStats.pace.pagesPerDay') }}</span>
               </div>
             </div>
@@ -258,7 +258,7 @@ const dateLocale = useDateTag()
 const enabled = computed(() => canUse('stats_advanced'))
 
 const num = (value, decimals = 0) =>
-  value === null || value === undefined ? '—' : new Intl.NumberFormat(dateLocale.value, { maximumFractionDigits: decimals }).format(value)
+  value === null || value === undefined ? '–' : new Intl.NumberFormat(dateLocale.value, { maximumFractionDigits: decimals }).format(value)
 const shortDate = text => localDate(text).toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short' })
 const rangeLabel = side => formatRange(side.from, side.to, dateLocale.value)
 
@@ -283,9 +283,7 @@ async function run(target, task) {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Comparar períodos
-// ---------------------------------------------------------------------------
 const preset = ref('yearToDate')
 const comparison = ref(null)
 const compareState = state()
@@ -320,7 +318,7 @@ function loadCompare() {
   })
 }
 
-const topName = list => list?.[0]?.name ?? '—'
+const topName = list => list?.[0]?.name ?? '–'
 
 const compareRows = computed(() => {
   const { a, b } = comparison.value
@@ -345,9 +343,7 @@ function delta(result, { lowerIsBetter = false } = {}) {
   return { delta: result.text, tone: lowerIsBetter ? (flip[result.tone] ?? '') : result.tone }
 }
 
-// ---------------------------------------------------------------------------
 // Ritmo
-// ---------------------------------------------------------------------------
 const pace = ref(null)
 const paceState = state()
 
@@ -385,9 +381,7 @@ const paceRows = computed(() => pace.value.byMonth
   .filter(item => item.avgDays !== null)
   .map(item => ({ label: monthNames.value[item.month - 1], value: num(item.avgDays, 1) })))
 
-// ---------------------------------------------------------------------------
 // Ao longo dos anos
-// ---------------------------------------------------------------------------
 const dimension = ref('authors')
 const overYears = ref(null)
 const yearsState = state()
@@ -434,8 +428,6 @@ const yearsSummary = computed(() => t('proStats.overYears.summary', {
 
 const discoveredRows = computed(() =>
   overYears.value.years.map((year, i) => ({ label: String(year), value: overYears.value.discovered[i] })))
-
-// ---------------------------------------------------------------------------
 
 function loadAll() {
   if (!enabled.value) return

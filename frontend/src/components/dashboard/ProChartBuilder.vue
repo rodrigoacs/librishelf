@@ -212,7 +212,7 @@ function label(key) {
   return key
 }
 
-const valueText = value => (value === null ? '—' : new Intl.NumberFormat(dateLocale.value, { maximumFractionDigits: 2 }).format(value))
+const valueText = value => (value === null ? '–' : new Intl.NumberFormat(dateLocale.value, { maximumFractionDigits: 2 }).format(value))
 
 const palette = useChartPalette()
 

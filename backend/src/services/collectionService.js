@@ -44,7 +44,7 @@ const MAX_CENTS = 100000000
 
 const bad = (message, code, params) => httpError(message, STATUS.BAD_REQUEST, code, params)
 
-// ------------------------------------------------------------------ validação
+// Validação
 
 function date(value, field, { required = false } = {}) {
   if (value === undefined || value === null || value === '') {
@@ -88,7 +88,7 @@ function loanInput(body = {}) {
   }
 }
 
-// ------------------------------------------------------------------ formatos
+// Formatos
 
 const loanOut = row => ({
   id: row.id,
@@ -130,7 +130,7 @@ async function ownedLoan(loanId, userId) {
   return loan
 }
 
-// ------------------------------------------------------------------ livro
+// Livro
 
 /** Tudo da coleção de um livro: empréstimos, exemplar, fotos e a cota. */
 export async function bookCollection(userId, bookId) {
@@ -153,7 +153,7 @@ export async function bookCollection(userId, bookId) {
   }
 }
 
-// ------------------------------------------------------------------ empréstimos
+// Empréstimos
 
 export async function listLoans(userId, status = 'open') {
   const which = ['open', 'returned', 'all'].includes(status) ? status : 'open'
@@ -247,7 +247,7 @@ export async function loanReminderMessage({ loanId, dueOn }) {
   }
 }
 
-// ------------------------------------------------------------------ exemplar
+// Exemplar
 
 export async function saveCopy(userId, bookId, body = {}) {
   await ownedBook(bookId, userId)
@@ -288,7 +288,7 @@ export async function summary(userId) {
   }
 }
 
-// ------------------------------------------------------------------ fotos
+// Fotos
 
 const userDir = userId => path.join(UPLOAD_DIR, 'copies', String(userId))
 export const photoPath = (userId, bookId, photoId, size) => path.join(userDir(userId), `${bookId}-${photoId}-${size}.jpg`)
@@ -369,7 +369,7 @@ export function removeUserPhotoFiles(userId) {
   return fs.rm(userDir(userId), { recursive: true, force: true })
 }
 
-// ------------------------------------------------------------------ exportação
+// Exportação
 
 export async function exportData(userId) {
   const [loans, copies] = await Promise.all([db.query(q.EXPORT_LOANS, [userId]), db.query(q.EXPORT_COPIES, [userId])])

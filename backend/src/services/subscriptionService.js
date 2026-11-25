@@ -33,7 +33,7 @@ export function addMonth(date) {
 /** Corpo do POST /preapproval para o mensal */
 export function preapprovalBody({ reference, email, priceCents, backUrl, startDate }) {
   return {
-    reason: 'Librishelf Pro — mensal',
+    reason: 'Librishelf Pro mensal',
     external_reference: reference,
     payer_email: email,
     auto_recurring: {

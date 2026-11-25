@@ -140,9 +140,7 @@ onBeforeUnmount(() => {
 // Trocou de tela: a gaveta fecha
 watch(() => route.path, () => { mobileMenuOpen.value = false })
 
-// ---------------------------------------------------------------------------
 // Celular: voltar do aparelho fecha o menu antes de sair da tela
-// ---------------------------------------------------------------------------
 let releaseBack = null
 
 function watchBack() {
@@ -168,9 +166,7 @@ async function goTo(navigate) {
   navigate()
 }
 
-// ---------------------------------------------------------------------------
 // Celular: gaveta arrastável (da borda para abrir, no menu/fundo para fechar)
-// ---------------------------------------------------------------------------
 const sidebarEl = ref(null)
 const overlayEl = ref(null)
 const dragging = ref(false)
@@ -326,7 +322,7 @@ const closeDrag = useDrag({
   display: none;
 }
 
-/* ---------------------------------------------------------------- celular
+/* Celular
  * Gaveta arrastável que vem da direita. Só abaixo de 640 px; no tablet ela
  * vem da esquerda, pelo ☰.
  */

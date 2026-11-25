@@ -153,7 +153,12 @@ defineExpose({ toggle })
 .popup-item:hover,
 .popup-item:focus-visible {
   background: var(--bg-hover);
-  outline: none;
+}
+
+/* O tom do hover sozinho não chega a 3:1 contra o painel: o foco ganha o anel */
+.popup-item:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
 }
 
 /* Ação destrutiva (Excluir) */

@@ -45,7 +45,7 @@
           class="section-title"
         >{{ t('admin.queue.jobs') }}</h2>
         <div class="table-wrap">
-          <table>
+          <table class="data-table">
             <thead>
               <tr>
                 <th scope="col">{{ t('admin.queue.cols.type') }}</th>
@@ -71,7 +71,7 @@
                   class="num"
                   :class="{ warn: row.failed }"
                 >{{ row.failed }}</td>
-                <td class="muted">{{ formatDateTime(row.lastDoneAt, locale) || '—' }}</td>
+                <td class="muted">{{ formatDateTime(row.lastDoneAt, locale) || '–' }}</td>
               </tr>
             </tbody>
           </table>
@@ -114,7 +114,7 @@
         </div>
         <p class="hint">{{ t('admin.queue.webhooksHint') }}</p>
         <div class="table-wrap">
-          <table :aria-busy="webhooksLoading ? 'true' : 'false'">
+          <table class="data-table" :aria-busy="webhooksLoading ? 'true' : 'false'">
             <thead>
               <tr>
                 <th scope="col">{{ t('admin.queue.cols.received') }}</th>
@@ -336,13 +336,6 @@ td {
   vertical-align: top;
 }
 
-thead th {
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
 
 tbody tr:last-child th,
 tbody tr:last-child td {

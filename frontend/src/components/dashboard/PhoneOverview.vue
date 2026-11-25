@@ -16,7 +16,7 @@
       </div>
       <div class="tile">
         <dt class="stat-label">{{ t('dashboard.tilePages') }}</dt>
-        <dd class="stat-value">{{ totals ? formatNumber(totals.pages) : '—' }}</dd>
+        <dd class="stat-value">{{ totals ? formatNumber(totals.pages) : '–' }}</dd>
       </div>
       <div class="tile">
         <dt class="stat-label">{{ t('dashboard.tileRating') }}</dt>
@@ -28,7 +28,7 @@
               aria-hidden="true"
             ></i>
           </template>
-          <template v-else>—</template>
+          <template v-else>–</template>
         </dd>
       </div>
     </dl>

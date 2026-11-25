@@ -227,7 +227,7 @@ function settle() {
   if (settling.value) setTimeout(() => { settling.value = false }, 600)
 }
 
-// ------------------------------------------------------------- ponteiros
+// Ponteiros
 const pointers = reactive(new Map())
 let gesture = null
 
@@ -313,7 +313,7 @@ function onKeydown(event) {
   view.value = clampView(next, natural.w, natural.h, box.value)
 }
 
-// ------------------------------------------------------------- salvar
+// Salvar
 
 function renderBlob() {
   const { sx, sy, size } = cropRect(view.value, natural.w, natural.h, box.value)

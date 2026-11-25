@@ -40,12 +40,8 @@
 </template>
 
 <script setup>
-// Abas de página (visual em main.css, .app-tabs). Quando não cabem
-// (celular), degradê na borda que tem mais abas e a aba ativa rola para o
-// meio, para a última não ficar escondida. Os painéis usam os ids
-// `${idPrefix}panel-${key}` e `aria-labelledby="${idPrefix}tab-${key}"`.
-// A margem em volta vem de --tabs-margin (padrão: 0 0 --space-5), que a
-// tela pode trocar num ancestral.
+// Abas de página (.app-tabs). Sem espaço, rolam com a ativa no meio. Painéis:
+// id `${idPrefix}panel-${key}`; margem por --tabs-margin num ancestral.
 import { ref, watch, nextTick, onMounted } from 'vue'
 import { useScrollEdges } from '../../composables/useScrollEdges.js'
 import { scrollBehavior } from '../../utils/motion.js'

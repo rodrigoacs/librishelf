@@ -22,6 +22,6 @@ export function centsToInput(cents, locale = 'pt-BR') {
 }
 
 export function formatMoney(cents, locale = 'pt-BR', currency = 'BRL') {
-  if (cents === null || cents === undefined) return '—'
+  if (cents === null || cents === undefined) return '–'
   return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(cents / 100)
 }

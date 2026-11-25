@@ -309,7 +309,7 @@
             v-for="(error, index) in current.errors"
             :key="index"
           >
-            <span class="strong">{{ error.line ? t('settings.data.errorLine', { line: error.line, title: error.title || '—' }) : t('import.fileError') }}</span>
+            <span class="strong">{{ error.line ? t('settings.data.errorLine', { line: error.line, title: error.title || '–' }) : t('import.fileError') }}</span>
             <span class="muted small">{{ reason(error) }}</span>
           </li>
         </ul>

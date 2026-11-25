@@ -52,7 +52,7 @@ async function deleteBookCover(bookId) {
   ])
 }
 
-// ------------------------------------------------------------------ foto de perfil
+// Foto de perfil
 
 // Quadrada, em dois tamanhos: sm para listas e cabeçalho (até 48 px na tela,
 // 2x/3x nos celulares), lg para o perfil e a folha de recorte.
@@ -95,7 +95,7 @@ async function deleteAvatar(userId) {
     fs.unlink(avatarPath(userId, size, ext)).catch(() => { }))))
 }
 
-// ------------------------------------------------- capa de fundo do perfil
+// Capa de fundo do perfil
 
 // Faixa larga no alto da biblioteca pública (aparece desfocada): 1600 px
 // bastam até em tela retina. Gira pela câmera e sai sem EXIF/GPS.

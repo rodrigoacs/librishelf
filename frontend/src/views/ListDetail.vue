@@ -332,7 +332,7 @@ function reloadSoon() {
   reloadTimer = setTimeout(load, 300)
 }
 
-// ------------------------------------------------------------ ordem
+// Ordem
 
 function move(from, to) {
   const items = [...list.value.items]
@@ -410,7 +410,7 @@ watch(listEl, element => {
   if (element) setupSortable()
 })
 
-// ------------------------------------------------------------ ações
+// Ações
 
 // Menu da linha (celular estreito): uma instância só, com o livro da vez
 const rowMenu = ref(null)

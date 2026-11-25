@@ -14,7 +14,7 @@ export async function clearDatabase() {
       `DB_NAME="${dbName}" precisa conter "test" no nome E a variável ` +
       'ALLOW_DESTRUCTIVE_TEST_DB precisa ser "true" no .env carregado. ' +
       'Isso normalmente significa que o .env de PRODUÇÃO está sendo usado ' +
-      'para rodar os testes — confira qual arquivo de env foi carregado ' +
+      'para rodar os testes. Confira qual arquivo de env foi carregado ' +
       '(deveria ser backend/src/.env.test, nunca backend/src/.env).'
     )
   }

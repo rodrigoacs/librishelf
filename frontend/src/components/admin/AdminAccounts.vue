@@ -39,7 +39,7 @@
       class="table-wrap"
       :class="{ 'more-end': tableEdges.moreEnd.value }"
     >
-      <table :aria-busy="loading ? 'true' : 'false'">
+      <table class="data-table" :aria-busy="loading ? 'true' : 'false'">
         <thead>
           <tr>
             <th scope="col">{{ t('admin.accounts.cols.user') }}</th>
@@ -88,7 +88,7 @@
               <p
                 v-if="!user.active && user.suspendedReason"
                 class="reason"
-              >{{ t('admin.accounts.suspendedOn', { date: formatDate(user.suspendedAt, locale) }) }} — {{ user.suspendedReason }}</p>
+              >{{ t('admin.accounts.suspendedOn', { date: formatDate(user.suspendedAt, locale) }) }} · {{ user.suspendedReason }}</p>
             </td>
             <td class="date">{{ formatShortDate(user.createdAt, locale) }}</td>
             <td class="date">{{ user.lastLoginAt ? formatDateTime(user.lastLoginAt, locale) : t('admin.accounts.never') }}</td>
@@ -287,11 +287,6 @@ td {
 }
 
 th {
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
   white-space: nowrap;
 }
 

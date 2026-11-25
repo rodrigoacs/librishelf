@@ -182,8 +182,6 @@ onBeforeUnmount(() => {
   padding: 0 var(--safe-right, 0px) var(--safe-bottom, 0px) var(--safe-left, 0px);
   border-top: 1px solid var(--border-color);
   background: color-mix(in srgb, var(--bg-panel) 94%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   view-transition-name: tab-bar;
   transition: transform var(--dur-medium) var(--ease-enter);
 }

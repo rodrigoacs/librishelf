@@ -50,7 +50,7 @@
         >{{ t('admin.billing.offers') }}</h2>
         <p class="hint">{{ t('admin.billing.offersHint') }}</p>
         <div class="table-wrap">
-          <table>
+          <table class="data-table">
             <thead>
               <tr>
                 <th scope="col">{{ t('admin.billing.cols.offer') }}</th>
@@ -76,7 +76,7 @@
                 <td class="num">{{ formatMoney(offer.priceCents, locale) }}</td>
                 <td class="muted">{{ windowText(offer) }}</td>
                 <td class="num">
-                  <template v-if="offer.slotsTotal === null">—</template>
+                  <template v-if="offer.slotsTotal === null">–</template>
                   <template v-else>
                     {{ t('admin.billing.slotsOf', { used: offer.slotsUsed, total: offer.slotsTotal }) }}
                     <span class="small block">{{ t('admin.billing.slotsLeft', { n: offer.slotsLeft }) }}<template v-if="offer.heldSlots"> · {{ t('admin.billing.slotsHeld', { n: offer.heldSlots }) }}</template></span>
@@ -120,7 +120,7 @@
         </div>
         <p class="hint">{{ t('admin.billing.paymentsHint') }}</p>
         <div class="table-wrap">
-          <table :aria-busy="paymentsLoading ? 'true' : 'false'">
+          <table class="data-table" :aria-busy="paymentsLoading ? 'true' : 'false'">
             <thead>
               <tr>
                 <th scope="col">{{ t('admin.billing.cols.when') }}</th>
@@ -561,13 +561,6 @@ td {
   vertical-align: top;
 }
 
-thead th {
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
 
 tbody th {
   font-weight: 600;

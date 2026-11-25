@@ -130,7 +130,7 @@ export async function libraryHead(username) {
     meta('og:site_name', 'Librishelf'),
     meta('og:title', title),
     // Com apresentação, ela vem primeiro (uma linha só na prévia)
-    meta('og:description', bio ? `${bio.replace(/\n/g, ' ')} — ${describe(user.name, stats)}` : describe(user.name, stats)),
+    meta('og:description', bio ? `${bio.replace(/\n/g, ' ')} · ${describe(user.name, stats)}` : describe(user.name, stats)),
     meta('og:url', url),
     meta('og:locale', 'pt_BR'),
     meta('profile:username', user.name)
@@ -157,7 +157,7 @@ export async function libraryHead(username) {
   return tags.join('')
 }
 
-// ------------------------------------------------------------------ listas
+// Listas
 
 const LIST_ID = /^\d{1,9}$/
 
@@ -233,7 +233,7 @@ export async function listImage(username, listId) {
   return { buffer, version }
 }
 
-// ------------------------------------------------------------------ imagem
+// Imagem
 
 /** Posições das capas: uma fileira (até 5) ou duas (6 a 10), centralizadas. */
 export function layoutCovers(count) {

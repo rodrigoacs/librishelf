@@ -26,7 +26,7 @@ const MAX_LOCATION = 160
 const MAX_STACK_LINES = 6
 const MAX_DETAIL_TEXT = 200
 
-// ------------------------------------------------------------- limpeza
+// Limpeza
 
 const EMAIL = /[\w.+-]+@[\w-]+(\.[\w-]+)+/g
 // Tokens, JWTs, hashes: 20+ caracteres de letras, números, - e _, com algum
@@ -84,7 +84,7 @@ function cleanDetail(detail = {}) {
   return out
 }
 
-// -------------------------------------------------------------- registro
+// Registro
 
 /**
  * { source, message, location?, detail? } → grava (ou soma). Devolve a
@@ -121,7 +121,7 @@ export function recordWebhookFailure(event, error) {
   return record({ source: 'webhook', message: error?.message, location: `${event.provider}/${event.topic}`, detail: { attempts: event.attempts } })
 }
 
-// ------------------------------------------------------------ navegador
+// Navegador
 
 const CLIENT_KINDS = new Set(['vue', 'error', 'unhandledrejection'])
 
@@ -153,7 +153,7 @@ export async function recordClient(body) {
   return true
 }
 
-// ------------------------------------------------------- resumo por e-mail
+// Resumo por e-mail
 
 const DIGEST_MAX_ITEMS = 10
 export const digestMinutes = () => Math.max(Number(process.env.ERROR_DIGEST_MINUTES) || 60, 5)
@@ -190,7 +190,7 @@ export async function digest({ now = Date.now(), send } = {}) {
   return { sent: rows.length }
 }
 
-// ------------------------------------------------------------------- Admin
+// Admin
 
 const STATUSES = ['open', 'resolved', 'all']
 const iso = date => (date ? new Date(date).toISOString() : null)

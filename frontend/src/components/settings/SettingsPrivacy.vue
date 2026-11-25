@@ -208,7 +208,7 @@ async function copyLink() {
   setTimeout(() => { copied.value = false }, 2000)
 }
 
-// ------------------------------------------------------------- bloqueados
+// Bloqueados
 const blockedSheetOpen = ref(false)
 const blockedUsers = ref([])
 const unblocking = ref('')

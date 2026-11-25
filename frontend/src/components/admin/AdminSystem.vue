@@ -115,7 +115,7 @@
           <div>
             <dt>{{ t('admin.system.db.migration') }}</dt>
             <dd>
-              <span class="mono">{{ data.database.lastMigration?.version || '—' }}</span>
+              <span class="mono">{{ data.database.lastMigration?.version || '–' }}</span>
               <span
                 v-if="data.database.lastMigration"
                 class="muted"
@@ -141,11 +141,11 @@
         <dl>
           <div>
             <dt>{{ t('admin.system.storage.covers') }}</dt>
-            <dd>{{ data.storage.uploads.files === null ? '—' : t('admin.system.storage.files', { n: formatNumber(data.storage.uploads.files, locale), size: formatBytes(data.storage.uploads.bytes, locale) }) }}</dd>
+            <dd>{{ data.storage.uploads.files === null ? '–' : t('admin.system.storage.files', { n: formatNumber(data.storage.uploads.files, locale), size: formatBytes(data.storage.uploads.bytes, locale) }) }}</dd>
           </div>
           <div>
             <dt>{{ t('admin.system.storage.disk') }}</dt>
-            <dd>{{ data.storage.disk.total === null ? '—' : t('admin.system.storage.free', { free: formatBytes(data.storage.disk.free, locale), total: formatBytes(data.storage.disk.total, locale), p: diskFree }) }}</dd>
+            <dd>{{ data.storage.disk.total === null ? '–' : t('admin.system.storage.free', { free: formatBytes(data.storage.disk.free, locale), total: formatBytes(data.storage.disk.total, locale), p: diskFree }) }}</dd>
           </div>
         </dl>
         <div
@@ -202,7 +202,7 @@
           </div>
           <div v-if="data.email.lastFailure">
             <dt>{{ t('admin.system.email.lastFailure') }}</dt>
-            <dd class="bad-text">{{ formatDateTime(data.email.lastFailure.at, locale) }} — {{ data.email.lastFailure.message }}</dd>
+            <dd class="bad-text">{{ formatDateTime(data.email.lastFailure.at, locale) }} · {{ data.email.lastFailure.message }}</dd>
           </div>
         </dl>
         <AppButton
@@ -231,7 +231,7 @@
             </div>
             <div>
               <dt>{{ t('admin.system.ol.errorRate') }}</dt>
-              <dd :class="{ 'bad-text': data.openLibrary.errorRate >= 10 }">{{ data.openLibrary.errorRate === null ? '—' : `${data.openLibrary.errorRate}%` }}</dd>
+              <dd :class="{ 'bad-text': data.openLibrary.errorRate >= 10 }">{{ data.openLibrary.errorRate === null ? '–' : `${data.openLibrary.errorRate}%` }}</dd>
             </div>
             <div>
               <dt>{{ t('admin.system.ol.latency') }}</dt>
@@ -239,7 +239,7 @@
             </div>
             <div v-if="data.openLibrary.lastFailure">
               <dt>{{ t('admin.system.ol.lastFailure') }}</dt>
-              <dd class="bad-text">{{ formatDateTime(data.openLibrary.lastFailure.at, locale) }} — {{ data.openLibrary.lastFailure.message }}</dd>
+              <dd class="bad-text">{{ formatDateTime(data.openLibrary.lastFailure.at, locale) }} · {{ data.openLibrary.lastFailure.message }}</dd>
             </div>
             <div>
               <dt>{{ t('admin.system.ol.books') }}</dt>
@@ -274,31 +274,36 @@
           v-if="!data.rateLimits.last7.length"
           class="muted"
         >{{ t('admin.system.limits.none') }}</p>
-        <table v-else>
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.system.limits.code') }}</th>
-              <th
-                scope="col"
-                class="num"
-              >{{ t('admin.system.limits.today') }}</th>
-              <th
-                scope="col"
-                class="num"
-              >{{ t('admin.system.limits.week') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in data.rateLimits.last7"
-              :key="row.code"
-            >
-              <th scope="row">{{ limitName(row.code) }}</th>
-              <td class="num">{{ todayLimit(row.code) }}</td>
-              <td class="num">{{ row.total }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div
+          v-else
+          class="table-scroll"
+        >
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ t('admin.system.limits.code') }}</th>
+                <th
+                  scope="col"
+                  class="num"
+                >{{ t('admin.system.limits.today') }}</th>
+                <th
+                  scope="col"
+                  class="num"
+                >{{ t('admin.system.limits.week') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in data.rateLimits.last7"
+                :key="row.code"
+              >
+                <th scope="row">{{ limitName(row.code) }}</th>
+                <td class="num">{{ todayLimit(row.code) }}</td>
+                <td class="num">{{ row.total }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <h3 class="section-title">{{ t('admin.system.limits.ips') }}</h3>
         <p
           v-if="!data.rateLimits.topIps.length"
@@ -615,13 +620,6 @@ td {
   vertical-align: top;
 }
 
-thead th {
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
 
 tbody tr:last-child th,
 tbody tr:last-child td {

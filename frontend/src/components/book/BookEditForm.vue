@@ -271,7 +271,7 @@ function load() {
   initialSnapshot = currentSnapshot()
 }
 
-// ---------------------------------------------------------------- alterações não salvas
+// Alterações não salvas
 
 // O que a pessoa pode mudar; comparado com o valor ao abrir (utils/formState.js)
 let initialSnapshot = null
@@ -302,7 +302,7 @@ function clearErrors() {
   Object.keys(errors).forEach(key => { delete errors[key] })
 }
 
-// ---------------------------------------------------------------- capa
+// Capa
 
 const selectedFile = ref(null)
 const preview = createPreviewHandle()
@@ -342,7 +342,7 @@ const coverCaption = computed(() => {
 
 onBeforeUnmount(() => preview.clear())
 
-// ---------------------------------------------------------------- ISBN, câmera e título
+// ISBN, câmera e título
 
 const {
   lookup,
@@ -365,7 +365,7 @@ onMounted(() => {
   if (isCreate.value && props.initialFindMode === 'title') setFindMode('title')
 })
 
-// ---------------------------------------------------------------- validação
+// Validação
 
 watch(() => form.title, () => { delete errors.title })
 watch(() => form.authorNames, () => { delete errors.authors })
@@ -406,7 +406,7 @@ async function focusFirstError() {
   el?.scrollIntoView({ block: 'center', behavior: scrollBehavior() })
 }
 
-// ---------------------------------------------------------------- salvar
+// Salvar
 
 function readDateToSend() {
   if (status.value === 'read') return toApiDate(statusDate.value || new Date())

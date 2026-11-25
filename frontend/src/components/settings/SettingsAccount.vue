@@ -252,7 +252,7 @@ const { t, locale } = useI18n()
 const toast = useToast()
 const confirm = useConfirm()
 
-// ---------------------------------------------------------------- foto de perfil
+// Foto de perfil
 // No celular as folhas sobem de baixo; no desktop, janelas
 const photoSheetOpen = ref(false)
 const photoInput = ref(null)
@@ -331,7 +331,7 @@ async function savePhotoVisibility(value) {
   }
 }
 
-// ------------------------------------------------- nome de usuário e e-mail
+// Nome de usuário e e-mail
 const accountDialog = reactive({ visible: false, field: 'username', value: '', password: '', saving: false, errors: { value: '', password: '' } })
 const accountValueField = ref(null)
 const accountPasswordField = ref(null)

@@ -75,11 +75,11 @@
         class="entity-grid"
         aria-busy="true"
       >
-        <div
+        <AppSkeleton
           v-for="n in 8"
           :key="n"
-          class="skeleton-card"
-        ></div>
+          height="98px"
+        />
       </div>
 
       <EmptyState
@@ -358,9 +358,7 @@ const filteredItems = computed(() => {
   return list.sort(byName)
 })
 
-// ---------------------------------------------------------------------------
 // Renomear e mesclar
-// ---------------------------------------------------------------------------
 const merging = ref(false)
 const selected = ref(new Set())
 const saving = ref(false)
@@ -746,27 +744,6 @@ button.entity-card {
 .entity-card:focus-visible .arrow-icon {
   color: var(--text-primary);
   transform: translateX(3px);
-}
-
-.skeleton-card {
-  height: 98px;
-  background-color: var(--bg-hover);
-  border-radius: var(--radius-md);
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 0.6;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.6;
-  }
 }
 
 @media (max-width: 639.98px) {

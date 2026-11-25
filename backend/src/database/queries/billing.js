@@ -501,9 +501,7 @@ export const BILLING_EMAIL_QUERIES = {
   `
 }
 
-// ---------------------------------------------------------------------------
 // Desistência da compra pelo próprio comprador (pacote 36b)
-// ---------------------------------------------------------------------------
 export const WITHDRAWAL_QUERIES = {
   PAYMENT_LOCK: `
     SELECT p.id, p.user_id, p.offer_code, p.method, p.amount_cents, p.status, p.paid_at, p.refunded_at,

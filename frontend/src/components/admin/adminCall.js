@@ -51,7 +51,7 @@ export function formatShortDate(value, locale) {
 }
 
 export function formatBytes(bytes, locale) {
-  if (bytes === null || bytes === undefined) return '—'
+  if (bytes === null || bytes === undefined) return '–'
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   let value = Number(bytes)
   let unit = 0
