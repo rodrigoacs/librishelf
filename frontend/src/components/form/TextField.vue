@@ -158,6 +158,7 @@ defineExpose({ focus: () => control.value?.focus() })
 }
 
 .large .field-control {
+  --field-font-size: var(--fs-lg);
   font-size: var(--fs-lg);
   font-weight: 600;
 }

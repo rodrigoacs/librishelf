@@ -474,6 +474,21 @@ button.notice:hover {
   }
 }
 
+/* Campos com 16 px ou mais na tela de toque: abaixo disso o Safari do iPhone
+   amplia a página ao focar e não volta (rolagem para os lados, barras fixas
+   fora da vista). Global e com !important para valer sobre o CSS com escopo
+   dos componentes; campo maior que 16 px declara --field-font-size.
+   https://www.stefanjudis.com/notes/mobile-safari-doesnt-zoom-into-form-inputs-with-minimum-16px */
+@media (pointer: coarse) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
+  textarea,
+  select,
+  [contenteditable=""],
+  [contenteditable="true"] {
+    font-size: max(1rem, var(--field-font-size, 1rem)) !important;
+  }
+}
+
 /* Vazio/carregando dentro de tabela ou lista (admin): texto centralizado.
    Para tela ou seção vazia, use o EmptyState. */
 .empty-note {
